@@ -33,7 +33,6 @@ export default [
         setInterval: 'readonly',
         clearTimeout: 'readonly',
         clearInterval: 'readonly',
-        IFlyCollector: 'readonly',
       },
     },
     plugins: {
