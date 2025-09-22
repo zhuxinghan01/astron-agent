@@ -141,7 +141,7 @@ def create_tools(tools_info: ToolManagerRequest):
     :return:
     """
     try:
-        run_params_list = tools_info.dict()
+        run_params_list = tools_info.model_dump()
         params = _extract_request_params(run_params_list)
         tools = run_params_list.get("payload", {}).get("tools")
 
@@ -421,7 +421,7 @@ def update_tools(tools_info: ToolManagerRequest):
     :return:
     """
     try:
-        run_params_list = tools_info.dict()
+        run_params_list = tools_info.model_dump()
         params = _extract_request_params(run_params_list)
         tools = run_params_list.get("payload", {}).get("tools")
 
