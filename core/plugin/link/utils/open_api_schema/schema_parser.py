@@ -6,10 +6,10 @@ extracting parameters, request bodies, and other schema information.
 
 import json
 
-from utils.open_api_schema.types.schema_parser_types import ParamsConfig
-from exceptions.sparklink_exceptions import SparkLinkOpenapiSchemaException
-from utils.errors.code import ErrCode
-from utils.otlp.trace.span import Span
+from plugin.link.utils.open_api_schema.types.schema_parser_types import ParamsConfig
+from plugin.link.exceptions.sparklink_exceptions import SparkLinkOpenapiSchemaException
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.utils.otlp.trace.span import Span
 
 
 class OpenapiSchemaParser:

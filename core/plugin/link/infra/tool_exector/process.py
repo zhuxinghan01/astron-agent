@@ -12,10 +12,10 @@ from urllib.parse import urljoin, urlparse, urlunparse, quote
 
 import aiohttp
 
-from exceptions.sparklink_exceptions import CallThirdApiException
-from utils.errors.code import ErrCode
-from consts import const
-from infra.tool_exector.http_auth import public_query_url, assemble_ws_auth_url
+from plugin.link.exceptions.sparklink_exceptions import CallThirdApiException
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.consts import const
+from plugin.link.infra.tool_exector.http_auth import public_query_url, assemble_ws_auth_url
 
 
 class HttpRun:

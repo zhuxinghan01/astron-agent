@@ -7,19 +7,16 @@ error handling, observability tracing, and security validations.
 
 import os
 from typing import Tuple
-from consts import const
+from plugin.link.consts import const
 
 from fastapi import Body
 from loguru import logger
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from opentelemetry.trace import Status, StatusCode
-from xingchen_utils.otlp.trace.span import Span
-from xingchen_utils.otlp.metric.meter import Meter
-from xingchen_utils.otlp.node_trace.node_trace import NodeTrace
-from xingchen_utils.otlp.node_trace.node import TraceStatus
 
-from api.schemas.community.tools.mcp.mcp_tools_schema import (
+
+from plugin.link.api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPToolListRequest,
     MCPToolListResponse,
     MCPItemInfo,
@@ -31,11 +28,12 @@ from api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPTextResponse,
     MCPImageResponse,
 )
-from domain.models.manager import get_db_engine
-from infra.tool_crud.process import ToolCrudOperation
-from utils.errors.code import ErrCode
-from utils.sid.sid_generator2 import new_sid
-from utils.security.access_interceptor import is_in_blacklist, is_local_url
+from plugin.link.domain.models.manager import get_db_engine
+from plugin.link.infra.tool_crud.process import ToolCrudOperation
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.utils.sid.sid_generator2 import new_sid
+from plugin.link.utils.security.access_interceptor import is_in_blacklist, is_local_url
+from common.otlp.trace.span import Span
 
 
 async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListResponse:
@@ -60,7 +58,7 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
         )
         span_context.add_info_events({"usr_input": list_info.model_dump_json()})
         span_context.set_attributes(attributes={"tool_id": "tool_list"})
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -293,16 +291,16 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
             sid=session_id,
             data=MCPToolListData(servers=items),
         )
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            m.in_success_count()
-            node_trace.answer = result.model_dump_json()
-            node_trace.flow_id = "tool_list"
-            node_trace.log_caller = "mcp_type"
-            node_trace.upload(
-                status=TraceStatus(code=success.code, message=success.msg),
-                log_caller="mcp_type",
-                span=span_context,
-            )
+        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        #     m.in_success_count()
+        #     node_trace.answer = result.model_dump_json()
+        #     node_trace.flow_id = "tool_list"
+        #     node_trace.log_caller = "mcp_type"
+        #     node_trace.upload(
+        #         status=Status(code=success.code, message=success.msg),
+        #         log_caller="mcp_type",
+        #         span=span_context,
+        #     )
         return result
 
 
@@ -329,7 +327,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
         )
         span_context.add_info_events({"usr_input": call_info.model_dump_json()})
         span_context.set_attributes(attributes={"tool_id": mcp_server_id})
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -348,8 +346,8 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
 
         if url and is_in_blacklist(url=url):
             err = ErrCode.MCP_SERVER_BLACKLIST_URL_ERR
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -363,14 +361,14 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                 mcp_server_id=mcp_server_id, span=span_context
             )
             node_trace.answer = err.msg
-            node_trace.upload(
-                status=TraceStatus(code=err.code, message=err.msg),
-                log_caller="",
-                span=span_context,
-            )
+            # node_trace.upload(
+            #     status=Status(code=err.code, message=err.msg),
+            #     log_caller="",
+            #     span=span_context,
+            # )
             if err is not ErrCode.SUCCESSES:
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(err.code)
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(err.code)
                 return MCPCallToolResponse(
                     code=err.code,
                     message=err.msg,
@@ -380,8 +378,8 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
 
         if is_local_url(url):
             err = ErrCode.MCP_SERVER_LOCAL_URL_ERR
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -403,15 +401,15 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                             err = ErrCode.MCP_SERVER_INITIAL_ERR
                             span_context.add_error_event(err.msg)
                             span_context.set_status(Status(StatusCode.ERROR))
-                            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                                m.in_error_count(err.code)
-                                node_trace.answer = err.msg
-                                node_trace.flow_id = mcp_server_id
-                                node_trace.upload(
-                                    status=TraceStatus(code=err.code, message=err.msg),
-                                    log_caller="",
-                                    span=span_context,
-                                )
+                            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                            #     m.in_error_count(err.code)
+                            #     node_trace.answer = err.msg
+                            #     node_trace.flow_id = mcp_server_id
+                            #     node_trace.upload(
+                            #         status=Status(code=err.code, message=err.msg),
+                            #         log_caller="",
+                            #         span=span_context,
+                            #     )
                             return MCPCallToolResponse(
                                 code=err.code,
                                 message=err.msg,
@@ -437,15 +435,15 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                             err = ErrCode.MCP_SERVER_CALL_TOOL_ERR
                             span_context.add_error_event(err.msg)
                             span_context.set_status(Status(StatusCode.ERROR))
-                            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                                m.in_error_count(err.code)
-                                node_trace.answer = err.msg
-                                node_trace.flow_id = mcp_server_id
-                                node_trace.upload(
-                                    status=TraceStatus(code=err.code, message=err.msg),
-                                    log_caller="",
-                                    span=span_context,
-                                )
+                            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                            #     m.in_error_count(err.code)
+                            #     node_trace.answer = err.msg
+                            #     node_trace.flow_id = mcp_server_id
+                            #     node_trace.upload(
+                            #         status=Status(code=err.code, message=err.msg),
+                            #         log_caller="",
+                            #         span=span_context,
+                            #     )
                             return MCPCallToolResponse(
                                 code=err.code,
                                 message=err.msg,
@@ -456,15 +454,15 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                     err = ErrCode.MCP_SERVER_SESSION_ERR
                     span_context.add_error_event(err.msg)
                     span_context.set_status(Status(StatusCode.ERROR))
-                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                        m.in_error_count(err.code)
-                        node_trace.answer = err.msg
-                        node_trace.flow_id = mcp_server_id
-                        node_trace.upload(
-                            status=TraceStatus(code=err.code, message=err.msg),
-                            log_caller="",
-                            span=span_context,
-                        )
+                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    #     m.in_error_count(err.code)
+                    #     node_trace.answer = err.msg
+                    #     node_trace.flow_id = mcp_server_id
+                    #     node_trace.upload(
+                    #         status=Status(code=err.code, message=err.msg),
+                    #         log_caller="",
+                    #         span=span_context,
+                    #     )
                     return MCPCallToolResponse(
                         code=err.code,
                         message=err.msg,
@@ -475,15 +473,15 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             err = ErrCode.MCP_SERVER_CONNECT_ERR
             span_context.add_error_event(err.msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
-                node_trace.answer = err.msg
-                node_trace.flow_id = mcp_server_id
-                node_trace.upload(
-                    status=TraceStatus(code=err.code, message=err.msg),
-                    log_caller="",
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
+            #     node_trace.answer = err.msg
+            #     node_trace.flow_id = mcp_server_id
+            #     node_trace.upload(
+            #         status=Status(code=err.code, message=err.msg),
+            #         log_caller="",
+            #         span=span_context,
+            #     )
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -498,16 +496,16 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             sid=session_id,
             data=MCPCallToolData(isError=is_error, content=content),
         )
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            m.in_success_count()
-            node_trace.answer = result.model_dump_json()
-            node_trace.flow_id = mcp_server_id
-            node_trace.log_caller = "mcp_type"
-            node_trace.upload(
-                status=TraceStatus(code=success.code, message=success.msg),
-                log_caller="mcp_type",
-                span=span_context,
-            )
+        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        #     m.in_success_count()
+        #     node_trace.answer = result.model_dump_json()
+        #     node_trace.flow_id = mcp_server_id
+        #     node_trace.log_caller = "mcp_type"
+        #     node_trace.upload(
+        #         status=Status(code=success.code, message=success.msg),
+        #         log_caller="mcp_type",
+        #         span=span_context,
+        #     )
         return result
 
 

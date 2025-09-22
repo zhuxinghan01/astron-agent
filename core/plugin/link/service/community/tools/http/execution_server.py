@@ -9,7 +9,7 @@ import os
 import json
 import base64
 
-from api.schemas.community.tools.http.execution_schema import (
+from plugin.link.api.schemas.community.tools.http.execution_schema import (
     HttpRunRequest,
     HttpRunResponse,
     HttpRunResponseHeader,
@@ -17,25 +17,28 @@ from api.schemas.community.tools.http.execution_schema import (
     ToolDebugResponseHeader,
     ToolDebugResponse,
 )
-from consts import const
-from domain.models.manager import get_db_engine, get_redis_engine
-from exceptions.sparklink_exceptions import SparkLinkBaseException
-from infra.tool_crud.process import ToolCrudOperation
-from infra.tool_exector.process import HttpRun
+from plugin.link.consts import const
+from plugin.link.domain.models.manager import get_db_engine, get_redis_engine
+from plugin.link.exceptions.sparklink_exceptions import SparkLinkBaseException
+from plugin.link.infra.tool_crud.process import ToolCrudOperation
+from plugin.link.infra.tool_exector.process import HttpRun
 from opentelemetry.trace import Status, StatusCode
 from loguru import logger
-from utils.uid.generate_uid import new_uid
-from utils.errors.code import ErrCode
-from utils.open_api_schema.schema_parser import OpenapiSchemaParser
-from utils.json_schemas.read_json_schemas import (
+from plugin.link.utils.uid.generate_uid import new_uid
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.utils.open_api_schema.schema_parser import OpenapiSchemaParser
+from plugin.link.utils.json_schemas.read_json_schemas import (
     get_http_run_schema,
     get_tool_debug_schema,
 )
-from utils.json_schemas.schema_validate import api_validate
-from xingchen_utils.otlp.trace.span import Span
-from xingchen_utils.otlp.node_trace.node_trace import NodeTrace
-from xingchen_utils.otlp.node_trace.node import TraceStatus
-from xingchen_utils.otlp.metric.meter import Meter
+from plugin.link.utils.json_schemas.schema_validate import api_validate
+from common.otlp.trace.span import Span
+from common.otlp.metrics.meter import Meter
+from common.otlp.log_trace.node_trace_log import (
+    NodeTraceLog,
+    Status
+)
+
 
 default_value = {
     " 'string'": "",
@@ -97,7 +100,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                 "tool_id": run_params_list.get("parameter", {}).get("tool_id", {})
             }
         )
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -118,16 +121,16 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             # is duplicated across service functions to ensure consistent error
             # reporting and observability, adapted for HTTP execution context
             # with different response types
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-                node_trace.answer = validate_err
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
-                    ),
-                    log_caller="",
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+            #     node_trace.answer = validate_err
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
+            #         ),
+            #         log_caller="",
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
@@ -158,15 +161,15 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
-                node_trace.answer = err.message
-                node_trace.flow_id = tool_id
-                node_trace.upload(
-                    status=TraceStatus(code=err.code, message=err.message),
-                    log_caller="",
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
+            #     node_trace.answer = err.message
+            #     node_trace.flow_id = tool_id
+            #     node_trace.upload(
+            #         status=Status(code=err.code, message=err.message),
+            #         log_caller="",
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -177,17 +180,17 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             message = f"{tool_id} does not exist"
             span_context.add_error_event(message)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.TOOL_NOT_EXIST_ERR.code)
-                node_trace.answer = message
-                node_trace.flow_id = tool_id
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.TOOL_NOT_EXIST_ERR.code, message=message
-                    ),
-                    log_caller="",
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.TOOL_NOT_EXIST_ERR.code)
+            #     node_trace.answer = message
+            #     node_trace.flow_id = tool_id
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.TOOL_NOT_EXIST_ERR.code, message=message
+            #         ),
+            #         log_caller="",
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.TOOL_NOT_EXIST_ERR.code,
@@ -213,18 +216,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             message = f"operation_id: {operation_id} does not exist"
             span_context.add_error_event(message)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.OPERATION_ID_NOT_EXIST_ERR.code)
-                node_trace.answer = message
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code, message=message
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.OPERATION_ID_NOT_EXIST_ERR.code)
+            #     node_trace.answer = message
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code, message=message
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code,
@@ -263,21 +266,21 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                         f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
                     )
                     span_context.set_status(Status(StatusCode.ERROR))
-                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                        m.in_error_count(ErrCode.OPENAPI_AUTH_TYPE_ERR.code)
-                        node_trace.answer = (
-                            f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
-                        )
-                        node_trace.flow_id = tool_id
-                        node_trace.log_caller = tool_type
-                        node_trace.upload(
-                            status=TraceStatus(
-                                code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
-                                message=f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}",
-                            ),
-                            log_caller=tool_type,
-                            span=span_context,
-                        )
+                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    #     m.in_error_count(ErrCode.OPENAPI_AUTH_TYPE_ERR.code)
+                    #     node_trace.answer = (
+                    #         f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
+                    #     )
+                    #     node_trace.flow_id = tool_id
+                    #     node_trace.log_caller = tool_type
+                    #     node_trace.upload(
+                    #         status=Status(
+                    #             code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
+                    #             message=f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}",
+                    #         ),
+                    #         log_caller=tool_type,
+                    #         span=span_context,
+                    #     )
                     return HttpRunResponse(
                         header=HttpRunResponseHeader(
                             code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
@@ -383,25 +386,25 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                     f"详细信息：{msg}"
                 )
                 span_context.set_status(Status(StatusCode.ERROR))
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
-                    node_trace.answer = (
-                        f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                        f"详细信息：{msg}"
-                    )
-                    node_trace.flow_id = tool_id
-                    node_trace.log_caller = tool_type
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
-                            message=(
-                                f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                                f"详细信息：{msg}"
-                            ),
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
+                #     node_trace.answer = (
+                #         f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                #         f"详细信息：{msg}"
+                #     )
+                #     node_trace.flow_id = tool_id
+                #     node_trace.log_caller = tool_type
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
+                #             message=(
+                #                 f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                #                 f"详细信息：{msg}"
+                #             ),
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
@@ -416,18 +419,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             span_context.add_info_events({"before result": result})
             result = json.dumps(result_json, ensure_ascii=False)
             span_context.add_info_events({"after result": result})
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = result
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = result
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.SUCCESSES.code,
@@ -443,16 +446,16 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
-                node_trace.answer = err.message
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(code=err.code, message=err.message),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
+            #     node_trace.answer = err.message
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(code=err.code, message=err.message),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -462,19 +465,19 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.COMMON_ERR.code)
-                node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.COMMON_ERR.code,
-                        message=f"{ErrCode.COMMON_ERR.msg}: {err}",
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.COMMON_ERR.code)
+            #     node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.COMMON_ERR.code,
+            #             message=f"{ErrCode.COMMON_ERR.msg}: {err}",
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.COMMON_ERR.code,
@@ -540,7 +543,7 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                 if openapi_schema.get("info").get("x-is-official")
                 else os.getenv(const.THIRD_TOOL_KEY)
             )
-            node_trace = NodeTrace(
+            node_trace = NodeTraceLog(
                 flow_id=tool_id,
                 sid=span_context.sid,
                 app_id=span_context.app_id,
@@ -559,19 +562,19 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                 span_context.add_error_event(
                     f"Error code: {ErrCode.JSON_PROTOCOL_PARSER_ERR.code}, error message: {validate_err}"
                 )
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-                    node_trace.answer = validate_err
-                    node_trace.flow_id = tool_id
-                    node_trace.log_caller = tool_type
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
-                            message=validate_err,
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+                #     node_trace.answer = validate_err
+                #     node_trace.flow_id = tool_id
+                #     node_trace.log_caller = tool_type
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                #             message=validate_err,
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
@@ -653,25 +656,25 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                     f"详细信息：{msg}"
                 )
                 span_context.set_status(Status(StatusCode.ERROR))
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
-                    node_trace.answer = (
-                        f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                        f"详细信息：{msg}"
-                    )
-                    node_trace.flow_id = tool_id
-                    node_trace.log_caller = tool_type
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
-                            message=(
-                                f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                                f"详细信息：{msg}"
-                            ),
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
+                #     node_trace.answer = (
+                #         f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                #         f"详细信息：{msg}"
+                #     )
+                #     node_trace.flow_id = tool_id
+                #     node_trace.log_caller = tool_type
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
+                #             message=(
+                #                 f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                #                 f"详细信息：{msg}"
+                #             ),
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
@@ -686,18 +689,18 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
             span_context.add_info_events({"before result": result})
             result = json.dumps(result_json, ensure_ascii=False)
             span_context.add_info_events({"after result": result})
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = result
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = result
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolDebugResponse(
                 header=ToolDebugResponseHeader(
                     code=ErrCode.SUCCESSES.code,
@@ -713,16 +716,16 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(err.code)
-                node_trace.answer = err.message
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(code=err.code, message=err.message),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(err.code)
+            #     node_trace.answer = err.message
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(code=err.code, message=err.message),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -732,19 +735,19 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.COMMON_ERR.code)
-                node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
-                node_trace.flow_id = tool_id
-                node_trace.log_caller = tool_type
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.COMMON_ERR.code,
-                        message=f"{ErrCode.COMMON_ERR.msg}: {err}",
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.COMMON_ERR.code)
+            #     node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
+            #     node_trace.flow_id = tool_id
+            #     node_trace.log_caller = tool_type
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.COMMON_ERR.code,
+            #             message=f"{ErrCode.COMMON_ERR.msg}: {err}",
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.COMMON_ERR.code,

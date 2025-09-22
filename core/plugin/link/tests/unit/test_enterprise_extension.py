@@ -11,14 +11,14 @@ import json
 import os
 from unittest.mock import Mock, patch, MagicMock
 
-from service.enterprise.extension import register_mcp
-from api.schemas.enterprise.extension_schema import (
+from plugin.link.service.enterprise.extension import register_mcp
+from plugin.link.api.schemas.enterprise.extension_schema import (
     MCPManagerRequest,
     MCPManagerResponse
 )
-from api.schemas.community.deprecated.management_schema import ToolManagerResponse
-from utils.errors.code import ErrCode
-from consts import const
+from plugin.link.api.schemas.community.deprecated.management_schema import ToolManagerResponse
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.consts import const
 
 
 class TestEnterpriseExtension:
@@ -82,7 +82,7 @@ class TestEnterpriseExtension:
 
         with patch('service.enterprise.extension.os.getenv') as mock_getenv, \
              patch('service.enterprise.extension.Meter') as mock_meter, \
-             patch('service.enterprise.extension.NodeTrace') as mock_node_trace:
+             patch('service.enterprise.extension.NodeTraceLog') as mock_node_trace:
 
             mock_getenv.return_value = "false"  # Disable OTLP
 
@@ -285,7 +285,7 @@ class TestEnterpriseExtension:
 
         with patch('service.enterprise.extension.os.getenv') as mock_getenv, \
              patch('service.enterprise.extension.Meter') as mock_meter_class, \
-             patch('service.enterprise.extension.NodeTrace') as mock_node_trace_class:
+             patch('service.enterprise.extension.NodeTraceLog') as mock_node_trace_class:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
@@ -513,8 +513,8 @@ class TestEnterpriseErrorHandling:
         telemetry_components = [
             "Span",
             "Meter",
-            "NodeTrace",
-            "TraceStatus"
+            "NodeTraceLog",
+            "Status"
         ]
 
         telemetry_operations = [

@@ -6,11 +6,10 @@ and used by other modules via attribute access (e.g., const.service_name_key).
 """
 
 import os
-from xingchen_utils.runtime.const import ProductionEnv, DevelopmentEnv
 
 # xingchen utils keys
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.xc_utils_keys import (
+from plugin.link.consts.polaris_keys.xc_utils_keys import (
     SERVICE_NAME_KEY,
     ENABLE_OTLP_KEY,
     METRIC_ENDPOINT_KEY,
@@ -30,7 +29,7 @@ from consts.polaris_keys.xc_utils_keys import (
 
 # uvicorn keys
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.uvicorn_keys import (
+from plugin.link.consts.polaris_keys.uvicorn_keys import (
     UVICORN_APP_KEY,
     UVICORN_HOST_KEY,
     UVICORN_PORT_KEY,
@@ -42,7 +41,7 @@ from consts.polaris_keys.uvicorn_keys import (
 
 # mysql
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.mysql_keys import (
+from plugin.link.consts.polaris_keys.mysql_keys import (
     MYSQL_HOST_KEY,
     MYSQL_PORT_KEY,
     MYSQL_USER_KEY,
@@ -52,7 +51,7 @@ from consts.polaris_keys.mysql_keys import (
 
 # redis
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.redis_keys import (
+from plugin.link.consts.polaris_keys.redis_keys import (
     REDIS_IS_CLUSTER_KEY,
     REDIS_CLUSTER_ADDR_KEY,
     REDIS_PASSWORD_KEY,
@@ -60,7 +59,7 @@ from consts.polaris_keys.redis_keys import (
 
 # spark
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.spark_keys import (
+from plugin.link.consts.polaris_keys.spark_keys import (
     SPARK_LINK_LOG_LEVEL_KEY,
     SPARK_LINK_LOG_PATH_KEY,
     SPARK_RUN_KEY,
@@ -68,7 +67,7 @@ from consts.polaris_keys.spark_keys import (
 
 # common
 # pylint: disable=unused-import  # These imports are used via module attribute access
-from consts.polaris_keys.common_keys import (
+from plugin.link.consts.polaris_keys.common_keys import (
     SEGMENT_BLACK_LIST_KEY,
     IP_BLACK_LIST_KEY,
     DOMAIN_BLACK_LIST_KEY,
@@ -89,6 +88,11 @@ Env = os.getenv("ENVIRONMENT")
 ENV_PRODUCTION = "production"
 ENV_PRERELEASE = "prerelease"
 ENV_DEVELOPMENT = "development"
+
+# Runtime environment constants
+DevelopmentEnv = "development"
+ProductionEnv = "production"
+
 # Keeping XingchenEnviron to match existing usage pattern
 XingchenEnviron = (
     ProductionEnv if Env in (ENV_PRODUCTION, ENV_PRERELEASE) else DevelopmentEnv

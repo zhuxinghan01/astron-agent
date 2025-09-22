@@ -13,10 +13,10 @@ import ipaddress
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from urllib.parse import urlparse
 
-from infra.tool_exector.process import HttpRun
-from exceptions.sparklink_exceptions import CallThirdApiException
-from utils.errors.code import ErrCode
-from consts import const
+from plugin.link.infra.tool_exector.process import HttpRun
+from plugin.link.exceptions.sparklink_exceptions import CallThirdApiException
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.consts import const
 
 
 class TestHttpRunInit:

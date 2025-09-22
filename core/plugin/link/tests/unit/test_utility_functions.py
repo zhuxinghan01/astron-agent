@@ -17,10 +17,10 @@ import threading
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
-from utils.uid.generate_uid import new_uid
-from utils.snowflake.gen_snowflake import Snowflake, gen_id
-from utils.open_api_schema.schema_validate import OpenapiSchemaValidator
-from consts import const
+from plugin.link.utils.uid.generate_uid import new_uid
+from plugin.link.utils.snowflake.gen_snowflake import Snowflake, gen_id
+from plugin.link.utils.open_api_schema.schema_validate import OpenapiSchemaValidator
+from plugin.link.consts import const
 
 
 class TestUIDGeneration:

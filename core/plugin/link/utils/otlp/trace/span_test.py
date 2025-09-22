@@ -9,9 +9,9 @@ import time
 
 from opentelemetry.trace import Status, StatusCode
 
-from utils.sid.sid_generator2 import init_sid
-from utils.otlp.trace.span import Span
-from utils.otlp.trace.trace import init_trace
+from plugin.link.utils.sid.sid_generator2 import init_sid
+from plugin.link.utils.otlp.trace.span import Span
+from plugin.link.utils.otlp.trace.trace import init_trace
 
 
 def do_work1():

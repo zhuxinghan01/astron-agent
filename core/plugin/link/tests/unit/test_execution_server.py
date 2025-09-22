@@ -12,13 +12,13 @@ import base64
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 
-from service.community.tools.http.execution_server import (
+from plugin.link.service.community.tools.http.execution_server import (
     http_run,
     tool_debug,
     process_array,
     get_response_schema
 )
-from api.schemas.community.tools.http.execution_schema import (
+from plugin.link.api.schemas.community.tools.http.execution_schema import (
     HttpRunRequest,
     HttpRunResponse,
     HttpRunResponseHeader,
@@ -26,9 +26,9 @@ from api.schemas.community.tools.http.execution_schema import (
     ToolDebugResponse,
     ToolDebugResponseHeader
 )
-from utils.errors.code import ErrCode
-from exceptions.sparklink_exceptions import SparkLinkBaseException
-from consts import const
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.exceptions.sparklink_exceptions import SparkLinkBaseException
+from plugin.link.consts import const
 
 
 class TestHttpRun:
@@ -165,7 +165,7 @@ class TestHttpRun:
 
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv, \
              patch('service.community.tools.http.execution_server.Meter') as mock_meter, \
-             patch('service.community.tools.http.execution_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.http.execution_server.NodeTraceLog') as mock_node_trace, \
              patch('jsonschema.Draft7Validator') as mock_validator:
 
             # Mock different environment variables appropriately
@@ -550,7 +550,7 @@ class TestToolDebug:
     @patch('service.community.tools.http.execution_server.api_validate')
     @patch('service.community.tools.http.execution_server.HttpRun')
     @patch('service.community.tools.http.execution_server.Meter')
-    @patch('service.community.tools.http.execution_server.NodeTrace')
+    @patch('service.community.tools.http.execution_server.NodeTraceLog')
     @pytest.mark.asyncio
     async def test_tool_debug_validation_error(self, mock_node_trace, mock_meter, mock_http_run_class, mock_api_validate, mock_span_class):
         """Test tool debug with validation error."""
@@ -786,7 +786,7 @@ class TestUtilityFunctions:
 
     def test_default_values_mapping(self):
         """Test default values mapping for schema validation."""
-        from service.community.tools.http.execution_server import default_value
+        from plugin.link.service.community.tools.http.execution_server import default_value
 
         expected_defaults = {
             " 'string'": "",
@@ -888,7 +888,7 @@ class TestExecutionServerErrorHandling:
     def test_telemetry_integration(self):
         """Test telemetry integration in execution server."""
         telemetry_components = [
-            "Span", "Meter", "NodeTrace", "TraceStatus"
+            "Span", "Meter", "NodeTraceLog", "Status"
         ]
 
         for component in telemetry_components:

@@ -2,35 +2,35 @@ import json
 import os
 import re
 
-from api.schemas.community.deprecated.management_schema import (
+from plugin.link.api.schemas.community.deprecated.management_schema import (
     ToolManagerRequest,
     ToolManagerResponse,
 )
-from consts import const
-from domain.models.manager import get_db_engine
-from exceptions.sparklink_exceptions import (
+from plugin.link.consts import const
+from plugin.link.domain.models.manager import get_db_engine
+from plugin.link.exceptions.sparklink_exceptions import (
     SparkLinkBaseException,
-    SparkLinkAppIdException,
 )
 from fastapi import Query
-from infra.tool_crud.process import ToolCrudOperation
+from plugin.link.infra.tool_crud.process import ToolCrudOperation
 from loguru import logger
 from opentelemetry.trace import Status, StatusCode
 
-from utils.json_schemas.read_json_schemas import (
+from plugin.link.utils.json_schemas.read_json_schemas import (
     get_create_tool_schema,
     get_update_tool_schema,
 )
-from utils.json_schemas.schema_validate import api_validate
-from utils.errors.code import ErrCode
-from utils.open_api_schema.schema_validate import OpenapiSchemaValidator
-from utils.snowflake.gen_snowflake import gen_id
-from utils.uid.generate_uid import new_uid
-
-from xingchen_utils.otlp.metric.meter import Meter
-from xingchen_utils.otlp.node_trace.node import TraceStatus
-from xingchen_utils.otlp.node_trace.node_trace import NodeTrace
-from xingchen_utils.otlp.trace.span import Span
+from plugin.link.utils.json_schemas.schema_validate import api_validate
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.utils.open_api_schema.schema_validate import OpenapiSchemaValidator
+from plugin.link.utils.snowflake.gen_snowflake import gen_id
+from plugin.link.utils.uid.generate_uid import new_uid
+from common.otlp.trace.span import Span
+from common.otlp.metrics.meter import Meter
+from common.otlp.log_trace.node_trace_log import (
+    NodeTraceLog,
+    Status
+)
 
 
 def create_tools(tools_info: ToolManagerRequest):
@@ -94,9 +94,9 @@ def create_tools(tools_info: ToolManagerRequest):
             span_context.set_attributes(
                 attributes={"tools": run_params_list.get("payload", {}).get("tools")}
             )
-            # NodeTrace initialization pattern - duplicated for consistent trace
+            # NodeTraceLog initialization pattern - duplicated for consistent trace
             # correlation across different service endpoints in the system
-            node_trace = NodeTrace(
+            node_trace = NodeTraceLog(
                 flow_id="",
                 sid=span_context.sid,
                 app_id=span_context.app_id,
@@ -116,17 +116,17 @@ def create_tools(tools_info: ToolManagerRequest):
                 # Standard error handling pattern - this telemetry and response
                 # structure is duplicated across all service functions to ensure
                 # consistent error reporting and observability across the entire system
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                    node_trace.answer = validate_err
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
-                            message=validate_err,
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                #     node_trace.answer = validate_err
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                #             message=validate_err,
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=validate_err,
@@ -152,17 +152,17 @@ def create_tools(tools_info: ToolManagerRequest):
                     )
                     span_context.add_error_event(msg)
                     span_context.set_status(Status(StatusCode.ERROR))
-                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                        m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
-                        node_trace.answer = json.dumps(err)
-                        node_trace.upload(
-                            status=TraceStatus(
-                                code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
-                                message=json.dumps(err),
-                            ),
-                            log_caller=tool_type,
-                            span=span_context,
-                        )
+                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    #     m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
+                    #     node_trace.answer = json.dumps(err)
+                    #     node_trace.upload(
+                    #         status=Status(
+                    #             code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
+                    #             message=json.dumps(err),
+                    #         ),
+                    #         log_caller=tool_type,
+                    #         span=span_context,
+                    #     )
                     return ToolManagerResponse(
                         code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
                         message=json.dumps(err),
@@ -190,17 +190,17 @@ def create_tools(tools_info: ToolManagerRequest):
                 resp_tool.append({"name": tool.get("name"), "id": tool.get("tool_id")})
                 tool_ids.append(tool.get("tool_id"))
 
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = json.dumps(resp_tool, ensure_ascii=False)
-                node_trace.flow_id = str(tool_ids)
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = json.dumps(resp_tool, ensure_ascii=False)
+            #     node_trace.flow_id = str(tool_ids)
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -209,14 +209,14 @@ def create_tools(tools_info: ToolManagerRequest):
             )
     except Exception as err:
         logger.error(f"failed to create tools, reason {err}")
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            m.in_error_count(ErrCode.COMMON_ERR.code)
-            node_trace.answer = str(err)
-            node_trace.upload(
-                status=TraceStatus(code=ErrCode.COMMON_ERR.code, message=str(err)),
-                log_caller=tool_type,
-                span=span_context,
-            )
+        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        #     m.in_error_count(ErrCode.COMMON_ERR.code)
+        #     node_trace.answer = str(err)
+        #     node_trace.upload(
+        #         status=Status(code=ErrCode.COMMON_ERR.code, message=str(err)),
+        #         log_caller=tool_type,
+        #         span=span_context,
+        #     )
         return ToolManagerResponse(
             code=ErrCode.COMMON_ERR.code,
             message=str(err),
@@ -250,7 +250,7 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             {"usr_input": json.dumps(usr_input, ensure_ascii=False)}
         )
         span_context.set_attributes(attributes={"tool_ids": str(tool_ids)})
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id=str(tool_ids),
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -269,16 +269,16 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             msg = f"del tool: tool num {len(tool_ids)} not in threshold 1 ~ 6"
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                node_trace.answer = msg
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+            #     node_trace.answer = msg
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                 message=msg,
@@ -291,16 +291,16 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
                 msg = f"del tool: tool id {tool_id} illegal"
                 span_context.add_error_event(msg)
                 span_context.set_status(Status(StatusCode.ERROR))
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                    node_trace.answer = msg
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                #     node_trace.answer = msg
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=msg,
@@ -320,18 +320,18 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
                 )
             crud_inst = ToolCrudOperation(get_db_engine())
             crud_inst.delete_tools(tool_info)
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = json.dumps(
-                    ErrCode.SUCCESSES.msg, ensure_ascii=False
-                )
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = json.dumps(
+            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
+            #     )
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -343,14 +343,14 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             logger.error(f"failed to del tool, reason {err}")
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.COMMON_ERR.code)
-                node_trace.answer = str(err)
-                node_trace.upload(
-                    status=TraceStatus(code=ErrCode.COMMON_ERR.code, message=str(err)),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.COMMON_ERR.code)
+            #     node_trace.answer = str(err)
+            #     node_trace.upload(
+            #         status=Status(code=ErrCode.COMMON_ERR.code, message=str(err)),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
                 message=str(err),
@@ -403,7 +403,7 @@ def update_tools(tools_info: ToolManagerRequest):
         span_context.set_attributes(
             attributes={"tools": run_params_list.get("payload", {}).get("tools")}
         )
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -419,16 +419,16 @@ def update_tools(tools_info: ToolManagerRequest):
         m = Meter(app_id=span_context.app_id, func="update_tools")
         validate_err = api_validate(get_update_tool_schema(), run_params_list)
         if validate_err:
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-                node_trace.answer = validate_err
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+            #     node_trace.answer = validate_err
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
                 message=validate_err,
@@ -458,17 +458,17 @@ def update_tools(tools_info: ToolManagerRequest):
                     )
                     span_context.add_error_event(msg)
                     span_context.set_status(Status(StatusCode.ERROR))
-                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                        m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
-                        node_trace.answer = json.dumps(err)
-                        node_trace.upload(
-                            status=TraceStatus(
-                                code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
-                                message=json.dumps(err),
-                            ),
-                            log_caller=tool_type,
-                            span=span_context,
-                        )
+                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    #     m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
+                    #     node_trace.answer = json.dumps(err)
+                    #     node_trace.upload(
+                    #         status=Status(
+                    #             code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
+                    #             message=json.dumps(err),
+                    #         ),
+                    #         log_caller=tool_type,
+                    #         span=span_context,
+                    #     )
                     return ToolManagerResponse(
                         code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
                         message=json.dumps(err),
@@ -491,19 +491,19 @@ def update_tools(tools_info: ToolManagerRequest):
                 tool_ids.append(tool.get("id"))
             crud_inst = ToolCrudOperation(get_db_engine())
             crud_inst.update_tools(update_tool)
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = json.dumps(
-                    ErrCode.SUCCESSES.msg, ensure_ascii=False
-                )
-                node_trace.flow_id = str(tool_ids)
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = json.dumps(
+            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
+            #     )
+            #     node_trace.flow_id = str(tool_ids)
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -514,14 +514,14 @@ def update_tools(tools_info: ToolManagerRequest):
             msg = f"failed to update tool, reason {err}"
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.COMMON_ERR.code)
-                node_trace.answer = f"{err}"
-                node_trace.upload(
-                    status=TraceStatus(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.COMMON_ERR.code)
+            #     node_trace.answer = f"{err}"
+            #     node_trace.upload(
+            #         status=Status(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             logger.error(f"failed to update tool, reason {err}")
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
@@ -556,7 +556,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             {"usr_input": json.dumps(usr_input, ensure_ascii=False)}
         )
         span_context.set_attributes(attributes={"tool_ids": str(tool_ids)})
-        node_trace = NodeTrace(
+        node_trace = NodeTraceLog(
             flow_id=str(tool_ids),
             sid=span_context.sid,
             app_id=span_context.app_id,
@@ -575,16 +575,16 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             msg = f"get tool: tool num {len(tool_ids)} not in threshold 0 ~ 6"
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                node_trace.answer = msg
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+            #     node_trace.answer = msg
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                 message=msg,
@@ -596,16 +596,16 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
                 msg = f"get tool: tool id {tool_id} pattern illegal"
                 span_context.add_error_event(msg)
                 span_context.set_status(Status(StatusCode.ERROR))
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                    node_trace.answer = msg
-                    node_trace.upload(
-                        status=TraceStatus(
-                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                        ),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                #     node_trace.answer = msg
+                #     node_trace.upload(
+                #         status=Status(
+                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
+                #         ),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=msg,
@@ -629,14 +629,14 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             except SparkLinkBaseException as err:
                 span_context.add_error_event(err.message)
                 span_context.set_status(Status(StatusCode.ERROR))
-                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    m.in_error_count(err.code)
-                    node_trace.answer = err.message
-                    node_trace.upload(
-                        status=TraceStatus(code=err.code, message=err.message),
-                        log_caller=tool_type,
-                        span=span_context,
-                    )
+                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                #     m.in_error_count(err.code)
+                #     node_trace.answer = err.message
+                #     node_trace.upload(
+                #         status=Status(code=err.code, message=err.message),
+                #         log_caller=tool_type,
+                #         span=span_context,
+                #     )
                 return ToolManagerResponse(
                     code=err.code, message=err.message, sid=span_context.sid, data={}
                 )
@@ -654,18 +654,18 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
                         # ).decode("utf-8")
                     }
                 )
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_success_count()
-                node_trace.answer = json.dumps(
-                    ErrCode.SUCCESSES.msg, ensure_ascii=False
-                )
-                node_trace.upload(
-                    status=TraceStatus(
-                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-                    ),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_success_count()
+            #     node_trace.answer = json.dumps(
+            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
+            #     )
+            #     node_trace.upload(
+            #         status=Status(
+            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+            #         ),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -676,14 +676,14 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             logger.error(f"failed to get tool, reason {err}")
             span_context.add_error_event(f"failed to get tool, reason {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                m.in_error_count(ErrCode.COMMON_ERR.code)
-                node_trace.answer = f"{err}"
-                node_trace.upload(
-                    status=TraceStatus(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
-                    log_caller=tool_type,
-                    span=span_context,
-                )
+            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            #     m.in_error_count(ErrCode.COMMON_ERR.code)
+            #     node_trace.answer = f"{err}"
+            #     node_trace.upload(
+            #         status=Status(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
+            #         log_caller=tool_type,
+            #         span=span_context,
+            #     )
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
                 message=f"{err}",

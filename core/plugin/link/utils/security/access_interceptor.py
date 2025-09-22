@@ -3,7 +3,7 @@ import os
 import re
 from urllib.parse import urlparse, urlunparse
 
-from consts import const
+from plugin.link.consts import const
 
 
 def is_in_black_domain(url: str):

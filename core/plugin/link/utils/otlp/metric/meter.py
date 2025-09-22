@@ -10,9 +10,9 @@ import os
 import time
 
 from loguru import logger
-from utils.otlp.metric import metric
-from utils.otlp.metric.atomic_int import AtomicCounter
-from utils.sid.sid_generator2 import get_host_ip
+from plugin.link.utils.otlp.metric import metric
+from plugin.link.utils.otlp.metric.atomic_int import AtomicCounter
+from plugin.link.utils.sid.sid_generator2 import get_host_ip
 
 counter = AtomicCounter()
 

@@ -11,12 +11,12 @@ import asyncio
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from typing import Tuple
 
-from service.community.tools.mcp.mcp_server import (
+from plugin.link.service.community.tools.mcp.mcp_server import (
     tool_list,
     call_tool,
     get_mcp_server_url
 )
-from api.schemas.community.tools.mcp.mcp_tools_schema import (
+from plugin.link.api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPToolListRequest,
     MCPToolListResponse,
     MCPCallToolRequest,
@@ -28,7 +28,7 @@ from api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPImageResponse,
     MCPToolListData
 )
-from utils.errors.code import ErrCode
+from plugin.link.utils.errors.code import ErrCode
 
 
 class TestMCPToolList:
@@ -121,7 +121,7 @@ class TestMCPToolList:
         mock_sse_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -194,7 +194,7 @@ class TestMCPToolList:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -238,7 +238,7 @@ class TestMCPToolList:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -285,7 +285,7 @@ class TestMCPToolList:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -332,7 +332,7 @@ class TestMCPToolList:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -423,7 +423,7 @@ class TestMCPCallTool:
         mock_sse_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -484,7 +484,7 @@ class TestMCPCallTool:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -529,7 +529,7 @@ class TestMCPCallTool:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -587,7 +587,7 @@ class TestMCPCallTool:
         )
 
         with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog') as mock_node_trace, \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -784,7 +784,7 @@ class TestMCPErrorHandling:
         # Test that MCP functions properly integrate with telemetry
 
         telemetry_components = [
-            "Span", "Meter", "NodeTrace", "TraceStatus"
+            "Span", "Meter", "NodeTraceLog", "Status"
         ]
 
         for component in telemetry_components:
