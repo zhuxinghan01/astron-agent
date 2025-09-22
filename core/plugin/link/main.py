@@ -10,8 +10,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import os
-from pathlib import Path
 
 def setup_python_path() -> None:
     """Set up Python path to include project root, parent directory, and grandparent directory"""
@@ -39,6 +37,7 @@ def setup_python_path() -> None:
             os.environ["PYTHONPATH"] = new_paths_str
         print(f"🔧 PYTHONPATH: {os.environ['PYTHONPATH']}")
 
+
 def load_env_file(env_file: str) -> None:
     """Load environment variables from .env file"""
     if not os.path.exists(env_file):
@@ -63,11 +62,11 @@ def load_env_file(env_file: str) -> None:
                 print(f"  ✅ {key.strip()}={value.strip()}")
             else:
                 print(f"  ⚠️  Line {line_num} format error: {line}")
-    
+
     use_polaris = os.getenv("use_polaris", "false")
     if use_polaris == "false":
         return
-    
+
     print(f"🔧 Config: use_polaris :{use_polaris}")
     load_polaris()
 
@@ -77,9 +76,9 @@ def load_polaris() -> None:
     Load remote configuration and override environment variables
     """
     from common.settings.polaris import ConfigFilter, Polaris
-    
+
     base_url = os.getenv("polaris_url")
-    project_name=os.getenv("project_name", "hy-spark-agent-builder")
+    project_name = os.getenv("project_name", "hy-spark-agent-builder")
     cluster_group = os.getenv("polaris_cluster")
     service_name = os.getenv("service_name", "spark-link")
     version = os.getenv("version", "1.0.0")
@@ -90,14 +89,14 @@ def load_polaris() -> None:
         service_name=service_name,
         version=version,
         config_file=config_file,
-    ) 
+    )
     username = os.getenv("polaris_username")
     password = os.getenv("polaris_password")
 
     # Ensure required parameters are not None
     if not base_url or not username or not password or not cluster_group:
         return  # Skip polaris config if required params are missing
-    
+
     polaris = Polaris(base_url=base_url, username=username, password=password)
     try:
         _ = polaris.pull(
@@ -111,7 +110,7 @@ def load_polaris() -> None:
             f"⚠️ Polaris configuration loading failed, "
             f"continuing with local configuration: {e}"
         )
-    
+
 
 def start_service() -> None:
     """Start FastAPI service"""
@@ -150,6 +149,7 @@ def start_service() -> None:
         print("\n🛑 Service stopped")
         sys.exit(0)
 
+
 def main() -> None:
     """Main function"""
     print("🌟 Link Development Environment Launcher")
@@ -164,6 +164,7 @@ def main() -> None:
 
     # Start service
     start_service()
+
 
 if __name__ == "__main__":
     main()
