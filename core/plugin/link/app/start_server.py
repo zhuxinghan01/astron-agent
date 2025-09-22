@@ -86,5 +86,6 @@ def spark_link_app():
     logger.error("init success")
     return app
 
+
 if __name__ == "__main__":
     SparkLinkServer().start()
