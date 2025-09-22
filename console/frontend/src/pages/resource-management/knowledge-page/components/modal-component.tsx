@@ -16,16 +16,16 @@ export const versionList: {
   title: string;
   description: string;
 }[] = [
-  // {
-  //   type: "AIUI-RAG2",
-  //   title: "xingchenKnowledge",
-  //   description: "xingchenDescription",
-  // },
-  // {
-  //   type: "CBG-RAG",
-  //   title: "xinghuoKnowledge",
-  //   description: "xingpuDescription",
-  // },
+  {
+    type: "AIUI-RAG2",
+    title: "xingchenKnowledge",
+    description: "xingchenDescription",
+  },
+  {
+    type: "CBG-RAG",
+    title: "xinghuoKnowledge",
+    description: "xingpuDescription",
+  },
   {
     type: "Ragflow-RAG",
     title: "ragflowRAG",
@@ -181,7 +181,7 @@ export const CreateModal: FC<{ setCreateModal: (value: boolean) => void }> = ({
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col gap-2">
+        {/* <div className="mt-6 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="text-second font-medium text-sm">
               <span className="text-[#F74E43]">*</span>
@@ -200,7 +200,7 @@ export const CreateModal: FC<{ setCreateModal: (value: boolean) => void }> = ({
               />
             ))}
           </div>
-        </div>
+        </div> */}
         <div className="flex flex-row-reverse gap-3 mt-7">
           <Button
             type="primary"
