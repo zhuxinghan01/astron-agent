@@ -1,4 +1,4 @@
-# Astra Agent - Stellar Agent Platform
+# Astra Agent - Agent Platform
 
 A comprehensive microservices-based platform for building and deploying AI agents, featuring a modular architecture with multi-language support and advanced CI/CD toolchain.
 
