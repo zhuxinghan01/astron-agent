@@ -13,6 +13,7 @@ from workflow.consts.model_provider import ModelProviderEnum
 from workflow.consts.template import TemplateSplitType, TemplateType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
+from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import History, ProcessArrayMethod
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_entities import NodeType
@@ -246,7 +247,11 @@ class BaseNode(BaseModel):
         return {"finish_reason": "stop"}
 
     def success(
-        self, inputs: dict, outputs: dict, raw_output: Any, time_cost: float
+        self,
+        inputs: dict,
+        outputs: dict,
+        raw_output: Optional[str] = "",
+        token_cost: Optional[GenerateUsage] = None,
     ) -> NodeRunResult:
         """
         Create a successful node execution result.
@@ -257,19 +262,21 @@ class BaseNode(BaseModel):
         :param inputs: Input parameters for the node
         :param outputs: Output parameters from the node
         :param raw_output: Raw execution result
-        :param time_cost: Execution time in seconds
+        :param token_cost: Token usage information for LLM nodes
         :return: NodeRunResult with SUCCEEDED status
         """
-        return NodeRunResult(
+        result = NodeRunResult(
             status=WorkflowNodeExecutionStatus.SUCCEEDED,
             inputs=inputs,
             outputs=outputs,
-            raw_output=raw_output,
+            raw_output=raw_output if raw_output else "",
             node_id=self.node_id,
             alias_name=self.alias_name,
             node_type=self.node_type,
-            time_cost=str(time_cost),
         )
+        if token_cost:
+            result.token_cost = token_cost
+        return result
 
     def fail(self, error: Exception, code_enum: CodeEnum, span: Span) -> NodeRunResult:
         """
@@ -287,8 +294,7 @@ class BaseNode(BaseModel):
         if isinstance(error, CustomException):
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.FAILED,
-                error=f"{error}",
-                error_code=error.code,
+                error=error,
                 node_id=self.node_id,
                 alias_name=self.alias_name,
                 node_type=self.node_type,
@@ -296,8 +302,10 @@ class BaseNode(BaseModel):
         else:
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.FAILED,
-                error=f"{error}",
-                error_code=code_enum.code,
+                error=CustomException(
+                    code_enum,
+                    cause_error=error,
+                ),
                 node_id=self.node_id,
                 alias_name=self.alias_name,
                 node_type=self.node_type,

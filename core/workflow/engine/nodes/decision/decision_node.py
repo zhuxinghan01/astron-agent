@@ -1,7 +1,6 @@
 import copy
 import json
 import re
-import time
 from typing import Any, Dict
 
 from jsonschema import ValidationError, validate  # type: ignore
@@ -159,7 +158,6 @@ class DecisionNode(BaseLLMNode):
         :param event_log_node_trace: Optional event logging for node execution
         :return: NodeRunResult containing the selected intent and execution details
         """
-        start_time = time.time()
         # Initialize function call instances and mapping
         fs_instances = []
         id_map = {}
@@ -243,8 +241,7 @@ class DecisionNode(BaseLLMNode):
                 alias_name=self.alias_name,
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
-                error=err.message,
-                error_code=err.code,
+                error=err,
             )
             return run_result
         # Ensure user input is string and apply variable replacements
@@ -274,7 +271,6 @@ class DecisionNode(BaseLLMNode):
                 raw_output=str(name),
                 outputs={self.output_identifier[0]: str(name)},
                 edge_source_handle=id_map.get(name, default_id),
-                time_cost=str(round(time.time() - start_time, 3)),
                 token_cost=GenerateUsage(
                     completion_tokens=token_usage.get("completion_tokens", 0),
                     prompt_tokens=token_usage.get("prompt_tokens", 0),
@@ -294,7 +290,6 @@ class DecisionNode(BaseLLMNode):
                 raw_output="DEFAULT",
                 outputs={self.output_identifier[0]: "DEFAULT"},
                 edge_source_handle=default_id,
-                time_cost=str(round(time.time() - start_time, 3)),
                 token_cost=GenerateUsage(),
             )
 
@@ -317,7 +312,6 @@ class DecisionNode(BaseLLMNode):
         :param event_log_node_trace: Optional event logging for node execution
         :return: NodeRunResult containing the selected intent and execution details
         """
-        start_time = time.time()
         raw_output = ""
         try:
             # Process user input and build input dictionary
@@ -462,7 +456,6 @@ class DecisionNode(BaseLLMNode):
                 raw_output=str(raw_output),
                 outputs=outputs,
                 edge_source_handle=edge_source_handle,
-                time_cost=str(round(time.time() - start_time, 3)),
                 token_cost=GenerateUsage(
                     completion_tokens=token_usage.get("completion_tokens", 0),
                     prompt_tokens=token_usage.get("prompt_tokens", 0),
@@ -482,7 +475,6 @@ class DecisionNode(BaseLLMNode):
                 raw_output=str(raw_output),
                 outputs={self.output_identifier[0]: "DEFAULT"},
                 edge_source_handle=defalut_id,
-                time_cost=str(round(time.time() - start_time, 3)),
                 token_cost=GenerateUsage(),
             )
 
@@ -493,7 +485,6 @@ class DecisionNode(BaseLLMNode):
         flow_id: str,
         event_log_node_trace: NodeLog | None = None,
     ) -> NodeRunResult:
-        start_time = time.time()
         raw_output = ""
         try:
             # 将用户输入的prompt和变量进行拼接
@@ -629,7 +620,6 @@ class DecisionNode(BaseLLMNode):
                 raw_output=str(raw_output),
                 outputs=outputs,
                 edge_source_handle=edge_source_handle,
-                time_cost=str(round(time.time() - start_time, 3)),
                 token_cost=GenerateUsage(
                     completion_tokens=token_usage.get("completion_tokens", 0),
                     prompt_tokens=token_usage.get("prompt_tokens", 0),

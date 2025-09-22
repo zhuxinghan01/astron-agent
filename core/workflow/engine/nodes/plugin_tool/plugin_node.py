@@ -1,5 +1,4 @@
 import os
-import time
 from typing import Any, Dict
 
 from workflow.engine.entities.variable_pool import (
@@ -13,6 +12,7 @@ from workflow.engine.nodes.entities.node_run_result import (
     WorkflowNodeExecutionStatus,
 )
 from workflow.engine.nodes.plugin_tool.link_client import Link
+from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
@@ -128,7 +128,6 @@ class PluginNode(BaseNode):
         :param kwargs: Additional keyword arguments
         :return: NodeRunResult containing execution status and outputs
         """
-        start_time = time.time()
         try:
             event_log_node_trace = kwargs.get("event_log_node_trace")
             # Initialize Link client for tool communication
@@ -199,7 +198,6 @@ class PluginNode(BaseNode):
                 node_id=self.node_id,
                 node_type=self.node_type,
                 alias_name=self.alias_name,
-                time_cost=str(round(time.time() - start_time, 3)),
             )
         except Exception as e:
             # Handle execution errors and return failure result
@@ -207,12 +205,13 @@ class PluginNode(BaseNode):
             span.record_exception(e)
             return NodeRunResult(
                 status=status,
-                error=f"{CodeEnum.PluginNodeExecutionError.value}. {e}",
-                error_code=CodeEnum.PluginNodeExecutionError.code,
+                error=CustomException(
+                    CodeEnum.PluginNodeExecutionError,
+                    cause_error=e,
+                ),
                 node_id=self.node_id,
                 node_type=self.node_type,
                 alias_name=self.alias_name,
-                time_cost=str(round(time.time() - start_time, 3)),
             )
 
     def sync_execute(
