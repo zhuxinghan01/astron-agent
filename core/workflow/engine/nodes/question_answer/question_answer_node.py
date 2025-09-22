@@ -281,7 +281,7 @@ class QuestionAnswerNode(BaseLLMNode):
         if required:
             schemas.update({"required": required})
         validator = JsonSchemaValidator(schemas)
-        # 校验并修正
+        # Validate and fix data
         is_valid, fixed_data = validator.validate_and_fix(res_dict)
         return fixed_data
 

@@ -418,8 +418,8 @@ class RetryableErrorHandler(ExceptionHandlerBase):
         except Exception as err:
             raise CustomException(
                 err_code=CodeEnum.VariablePoolSetParameterError,
-                err_msg=f"节点名称: {node.node_id}, 错误信息: {err}",
-                cause_error=f"节点名称: {node.node_id}, 错误信息: {err}",
+                err_msg=f"Node name: {node.node_id}, error message: {err}",
+                cause_error=f"Node name: {node.node_id}, error message: {err}",
             ) from err
 
         # Handle special logic for streaming nodes
@@ -1992,7 +1992,7 @@ class WorkflowEngineBuilder:
         if not node_class:
             raise CustomException(
                 CodeEnum.EngNodeProtocolValidateErr,
-                err_msg=f"当前workflow不支持节点类型：{node_type}",
+                err_msg=f"Current workflow does not support node type: {node_type}",
             )
 
         # Validate node configuration

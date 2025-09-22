@@ -561,7 +561,7 @@ class VariablePool:
                     )
                     if key not in mapping_schema:
                         cause_error = f"key {key} not in {mapping_schema_orig}"
-                        msg = f"节点 {node_id} 不存在值 {key}"
+                        msg = f"Node {node_id} does not have value {key}"
                         raise CustomException(
                             err_code=CodeEnum.VariablePoolGetParameterError,
                             err_msg=msg,
@@ -590,7 +590,7 @@ class VariablePool:
                 )
                 if key not in mapping_schema:
                     cause_error = f"key {key} not in {mapping_schema_orig}"
-                    msg = f"节点 {node_id} 不存在值 {key}"
+                    msg = f"Node {node_id} does not have value {key}"
                     raise CustomException(
                         err_code=CodeEnum.VariablePoolGetParameterError,
                         err_msg=msg,
