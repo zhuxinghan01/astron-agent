@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iflytek.stellar.console.commons.mapper.bot.ChatBotMarketMapper">
+
+    <select id="selectByBotIds" parameterType="java.util.List"
+            resultType="com.iflytek.stellar.console.commons.entity.bot.ChatBotMarket">
+        SELECT bot_id, bot_status
+        FROM chat_bot_market
+        WHERE is_delete = 0
+        AND bot_id IN
+        <foreach item="botId" index="index" collection="botIds" open="(" separator="," close=")">
+            #{botId}
+        </foreach>
+    </select>
+</mapper>

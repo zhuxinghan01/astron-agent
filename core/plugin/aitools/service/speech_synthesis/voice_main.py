@@ -1,0 +1,145 @@
+"""
+Speech synthesis module providing text-to-speech and voice cloning functionality.
+"""
+
+import json
+import logging
+import os
+import uuid
+
+from common.otlp.metrics.meter import Meter
+from common.otlp.trace.span import Span
+from common.otlp.log_trace.node_trace_log import (
+    NodeTraceLog,
+    Status
+)
+
+from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
+from plugin.aitools.const.polaris_keys.common_keys import (
+   OFFICIAL_TOOL_KEY
+)
+from plugin.aitools.const.err_code.code import CodeEnum
+from plugin.aitools.service.ase_sdk.ability.oss.client import OSSClient
+from plugin.aitools.service.speech_synthesis.one_sentence_reproduction.train import VoiceTrainer
+from plugin.aitools.service.speech_synthesis.one_sentence_reproduction.ttsclient import TTSClient
+from plugin.aitools.service.speech_synthesis.smart_tts.smart_tts_client import SmartTTSClient
+
+
+# 超拟人
+def smarttts_main(text: str, vcn: str, speed: int, request):
+    app_id = os.getenv("TTS_APP_ID")
+    uid = str(uuid.uuid1())
+    caller = ""
+    tool_id = ""
+    tool_type = os.getenv(OFFICIAL_TOOL_KEY)
+    span = Span(
+        app_id=app_id,
+        uid=uid,
+    )
+    usr_input = {"text": text, "vcn": vcn, "speed": str(speed)}
+    try:
+        with span.start(
+            func_name="smarttts", add_source_function_name=False
+        ) as span_context:
+            m = Meter(app_id=span_context.app_id, func="smarttts")
+            span_context.add_info_events(
+                {"usr_input": json.dumps(usr_input, ensure_ascii=False)}
+            )
+            span_context.set_attributes(attributes=usr_input)
+            # node_trace = NodeTrace(
+            #     flow_id=tool_id,
+            #     sid=span_context.sid,
+            #     app_id=span_context.app_id,
+            #     uid=span_context.uid,
+            #     bot_id="/aitools/v1/smarttts",
+            #     chat_id=span_context.sid,
+            #     sub="aitools",
+            #     caller=caller,
+            #     log_caller=tool_type,
+            #     question=json.dumps(usr_input, ensure_ascii=False),
+            # )
+            # node_trace.record_start()
+
+            if not text:
+                response = ErrorResponse(
+                    CodeEnum.TEXT_RESULT_NULL_ERROR, sid=uuid.uuid4()
+                )
+                m.in_error_count(response.code)
+                # node_trace.answer = response.message
+                # node_trace.upload(
+                #     status=TraceStatus(code=response.code, message=response.message),
+                #     log_caller=tool_type,
+                #     span=span_context,
+                # )
+
+                return response
+            data = {"text": text, "vcn": vcn, "speed": speed}
+            span_context.add_info_events(
+                {"参数data": json.dumps(data, ensure_ascii=False)}
+            )
+
+            messages, audio_data = SmartTTSClient(
+                app_id=os.getenv("TTS_APP_ID"),
+                api_key=os.getenv("TTS_API_KEY"),
+                api_secret=os.getenv("TTS_API_SECRET"),
+                text=text,
+                vcn=vcn,
+                speed=speed,
+            ).start()
+            audios = audio_data
+            # print('audios:',audios)
+            # print('messages:', messages)
+            sid = messages[0].get("header", "").get("sid", "")
+            if not audios:
+                response = {
+                    "code": messages[0].get("header", "").get("code", ""),
+                    "message": messages[0].get("header", "").get("message", ""),
+                    "sid": sid,
+                    "data": "",
+                }
+                m.in_error_count(response["code"])
+                # node_trace.answer = response["message"]
+                # node_trace.upload(
+                #     status=TraceStatus(
+                #         code=response["code"], message=response["message"]
+                #     ),
+                #     log_caller=tool_type,
+                #     span=span_context,
+                # )
+
+                return response
+
+            oss_client = OSSClient(
+                endpoint=os.getenv("OSS_ENDPOINT"),
+                access_key_id=os.getenv("OSS_ACCESS_KEY_ID"),
+                access_key_secret=os.getenv("OSS_ACCESS_KEY_SECRET"),
+                bucket_name=os.getenv("OSS_BUCKET_NAME"),
+                ttl=int(os.getenv("OSS_TTL")),
+            )
+            voice_url = oss_client.invoke(str(uuid.uuid4()) + ".MP3", audios)
+            span_context.add_info_events(
+                {"voice_url": json.dumps(voice_url, ensure_ascii=False)}
+            )
+
+            response = SuccessDataResponse(data={"voice_url": voice_url}, sid=sid)
+            m.in_success_count()
+            # node_trace.answer = json.dumps(response.data, ensure_ascii=False)
+            # node_trace.upload(
+            #     status=TraceStatus(code=response.code, message=response.message),
+            #     log_caller=tool_type,
+            #     span=span_context,
+            # )
+
+            return response
+    except Exception as e:
+        logging.error("smarttts请求error: %s", str(e))
+        response = ErrorResponse(CodeEnum.VOICE_GENERATE_ERROR)
+        m.in_error_count(response.code)
+        # node_trace.answer = response.message
+        # node_trace.upload(
+        #     status=TraceStatus(code=response.code, message=response.message),
+        #     log_caller=tool_type,
+        #     span=span_context,
+        # )
+
+        return response

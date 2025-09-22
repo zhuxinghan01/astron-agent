@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Logback configuration for stellar-console-hub -->
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <!-- 包含Spring Boot默认配置 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- 属性定义 -->
+    <property name="CONSOLE_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){faint} %clr(%-5level) %clr([%X{traceId:-},%X{spanId:-}]){cyan} %clr(%logger{50}){cyan} %clr(-){faint} %msg%n"/>
+
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 开发环境配置 -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+
+        <!-- 开发时调试SQL -->
+        <logger name="com.iflytek.stellar.console.hub.mapper" level="DEBUG" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <!-- MyBatis Plus SQL日志 -->
+        <logger name="com.baomidou.mybatisplus" level="DEBUG" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <!-- Redis操作日志 -->
+        <logger name="org.springframework.data.redis" level="DEBUG" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <!-- 应用核心日志 -->
+        <logger name="com.iflytek.stellar.console" level="DEBUG" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+    </springProfile>
+
+    <!-- 测试环境配置 -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+
+        <!-- 应用核心日志 -->
+        <logger name="com.iflytek.stellar.console" level="DEBUG" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+    </springProfile>
+
+    <!-- 生产环境配置 -->
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="STDOUT"/>
+        </root>
+
+        <!-- 应用核心日志 -->
+        <logger name="com.iflytek.stellar.console" level="INFO" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+
+        <!-- 重要的第三方库日志 -->
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.springframework.web.servlet.DispatcherServlet" level="WARN"/>
+        <logger name="org.redisson" level="WARN"/>
+    </springProfile>
+
+    <!-- 通用日志配置 -->
+    <!-- 数据库连接池日志 -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- 禁用过于频繁的日志 -->
+    <logger name="org.apache.catalina.startup.DigesterFactory" level="ERROR"/>
+    <logger name="org.apache.catalina.util.LifecycleBase" level="ERROR"/>
+    <logger name="org.apache.coyote.http11.Http11NioProtocol" level="WARN"/>
+    <logger name="org.apache.sshd.common.util.SecurityUtils" level="WARN"/>
+    <logger name="org.eclipse.jetty.util.component.AbstractLifeCycle" level="ERROR"/>
+    <logger name="org.hibernate.validator.internal.util.Version" level="WARN"/>
+
+</configuration>

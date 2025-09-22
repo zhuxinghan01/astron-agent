@@ -1,0 +1,87 @@
+# PageHelper configuration for MyBatis pagination
+pagehelper:
+  helperDialect: mysql
+  params: count=countSql
+  reasonable: true
+  supportMethodsArguments: true
+
+# API-related configuration, including authentication, tenant info, and service endpoints
+api:
+  url:
+    aiuiTenantId: xxxxxxxxxxxxxxxx
+    aiuiTenantKey: xxxxxxxxxxxxxxxx
+    aiuiTenantSecret: xxxxxxxxxxxxxxxx
+    appUrl: http://10.1.87.65:5052/v2/app
+    apiKey: ${APP_APIKEY:apikey}
+    apiSecret: ${APP_API_SECRET:apiSecret}
+    defaultAddRepo: sparkbot_repo_01
+    knowledgeUrl: http://10.1.87.65:10007/knowledge
+    mcpToolServer: http://127.0.0.1:port/api/v1
+    mcpAuthServer: http://127.0.0.1:port
+    openPlatform: https://127.0.0.1:8080
+    tenantId: ${TENANT_ID:tenantId}
+    tenantKey: ${TENANT_KEY:tenantKey}
+    tenantSecret: ${TENANT_SECRET:tenantSecret}
+    toolUrl: http://10.1.87.65:18888
+    workflow: http://10.1.87.65:7880
+    sparkDB: http://10.1.87.65:7990
+    sparkDocUrl: https://chatdoc.xfyun.cn
+    mcpUrlServer: http://127.0.0.1:port
+    localModel: http://127.0.0.1:0000
+    datasetUrl: http://127.0.0.1:8080/dataset/getDataset
+    datasetFileUrl: http://127.0.0.1:8080/dataset/getDatasetFiles
+    xinghuoDatasetFileUrl: http://127.0.0.1:8080/dataset/addXinghuoDatasetFile
+    deleteXinghuoDatasetFileUrl: http://127.0.0.1:8080/dataset/deleteXinghuoDatasetFile
+    deleteXinghuoDatasetUrl: http://127.0.0.1:8080/dataset/deleteXinghuoDataset
+
+# Business-specific configuration
+biz:
+  admin-uid: ${ADMIN_UID:9999}
+#  RAG/Search generates maximum character count threshold (too large affects performance)
+  cbg-rag-max-char-count: 1000000
+#  CBG RAG compatible source types (sources that have same behavior as CBG-RAG)
+  cbg-rag-compatible-sources:
+    - CBG-RAG
+    - Ragflow-RAG
+#  AIUI RAG compatible source types (sources that have same behavior as AIUI-RAG2)
+  aiui-rag-compatible-sources:
+    - AIUI-RAG2
+#  Spark RAG compatible source types (sources that have same behavior as SparkDesk-RAG)
+  spark-rag-compatible-sources:
+    - SparkDesk-RAG
+
+# iFlytek API authentication configuration
+xfyun:
+  api:
+    auth:
+      secret: ${API_AUTH_SECRET:api-auth-secret}
+
+# MCP server configuration
+mcp-server:
+  file-path: classpath:mcp-server
+
+# Task scheduling and async executor configuration
+task:
+  scheduling:
+    pool-size: 4
+    thread-name-prefix: app-scheduler-
+    await-termination-seconds: 10
+    wait-for-tasks-to-complete-on-shutdown: true
+
+  executor:
+    core-pool-size: 8
+    max-pool-size: 16
+    queue-capacity: 2000
+    keep-alive-seconds: 60
+    allow-core-thread-timeout: false
+    thread-name-prefix: app-async-
+    await-termination-seconds: 20
+    wait-for-tasks-to-complete-on-shutdown: true
+    rejection-policy: CallerRuns
+    # Optional values: Abort / CallerRuns / Discard / DiscardOldest
+
+# Common app-level authentication configuration
+common:
+  appid: ${COMMON_APPID:appid}
+  apiKey: ${COMMON_APIKEY:apiKey}
+  apiSecret: ${COMMON_API_SECRET:apiSecret}

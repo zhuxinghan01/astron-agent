@@ -1,0 +1,157 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  config:
+    import: optional:classpath:application-toolkit.yml
+  profiles:
+    active: dev
+  application:
+    name: stellar-console-hub
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://db:3306/stellar_console?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${MYSQL_USERNAME:stellar}
+    password: ${MYSQL_PASSWORD:stellar-dev-env-db}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://auth-server:8000}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://auth-server:8000/.well-known/jwks}
+          audiences:
+            - ${OAUTH2_AUDIENCE:your-oauth2-client-id}
+
+  # Disable static resource mapping
+  web:
+    resources:
+      add-mappings: false
+
+  # MVC configuration, including async request timeout settings
+  mvc:
+    async:
+      request-timeout: 300000  # 5-minute async request timeout
+
+  # i18n language config
+  messages:
+    basename: classpath:messages
+    encoding: UTF-8
+    use-code-as-default-message: true
+
+mybatis-plus:
+  mapper-locations:
+    - classpath*:/mapper/*.xml
+    - classpath*:/mapper/**/*.xml
+    - classpath*:/mybatis/mapper/**/*.xml
+  type-aliases-package:
+    com.iflytek.stellar.console.hub.entity,
+    com.iflytek.stellar.console.commons.entity,
+    com.iflytek.stellar.console.toolkit.entity.table
+
+# S3(MinIO) basic configuration
+s3:
+  endpoint: ${S3_ENDPOINT:http://minio:9000}
+  accessKey: ${S3_ACCESS_KEY:stellar-uploader}
+  secretKey: ${S3_SECRET_KEY:stellar-uploader-secret}
+  bucket: ${S3_BUCKET:stellar-agent}
+  presignExpirySeconds: 600
+
+# Spark LLM configuration
+spark:
+  app-id: ${SPARK_APP_ID:xxx}
+  api-key: ${SPARK_API_KEY:xxx}
+  api-secret: ${SPARK_API_SECRET:xxx}
+  api:
+    password: ${SPARK_API_PASSWORD:xxx}
+  lfasr-key: ${SPARK_LFASR_KEY:xxx}
+  lfasr-appId: ${SPARK_LFASR_APPID:xxx}
+
+# DeepSeek configuration example
+deepseek:
+  # DeepSeek API key (required)
+  api-key: sk-your-deepseek-api-key-here
+  # API base URL (optional, default is https://api.deepseek.com)
+  base-url: https://api.deepseek.com
+  # Chat completion API path (optional, default is /chat/completions)
+  chat-completion-path: /chat/completions
+  # HTTP client configuration
+  connect-timeout: PT30S  # Connection timeout (ISO 8601 format)
+  read-timeout: PT60S     # Read timeout
+  write-timeout: PT60S    # Write timeout
+
+# Workflow configuration
+workflow:
+  chatUrl: ${WORKFLOW_CHAT_URL:http://}
+  debugUrl: ${WORKFLOW_DEBUG_URL:http://}
+  resumeUrl: ${WORKFLOW_RESUME_URL:http://}
+  # Whether to enable workflow functionality
+  enabled: ${WORKFLOW_ENABLED:true}
+  # Workflow timeout (milliseconds)
+  timeout-ms: ${WORKFLOW_TIMEOUT_MS:300000}
+  # Maximum concurrent workflow count
+  max-concurrent-workflows: ${WORKFLOW_MAX_CONCURRENT:100}
+  # Workflow event cache expiration time (seconds)
+  event-cache-expire-seconds: ${WORKFLOW_EVENT_CACHE_EXPIRE:1800}
+  # Whether to enable workflow debug logging
+  debug-enabled: ${WORKFLOW_DEBUG_ENABLED:false}
+  # File upload configuration
+  file-upload:
+    enabled: ${WORKFLOW_FILE_UPLOAD_ENABLED:true}
+    max-file-size: ${WORKFLOW_MAX_FILE_SIZE:10485760}  # 10MB
+    allowed-types: ${WORKFLOW_ALLOWED_FILE_TYPES:txt,pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif}
+    storage-path: ${WORKFLOW_STORAGE_PATH:/tmp/workflow/uploads}
+
+
+maas:
+  appId: ${MAAS_APP_ID:your-maas-app-id}
+  apiKey: ${MAAS_API_KEY:your-maas-api-key}
+  apiSecret: ${MAAS_API_SECRET:your-maas-api-secret}
+  synchronizeWorkFlow: http://127.0.0.1:8080/workflow
+  publish: http://127.0.0.1:8080/workflow/publish
+  cloneWorkFlow: http://127.0.0.1:8080/workflow/internal-clone
+  getInputs: http://127.0.0.1:8080/workflow/get-inputs-info
+  canPublishUrl: http://127.0.0.1:8080/workflow/can-publish
+  consumerId: ${MAAS_CONSUMER_ID:your-maas-consumer-id}
+  consumerSecret: ${MAAS_CONSUMER_SECRET:your-maas-consumer-secret}
+  consumerKey: ${MAAS_CONSUMER_KEY:your-maas-consumer-key}
+  publishApi: http://10.1.87.65:7880/v1/publish
+  authApi: http://10.1.87.65:7880/v1/auth
+  mcpHost: https://xingchen-api.xf-yun.com/mcp/xingchen/flow/%s/sse
+  mcpRegister: http://127.0.0.1:8080/workflow/release
+  workflowConfig: http://127.0.0.1:8080/workflow/get-flow-advanced-config
+
+bot:
+  default:
+    avatar: ${WORKFLOW_FILE_UPLOAD_ENABLED:null}
+
+space:
+  limit:
+    free:
+      space-count: 1
+      user-count: 50
+    pro:
+      space-count: 10
+      user-count: 100
+    team:
+      space-count: 10000
+      user-count: 100
+    enterprise:
+      space-count: 10000
+      user-count: 500
+  invite-message-template:
+    url: https://${STELLAR_DOMAIN:localhost:3000}/sharepage?param=
+    space-title: Space Invitation Reminder
+    space-content: >
+      <h3>Space Invitation Reminder</h3>[%s] invited you to join space "%s",
+      <a href="%s" target="_blank" style="color: blue;">Click to view</a>
+    enterprise-title: Team Invitation Reminder
+    enterprise-content: >
+      <h3>Team Invitation Reminder</h3>[%s] invited you to join team "%s",
+      <a href="%s" target="_blank" style="color: blue;">Click to view</a>

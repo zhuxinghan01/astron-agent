@@ -1,0 +1,90 @@
+"""
+Server startup module responsible for FastAPI application initialization and startup.
+"""
+
+import json
+import os
+import threading
+import time
+from pathlib import Path
+
+import uvicorn
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from loguru import logger
+
+
+
+from common.initialize.initialize import initialize_services
+from plugin.aitools.api.route import app
+from plugin.aitools.const import const
+
+
+# uvicorn keys
+from plugin.aitools.const.polaris_keys.uvicorn_keys import (
+    UVICORN_APP_KEY,
+    UVICORN_HOST_KEY,
+    UVICORN_PORT_KEY,
+    UVICORN_WORKERS_KEY,
+    UVICORN_RELOAD_KEY,
+    UVICORN_WS_PING_INTERVAL_KEY,
+    UVICORN_WS_PING_TIMEOUT_KEY,
+)
+
+
+class AIToolsServer:
+
+    def start(self):
+        #self.set_env()
+        self.setup_server()
+        self.start_uvicorn()
+
+    def start_config_watcher(self):
+        """启动一个后台线程，每 5 分钟执行一次拉取配置"""
+
+        def config_watcher():
+            while True:
+                try:
+                    self.load_config()
+                except Exception as e:
+                    logger.error("配置拉取失败: %s", e)
+                time.sleep(300)
+
+        thread = threading.Thread(target=config_watcher, daemon=True)
+        thread.start()
+
+    @staticmethod
+    def setup_server():
+        """初始化服务套件"""
+
+        os.environ["CONFIG_ENV_PATH"] = (
+            "./plugin/aitools/config.env"
+        )
+        need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
+        initialize_services(services=need_init_services)
+
+    @staticmethod
+    def start_uvicorn():
+        uvicorn_config = uvicorn.Config(
+            app=os.getenv(UVICORN_APP_KEY),
+            host=os.getenv(UVICORN_HOST_KEY),
+            port=int(os.getenv(UVICORN_PORT_KEY)),
+            workers=int(os.getenv(UVICORN_WORKERS_KEY)),
+            reload=json.loads(os.getenv(UVICORN_RELOAD_KEY)),
+            ws_ping_interval=json.loads(os.getenv(UVICORN_WS_PING_INTERVAL_KEY)),
+            ws_ping_timeout=json.loads(os.getenv(UVICORN_WS_PING_TIMEOUT_KEY)),
+            # log_config=None
+        )
+        uvicorn_server = uvicorn.Server(uvicorn_config)
+        uvicorn_server.run()
+
+
+def aitools_app():
+    """
+    description: create ai tools app
+    :return:
+    """
+    main_app = FastAPI()
+    main_app.include_router(app)
+
+    return main_app

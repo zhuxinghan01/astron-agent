@@ -1,0 +1,38 @@
+"""常量定义模块。
+本模块定义了 RPA 服务中使用的所有常量。
+"""
+
+from consts.app.uvicorn_keys import (
+    UVICORN_APP_KEY,
+    UVICORN_HOST_KEY,
+    UVICORN_PORT_KEY,
+    UVICORN_RELOAD_KEY,
+    UVICORN_WORKERS_KEY,
+    UVICORN_WS_PING_INTERVAL_KEY,
+    UVICORN_WS_PING_TIMEOUT_KEY,
+)
+from consts.log.log_keys import LOG_LEVEL_KEY, LOG_PATH_KEY
+from consts.rpa.rpa_keys import (
+    RPA_PING_INTERVAL_KEY,
+    RPA_TASK_CREATE_URL_KEY,
+    RPA_TASK_QUERY_INTERVAL_KEY,
+    RPA_TASK_QUERY_URL_KEY,
+    RPA_TIMEOUT_KEY,
+)
+
+__all__ = [
+    "UVICORN_APP_KEY",
+    "UVICORN_HOST_KEY",
+    "UVICORN_PORT_KEY",
+    "UVICORN_RELOAD_KEY",
+    "UVICORN_WS_PING_INTERVAL_KEY",
+    "UVICORN_WS_PING_TIMEOUT_KEY",
+    "UVICORN_WORKERS_KEY",
+    "LOG_LEVEL_KEY",
+    "LOG_PATH_KEY",
+    "RPA_PING_INTERVAL_KEY",
+    "RPA_TASK_CREATE_URL_KEY",
+    "RPA_TASK_QUERY_INTERVAL_KEY",
+    "RPA_TASK_QUERY_URL_KEY",
+    "RPA_TIMEOUT_KEY",
+]

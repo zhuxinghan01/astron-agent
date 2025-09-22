@@ -1,0 +1,156 @@
+"""Enterprise extension service module for MCP (Model Context Protocol) management.
+
+This module provides functionality for registering and managing MCP tools
+in the enterprise environment, including validation, database operations,
+and telemetry tracking.
+"""
+
+import json
+import os
+
+from loguru import logger
+from xingchen_utils.otlp.trace.span import Span
+from xingchen_utils.otlp.metric.meter import Meter
+from xingchen_utils.otlp.node_trace.node_trace import NodeTrace
+from xingchen_utils.otlp.node_trace.node import TraceStatus
+
+from api.schemas.enterprise.extension_schema import (
+    MCPManagerRequest,
+    MCPManagerResponse,
+)
+from api.schemas.community.deprecated.management_schema import ToolManagerResponse
+from consts import const
+from domain.models.manager import get_db_engine
+from infra.tool_crud.process import ToolCrudOperation
+from utils.errors.code import ErrCode
+from utils.json_schemas.schema_validate import api_validate
+from utils.json_schemas.read_json_schemas import get_mcp_register_schema
+from utils.snowflake.gen_snowflake import gen_id
+
+
+def register_mcp(mcp_info: MCPManagerRequest):
+    """Register a new MCP (Model Context Protocol) tool in the system.
+
+    Validates the MCP registration request, generates a unique tool ID,
+    and persists the MCP tool information to the database with proper
+    telemetry tracking and error handling.
+
+    Args:
+        mcp_info (MCPManagerRequest): The MCP registration request containing
+            tool metadata including name, description, schema, and server URL.
+
+    Returns:
+        Union[MCPManagerResponse, ToolManagerResponse]: Response containing
+            the registration result with tool ID and status information.
+    """
+    try:
+        run_params_list = mcp_info.model_dump()
+        app_id = run_params_list.get("app_id", os.getenv(const.APP_ID_KEY))
+        flow_id = run_params_list.get("flow_id", "")
+        span = Span(app_id=app_id, uid=flow_id)
+        with span.start(func_name="register_mcp") as span_context:
+            # Generate tool ID
+            logger.info(
+                {
+                    "manager api, register_mcp router usr_input": json.dumps(
+                        run_params_list, ensure_ascii=False
+                    )
+                }
+            )
+            span_context.add_info_events(
+                {"usr_input": json.dumps(run_params_list, ensure_ascii=False)}
+            )
+
+            node_trace = NodeTrace(
+                flow_id="",
+                sid=span_context.sid,
+                app_id=span_context.app_id,
+                uid=span_context.uid,
+                bot_id="/mcp",
+                chat_id=span_context.sid,
+                sub="spark-link",
+                caller="",
+                log_caller="mcp",
+                question=json.dumps(run_params_list, ensure_ascii=False),
+            )
+            node_trace.record_start()
+            m = Meter(app_id=span_context.app_id, func="register_mcp")
+            validate_err = api_validate(get_mcp_register_schema(), run_params_list)
+            if validate_err:
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+                    node_trace.answer = validate_err
+                    node_trace.upload(
+                        status=TraceStatus(
+                            code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                            message=validate_err,
+                        ),
+                        log_caller="mcp",
+                        span=span_context,
+                    )
+                return MCPManagerResponse(
+                    code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                    message=validate_err,
+                    sid=span_context.sid,
+                    data={},
+                )
+
+            new_id = f"{hex(gen_id())}"
+            tool_type = run_params_list.get("type", "")
+            if flow_id:
+                tool_id = f"mcp@{tool_type}{flow_id}"
+            else:
+                tool_id = f"mcp@{tool_type}{new_id[2:]}"
+            schema = run_params_list.get("mcp_schema", "")
+            mcp_name = run_params_list.get("name", "")
+            mcp_description = run_params_list.get("description", "")
+            mcp_server_url = run_params_list.get("mcp_server_url", "")
+            tool_info = {
+                "app_id": app_id,
+                "tool_id": tool_id,
+                "schema": schema,
+                "name": mcp_name,
+                "description": mcp_description,
+                "mcp_server_url": mcp_server_url,
+                "version": const.DEF_VER,
+                "is_deleted": const.DEF_DEL,
+            }
+            span_context.set_attributes(
+                attributes={"mcp": json.dumps(tool_info, ensure_ascii=False)}
+            )
+            crud_inst = ToolCrudOperation(get_db_engine())
+            crud_inst.add_mcp(tool_info)
+            resp_data = {"name": mcp_name, "id": tool_id}
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = json.dumps(resp_data, ensure_ascii=False)
+                node_trace.flow_id = str(tool_id)
+                node_trace.upload(
+                    status=TraceStatus(
+                        code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
+                    ),
+                    log_caller="mcp",
+                    span=span_context,
+                )
+            return ToolManagerResponse(
+                code=ErrCode.SUCCESSES.code,
+                message=ErrCode.SUCCESSES.msg,
+                sid=span_context.sid,
+                data=resp_data,
+            )
+    except Exception as err:
+        logger.error(f"failed to create tools, reason {err}")
+        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            m.in_error_count(ErrCode.COMMON_ERR.code)
+            node_trace.answer = str(err)
+            node_trace.upload(
+                status=TraceStatus(code=ErrCode.COMMON_ERR.code, message=str(err)),
+                log_caller="mcp",
+                span=span_context,
+            )
+        return ToolManagerResponse(
+            code=ErrCode.COMMON_ERR.code,
+            message=str(err),
+            sid=span_context.sid,
+            data={},
+        )

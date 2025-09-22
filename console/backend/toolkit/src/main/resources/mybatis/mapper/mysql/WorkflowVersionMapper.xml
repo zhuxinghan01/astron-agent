@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iflytek.stellar.console.toolkit.mapper.workflow.WorkflowVersionMapper">
+
+    <select id="selectPageByCondition" resultType="com.iflytek.stellar.console.toolkit.entity.table.workflow.WorkflowVersion">
+        SELECT w.id,
+               w.name,
+               w.version_num,
+               w.data,
+               w.flow_id,
+               w.deleted,
+               w.created_time AS createdTime,
+               w.updated_time,
+               w.is_version,
+               w.sys_data,
+               w.description,
+               w.publish_channel,
+               w.publish_result,
+               w.bot_id
+        FROM workflow_version w
+                 INNER JOIN (
+            SELECT name, MAX(created_time) AS max_created
+            FROM workflow_version
+            WHERE flow_id = #{flowId}
+              AND deleted = 1
+            GROUP BY name
+        ) t ON w.name = t.name AND w.created_time = t.max_created
+        WHERE w.flow_id = #{flowId}
+          AND w.deleted = 1
+        ORDER BY w.created_time DESC
+
+    </select>
+
+</mapper>
