@@ -113,7 +113,7 @@ POLARIS_DEV_CLUSTER_GROUP = "dev"
 POLARIS_PROJECT_NAME = "hy-spark-agent-builder"
 POLARIS_SERVICE_NAME = "spark-link"
 POLARIS_VERSION = "1.0.0"
-POLARIS_CONFIG_FILE = "spark-link.env"
+POLARIS_CONFIG_FILE = "config.env"
 
 # Default tool version and deletion flag value
 DEF_VER = "V1.0"

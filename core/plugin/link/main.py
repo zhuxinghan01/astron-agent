@@ -159,7 +159,7 @@ def main() -> None:
     setup_python_path()
 
     # Load environment configuration
-    config_file = Path(__file__).parent / ".env"
+    config_file = Path(__file__).parent / "config.env"
     load_env_file(str(config_file))
 
     # Start service
