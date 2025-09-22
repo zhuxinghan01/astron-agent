@@ -610,7 +610,7 @@ class PGSqlNode(BaseNode):
                         ]
             else:
                 outputList = exec_result.get("data", {}).get("exec_success", [])
-            # DELETE语句不需要outputList
+            # DELETE statement does not need outputList
             outputs = {
                 "isSuccess": True,
                 "message": exec_result.get("message", ""),

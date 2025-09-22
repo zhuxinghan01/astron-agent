@@ -369,7 +369,7 @@ class NodeExecutionTemplate:
         except Exception as err:
             raise CustomException(
                 err_code=CodeEnum.VariablePoolSetParameterError,
-                err_msg=f"节点名称: {self.node.node_id}, 错误信息: {err}",
+                err_msg=f"Node name: {self.node.node_id}, error message: {err}",
             ) from err
 
     def _add_end_node_variables(
@@ -393,7 +393,7 @@ class NodeExecutionTemplate:
         except Exception as err:
             raise CustomException(
                 err_code=CodeEnum.VariablePoolSetParameterError,
-                err_msg=f"节点名称: {self.node.node_id}, 错误信息: {err}",
+                err_msg=f"Node name: {self.node.node_id}, error message: {err}",
             ) from err
 
     def _add_default_node_variables(
@@ -415,7 +415,7 @@ class NodeExecutionTemplate:
         except Exception as err:
             raise CustomException(
                 err_code=CodeEnum.VariablePoolSetParameterError,
-                err_msg=f"节点名称: {self.node.node_id}, 错误信息: {err}",
+                err_msg=f"Node name: {self.node.node_id}, error message: {err}",
             ) from err
 
     def _log_success_result(self, result: NodeRunResult, span_context: Span) -> None:
@@ -672,8 +672,8 @@ class NodeFactory:
         if not node_class:
             raise CustomException(
                 CodeEnum.EngNodeProtocolValidateErr,
-                err_msg=f"当前workflow不支持节点类型：{node.get_node_type()}",
-                cause_error=f"当前workflow不支持节点类型：{node.get_node_type()}",
+                err_msg=f"Current workflow does not support node type: {node.get_node_type()}",
+                cause_error=f"Current workflow does not support node type: {node.get_node_type()}",
             )
 
         if not node.data:
@@ -733,7 +733,7 @@ class NodeFactory:
                 )
                 raise CustomException(
                     CodeEnum.EngNodeProtocolValidateErr,
-                    err_msg=f"节点设定输出内容: {custom_output} 不符合格式",
+                    err_msg=f"Node set output content: {custom_output} does not match format",
                 )
         else:
             custom_output = NodeFactory._create_default_output(outputs)
@@ -845,7 +845,7 @@ class NodeFactory:
                 elif type_str == "object":
                     custom_output[name] = {}
                 else:
-                    custom_output[name] = None  # 未知类型兜底
+                    custom_output[name] = None  # Fallback for unknown types
         return custom_output
 
     @staticmethod
