@@ -31,7 +31,7 @@ from plugin.link.exceptions.sparklink_exceptions import (
     SparkLinkAppIdException,
 )
 from fastapi import Query
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Status as OTelStatus, StatusCode
 from loguru import logger
 from plugin.link.infra.tool_crud.process import ToolCrudOperation
 from plugin.link.utils.errors.code import ErrCode
@@ -162,7 +162,7 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
                         f"openapi schema, reason {err}"
                     )
                     span_context.add_error_event(msg)
-                    span_context.set_status(Status(StatusCode.ERROR))
+                    span_context.set_status(OTelStatus(StatusCode.ERROR))
                     if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                         m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
                         node_trace.answer = json.dumps(err)
@@ -292,7 +292,7 @@ def delete_version(
         if len(tool_ids) == 0:
             msg = f"del tool: tool num {len(tool_ids)} is 0"
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                 node_trace.answer = msg
@@ -314,7 +314,7 @@ def delete_version(
             if not re.compile("^tool@[0-9a-zA-Z]+$").match(tool_id):
                 msg = f"del tool: tool id {tool_id} illegal"
                 span_context.add_error_event(msg)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = msg
@@ -370,7 +370,7 @@ def delete_version(
             msg = f"failed to del tool, reason {err}"
             logger.error(f"failed to del tool, reason {err}")
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = str(err)
@@ -485,7 +485,7 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
                             f"schema, reason {json.dumps(err)}"
                         )
                         span_context.add_error_event(msg)
-                        span_context.set_status(Status(StatusCode.ERROR))
+                        span_context.set_status(OTelStatus(StatusCode.ERROR))
                         if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                             m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
                             node_trace.answer = json.dumps(err)
@@ -552,7 +552,7 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
         except Exception as err:
             msg = f"failed to update tool, reason {err}"
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{err}"
@@ -620,7 +620,7 @@ def read_version(
                 f"version num {len(versions)} not equal"
             )
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                 node_trace.answer = msg
@@ -641,7 +641,7 @@ def read_version(
             if not re.compile("^tool@[0-9a-zA-Z]+$").match(tool_id):
                 msg = f"get tool: tool id {tool_id} pattern illegal"
                 span_context.add_error_event(msg)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = msg
@@ -674,7 +674,7 @@ def read_version(
                 results = crud_inst.get_tools(tool_info, span=span_context)
             except SparkLinkBaseException as err:
                 span_context.add_error_event(err.message)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(err.code)
                     node_trace.answer = err.message
@@ -721,7 +721,7 @@ def read_version(
         except Exception as err:
             logger.error(f"failed to get tool, reason {err}")
             span_context.add_error_event(f"failed to get tool, reason {err}")
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{err}"

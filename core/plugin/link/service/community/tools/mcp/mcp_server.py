@@ -7,13 +7,14 @@ error handling, observability tracing, and security validations.
 
 import os
 from typing import Tuple
+import time
 from plugin.link.consts import const
 
 from fastapi import Body
 from loguru import logger
 from mcp import ClientSession
 from mcp.client.sse import sse_client
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Status as OTelStatus, StatusCode
 
 
 from plugin.link.api.schemas.community.tools.mcp.mcp_tools_schema import (
@@ -34,6 +35,12 @@ from plugin.link.utils.errors.code import ErrCode
 from plugin.link.utils.sid.sid_generator2 import new_sid
 from plugin.link.utils.security.access_interceptor import is_in_blacklist, is_local_url
 from common.otlp.trace.span import Span
+from common.otlp.metrics.meter import Meter
+from common.otlp.log_trace.node_trace_log import (
+    NodeTraceLog,
+    Status
+)
+from common.service import get_kafka_producer_service
 
 
 async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListResponse:
@@ -400,7 +407,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                         except Exception:
                             err = ErrCode.MCP_SERVER_INITIAL_ERR
                             span_context.add_error_event(err.msg)
-                            span_context.set_status(Status(StatusCode.ERROR))
+                            span_context.set_status(OTelStatus(StatusCode.ERROR))
                             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                                 m.in_error_count(err.code)
                                 node_trace.answer = err.msg
@@ -436,7 +443,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                         except Exception:
                             err = ErrCode.MCP_SERVER_CALL_TOOL_ERR
                             span_context.add_error_event(err.msg)
-                            span_context.set_status(Status(StatusCode.ERROR))
+                            span_context.set_status(OTelStatus(StatusCode.ERROR))
                             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                                 m.in_error_count(err.code)
                                 node_trace.answer = err.msg
@@ -457,7 +464,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                 except Exception:
                     err = ErrCode.MCP_SERVER_SESSION_ERR
                     span_context.add_error_event(err.msg)
-                    span_context.set_status(Status(StatusCode.ERROR))
+                    span_context.set_status(OTelStatus(StatusCode.ERROR))
                     if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                         m.in_error_count(err.code)
                         node_trace.answer = err.msg
@@ -478,7 +485,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
         except Exception:
             err = ErrCode.MCP_SERVER_CONNECT_ERR
             span_context.add_error_event(err.msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(err.code)
                 node_trace.answer = err.msg

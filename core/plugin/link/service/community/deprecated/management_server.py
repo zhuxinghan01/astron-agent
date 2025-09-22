@@ -3,7 +3,6 @@ import os
 import re
 import time
 
-from common.service import get_kafka_producer_service
 from plugin.link.api.schemas.community.deprecated.management_schema import (
     ToolManagerRequest,
     ToolManagerResponse,
@@ -16,7 +15,7 @@ from plugin.link.exceptions.sparklink_exceptions import (
 from fastapi import Query
 from plugin.link.infra.tool_crud.process import ToolCrudOperation
 from loguru import logger
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Status as OTelStatus, StatusCode
 
 from plugin.link.utils.json_schemas.read_json_schemas import (
     get_create_tool_schema,
@@ -33,6 +32,7 @@ from common.otlp.log_trace.node_trace_log import (
     NodeTraceLog,
     Status
 )
+from common.service import get_kafka_producer_service
 
 
 def create_tools(tools_info: ToolManagerRequest):
@@ -151,7 +151,7 @@ def create_tools(tools_info: ToolManagerRequest):
                         f"{tool.get('name', '')} openapi schema, reason {err}"
                     )
                     span_context.add_error_event(msg)
-                    span_context.set_status(Status(StatusCode.ERROR))
+                    span_context.set_status(OTelStatus(StatusCode.ERROR))
                     if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                         m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
                         node_trace.answer = json.dumps(err)
@@ -269,7 +269,7 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
         if len(tool_ids) == 0 or len(tool_ids) > 6:
             msg = f"del tool: tool num {len(tool_ids)} not in threshold 1 ~ 6"
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                 node_trace.answer = msg
@@ -291,7 +291,7 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             if not re.compile("^tool@[0-9a-zA-Z]+$").match(tool_id):
                 msg = f"del tool: tool id {tool_id} illegal"
                 span_context.add_error_event(msg)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = msg
@@ -343,7 +343,7 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             msg = f"failed to del tool, reason {err}"
             logger.error(f"failed to del tool, reason {err}")
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = str(err)
@@ -459,7 +459,7 @@ def update_tools(tools_info: ToolManagerRequest):
                         f" reason {json.dumps(err)}"
                     )
                     span_context.add_error_event(msg)
-                    span_context.set_status(Status(StatusCode.ERROR))
+                    span_context.set_status(OTelStatus(StatusCode.ERROR))
                     if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                         m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
                         node_trace.answer = json.dumps(err)
@@ -514,7 +514,7 @@ def update_tools(tools_info: ToolManagerRequest):
         except Exception as err:
             msg = f"failed to update tool, reason {err}"
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{err}"
@@ -576,7 +576,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
         if len(tool_ids) == 0:
             msg = f"get tool: tool num {len(tool_ids)} not in threshold 0 ~ 6"
             span_context.add_error_event(msg)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                 node_trace.answer = msg
@@ -597,7 +597,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
             if not re.compile("^tool@[0-9a-zA-Z]+$").match(tool_id):
                 msg = f"get tool: tool id {tool_id} pattern illegal"
                 span_context.add_error_event(msg)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = msg
@@ -630,7 +630,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
                 results = crud_inst.get_tools(tool_info, span=span_context)
             except SparkLinkBaseException as err:
                 span_context.add_error_event(err.message)
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(err.code)
                     node_trace.answer = err.message
@@ -679,7 +679,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
         except Exception as err:
             logger.error(f"failed to get tool, reason {err}")
             span_context.add_error_event(f"failed to get tool, reason {err}")
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{err}"

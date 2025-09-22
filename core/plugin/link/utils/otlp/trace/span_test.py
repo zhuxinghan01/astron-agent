@@ -7,7 +7,7 @@ functionality.
 
 import time
 
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Status as OTelStatus, StatusCode
 
 from plugin.link.utils.sid.sid_generator2 import init_sid
 from plugin.link.utils.otlp.trace.span import Span
@@ -27,7 +27,7 @@ def do_work1():
         current_span.set_attribute("operation.value", "chain1")
         current_span.set_attribute("operation.name", "Saying hello!")
         current_span.set_attribute("operation.other-stuff", [1, 2, 3])
-        current_span.set_status(Status(StatusCode.ERROR))
+        current_span.set_status(OTelStatus(StatusCode.ERROR))
         current_span.set_attributes(
             attributes={"info1": "chain1 info1", "info2": "chain1 info2"}
         )

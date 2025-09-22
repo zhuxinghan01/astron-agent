@@ -8,6 +8,7 @@ It handles authentication, parameter validation, and response processing.
 import os
 import json
 import base64
+import time
 
 from plugin.link.api.schemas.community.tools.http.execution_schema import (
     HttpRunRequest,
@@ -22,7 +23,7 @@ from plugin.link.domain.models.manager import get_db_engine, get_redis_engine
 from plugin.link.exceptions.sparklink_exceptions import SparkLinkBaseException
 from plugin.link.infra.tool_crud.process import ToolCrudOperation
 from plugin.link.infra.tool_exector.process import HttpRun
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Status as OTelStatus, StatusCode
 from loguru import logger
 from plugin.link.utils.uid.generate_uid import new_uid
 from plugin.link.utils.errors.code import ErrCode
@@ -38,6 +39,7 @@ from common.otlp.log_trace.node_trace_log import (
     NodeTraceLog,
     Status
 )
+from common.service import get_kafka_producer_service
 
 
 default_value = {
@@ -159,7 +161,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             query_results = crud_inst.get_tools(tool_id_info, span=span_context)
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(err.code)
                 node_trace.answer = err.message
@@ -180,7 +182,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         if not query_results:
             message = f"{tool_id} does not exist"
             span_context.add_error_event(message)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.TOOL_NOT_EXIST_ERR.code)
                 node_trace.answer = message
@@ -216,7 +218,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         if not operation_id_schema:
             message = f"operation_id: {operation_id} does not exist"
             span_context.add_error_event(message)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.OPERATION_ID_NOT_EXIST_ERR.code)
                 node_trace.answer = message
@@ -266,7 +268,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                     span_context.add_error_event(
                         f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
                     )
-                    span_context.set_status(Status(StatusCode.ERROR))
+                    span_context.set_status(OTelStatus(StatusCode.ERROR))
                     if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                         m.in_error_count(ErrCode.OPENAPI_AUTH_TYPE_ERR.code)
                         node_trace.answer = (
@@ -385,7 +387,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                     f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
                     f"详细信息：{msg}"
                 )
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = (
@@ -441,7 +443,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             )
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(err.code)
                 node_trace.answer = err.message
@@ -462,7 +464,7 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             )
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
@@ -650,7 +652,7 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                     f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
                     f"详细信息：{msg}"
                 )
-                span_context.set_status(Status(StatusCode.ERROR))
+                span_context.set_status(OTelStatus(StatusCode.ERROR))
                 if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
                     node_trace.answer = (
@@ -709,7 +711,7 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
             )
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(err.code)
                 node_trace.answer = err.message
@@ -730,7 +732,7 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
             )
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
-            span_context.set_status(Status(StatusCode.ERROR))
+            span_context.set_status(OTelStatus(StatusCode.ERROR))
             if os.getenv(const.enable_otlp_key, "false").lower() == "true":
                 m.in_error_count(ErrCode.COMMON_ERR.code)
                 node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
