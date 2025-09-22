@@ -36,10 +36,6 @@ class SparkLinkServer:
     @staticmethod
     def setup_server():
         """Initialize service suite"""
-        os.environ["CONFIG_ENV_PATH"] = (
-            "./plugin/link/config.env"
-        )
-
         need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
         initialize_services(services=need_init_services)
 
@@ -54,14 +50,13 @@ class SparkLinkServer:
         ping intervals retrieved from environment variables.
         """
         uvicorn_config = uvicorn.Config(
-            app=os.getenv(const.UVICORN_APP_KEY),
+            app=spark_link_app(),
             host=os.getenv(const.UVICORN_HOST_KEY),
             port=int(os.getenv(const.UVICORN_PORT_KEY)),
             workers=int(os.getenv(const.UVICORN_WORKERS_KEY)),
             reload=json.loads(os.getenv(const.UVICORN_RELOAD_KEY)),
             ws_ping_interval=json.loads(os.getenv(const.UVICORN_WS_PING_INTERVAL_KEY)),
             ws_ping_timeout=json.loads(os.getenv(const.UVICORN_WS_PING_TIMEOUT_KEY)),
-            factory=True,
             # log_config=None
         )
         uvicorn_server = uvicorn.Server(uvicorn_config)
@@ -90,3 +85,6 @@ def spark_link_app():
     app.include_router(router)
     logger.error("init success")
     return app
+
+if __name__ == "__main__":
+    SparkLinkServer().start()
