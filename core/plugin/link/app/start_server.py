@@ -36,7 +36,7 @@ class SparkLinkServer:
     @staticmethod
     def setup_server():
         """Initialize service suite"""
-        need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
+        need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service", "kafka_producer_service"]
         initialize_services(services=need_init_services)
 
     @staticmethod

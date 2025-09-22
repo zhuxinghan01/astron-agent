@@ -25,6 +25,9 @@ from plugin.link.consts.polaris_keys.xc_utils_keys import (
     TRACE_SCHEDULE_DELAY_MILLIS_KEY,
     TRACE_MAX_EXPORT_BATCH_SIZE_KEY,
     TRACE_EXPORT_TIMEOUT_MILLIS_KEY,
+    KAFKA_SERVERS_KEY,
+    KAFKA_TIMEOUT_KEY,
+    KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY,
 )
 
 # uvicorn keys
@@ -133,6 +136,9 @@ trace_max_queue_size_key = TRACE_MAX_QUEUE_SIZE_KEY
 trace_schedule_delay_millis_key = TRACE_SCHEDULE_DELAY_MILLIS_KEY
 trace_max_export_batch_size_key = TRACE_MAX_EXPORT_BATCH_SIZE_KEY
 trace_export_timeout_millis_key = TRACE_EXPORT_TIMEOUT_MILLIS_KEY
+kafka_server_key = KAFKA_SERVERS_KEY
+kafka_timeout_key = KAFKA_TIMEOUT_KEY
+kafka_topic_sparklink_log_trace_key = KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY
 
 uvicorn_app_key = UVICORN_APP_KEY
 uvicorn_host_key = UVICORN_HOST_KEY

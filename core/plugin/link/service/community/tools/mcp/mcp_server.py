@@ -59,18 +59,17 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
         span_context.add_info_events({"usr_input": list_info.model_dump_json()})
         span_context.set_attributes(attributes={"tool_id": "tool_list"})
         node_trace = NodeTraceLog(
-            flow_id="",
+            service_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/mcp/tool_list",
             chat_id=span_context.sid,
             sub="spark-link",
             caller="mcp_caller",
             log_caller="",
             question=list_info.model_dump_json(),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="tool_list")
 
         items = []
@@ -291,16 +290,18 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
             sid=session_id,
             data=MCPToolListData(servers=items),
         )
-        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-        #     m.in_success_count()
-        #     node_trace.answer = result.model_dump_json()
-        #     node_trace.flow_id = "tool_list"
-        #     node_trace.log_caller = "mcp_type"
-        #     node_trace.upload(
-        #         status=Status(code=success.code, message=success.msg),
-        #         log_caller="mcp_type",
-        #         span=span_context,
-        #     )
+        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            m.in_success_count()
+            node_trace.answer = result.model_dump_json()
+            node_trace.service_id = "tool_list"
+            node_trace.log_caller = "mcp_type"
+            node_trace.status = Status(
+                    code=success.code,
+                    message=success.msg,
+                )
+            kafka_service = get_kafka_producer_service()
+            node_trace.start_time = int(round(time.time() * 1000))
+            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
         return result
 
 
@@ -328,26 +329,25 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
         span_context.add_info_events({"usr_input": call_info.model_dump_json()})
         span_context.set_attributes(attributes={"tool_id": mcp_server_id})
         node_trace = NodeTraceLog(
-            flow_id="",
+            service_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/mcp/call_tool",
             chat_id=span_context.sid,
             sub="spark-link",
             caller="mcp_caller",
             log_caller="",
             question=call_info.model_dump_json(),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="call_tool")
 
         url = call_info.mcp_server_url
 
         if url and is_in_blacklist(url=url):
             err = ErrCode.MCP_SERVER_BLACKLIST_URL_ERR
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -367,8 +367,8 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             #     span=span_context,
             # )
             if err is not ErrCode.SUCCESSES:
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(err.code)
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(err.code)
                 return MCPCallToolResponse(
                     code=err.code,
                     message=err.msg,
@@ -378,8 +378,8 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
 
         if is_local_url(url):
             err = ErrCode.MCP_SERVER_LOCAL_URL_ERR
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -401,15 +401,17 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                             err = ErrCode.MCP_SERVER_INITIAL_ERR
                             span_context.add_error_event(err.msg)
                             span_context.set_status(Status(StatusCode.ERROR))
-                            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                            #     m.in_error_count(err.code)
-                            #     node_trace.answer = err.msg
-                            #     node_trace.flow_id = mcp_server_id
-                            #     node_trace.upload(
-                            #         status=Status(code=err.code, message=err.msg),
-                            #         log_caller="",
-                            #         span=span_context,
-                            #     )
+                            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                                m.in_error_count(err.code)
+                                node_trace.answer = err.msg
+                                node_trace.service_id = mcp_server_id
+                                node_trace.status = Status(
+                                        code=err.cod,
+                                        message=err.msg,
+                                    )
+                                kafka_service = get_kafka_producer_service()
+                                node_trace.start_time = int(round(time.time() * 1000))
+                                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                             return MCPCallToolResponse(
                                 code=err.code,
                                 message=err.msg,
@@ -435,15 +437,17 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                             err = ErrCode.MCP_SERVER_CALL_TOOL_ERR
                             span_context.add_error_event(err.msg)
                             span_context.set_status(Status(StatusCode.ERROR))
-                            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                            #     m.in_error_count(err.code)
-                            #     node_trace.answer = err.msg
-                            #     node_trace.flow_id = mcp_server_id
-                            #     node_trace.upload(
-                            #         status=Status(code=err.code, message=err.msg),
-                            #         log_caller="",
-                            #         span=span_context,
-                            #     )
+                            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                                m.in_error_count(err.code)
+                                node_trace.answer = err.msg
+                                node_trace.service_id = mcp_server_id
+                                node_trace.status = Status(
+                                        code=err.code,
+                                        message=err.msg,
+                                    )
+                                kafka_service = get_kafka_producer_service()
+                                node_trace.start_time = int(round(time.time() * 1000))
+                                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                             return MCPCallToolResponse(
                                 code=err.code,
                                 message=err.msg,
@@ -454,15 +458,17 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                     err = ErrCode.MCP_SERVER_SESSION_ERR
                     span_context.add_error_event(err.msg)
                     span_context.set_status(Status(StatusCode.ERROR))
-                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    #     m.in_error_count(err.code)
-                    #     node_trace.answer = err.msg
-                    #     node_trace.flow_id = mcp_server_id
-                    #     node_trace.upload(
-                    #         status=Status(code=err.code, message=err.msg),
-                    #         log_caller="",
-                    #         span=span_context,
-                    #     )
+                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                        m.in_error_count(err.code)
+                        node_trace.answer = err.msg
+                        node_trace.service_id = mcp_server_id
+                        node_trace.status = Status(
+                                code=err.code,
+                                message=err.msg,
+                            )
+                        kafka_service = get_kafka_producer_service()
+                        node_trace.start_time = int(round(time.time() * 1000))
+                        kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                     return MCPCallToolResponse(
                         code=err.code,
                         message=err.msg,
@@ -473,15 +479,17 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             err = ErrCode.MCP_SERVER_CONNECT_ERR
             span_context.add_error_event(err.msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
-            #     node_trace.answer = err.msg
-            #     node_trace.flow_id = mcp_server_id
-            #     node_trace.upload(
-            #         status=Status(code=err.code, message=err.msg),
-            #         log_caller="",
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
+                node_trace.answer = err.msg
+                node_trace.service_id = mcp_server_id
+                node_trace.status = Status(
+                        code=err.code,
+                        message=err.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return MCPCallToolResponse(
                 code=err.code,
                 message=err.msg,
@@ -496,16 +504,18 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             sid=session_id,
             data=MCPCallToolData(isError=is_error, content=content),
         )
-        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-        #     m.in_success_count()
-        #     node_trace.answer = result.model_dump_json()
-        #     node_trace.flow_id = mcp_server_id
-        #     node_trace.log_caller = "mcp_type"
-        #     node_trace.upload(
-        #         status=Status(code=success.code, message=success.msg),
-        #         log_caller="mcp_type",
-        #         span=span_context,
-        #     )
+        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            m.in_success_count()
+            node_trace.answer = result.model_dump_json()
+            node_trace.service_id = mcp_server_id
+            node_trace.log_caller = "mcp_type"
+            node_trace.status = Status(
+                    code=success.code,
+                    message=success.msg,
+                )
+            kafka_service = get_kafka_producer_service()
+            node_trace.start_time = int(round(time.time() * 1000))
+            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
         return result
 
 

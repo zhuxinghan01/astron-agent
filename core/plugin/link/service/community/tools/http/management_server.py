@@ -17,6 +17,7 @@ The module handles:
 import json
 import os
 import re
+import time
 
 from plugin.link.api.schemas.community.tools.http.management_schema import (
     ToolCreateRequest,
@@ -48,6 +49,7 @@ from common.otlp.log_trace.node_trace_log import (
     NodeTraceLog,
     Status
 )
+from common.service import get_kafka_producer_service
 
 
 def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
@@ -108,18 +110,17 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
                 attributes={"tools": run_params_list.get("payload", {}).get("tools")}
             )
             node_trace = NodeTraceLog(
-                flow_id="",
+                service_id="",
                 sid=span_context.sid,
                 app_id=span_context.app_id,
                 uid=span_context.uid,
-                bot_id="/tools",
                 chat_id=span_context.sid,
                 sub="spark-link",
                 caller=caller,
                 log_caller=tool_type,
                 question=json.dumps(run_params_list, ensure_ascii=False),
             )
-            node_trace.record_start()
+            
             m = Meter(app_id=span_context.app_id, func="create_tools")
             # Validate API
             validate_err = api_validate(get_create_tool_schema(), run_params_list)
@@ -127,17 +128,16 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
                 # Standard error handling pattern - this telemetry and response
                 # structure is duplicated across all service functions to ensure
                 # consistent error reporting and observability across the entire system
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                #     node_trace.answer = validate_err
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
-                #             message=validate_err,
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                    node_trace.answer = validate_err
+                    node_trace.status = Status(
+                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                            message=validate_err,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=validate_err,
@@ -163,17 +163,16 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
                     )
                     span_context.add_error_event(msg)
                     span_context.set_status(Status(StatusCode.ERROR))
-                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    #     m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
-                    #     node_trace.answer = json.dumps(err)
-                    #     node_trace.upload(
-                    #         status=Status(
-                    #             code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
-                    #             message=json.dumps(err),
-                    #         ),
-                    #         log_caller=tool_type,
-                    #         span=span_context,
-                    #     )
+                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                        m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
+                        node_trace.answer = json.dumps(err)
+                        node_trace.status = Status(
+                                code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
+                                message=json.dumps(err),
+                            )
+                        kafka_service = get_kafka_producer_service()
+                        node_trace.start_time = int(round(time.time() * 1000))
+                        kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                     return ToolManagerResponse(
                         code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
                         message=json.dumps(err),
@@ -209,17 +208,17 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
                 )
                 tool_ids.append(tool.get("tool_id"))
 
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = json.dumps(resp_tool, ensure_ascii=False)
-            #     node_trace.flow_id = str(tool_ids)
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = json.dumps(resp_tool, ensure_ascii=False)
+                node_trace.service_id = str(tool_ids)
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -228,14 +227,16 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
             )
     except Exception as err:
         logger.error(f"failed to create tools, reason {err}")
-        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-        #     m.in_error_count(ErrCode.COMMON_ERR.code)
-        #     node_trace.answer = str(err)
-        #     node_trace.upload(
-        #         status=Status(code=ErrCode.COMMON_ERR.code, message=str(err)),
-        #         log_caller=tool_type,
-        #         span=span_context,
-        #     )
+        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            m.in_error_count(ErrCode.COMMON_ERR.code)
+            node_trace.answer = str(err)
+            node_trace.status = Status(
+                    code=ErrCode.COMMON_ERR.code,
+                    message=str(err),
+                )
+            kafka_service = get_kafka_producer_service()
+            node_trace.start_time = int(round(time.time() * 1000))
+            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
         return ToolManagerResponse(
             code=ErrCode.COMMON_ERR.code,
             message=str(err),
@@ -275,34 +276,33 @@ def delete_version(
         span_context.set_attributes(attributes={"tool_ids": str(tool_ids)})
         span_context.set_attributes(attributes={"versions": str(versions)})
         node_trace = NodeTraceLog(
-            flow_id=str(tool_ids) + " " + str(versions),
+            service_id=str(tool_ids) + " " + str(versions),
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/tools",
             chat_id=span_context.sid,
             sub="spark-link",
             caller=caller,
             log_caller=tool_type,
             question=json.dumps(usr_input, ensure_ascii=False),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="delete_tools")
 
         if len(tool_ids) == 0:
             msg = f"del tool: tool num {len(tool_ids)} is 0"
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-            #     node_trace.answer = msg
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                node_trace.answer = msg
+                node_trace.status = Status(
+                        code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                        message=msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                 message=msg,
@@ -315,16 +315,16 @@ def delete_version(
                 msg = f"del tool: tool id {tool_id} illegal"
                 span_context.add_error_event(msg)
                 span_context.set_status(Status(StatusCode.ERROR))
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                #     node_trace.answer = msg
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                    node_trace.answer = msg
+                    node_trace.status = Status(
+                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                            message=msg,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=msg,
@@ -348,18 +348,18 @@ def delete_version(
                 )
             crud_inst = ToolCrudOperation(get_db_engine())
             crud_inst.delete_tools(tool_info)
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = json.dumps(
-            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
-            #     )
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = json.dumps(
+                    ErrCode.SUCCESSES.msg, ensure_ascii=False
+                )
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -371,14 +371,16 @@ def delete_version(
             logger.error(f"failed to del tool, reason {err}")
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.COMMON_ERR.code)
-            #     node_trace.answer = str(err)
-            #     node_trace.upload(
-            #         status=Status(code=ErrCode.COMMON_ERR.code, message=str(err)),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.COMMON_ERR.code)
+                node_trace.answer = str(err)
+                node_trace.status = Status(
+                        code=ErrCode.COMMON_ERR.code,
+                        message=str(err),
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
                 message=str(err),
@@ -432,31 +434,30 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
             attributes={"tools": run_params_list.get("payload", {}).get("tools")}
         )
         node_trace = NodeTraceLog(
-            flow_id="",
+            service_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/tools",
             chat_id=span_context.sid,
             sub="spark-link",
             caller=caller,
             log_caller=tool_type,
             question=json.dumps(run_params_list, ensure_ascii=False),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="update_tools")
         validate_err = api_validate(get_update_tool_schema(), run_params_list)
         if validate_err:
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-            #     node_trace.answer = validate_err
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+                node_trace.answer = validate_err
+                node_trace.status = Status(
+                        code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                        message=validate_err,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
                 message=validate_err,
@@ -485,17 +486,16 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
                         )
                         span_context.add_error_event(msg)
                         span_context.set_status(Status(StatusCode.ERROR))
-                        # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                        #     m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
-                        #     node_trace.answer = json.dumps(err)
-                        #     node_trace.upload(
-                        #         status=Status(
-                        #             code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
-                        #             message=json.dumps(err),
-                        #         ),
-                        #         log_caller=tool_type,
-                        #         span=span_context,
-                        #     )
+                        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                            m.in_error_count(ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code)
+                            node_trace.answer = json.dumps(err)
+                            node_trace.status = Status(
+                                    code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
+                                    message=json.dumps(err),
+                                )
+                            kafka_service = get_kafka_producer_service()
+                            node_trace.start_time = int(round(time.time() * 1000))
+                            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                         return ToolManagerResponse(
                             code=ErrCode.OPENAPI_SCHEMA_VALIDATE_ERR.code,
                             message=json.dumps(err),
@@ -530,19 +530,19 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
                 tool_ids.append(tool.get("id"))
             crud_inst = ToolCrudOperation(get_db_engine())
             crud_inst.add_tool_version(update_tool)
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = json.dumps(
-            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
-            #     )
-            #     node_trace.flow_id = str(tool_ids)
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = json.dumps(
+                    ErrCode.SUCCESSES.msg, ensure_ascii=False
+                )
+                node_trace.service_id = str(tool_ids)
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -553,14 +553,16 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
             msg = f"failed to update tool, reason {err}"
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.COMMON_ERR.code)
-            #     node_trace.answer = f"{err}"
-            #     node_trace.upload(
-            #         status=Status(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.COMMON_ERR.code)
+                node_trace.answer = f"{err}"
+                node_trace.status = Status(
+                        code=ErrCode.COMMON_ERR.code,
+                        message=f"{err}",
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             logger.error(f"failed to update tool, reason {err}")
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
@@ -599,18 +601,17 @@ def read_version(
         span_context.set_attributes(attributes={"tool_ids": str(tool_ids)})
         span_context.set_attributes(attributes={"versions": str(versions)})
         node_trace = NodeTraceLog(
-            flow_id=str(tool_ids),
+            service_id=str(tool_ids),
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/tools",
             chat_id=span_context.sid,
             sub="spark-link",
             caller=caller,
             log_caller=tool_type,
             question=json.dumps(usr_input, ensure_ascii=False),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="read_tools")
 
         if len(tool_ids) == 0 or len(versions) == 0 or len(tool_ids) != len(versions):
@@ -620,16 +621,16 @@ def read_version(
             )
             span_context.add_error_event(msg)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-            #     node_trace.answer = msg
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                node_trace.answer = msg
+                node_trace.status = Status(
+                        code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                        message=msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                 message=msg,
@@ -641,16 +642,16 @@ def read_version(
                 msg = f"get tool: tool id {tool_id} pattern illegal"
                 span_context.add_error_event(msg)
                 span_context.set_status(Status(StatusCode.ERROR))
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
-                #     node_trace.answer = msg
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code, message=msg
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.JSON_SCHEMA_VALIDATE_ERR.code)
+                    node_trace.answer = msg
+                    node_trace.status = Status(
+                            code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
+                            message=msg,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return ToolManagerResponse(
                     code=ErrCode.JSON_SCHEMA_VALIDATE_ERR.code,
                     message=msg,
@@ -674,14 +675,16 @@ def read_version(
             except SparkLinkBaseException as err:
                 span_context.add_error_event(err.message)
                 span_context.set_status(Status(StatusCode.ERROR))
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(err.code)
-                #     node_trace.answer = err.message
-                #     node_trace.upload(
-                #         status=Status(code=err.code, message=err.message),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(err.code)
+                    node_trace.answer = err.message
+                    node_trace.status = Status(
+                            code=err.code,
+                            message=err.message,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return ToolManagerResponse(
                     code=err.code, message=err.message, sid=span_context.sid, data={}
                 )
@@ -697,18 +700,18 @@ def read_version(
                         "version": result_dict.get("version", ""),
                     }
                 )
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = json.dumps(
-            #         ErrCode.SUCCESSES.msg, ensure_ascii=False
-            #     )
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = json.dumps(
+                    ErrCode.SUCCESSES.msg, ensure_ascii=False
+                )
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -719,14 +722,16 @@ def read_version(
             logger.error(f"failed to get tool, reason {err}")
             span_context.add_error_event(f"failed to get tool, reason {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.COMMON_ERR.code)
-            #     node_trace.answer = f"{err}"
-            #     node_trace.upload(
-            #         status=Status(code=ErrCode.COMMON_ERR.code, message=f"{err}"),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.COMMON_ERR.code)
+                node_trace.answer = f"{err}"
+                node_trace.status = Status(
+                        code=ErrCode.COMMON_ERR.code,
+                        message=f"{err}",
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.COMMON_ERR.code,
                 message=f"{err}",

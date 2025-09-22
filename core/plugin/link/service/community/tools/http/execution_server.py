@@ -101,18 +101,17 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             }
         )
         node_trace = NodeTraceLog(
-            flow_id="",
+            service_id="",
             sid=span_context.sid,
             app_id=span_context.app_id,
             uid=span_context.uid,
-            bot_id="/tools/http_run",
             chat_id=span_context.sid,
             sub="spark-link",
             caller=caller,
             log_caller="",
             question=json.dumps(run_params_list, ensure_ascii=False),
         )
-        node_trace.record_start()
+        
         m = Meter(app_id=span_context.app_id, func="http_run")
         # Parameter validation
         validate_err = api_validate(get_http_run_schema(), run_params_list)
@@ -121,16 +120,16 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             # is duplicated across service functions to ensure consistent error
             # reporting and observability, adapted for HTTP execution context
             # with different response types
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-            #     node_trace.answer = validate_err
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code, message=validate_err
-            #         ),
-            #         log_caller="",
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+                node_trace.answer = validate_err
+                node_trace.status = Status(
+                        code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                        message=validate_err,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
@@ -161,15 +160,17 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
-            #     node_trace.answer = err.message
-            #     node_trace.flow_id = tool_id
-            #     node_trace.upload(
-            #         status=Status(code=err.code, message=err.message),
-            #         log_caller="",
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
+                node_trace.answer = err.message
+                node_trace.service_id = tool_id
+                node_trace.status = Status(
+                        code=err.code,
+                        message=err.message,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -180,17 +181,17 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             message = f"{tool_id} does not exist"
             span_context.add_error_event(message)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.TOOL_NOT_EXIST_ERR.code)
-            #     node_trace.answer = message
-            #     node_trace.flow_id = tool_id
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.TOOL_NOT_EXIST_ERR.code, message=message
-            #         ),
-            #         log_caller="",
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.TOOL_NOT_EXIST_ERR.code)
+                node_trace.answer = message
+                node_trace.service_id = tool_id
+                node_trace.status = Status(
+                        code=ErrCode.TOOL_NOT_EXIST_ERR.code,
+                        message=message,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.TOOL_NOT_EXIST_ERR.code,
@@ -216,18 +217,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             message = f"operation_id: {operation_id} does not exist"
             span_context.add_error_event(message)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.OPERATION_ID_NOT_EXIST_ERR.code)
-            #     node_trace.answer = message
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code, message=message
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.OPERATION_ID_NOT_EXIST_ERR.code)
+                node_trace.answer = message
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code,
+                        message=message,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.OPERATION_ID_NOT_EXIST_ERR.code,
@@ -266,21 +267,20 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                         f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
                     )
                     span_context.set_status(Status(StatusCode.ERROR))
-                    # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                    #     m.in_error_count(ErrCode.OPENAPI_AUTH_TYPE_ERR.code)
-                    #     node_trace.answer = (
-                    #         f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
-                    #     )
-                    #     node_trace.flow_id = tool_id
-                    #     node_trace.log_caller = tool_type
-                    #     node_trace.upload(
-                    #         status=Status(
-                    #             code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
-                    #             message=f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}",
-                    #         ),
-                    #         log_caller=tool_type,
-                    #         span=span_context,
-                    #     )
+                    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                        m.in_error_count(ErrCode.OPENAPI_AUTH_TYPE_ERR.code)
+                        node_trace.answer = (
+                            f"{ErrCode.OPENAPI_AUTH_TYPE_ERR.msg}"
+                        )
+                        node_trace.service_id = tool_id
+                        node_trace.log_caller = tool_type
+                        node_trace.status = Status(
+                                code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
+                                message=ErrCode.OPENAPI_AUTH_TYPE_ERR.msg,
+                            )
+                        kafka_service = get_kafka_producer_service()
+                        node_trace.start_time = int(round(time.time() * 1000))
+                        kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                     return HttpRunResponse(
                         header=HttpRunResponseHeader(
                             code=ErrCode.OPENAPI_AUTH_TYPE_ERR.code,
@@ -386,25 +386,21 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
                     f"详细信息：{msg}"
                 )
                 span_context.set_status(Status(StatusCode.ERROR))
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
-                #     node_trace.answer = (
-                #         f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                #         f"详细信息：{msg}"
-                #     )
-                #     node_trace.flow_id = tool_id
-                #     node_trace.log_caller = tool_type
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
-                #             message=(
-                #                 f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                #                 f"详细信息：{msg}"
-                #             ),
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
+                    node_trace.answer = (
+                        f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                        f"详细信息：{msg}"
+                    )
+                    node_trace.service_id = tool_id
+                    node_trace.log_caller = tool_type
+                    node_trace.status = Status(
+                            code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
+                            message=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
@@ -419,18 +415,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
             span_context.add_info_events({"before result": result})
             result = json.dumps(result_json, ensure_ascii=False)
             span_context.add_info_events({"after result": result})
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = result
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = result
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.SUCCESSES.code,
@@ -446,16 +442,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
-            #     node_trace.answer = err.message
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(code=err.code, message=err.message),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
+                node_trace.answer = err.message
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=err.code,
+                        message=err.message,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -465,19 +463,18 @@ async def http_run(run_params: HttpRunRequest) -> HttpRunResponse:
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.COMMON_ERR.code)
-            #     node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.COMMON_ERR.code,
-            #             message=f"{ErrCode.COMMON_ERR.msg}: {err}",
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.COMMON_ERR.code)
+                node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=ErrCode.COMMON_ERR.code,
+                        message=f"{ErrCode.COMMON_ERR.msg}: {err}",
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.COMMON_ERR.code,
@@ -544,37 +541,35 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                 else os.getenv(const.THIRD_TOOL_KEY)
             )
             node_trace = NodeTraceLog(
-                flow_id=tool_id,
+                service_id=tool_id,
                 sid=span_context.sid,
                 app_id=span_context.app_id,
                 uid=span_context.uid,
-                bot_id="/tools/tool_debug",
                 chat_id=span_context.sid,
                 sub="spark-link",
                 caller=caller,
                 log_caller="",
                 question=json.dumps(run_params_list, ensure_ascii=False),
             )
-            node_trace.record_start()
+            
             # Parameter validation
             validate_err = api_validate(get_tool_debug_schema(), run_params_list)
             if validate_err:
                 span_context.add_error_event(
                     f"Error code: {ErrCode.JSON_PROTOCOL_PARSER_ERR.code}, error message: {validate_err}"
                 )
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
-                #     node_trace.answer = validate_err
-                #     node_trace.flow_id = tool_id
-                #     node_trace.log_caller = tool_type
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
-                #             message=validate_err,
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
+                    node_trace.answer = validate_err
+                    node_trace.service_id = tool_id
+                    node_trace.log_caller = tool_type
+                    node_trace.status = Status(
+                            code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
+                            message=validate_err,
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
@@ -656,25 +651,24 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                     f"详细信息：{msg}"
                 )
                 span_context.set_status(Status(StatusCode.ERROR))
-                # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-                #     m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
-                #     node_trace.answer = (
-                #         f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                #         f"详细信息：{msg}"
-                #     )
-                #     node_trace.flow_id = tool_id
-                #     node_trace.log_caller = tool_type
-                #     node_trace.upload(
-                #         status=Status(
-                #             code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
-                #             message=(
-                #                 f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
-                #                 f"详细信息：{msg}"
-                #             ),
-                #         ),
-                #         log_caller=tool_type,
-                #         span=span_context,
-                #     )
+                if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                    m.in_error_count(ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code)
+                    node_trace.answer = (
+                        f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                        f"详细信息：{msg}"
+                    )
+                    node_trace.service_id = tool_id
+                    node_trace.log_caller = tool_type
+                    node_trace.status = Status(
+                            code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
+                            message=(
+                                f"错误信息：{ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.msg}, "
+                                f"详细信息：{msg}"
+                            ),
+                        )
+                    kafka_service = get_kafka_producer_service()
+                    node_trace.start_time = int(round(time.time() * 1000))
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
                 return HttpRunResponse(
                     header=HttpRunResponseHeader(
                         code=ErrCode.RESPONSE_SCHEMA_VALIDATE_ERR.code,
@@ -689,18 +683,18 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
             span_context.add_info_events({"before result": result})
             result = json.dumps(result_json, ensure_ascii=False)
             span_context.add_info_events({"after result": result})
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_success_count()
-            #     node_trace.answer = result
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.SUCCESSES.code, message=ErrCode.SUCCESSES.msg
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_success_count()
+                node_trace.answer = result
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=ErrCode.SUCCESSES.code,
+                        message=ErrCode.SUCCESSES.msg,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return ToolDebugResponse(
                 header=ToolDebugResponseHeader(
                     code=ErrCode.SUCCESSES.code,
@@ -716,16 +710,18 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
         except SparkLinkBaseException as err:
             span_context.add_error_event(err.message)
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(err.code)
-            #     node_trace.answer = err.message
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(code=err.code, message=err.message),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(err.code)
+                node_trace.answer = err.message
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=err.code,
+                        message=err.message,
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=err.code, message=err.message, sid=span_context.sid
@@ -735,19 +731,18 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
         except Exception as err:
             span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
             span_context.set_status(Status(StatusCode.ERROR))
-            # if os.getenv(const.enable_otlp_key, "false").lower() == "true":
-            #     m.in_error_count(ErrCode.COMMON_ERR.code)
-            #     node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
-            #     node_trace.flow_id = tool_id
-            #     node_trace.log_caller = tool_type
-            #     node_trace.upload(
-            #         status=Status(
-            #             code=ErrCode.COMMON_ERR.code,
-            #             message=f"{ErrCode.COMMON_ERR.msg}: {err}",
-            #         ),
-            #         log_caller=tool_type,
-            #         span=span_context,
-            #     )
+            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+                m.in_error_count(ErrCode.COMMON_ERR.code)
+                node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
+                node_trace.service_id = tool_id
+                node_trace.log_caller = tool_type
+                node_trace.status = Status(
+                        code=ErrCode.COMMON_ERR.code,
+                        message=f"{ErrCode.COMMON_ERR.msg}: {err}",
+                    )
+                kafka_service = get_kafka_producer_service()
+                node_trace.start_time = int(round(time.time() * 1000))
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
             return HttpRunResponse(
                 header=HttpRunResponseHeader(
                     code=ErrCode.COMMON_ERR.code,
