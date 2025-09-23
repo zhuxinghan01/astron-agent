@@ -1,17 +1,18 @@
 import os
 
 from loguru import logger
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import \
-    OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
-from common.otlp.metrics.consts import (SERVER_REQUEST_DESC,
-                                        SERVER_REQUEST_TIME_DESC,
-                                        SERVER_REQUEST_TIME_MICROSECONDS,
-                                        SERVER_REQUEST_TOTAL)
+from common.otlp.metrics.consts import (
+    SERVER_REQUEST_DESC,
+    SERVER_REQUEST_TIME_DESC,
+    SERVER_REQUEST_TIME_MICROSECONDS,
+    SERVER_REQUEST_TOTAL,
+)
 
 counter = None
 histogram = None

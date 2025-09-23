@@ -4,8 +4,7 @@ orchestrator.py
 
 from typing import TYPE_CHECKING
 
-from common.audit_system.base import (FrameAuditResult, InputFrameAudit,
-                                      OutputFrameAudit)
+from common.audit_system.base import FrameAuditResult, InputFrameAudit, OutputFrameAudit
 from common.audit_system.enums import Status
 from common.audit_system.strategy.base_strategy import AuditStrategy
 

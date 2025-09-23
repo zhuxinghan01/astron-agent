@@ -19,15 +19,15 @@ class NodeLog(BaseModel):
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     sid: str = ""
 
-    node_id: str = "" 
-    node_type: str = "" 
-    node_name: str = "" 
+    node_id: str = ""
+    node_type: str = ""
+    node_name: str = ""
 
-    func_id: str = "" 
-    func_type: str = "" 
-    func_name: str = "" 
+    func_id: str = ""
+    func_type: str = ""
+    func_name: str = ""
 
-    next_log_ids: Set[str] = set() 
+    next_log_ids: Set[str] = set()
 
     start_time: int = Field(default_factory=lambda: int(time.time() * 1000))
     end_time: int = Field(default_factory=lambda: int(time.time() * 1000))

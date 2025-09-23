@@ -2,8 +2,7 @@ import asyncio
 from typing import Literal
 
 from common.audit_system.audit_api.base import ContentType, Stage
-from common.audit_system.base import (FrameAuditResult, InputFrameAudit,
-                                      OutputFrameAudit)
+from common.audit_system.base import FrameAuditResult, InputFrameAudit, OutputFrameAudit
 from common.audit_system.enums import Status
 from common.audit_system.strategy.base_strategy import AuditStrategy
 from common.audit_system.utils import ALL_SENTENCE_LEN, Sentence

@@ -14,8 +14,8 @@ def init_otlp_metric():
         return
 
     global_otlp_metric_args.otlp_endpoint = os.getenv("OTLP_ENDPOINT", "")
-    global_otlp_metric_args.otlp_service_name = os.getenv("OTLP_SERVICE_NAME", "")
-    global_otlp_metric_args.otlp_dc = os.getenv("OTLP_DC", "")
+    global_otlp_metric_args.otlp_service_name = os.getenv("SERVICE_NAME", "")
+    global_otlp_metric_args.otlp_dc = os.getenv("SERVICE_LOCATION", "")
     global_otlp_metric_args.metric_timeout = int(
         os.getenv("OTLP_METRIC_TIMEOUT", "5000")
     )

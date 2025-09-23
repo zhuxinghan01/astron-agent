@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, List
 
 from common.audit_system.audit_api.base import AuditAPI
-from common.audit_system.base import (AuditContext, InputFrameAudit,
-                                      OutputFrameAudit)
+from common.audit_system.base import AuditContext, InputFrameAudit, OutputFrameAudit
 
 if TYPE_CHECKING:
     from common.otlp.trace.span import Span

@@ -16,7 +16,7 @@ class Status(BaseModel):
 
 
 class NodeTraceLog(BaseModel):
-    service_id: str 
+    service_id: str
     sid: str
     app_id: str = Field(default="", description="应用ID")
     uid: str = Field(default="", description="用户ID")

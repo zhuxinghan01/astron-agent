@@ -17,8 +17,7 @@ if TYPE_CHECKING:
     from common.service.ma.metrology_auth_service import MASDKService
     from common.service.oss.base_oss import BaseOSSService
     from common.service.otlp.metric.base_metric import BaseOtlpMetricService
-    from common.service.otlp.node_log.base_node_log import \
-        BaseOtlpNodeLogService
+    from common.service.otlp.node_log.base_node_log import BaseOtlpNodeLogService
     from common.service.otlp.sid.sid_service import OtlpSidService
     from common.service.otlp.span.span_service import OtlpSpanService
     from common.service.settings.settings_service import SettingsService

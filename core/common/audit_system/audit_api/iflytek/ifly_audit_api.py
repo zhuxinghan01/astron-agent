@@ -79,9 +79,7 @@ class IFlyAuditAPI(AuditAPI):
         builder = []
         for key, value in sorted_params.items():
             if value is not None and value != "":
-                encoded_value = quote(
-                    value, safe=""
-                )
+                encoded_value = quote(value, safe="")
                 builder.append(f"{key}={encoded_value}")
 
         base_string = "&".join(builder)

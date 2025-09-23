@@ -42,7 +42,7 @@ class Span:
         if sid_module.sid_generator2 is None:
             raise Exception("sid_generator2 is not initialized")
         self.sid = sid_module.sid_generator2.gen()
-        self.tracer = trace.get_tracer(os.getenv("OTLP_TRACE_NAME", "service_trace"))
+        self.tracer = trace.get_tracer(os.getenv("SERVICE_NAME", "service_trace"))
         self.oss_service = oss_service
 
     @contextmanager

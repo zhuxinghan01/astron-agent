@@ -8,8 +8,11 @@ from typing import ClassVar, Optional, Type
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic.fields import FieldInfo
-from pydantic_settings import (BaseSettings, PydanticBaseSettingsSource,
-                               SettingsConfigDict)
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 from common.service.settings.base_settings import BaseRemoteSettings
 

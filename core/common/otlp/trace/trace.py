@@ -4,13 +4,15 @@ from enum import Enum
 
 from loguru import logger
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import \
-    OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.propagate import extract, inject
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import SpanLimits, TracerProvider
-from opentelemetry.sdk.trace.export import (BatchSpanProcessor, SpanExporter,
-                                            SpanExportResult)
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    SpanExporter,
+    SpanExportResult,
+)
 from opentelemetry.trace import StatusCode
 
 from common.otlp.ip import local_ip
