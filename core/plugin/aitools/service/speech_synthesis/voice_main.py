@@ -18,9 +18,6 @@ from common.otlp.log_trace.node_trace_log import (
 )
 
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
-from plugin.aitools.const.polaris_keys.common_keys import (
-   OFFICIAL_TOOL_KEY
-)
 from plugin.aitools.const.err_code.code import CodeEnum
 from plugin.aitools.service.ase_sdk.ability.oss.client import OSSClient
 from plugin.aitools.service.speech_synthesis.one_sentence_reproduction.train import VoiceTrainer
@@ -34,7 +31,6 @@ def smarttts_main(text: str, vcn: str, speed: int, request):
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
-    #tool_type = os.getenv(OFFICIAL_TOOL_KEY)
     span = Span(
         app_id=app_id,
         uid=uid,
