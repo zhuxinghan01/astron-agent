@@ -23,8 +23,8 @@ import java.util.List;
  * <p>
  * Provides endpoints to:
  * <ul>
- *   <li>List available RPA platforms/sources</li>
- *   <li>Manage user RPA assistants (create, query, update, delete)</li>
+ * <li>List available RPA platforms/sources</li>
+ * <li>Manage user RPA assistants (create, query, update, delete)</li>
  * </ul>
  * No business logic is implemented here; all operations delegate to service layer.
  */
@@ -53,8 +53,8 @@ public class RpaController {
     }
 
     /**
-     * Get current user's RPA assistant list by assistant name (fuzzy match or exact,
-     * depending on service implementation).
+     * Get current user's RPA assistant list by assistant name (fuzzy match or exact, depending on
+     * service implementation).
      *
      * @param name assistant name filter (required)
      * @return an {@link ApiResult} containing a list of {@link RpaUserAssistant}
@@ -71,7 +71,8 @@ public class RpaController {
      * @param req creation request body; must pass bean validation
      * @return created assistant basic info
      * @throws org.springframework.web.bind.MethodArgumentNotValidException if validation fails
-     * @throws com.iflytek.astron.console.commons.exception.BusinessException for business-rule violations
+     * @throws com.iflytek.astron.console.commons.exception.BusinessException for business-rule
+     *         violations
      */
     @PostMapping
     public RpaAssistantResp create(@RequestBody @Validated CreateRpaAssistantReq req) {
@@ -82,10 +83,11 @@ public class RpaController {
     /**
      * Get assistant details by id for the current user.
      *
-     * @param id   assistant primary key
+     * @param id assistant primary key
      * @param name optional assistant name filter used by downstream service (may be null)
      * @return assistant detail info
-     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not exist or no permission
+     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not
+     *         exist or no permission
      */
     @GetMapping("/{id}")
     public RpaAssistantResp detail(@PathVariable("id") Long id, @RequestParam(required = false) String name) {
@@ -96,15 +98,16 @@ public class RpaController {
     /**
      * Update assistant info for the given id.
      *
-     * @param id  assistant primary key
+     * @param id assistant primary key
      * @param req update request body; must pass bean validation
      * @return updated {@link RpaUserAssistant}
      * @throws org.springframework.web.bind.MethodArgumentNotValidException if validation fails
-     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not exist or no permission
+     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not
+     *         exist or no permission
      */
     @PutMapping("/{id}")
     public RpaUserAssistant update(@PathVariable("id") Long id,
-                                   @RequestBody @Validated UpdateRpaAssistantReq req) {
+            @RequestBody @Validated UpdateRpaAssistantReq req) {
         String userId = UserInfoManagerHandler.getUserId();
         return rpaAssistantService.update(userId, id, req);
     }
@@ -113,7 +116,8 @@ public class RpaController {
      * Delete assistant by id for the current user.
      *
      * @param id assistant primary key
-     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not exist or no permission
+     * @throws com.iflytek.astron.console.commons.exception.BusinessException if the assistant does not
+     *         exist or no permission
      */
     @DeleteMapping("/{id}")
     public void delete(@PathVariable("id") Long id) {

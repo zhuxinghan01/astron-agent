@@ -974,7 +974,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
                 if (jsonObject.getIntValue("code") != 0) {
                     throw new BusinessException(ResponseEnum.REPO_FILE_EMBEDDING_FAILED);
                 } else {
-                    // 调用文档绑定
+                    // Call document binding
 
                     JSONObject bindParams = new JSONObject();
                     bindParams.put("datasetId", sliceFileVO.getRepoId());
@@ -1134,7 +1134,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
                 if (jsonObject.getIntValue("code") != 0) {
                     throw new BusinessException(ResponseEnum.REPO_FILE_EMBEDDING_FAILED);
                 } else {
-                    // 调用文档绑定
+                    // Call document binding
                     JSONObject bindParams = new JSONObject();
                     bindParams.put("datasetId", sliceFileVO.getRepoId());
                     bindParams.put("files", sliceFileVO.getSparkFiles());
@@ -2070,7 +2070,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
     @Transactional
     public void deleteFileDirectoryTree(String id, String tag, Long repoId, HttpServletRequest request) {
         if (ProjectContent.isSparkRagCompatible(tag)) {
-            // 星火删除
+            // Spark Delete
             String url = apiUrl.getDeleteXinghuoDatasetFileUrl() + "?datasetId=" + repoId + "&fileId=" + id;
             HashMap<String, String> header = new HashMap<>();
             String authorization = request.getHeader("Authorization");

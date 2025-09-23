@@ -5,8 +5,8 @@ import lombok.Data;
 /**
  * Specification of a single field required by an RPA platform.
  * <p>
- * Used to define the field metadata such as display name, request key,
- * description, type, and whether it is mandatory.
+ * Used to define the field metadata such as display name, request key, description, type, and
+ * whether it is mandatory.
  * </p>
  */
 @Data

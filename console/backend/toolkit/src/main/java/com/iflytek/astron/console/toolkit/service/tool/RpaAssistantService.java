@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 /**
  * Service layer for managing user RPA assistants.
  * <p>
- * Provides APIs for creating, querying, updating, deleting RPA assistants,
- * validating fields, and integrating with platform APIs.
+ * Provides APIs for creating, querying, updating, deleting RPA assistants, validating fields, and
+ * integrating with platform APIs.
  */
 @Service
 @RequiredArgsConstructor
@@ -44,7 +44,7 @@ public class RpaAssistantService {
      * Create an RPA assistant with plaintext credentials.
      *
      * @param currentUserId current user ID
-     * @param req           creation request
+     * @param req creation request
      * @return created assistant response
      * @throws IllegalArgumentException if the platform does not exist or field validation fails
      */
@@ -54,8 +54,7 @@ public class RpaAssistantService {
         long exists = assistantMapper.selectCount(
                 new LambdaQueryWrapper<RpaUserAssistant>()
                         .eq(RpaUserAssistant::getUserId, currentUserId)
-                        .eq(RpaUserAssistant::getAssistantName, req.assistantName())
-        );
+                        .eq(RpaUserAssistant::getAssistantName, req.assistantName()));
         if (exists > 0) {
             throw new IllegalArgumentException("Assistant name already exists: " + req.assistantName());
         }
@@ -104,8 +103,7 @@ public class RpaAssistantService {
                 assistant.getStatus(),
                 req.fields(),
                 new JSONArray(),
-                assistant.getCreateTime()
-        );
+                assistant.getCreateTime());
     }
 
     /**
@@ -133,12 +131,13 @@ public class RpaAssistantService {
      * Validate required fields and field types.
      *
      * @param specMap platform field specification map
-     * @param fields  actual field key-value pairs
+     * @param fields actual field key-value pairs
      * @throws BusinessException if required fields are missing or validation fails
      */
     private void validate(Map<String, PlatformFieldSpec> specMap, Map<String, String> fields) {
         // Required fields check
-        List<String> missing = specMap.values().stream()
+        List<String> missing = specMap.values()
+                .stream()
                 .filter(PlatformFieldSpec::isRequired)
                 .map(PlatformFieldSpec::getName)
                 .filter(n -> fields == null || !fields.containsKey(n) ||
@@ -147,11 +146,13 @@ public class RpaAssistantService {
         if (!missing.isEmpty()) {
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Missing required fields: " + String.join(",", missing));
         }
-        // Type validation (simple demo: only string type is allowed; can extend to number/bool/url/regex etc.)
+        // Type validation (simple demo: only string type is allowed; can extend to number/bool/url/regex
+        // etc.)
         if (fields != null) {
             for (Map.Entry<String, String> e : fields.entrySet()) {
                 PlatformFieldSpec s = specMap.get(e.getKey());
-                if (s == null) continue;
+                if (s == null)
+                    continue;
                 String t = Optional.ofNullable(s.getType()).orElse("string").toLowerCase();
                 if (!"string".equals(t)) {
                     // Extend validation for other types here
@@ -164,10 +165,11 @@ public class RpaAssistantService {
      * Get assistant details including robots fetched from RPA platform.
      *
      * @param currentUserId current user ID
-     * @param assistantId   assistant ID
-     * @param name          optional robot name filter (supports Chinese "name" or English "english_name")
+     * @param assistantId assistant ID
+     * @param name optional robot name filter (supports Chinese "name" or English "english_name")
      * @return assistant detail response with robots and fields
-     * @throws BusinessException if assistant does not exist, has no permission, or RPA platform fields are missing
+     * @throws BusinessException if assistant does not exist, has no permission, or RPA platform fields
+     *         are missing
      */
     @Transactional(rollbackFor = Exception.class)
     public RpaAssistantResp detail(String currentUserId, Long assistantId, String name) {
@@ -177,8 +179,7 @@ public class RpaAssistantService {
         // 2) Retrieve authentication field (e.g., apiKey)
         RpaUserAssistantField field = fieldMapper.selectOne(
                 new LambdaQueryWrapper<RpaUserAssistantField>()
-                        .eq(RpaUserAssistantField::getAssistantId, a.getId())
-        );
+                        .eq(RpaUserAssistantField::getAssistantId, a.getId()));
         if (field == null || StringUtils.isBlank(field.getFieldValue())) {
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "RPA platform authentication field is missing, please configure first");
         }
@@ -188,7 +189,8 @@ public class RpaAssistantService {
 
         // 4) Update robot count with actual platform total (not affected by name filter)
         Integer total = rpaList.getInteger("total");
-        if (total == null) total = 0;
+        if (total == null)
+            total = 0;
         a.setRobotCount(total);
         assistantMapper.updateById(a);
 
@@ -225,16 +227,15 @@ public class RpaAssistantService {
                 a.getStatus(),
                 fields,
                 records,
-                a.getCreateTime()
-        );
+                a.getCreateTime());
     }
 
     /**
      * Update assistant info.
      *
      * @param currentUserId current user ID
-     * @param assistantId   assistant ID
-     * @param req           update request
+     * @param assistantId assistant ID
+     * @param req update request
      * @return updated assistant entity
      * @throws BusinessException if assistant does not exist, no permission, or name duplication occurs
      */
@@ -253,7 +254,8 @@ public class RpaAssistantService {
             }
             a.setAssistantName(req.assistantName());
         }
-        if (req.status() != null) a.setStatus(req.status());
+        if (req.status() != null)
+            a.setStatus(req.status());
         a.setUpdateTime(LocalDateTime.now());
         assistantMapper.updateById(a);
 
@@ -311,7 +313,7 @@ public class RpaAssistantService {
      * Delete an assistant.
      *
      * @param currentUserId current user ID
-     * @param assistantId   assistant ID
+     * @param assistantId assistant ID
      * @throws BusinessException if assistant does not exist or no permission
      */
     @Transactional
@@ -336,19 +338,21 @@ public class RpaAssistantService {
         List<RpaUserAssistantField> list = fieldMapper.selectList(
                 Wrappers.<RpaUserAssistantField>lambdaQuery()
                         .eq(RpaUserAssistantField::getAssistantId, assistantId));
-        return list.stream().collect(Collectors.toMap(
-                RpaUserAssistantField::getFieldKey,
-                RpaUserAssistantField::getFieldValue,
-                (a, b) -> a,
-                LinkedHashMap::new
-        ));
+        return list.stream()
+                .collect(Collectors.toMap(
+                        RpaUserAssistantField::getFieldKey,
+                        RpaUserAssistantField::getFieldValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new));
     }
 
     private void saveFields(Long assistantId, Map<String, PlatformFieldSpec> specMap, Map<String, String> fields) {
-        if (fields == null || fields.isEmpty()) return;
+        if (fields == null || fields.isEmpty())
+            return;
         for (Map.Entry<String, String> e : fields.entrySet()) {
             PlatformFieldSpec s = specMap.get(e.getKey());
-            if (s == null) continue;
+            if (s == null)
+                continue;
             RpaUserAssistantField f = new RpaUserAssistantField();
             f.setAssistantId(assistantId);
             f.setFieldKey(s.getName());

@@ -9,4 +9,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @Date: 2025/9/23 11:01
  */
 @Mapper
-public interface RpaInfoMapper extends BaseMapper<RpaInfo> {}
+public interface RpaInfoMapper extends BaseMapper<RpaInfo> {
+}

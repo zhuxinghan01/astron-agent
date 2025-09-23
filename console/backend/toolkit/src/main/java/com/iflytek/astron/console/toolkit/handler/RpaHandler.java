@@ -15,8 +15,10 @@ import org.springframework.stereotype.Component;
 /**
  * Handler for interacting with RPA APIs.
  *
- * <p>This class provides methods to query the RPA workflow list and handles HTTP calls,
- * response parsing, and error handling.</p>
+ * <p>
+ * This class provides methods to query the RPA workflow list and handles HTTP calls, response
+ * parsing, and error handling.
+ * </p>
  *
  * @author clliu19
  * @date 2025/9/23 09:54
@@ -31,15 +33,17 @@ public class RpaHandler {
     /**
      * Get RPA workflow list from downstream API.
      *
-     * <p>Performs parameter validation, constructs request URL, invokes HTTP call,
-     * parses the response, and returns the workflow list data.</p>
+     * <p>
+     * Performs parameter validation, constructs request URL, invokes HTTP call, parses the response,
+     * and returns the workflow list data.
+     * </p>
      *
-     * @param pageNo   page number (>= 1, default 1 if null)
+     * @param pageNo page number (>= 1, default 1 if null)
      * @param pageSize page size (1~1000, default 20 if null; values outside the range will be trimmed)
-     * @param key      secret/token used to generate Bearer Token (must not be blank)
+     * @param key secret/token used to generate Bearer Token (must not be blank)
      * @return {@link JSONObject} containing workflow list data
-     * @throws BusinessException if parameters are invalid, HTTP call fails,
-     *                           response parsing fails, or downstream returns a non-zero code
+     * @throws BusinessException if parameters are invalid, HTTP call fails, response parsing fails, or
+     *         downstream returns a non-zero code
      */
     public JSONObject getRpaList(Integer pageNo, Integer pageSize, String key) {
         // 1) Validate and normalize parameters
@@ -58,8 +62,7 @@ public class RpaHandler {
         final String url = String.format("%s%s?pageNo=%d&pageSize=%d", base, RPA_ROBOT_LIST, safePageNo, safePageSize);
         final Map<String, String> headers = Map.of(
                 "Authorization", "Bearer " + key,
-                "Accept", "application/json; charset=utf-8"
-        );
+                "Accept", "application/json; charset=utf-8");
 
         log.info("getRpaList -> url: {}, pageNo: {}, pageSize: {}", url, safePageNo, safePageSize);
 
@@ -88,8 +91,7 @@ public class RpaHandler {
             String message = obj.getString("message");
             throw new BusinessException(
                     ResponseEnum.RESPONSE_FAILED,
-                    "RPA api returned non-zero code: " + code + ", message: " + message
-            );
+                    "RPA api returned non-zero code: " + code + ", message: " + message);
         } catch (BusinessException be) {
             throw be;
         } catch (Exception parseEx) {
@@ -101,17 +103,21 @@ public class RpaHandler {
     /**
      * Abbreviate a string when printing logs to avoid overly long log entries.
      *
-     * <p>If the input exceeds {@code max} bytes (UTF-8), it will be truncated with a suffix
-     * indicating the original length.</p>
+     * <p>
+     * If the input exceeds {@code max} bytes (UTF-8), it will be truncated with a suffix indicating the
+     * original length.
+     * </p>
      *
-     * @param s   input string
+     * @param s input string
      * @param max maximum number of bytes to keep in logs
      * @return abbreviated string with suffix if truncated, otherwise the original string
      */
     private static String abbreviate(String s, int max) {
-        if (s == null) return null;
+        if (s == null)
+            return null;
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-        if (bytes.length <= max) return s;
+        if (bytes.length <= max)
+            return s;
         // Try to truncate on character boundary
         String cut = new String(bytes, 0, max, StandardCharsets.UTF_8);
         return cut + "...(" + bytes.length + "B)";
