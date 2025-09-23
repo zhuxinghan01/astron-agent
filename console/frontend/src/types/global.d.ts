@@ -40,4 +40,11 @@ declare global {
   }
 }
 
+declare module 'js-base64' {  // 明确声明模块名，与导入的包名一致
+  export class Base64 {
+    static encode(str: string): string;
+    static decode(str: string): string;
+  }
+}
+
 export type { ResponseResult, ResponseResultPage, ResponseBusinessError };

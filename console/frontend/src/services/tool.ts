@@ -1,3 +1,10 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:08:13
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:08:24
+ * @Description: 插件广场相关接口
+ */
 import http from '@/utils/http';
 import { message } from 'antd';
 import {

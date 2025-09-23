@@ -97,16 +97,8 @@ export async function debugServerToolAPI(params: {
   toolName: string;
   toolId: string;
   toolArgs: Record<string, unknown>;
-}): Promise<unknown> {
-  try {
-    const response = await http.post('/workflow/debug-server-tool', params);
-    message.success('操作成功');
-    return response as unknown;
-  } catch (error: unknown) {
-    const errorMessage = (error as Error)?.message;
-    message.error(errorMessage);
-    throw error;
-  }
+}): Promise<{ content: { text: string }[] }> {
+ return await http.post('/workflow/debug-server-tool', params);
 }
 
 export async function workflowGetEnvKey(

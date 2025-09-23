@@ -1,3 +1,10 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:07:18
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:07:29
+ * @Description: http请求工具
+ */
 import axios from 'axios';
 import { Base64 } from 'js-base64';
 import { casdoorSdk } from '@/config';
