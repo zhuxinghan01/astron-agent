@@ -65,58 +65,64 @@ class CBGRAGStrategy(RAGStrategy):
             query=query, doc_ids=doc_ids, top_n=top_k, **kwargs
         )
 
-        results = []
+        results = [dict]
         if check_not_empty(query_results):
             for result in query_results:
-                if result.get("score", 0) < threshold:
-                    continue
+                if isinstance(result, dict):
+                    if result.get("score", 0) < threshold:
+                        continue
 
-                chunk_context = []
-                chunk_img_reference = {}
-                sorted_objects = []
-                chunk_info = result.get("chunk")
+                    chunk_context = []
+                    chunk_img_reference: Dict[str, Any] = {}  # Added type annotation
+                    sorted_objects = []
+                    chunk_info = result.get("chunk")
 
-                if check_not_empty(chunk_info):
-                    chunk_context.append(chunk_info)
+                    # Handle chunk_info as dictionary
+                    if check_not_empty(chunk_info) and isinstance(chunk_info, dict):
+                        chunk_context.append(chunk_info)
 
-                    if check_not_empty(chunk_info.get("imgReference")):
-                        chunk_img_reference.update(chunk_info.get("imgReference"))
+                        # Safely handle imgReference
+                        img_ref = chunk_info.get("imgReference")
+                        if check_not_empty(img_ref) and isinstance(img_ref, dict):
+                            chunk_img_reference.update(img_ref)
 
-                    if check_not_empty(result.get("overlap", [])):
-                        chunk_context.extend(result.get("overlap", []))
-                        sorted_objects = sorted(
-                            chunk_context, key=lambda x: x.get("dataIndex", 0)
+                        # Handle overlap chunks
+                        overlap_chunks = result.get("overlap", [])
+                        if check_not_empty(overlap_chunks):
+                            chunk_context.extend(overlap_chunks)
+                            sorted_objects = sorted(
+                                chunk_context, key=lambda x: x.get("dataIndex", 0)
+                            )
+
+                        # Build full context text
+                        full_context = "".join(
+                            obj.get("content", "") for obj in sorted_objects
+                        ) if sorted_objects else chunk_info.get("content", "")
+
+                        # Collect references from all chunks
+                        for obj in sorted_objects or chunk_context:
+                            obj_img_ref = obj.get("imgReference") if isinstance(obj, dict) else None
+                            if check_not_empty(obj_img_ref) and isinstance(obj_img_ref, dict):
+                                chunk_img_reference.update(obj_img_ref)
+
+                        # Append processed result
+                        results.append(
+                            {
+                                "score": result.get("score"),
+                                "docId": chunk_info.get("fileId", ""),
+                                "chunkId": chunk_info.get("id", ""),
+                                "fileName": unquote(
+                                    str(result.get("fileName", "")), encoding="utf-8"
+                                ),
+                                "content": chunk_info.get("content", ""),
+                                "context": full_context,
+                                "references": chunk_img_reference,
+                            }
                         )
-
-                    full_context = "".join(
-                        obj.get("content", "") for obj in sorted_objects
-                    )
-
-                    for obj in sorted_objects:
-                        if check_not_empty(obj.get("imgReference")):
-                            chunk_img_reference.update(obj.get("imgReference"))
-
-                    results.append(
-                        {
-                            "score": result.get("score", ""),
-                            "docId": chunk_info.get("fileId", ""),
-                            "chunkId": chunk_info.get("id", ""),
-                            "fileName": unquote(
-                                str(result.get("fileName", "")), encoding="utf-8"
-                            ),
-                            "content": chunk_info.get("content", ""),
-                            "context": (
-                                full_context
-                                if full_context != ""
-                                else chunk_info.get("content", "")
-                            ),
-                            "references": chunk_img_reference,
-                        }
-                    )
 
         return {
             "query": query,
-            "count": len(query_results) if query_results else 0,
+            "count": len(results),
             "results": results,
         }
 
@@ -146,7 +152,7 @@ class CBGRAGStrategy(RAGStrategy):
             List of split chunks
         """
         data = []
-        wiki_split_extends = {}
+        wiki_split_extends: Dict[str, Any] = {}
 
         if check_not_empty(separator):
             split_chars = []
@@ -254,7 +260,7 @@ class CBGRAGStrategy(RAGStrategy):
 
         return await xinghuo.dataset_delchunk(chunk_ids=chunkIds, **kwargs)
 
-    async def query_doc(self, docId: str, **kwargs: Any) -> List[ChunkInfo]:
+    async def query_doc(self, docId: str, **kwargs: Any) -> List[dict]:
         """
         Query all chunks of a document
 
@@ -265,7 +271,7 @@ class CBGRAGStrategy(RAGStrategy):
         Returns:
             List of chunk information
         """
-        result = []
+        result: List[dict] = []
         datas = await xinghuo.get_chunks(file_id=docId, **kwargs)
 
         for data in datas:
@@ -275,7 +281,7 @@ class CBGRAGStrategy(RAGStrategy):
             if isinstance(references, dict):
                 for key, value in references.items():
                     content_text = content_text.replace(
-                        "{" + key + "}", "![Image name](" + value + ")"
+                        "{" + key + "}", ""
                     )
 
             result.append(
@@ -285,10 +291,10 @@ class CBGRAGStrategy(RAGStrategy):
                     content=content_text
                 ).__dict__
             )
-        sorted_by_age = sorted(result, key=lambda x: x['chunkId'])
+        sorted_by_age = sorted(result, key=lambda x: x["chunkId"])
         return sorted_by_age
 
-    async def query_doc_name(self, docId: str, **kwargs: Any) -> Optional[FileInfo]:
+    async def query_doc_name(self, docId: str, **kwargs: Any) -> Optional[dict]:
         """
         Query document name information
 
@@ -311,4 +317,5 @@ class CBGRAGStrategy(RAGStrategy):
             fileName=file_name,
             fileStatus=datas.get("fileStatus", ""),
             fileQuantity=datas.get("quantity", 0),
-        )
+        ).__dict__
+

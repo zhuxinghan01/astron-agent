@@ -48,22 +48,23 @@ class AIUIRAGStrategy(RAGStrategy):
 
         results = []
         for result in chunk_query_response_data["results"]:
-            doc_info = result.get("docInfo", {})
-            file_name = doc_info.get("documentName", "") if check_not_empty(doc_info) else ""
+            if isinstance(result, dict):
+                doc_info = result.get("docInfo", {})
+                file_name = doc_info.get("documentName", "") if check_not_empty(doc_info) else ""
 
-            results.append(
-                {
-                    "score": result.get("score"),
-                    "docId": result.get("docId", ""),
-                    "title": result.get("title"),
-                    "content": result.get("content", ""),
-                    "context": result.get("context", ""),
-                    "chunkId": result.get("chunkId"),
-                    "references": result.get("references", {}),
-                    "docInfo": doc_info,
-                    "fileName": file_name,
-                }
-            )
+                results.append(
+                    {
+                        "score": result.get("score"),
+                        "docId": result.get("docId", ""),
+                        "title": result.get("title"),
+                        "content": result.get("content", ""),
+                        "context": result.get("context", ""),
+                        "chunkId": result.get("chunkId"),
+                        "references": result.get("references", {}),
+                        "docInfo": doc_info,
+                        "fileName": file_name,
+                    }
+                )
 
         return {
             "query": chunk_query_response_data.get("query"),
@@ -124,17 +125,18 @@ class AIUIRAGStrategy(RAGStrategy):
         data = []
         if check_not_empty(doc_split_response_data):
             for chunk in doc_split_response_data:
-                data.append(
-                    {
-                        "docId": chunk.get("docId", ""),
-                        "dataIndex": chunk.get("chunkId", ""),
-                        "title": chunk.get("title", ""),
-                        "content": chunk.get("content", ""),
-                        "context": chunk.get("context", ""),
-                        "references": chunk.get("references", {}),
-                        "docInfo": chunk.get("docInfo", {}),
-                    }
-                )
+                if isinstance(chunk, dict):
+                    data.append(
+                        {
+                            "docId": chunk.get("docId", ""),
+                            "dataIndex": chunk.get("chunkId", ""),
+                            "title": chunk.get("title", ""),
+                            "content": chunk.get("content", ""),
+                            "context": chunk.get("context", ""),
+                            "references": chunk.get("references", {}),
+                            "docInfo": chunk.get("docInfo", {}),
+                        }
+                    )
 
         return data
 
@@ -176,7 +178,7 @@ class AIUIRAGStrategy(RAGStrategy):
         """
         chunk_ids = []
         if check_not_empty(chunks):
-            chunk_ids = [chunk.get("chunkId") for chunk in chunks if check_not_empty(chunk)]
+            chunk_ids = [chunk.get("chunkId") for chunk in chunks if check_not_empty(chunk) and isinstance(chunk, dict)]
 
         # Delete first, then save
         await self.chunks_delete(doc_id=docId, chunk_ids=chunk_ids, **kwargs)
@@ -204,45 +206,43 @@ class AIUIRAGStrategy(RAGStrategy):
 
     async def query_doc(
             self, docId: str, **kwargs: Any
-    ) -> List[ChunkInfo]:
+    ) -> List[dict]:
         """
         Query all chunks of a document
-
-        Args:
-            docId: Document ID
-            **kwargs: Other parameters
-
-        Returns:
-            List of chunk information
         """
-        result = []
+        result: List[dict] = []
         datas = await aiui.get_doc_content(docId, **kwargs)
+        if check_not_empty(datas):
+            for data in datas:
+                if isinstance(data, dict):
+                    content_text = data.get("content", "")
+                    references = data.get("references", {})
 
-        for data in datas:
-            content_text = data["content"]
-            for key, value in data["references"].items():
-                if value["format"] == "table":
-                    content_text = content_text.replace(
-                        "<" + key + ">", value["content"]
+                    if isinstance(references, dict):
+                        for key, value in references.items():
+                            if isinstance(value, dict):
+                                if value.get("format") == "table":
+                                    content_text = content_text.replace(
+                                        "<" + key + ">", value.get("content", "")
+                                    )
+                                elif value.get("format") == "image":
+                                    content_text = content_text.replace(
+                                        "<" + key + ">", "![Image name](" + value["link"] + ")")
+
+                    result.append(
+                        ChunkInfo(
+                            docId=data.get("docId", ""),
+                            chunkId=data.get("chunkId", ""),
+                            content=content_text,
+                        ).__dict__
                     )
-                elif value["format"] == "image":
-                    content_text = content_text.replace(
-                        "<" + key + ">", "![Image name](" + value["link"] + ")"
-                    )
 
-            result.append(
-                ChunkInfo(
-                    docId=data.get("docId", ""),
-                    chunkId=data.get("chunkId", ""),
-                    content=content_text,
-                )
-            )
-
-        return sorted(result)
+            result = sorted(result, key=lambda x: x["chunkId"])
+        return result
 
     async def query_doc_name(
             self, docId: str, **kwargs: Any
-    ) -> Optional[FileInfo]:
+    ) -> Optional[dict]:
         """
         Query document name information
 
