@@ -227,7 +227,7 @@ services:
     image: ghcr.io/lyj715824/openstellar/astra-agent-core-link:latest
     container_name: astra-agent-core-link
     ports:
-      - "${CORE_LINK_PORT:-8004}:8000"
+      - "${CORE_LINK_PORT:-18888}:18888"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy

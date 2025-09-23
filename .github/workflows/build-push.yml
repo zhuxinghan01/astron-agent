@@ -1,13 +1,14 @@
-name: Build and Push Astra Agent Images
+name: Build and Push astron Agent Images
 
 on:
   push:
     branches:
       - master
       - feature/**
-      - 'release/**'
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - feature/**
   workflow_dispatch:
     inputs:
       push_images:
@@ -49,18 +50,16 @@ jobs:
       - name: Extract metadata
         id: meta
         run: |
-          # Determine version (only for branches now)
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            VERSION="latest"
-          else
-            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9._-]/-/g')
-          fi
+          # Version is always latest
+          VERSION="latest"
 
-          # Determine if should push (master, feature branches, or manual dispatch)
+          # Determine if should push (master, feature branches, PR, or manual dispatch)
           SHOULD_PUSH="false"
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]]; then
             SHOULD_PUSH="true"
           elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/heads/feature/* ]]; then
+            SHOULD_PUSH="true"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             SHOULD_PUSH="true"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.push_images }}" == "true" ]]; then
             SHOULD_PUSH="true"
@@ -78,7 +77,7 @@ jobs:
           echo "🏗️ Platforms: $PLATFORMS"
 
   # ============================================================================
-  # Stage 2: Build Astra Agent Docker Images (Parallel Jobs)
+  # Stage 2: Build astron Agent Docker Images (Parallel Jobs)
   # ============================================================================
   build-core-tenant:
     name: 🏢 Build Core Tenant
@@ -107,12 +106,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-tenant
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-tenant
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Tenant image
         uses: docker/build-push-action@v5
@@ -157,12 +153,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-memory
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-memory
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Memory image
         uses: docker/build-push-action@v5
@@ -207,12 +200,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-rpa
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-rpa
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core RPA image
         uses: docker/build-push-action@v5
@@ -257,12 +247,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-link
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-link
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Link image
         uses: docker/build-push-action@v5
@@ -307,12 +294,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-aitools
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-aitools
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core AI Tools image
         uses: docker/build-push-action@v5
@@ -357,12 +341,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-agent
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-agent
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Agent image
         uses: docker/build-push-action@v5
@@ -407,12 +388,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-knowledge
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-knowledge
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Knowledge image
         uses: docker/build-push-action@v5
@@ -457,12 +435,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-workflow
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-workflow
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Core Workflow image
         uses: docker/build-push-action@v5
@@ -507,12 +482,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-frontend
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-frontend
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Console Frontend image
         uses: docker/build-push-action@v5
@@ -557,12 +529,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-hub
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-hub
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Console Hub image
         uses: docker/build-push-action@v5
@@ -607,12 +576,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-toolkit
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-toolkit
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.detect-and-prepare.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push Console Toolkit image
         uses: docker/build-push-action@v5
@@ -653,7 +619,7 @@ jobs:
     steps:
       - name: Generate build summary
         run: |
-          echo "=== 🐳 Astra Agent Multi-Service Docker Build Summary ==="
+          echo "=== 🐳 astron Agent Multi-Service Docker Build Summary ==="
           echo ""
           echo "🔍 Project Detection: ${{ needs.detect-and-prepare.result }}"
           echo "📊 Version: ${{ needs.detect-and-prepare.outputs.version }}"
@@ -696,22 +662,22 @@ jobs:
           if [[ "${{ needs.detect-and-prepare.outputs.should-push }}" == "true" ]]; then
             echo ""
             echo "🎯 Published Images:"
-            [[ "${{ needs.build-core-tenant.result }}" == "success" ]] && echo "  🏢 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/openstellar-core-tenant:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-memory.result }}" == "success" ]] && echo "  🧠 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-memory:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-rpa.result }}" == "success" ]] && echo "  🤖 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-rpa:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-link.result }}" == "success" ]] && echo "  🔗 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-link:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-aitools.result }}" == "success" ]] && echo "  🛠️ ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-aitools:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-agent.result }}" == "success" ]] && echo "  🤖 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-agent:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-knowledge.result }}" == "success" ]] && echo "  📚 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-knowledge:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-core-workflow.result }}" == "success" ]] && echo "  ⚡ ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-core-workflow:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-console-frontend.result }}" == "success" ]] && echo "  🌐 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-frontend:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-console-hub.result }}" == "success" ]] && echo "  🎯 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-hub:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-console-toolkit.result }}" == "success" ]] && echo "  🧰 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astra-agent-console-toolkit:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-tenant.result }}" == "success" ]] && echo "  🏢 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-tenant:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-memory.result }}" == "success" ]] && echo "  🧠 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-memory:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-rpa.result }}" == "success" ]] && echo "  🤖 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-rpa:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-link.result }}" == "success" ]] && echo "  🔗 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-link:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-aitools.result }}" == "success" ]] && echo "  🛠️ ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-aitools:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-agent.result }}" == "success" ]] && echo "  🤖 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-agent:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-knowledge.result }}" == "success" ]] && echo "  📚 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-knowledge:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-core-workflow.result }}" == "success" ]] && echo "  ⚡ ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-workflow:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-console-frontend.result }}" == "success" ]] && echo "  🌐 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-frontend:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-console-hub.result }}" == "success" ]] && echo "  🎯 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-hub:${{ needs.detect-and-prepare.outputs.version }}"
+            [[ "${{ needs.build-console-toolkit.result }}" == "success" ]] && echo "  🧰 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-toolkit:${{ needs.detect-and-prepare.outputs.version }}"
           fi
 
           if [[ "$SUCCESS_COUNT" == "$TOTAL_COUNT" ]]; then
             echo ""
-            echo "✅ 🎉 All Astra Agent Docker images built successfully!"
+            echo "✅ 🎉 All astron Agent Docker images built successfully!"
             if [[ "${{ needs.detect-and-prepare.outputs.should-push }}" == "true" ]]; then
               echo "🚀 Images are now available in GitHub Container Registry"
             else
