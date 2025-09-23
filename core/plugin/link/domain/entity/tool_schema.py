@@ -6,7 +6,7 @@ and entities used by the SparkLink plugin system.
 
 import warnings
 from datetime import datetime
-from consts import const
+from plugin.link.consts import const
 
 import sqlalchemy as sa
 from sqlmodel import SQLModel, Field, Column, String, Text, BigInteger

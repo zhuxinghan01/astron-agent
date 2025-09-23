@@ -6,8 +6,8 @@ including format checking, version validation, and schema compliance.
 
 import re
 import jsonschema
-from utils.open_api_schema.common_schema import open_api_schema_template
-from utils.otlp.trace.span import Span
+from plugin.link.utils.open_api_schema.common_schema import open_api_schema_template
+from plugin.link.utils.otlp.trace.span import Span
 import base64
 import json
 from openapi_spec_validator import validate

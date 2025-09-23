@@ -15,7 +15,7 @@ from time import mktime
 import base64
 import hmac
 from urllib.parse import urlencode
-from consts import const
+from plugin.link.consts import const
 
 
 def generate_13_digit_timestamp():

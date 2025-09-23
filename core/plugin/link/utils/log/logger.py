@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import appdirs
-from consts import const
+from plugin.link.consts import const
 from loguru import logger
 
 VALID_LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]

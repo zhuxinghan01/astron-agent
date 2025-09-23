@@ -9,26 +9,23 @@ with proper async support and comprehensive error handling.
 import pytest
 import json
 import base64
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+from unittest.mock import Mock, patch, AsyncMock
 
-from service.community.tools.http.execution_server import (
+from plugin.link.service.community.tools.http.execution_server import (
     http_run,
     tool_debug,
     process_array,
     get_response_schema
 )
-from api.schemas.community.tools.http.execution_schema import (
-    HttpRunRequest,
+from plugin.link.api.schemas.community.tools.http.execution_schema import (
     HttpRunResponse,
     HttpRunResponseHeader,
     ToolDebugRequest,
     ToolDebugResponse,
     ToolDebugResponseHeader
 )
-from utils.errors.code import ErrCode
-from exceptions.sparklink_exceptions import SparkLinkBaseException
-from consts import const
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.consts import const
 
 
 class TestHttpRun:
@@ -118,9 +115,9 @@ class TestHttpRun:
     @patch('service.community.tools.http.execution_server.HttpRun')
     @pytest.mark.asyncio
     async def test_http_run_success(self, mock_http_run_class, mock_parser_class,
-                                  mock_get_db, mock_crud_class, mock_api_validate,
-                                  mock_span_class, valid_http_run_request,
-                                  mock_tool_schema, mock_schema_parser_result):
+                                    mock_get_db, mock_crud_class, mock_api_validate,
+                                    mock_span_class, valid_http_run_request,
+                                    mock_tool_schema, mock_schema_parser_result):
         """Test successful HTTP tool execution."""
         # Mock validation
         mock_api_validate.return_value = None
@@ -164,15 +161,13 @@ class TestHttpRun:
         mock_request.model_dump.return_value = valid_http_run_request
 
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv, \
-             patch('service.community.tools.http.execution_server.Meter') as mock_meter, \
-             patch('service.community.tools.http.execution_server.NodeTrace') as mock_node_trace, \
              patch('jsonschema.Draft7Validator') as mock_validator:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -221,7 +216,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -242,7 +237,7 @@ class TestHttpRun:
     @patch('service.community.tools.http.execution_server.get_db_engine')
     @pytest.mark.asyncio
     async def test_http_run_tool_not_exist(self, mock_get_db, mock_crud_class,
-                                         mock_api_validate, mock_span_class):
+                                           mock_api_validate, mock_span_class):
         """Test HTTP run with non-existent tool."""
         mock_api_validate.return_value = None
 
@@ -273,7 +268,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -295,8 +290,8 @@ class TestHttpRun:
     @patch('service.community.tools.http.execution_server.OpenapiSchemaParser')
     @pytest.mark.asyncio
     async def test_http_run_operation_not_exist(self, mock_parser_class, mock_get_db,
-                                              mock_crud_class, mock_api_validate,
-                                              mock_span_class, mock_tool_schema):
+                                                mock_crud_class, mock_api_validate,
+                                                mock_span_class, mock_tool_schema):
         """Test HTTP run with non-existent operation ID."""
         mock_api_validate.return_value = None
 
@@ -338,7 +333,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -362,10 +357,10 @@ class TestHttpRun:
     @patch('service.community.tools.http.execution_server.get_redis_engine')
     @pytest.mark.asyncio
     async def test_http_run_with_authentication(self, mock_get_redis, mock_http_run_class,
-                                              mock_parser_class, mock_get_db,
-                                              mock_crud_class, mock_api_validate,
-                                              mock_span_class, valid_http_run_request,
-                                              mock_tool_schema):
+                                                mock_parser_class, mock_get_db,
+                                                mock_crud_class, mock_api_validate,
+                                                mock_span_class, valid_http_run_request,
+                                                mock_tool_schema):
         """Test HTTP run with API key authentication."""
         mock_api_validate.return_value = None
 
@@ -434,7 +429,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -463,7 +458,7 @@ class TestToolDebug:
     def valid_debug_request(self):
         """Create a valid tool debug request."""
         return {
-            "header": {
+            "header_info": {
                 "app_id": "12345678",
                 "uid": "test_uid",
                 "sid": "test_sid",
@@ -473,7 +468,7 @@ class TestToolDebug:
             "method": "GET",
             "path": {"id": "123"},
             "query": {"q": "test"},
-            "header": {"Authorization": "Bearer token"},
+            "headers": {"Authorization": "Bearer token"},
             "body": {"data": "test"},
             "openapi_schema": json.dumps({
                 "openapi": "3.0.0",
@@ -487,7 +482,7 @@ class TestToolDebug:
     @patch('service.community.tools.http.execution_server.HttpRun')
     @pytest.mark.asyncio
     async def test_tool_debug_success(self, mock_http_run_class, mock_api_validate,
-                                    mock_span_class, valid_debug_request):
+                                      mock_span_class, valid_debug_request):
         """Test successful tool debugging."""
         mock_api_validate.return_value = None
 
@@ -525,7 +520,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -550,9 +545,11 @@ class TestToolDebug:
     @patch('service.community.tools.http.execution_server.api_validate')
     @patch('service.community.tools.http.execution_server.HttpRun')
     @patch('service.community.tools.http.execution_server.Meter')
-    @patch('service.community.tools.http.execution_server.NodeTrace')
+    @patch('service.community.tools.http.execution_server.NodeTraceLog')
     @pytest.mark.asyncio
-    async def test_tool_debug_validation_error(self, mock_node_trace, mock_meter, mock_http_run_class, mock_api_validate, mock_span_class):
+    async def test_tool_debug_validation_error(self, mock_node_trace, mock_meter,
+                                               mock_http_run_class, mock_api_validate,
+                                               mock_span_class):
         """Test tool debug with validation error."""
         mock_api_validate.return_value = "Debug validation failed"
 
@@ -589,7 +586,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -609,7 +606,7 @@ class TestToolDebug:
     @patch('service.community.tools.http.execution_server.HttpRun')
     @pytest.mark.asyncio
     async def test_tool_debug_response_schema_validation_error(self, mock_http_run_class,
-                                                             mock_api_validate, mock_span_class):
+                                                               mock_api_validate, mock_span_class):
         """Test tool debug with response schema validation error."""
         mock_api_validate.return_value = None
 
@@ -674,7 +671,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -786,7 +783,7 @@ class TestUtilityFunctions:
 
     def test_default_values_mapping(self):
         """Test default values mapping for schema validation."""
-        from service.community.tools.http.execution_server import default_value
+        from plugin.link.service.community.tools.http.execution_server import default_value
 
         expected_defaults = {
             " 'string'": "",
@@ -888,9 +885,8 @@ class TestExecutionServerErrorHandling:
     def test_telemetry_integration(self):
         """Test telemetry integration in execution server."""
         telemetry_components = [
-            "Span", "Meter", "NodeTrace", "TraceStatus"
+            "Span", "Meter", "NodeTraceLog", "Status"
         ]
 
         for component in telemetry_components:
             assert isinstance(component, str)
-            # Verify telemetry components are properly used

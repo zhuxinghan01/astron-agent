@@ -5,13 +5,13 @@ including listing available tools and calling specific MCP tool functions.
 """
 
 from fastapi import APIRouter, Body
-from api.schemas.community.tools.mcp.mcp_tools_schema import (
+from plugin.link.api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPToolListRequest,
     MCPToolListResponse,
     MCPCallToolRequest,
     MCPCallToolResponse,
 )
-from service.community.tools.mcp.mcp_server import tool_list, call_tool
+from plugin.link.service.community.tools.mcp.mcp_server import tool_list, call_tool
 
 # MCP tools router
 mcp_router = APIRouter(tags=["mcp tools api"])
