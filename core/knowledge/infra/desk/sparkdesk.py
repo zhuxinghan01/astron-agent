@@ -18,8 +18,6 @@ from knowledge.exceptions.exception import ThirdPartyException
 from knowledge.utils.spark_signature import get_signature
 
 
-
-
 async def sparkdesk_query_async(
     query: str,
     repo_ids: Optional[List[str]] = None,
@@ -151,6 +149,7 @@ async def async_request(
                 ) from e
 
     return {}
+
 
 async def assemble_auth_headers_async() -> Dict[str, str]:
     """
