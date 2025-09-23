@@ -4,10 +4,12 @@ import type {
   ChatState,
   ChatActions,
   Option,
+  UploadFileInfo,
 } from '@/types/chat';
 const useChatStore = create<ChatState & ChatActions>(set => ({
   // 状态
   messageList: [],
+  chatFileListNoReq: [],
   streamingMessage: null,
   streamId: '',
   answerPercent: 0,
@@ -27,6 +29,7 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
   initChatStore: (): void => {
     set({
       messageList: [],
+      chatFileListNoReq: [],
       streamId: '',
       streamingMessage: null,
       answerPercent: 0,
@@ -46,6 +49,16 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
 
   setMessageList: (messageList: MessageListType[]): void =>
     set({ messageList }),
+  setChatFileListNoReq: (
+    updater: UploadFileInfo[] | ((prev: UploadFileInfo[]) => UploadFileInfo[])
+  ): void => {
+    set(state => ({
+      chatFileListNoReq:
+        typeof updater === 'function'
+          ? updater(state.chatFileListNoReq)
+          : updater,
+    }));
+  },
   addMessage: (message: MessageListType): void =>
     set(state => ({ messageList: [...state.messageList, message] })),
 

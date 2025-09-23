@@ -39,7 +39,7 @@ const useChat = () => {
   const controllerRef = useRef<AbortController>(new AbortController()); //sse请求控制器
   const sidRef = useRef<string>(''); //sid
   const currentChatId = useChatStore(state => state.currentChatId); //当前聊天id
-  const workflowOption = useChatStore(state => state.workflowOption); //工作流选项
+  const chatFileListNoReq = useChatStore(state => state.chatFileListNoReq); //文件列表
   const setStreamId = useChatStore(state => state.setStreamId); //对话流id
   const setAnswerPercent = useChatStore(state => state.setAnswerPercent); //进度条
   const setControllerRef = useChatStore(state => state.setControllerRef); //sse请求控制器
@@ -96,6 +96,7 @@ const useChat = () => {
       })(),
       updateTime: new Date().toISOString(),
       reqId: 'USER',
+      chatFileList: chatFileListNoReq,
     });
     // 开始流式消息
     startStreamingMessage({
@@ -218,11 +219,12 @@ const useChat = () => {
     msg: string;
     workflowOperation?: string;
     version?: string;
+    fileUrl?: string;
     onSendCallback?: () => void;
   }) => {
     setIsWorkflowOption(false);
     setWorkflowOption({ option: [], content: '' });
-    const { msg, workflowOperation, version, onSendCallback } = params;
+    const { msg, workflowOperation, version, fileUrl, onSendCallback } = params;
     let esURL = `/chat-message/chat`;
     if (
       typeof window !== 'undefined' &&
@@ -237,6 +239,7 @@ const useChat = () => {
     form.append('chatId', `${currentChatId}`);
     form.append('workflowVersion', version || '');
     workflowOperation && form.append('workflowOperation', workflowOperation);
+    fileUrl && form.append('fileUrl', fileUrl);
     // 执行回调函数
     onSendCallback && onSendCallback();
     fetchSSE(esURL, form);
