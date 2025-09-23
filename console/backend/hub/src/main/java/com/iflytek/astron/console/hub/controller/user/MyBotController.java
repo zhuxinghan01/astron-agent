@@ -84,9 +84,7 @@ public class MyBotController {
         botDetail.setMaasDatasetList(massDatasetInfoService.getDatasetMaasByBot(uid, botId, request));
 
         // Manually parse inputExample to inputExampleList
-        if (botDetail != null) {
-            botDetail.parseInputExampleList();
-        }
+        botDetail.parseInputExampleList();
 
         return ApiResult.success(botDetail);
     }
