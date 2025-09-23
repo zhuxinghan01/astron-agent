@@ -24,6 +24,7 @@ import com.iflytek.astron.console.toolkit.mapper.bot.SparkBotMapper;
 import com.iflytek.astron.console.toolkit.mapper.model.ModelMapper;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowMapper;
 import com.iflytek.astron.console.toolkit.util.S3Util;
+import com.iflytek.astron.console.commons.entity.workflow.Workflow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

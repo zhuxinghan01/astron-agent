@@ -61,7 +61,7 @@ public class AuthStringUtil {
         String sha = Base64.getEncoder().encodeToString(hexDigits);
         String authParam = String.format("hmac-auth api_key=\"%s\", algorithm=\"%s\", headers=\"%s\", signature=\"%s\"",
                 apiKey, "hmac-sha256", "host date request-line digest", sha);
-        String authorization = Base64.getEncoder().encodeToString(authParam.getBytes());
+        String authorization = Base64.getEncoder().encodeToString(authParam.getBytes(charset));
 
         Map<String, String> header = new HashMap<>();
         header.put("authorization", authorization);
@@ -190,7 +190,7 @@ public class AuthStringUtil {
 
     private static String md5(String cipherText) {
         try {
-            byte[] data = cipherText.getBytes();
+            byte[] data = cipherText.getBytes(StandardCharsets.UTF_8);
             // Message digest is a secure one-way hash function that takes data of any size and outputs a
             // fixed-length hash value.
             MessageDigest mdInst = MessageDigest.getInstance("MD5");
