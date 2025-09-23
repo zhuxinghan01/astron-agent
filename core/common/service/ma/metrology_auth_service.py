@@ -19,7 +19,6 @@ class MASDKService(Service):
         rpc_config_file=None,
         metrics_service_name=None,
     ):
-        # 初始化masdk
         if not os.getenv("MASDK_SWITCH"):
             return
         self.ma_sdk = MASDK(

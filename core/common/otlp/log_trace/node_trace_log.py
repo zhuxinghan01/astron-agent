@@ -16,16 +16,14 @@ class Status(BaseModel):
 
 
 class NodeTraceLog(BaseModel):
-    service_id: str  # 服务ID，后续flow_id，bot_id，mcp_id放置于此。
-    # flow_id: str = Field(default="", description="工作流ID（字段弃用）")  # 工作流ID（字段弃用，不删除）
-    sid: str  # 会话ID
+    service_id: str 
+    sid: str
     app_id: str = Field(default="", description="应用ID")
     uid: str = Field(default="", description="用户ID")
-    # bot_id: str = Field(default="", description="助手ID（字段弃用）")
     chat_id: str = Field(default="", description="会话ID")
-    sub: str  # 业务服务分类
-    caller: str = ""  # 业务调用来源，用于统计区分来源成功，请按照规范使用
-    log_caller: str = ""  # 上报该日志的调用函数
+    sub: str
+    caller: str = ""
+    log_caller: str = ""
 
     question: str = Field(default="", description="问题")
     answer: str = Field(default="", description="答案")
@@ -33,12 +31,12 @@ class NodeTraceLog(BaseModel):
     start_time: int = Field(default_factory=lambda: int(time.time() * 1000))
     end_time: int = Field(default_factory=lambda: int(time.time() * 1000))
     duration: int = 0
-    first_frame_duration: float = -1.0  # 链路首帧耗时
+    first_frame_duration: float = -1.0
 
-    srv: Dict[str, str] = {}  # 上层业务属性，待定
-    srv_tag: Dict[str, str] = {}  # 上层业务属性，待定
-    status: Status = Status()  # 运行状态
-    usage: Usage = Usage()  # 统计token使用情况
+    srv: Dict[str, str] = {}
+    srv_tag: Dict[str, str] = {}
+    status: Status = Status()
+    usage: Usage = Usage()
     version: str = "v2.0.0"
     trace: List[NodeLog] = Field(default_factory=list)
 
@@ -74,7 +72,6 @@ class NodeTraceLog(BaseModel):
         """
         self.end_time = int(time.time() * 1000)
         self.duration = self.end_time - self.start_time
-        # usage计算
         for i, node_log in enumerate(self.trace):
             self.usage.total_tokens += node_log.data.usage.total_tokens
             self.usage.prompt_tokens += node_log.data.usage.prompt_tokens
@@ -104,7 +101,6 @@ class NodeTraceLog(BaseModel):
         def is_large_string(s: str, limit=5 * 1024) -> bool:
             return isinstance(s, str) and sys.getsizeof(s.encode("utf-8")) > limit
 
-        # 递归处理结构
         def process_data(data):
             if isinstance(data, dict):
                 return {k: process_data(v) for k, v in data.items()}

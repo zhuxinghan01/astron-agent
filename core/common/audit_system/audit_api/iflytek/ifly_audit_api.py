@@ -16,16 +16,12 @@ from common.exceptions.codes import c9021, c9022, c9023
 from common.exceptions.errs import AuditServiceException
 from common.otlp.trace.span import Span
 
-# 连接超时1s
 CONNECT_TIMEOUT = 1
 
-# 文本读超时6s
 TEXT_READ_TIMEOUT = 6
 
-# 图片读超时10s
 IMAGE_READ_TIMEOUT = 10
 
-# 重试次数
 RETRY_COUNT = 2
 
 
@@ -34,31 +30,22 @@ class ActionEnum:
     定义审核动作枚举类。
     """
 
-    # 审核结果正常，流程正常执行。
     NONE = "none"
 
-    # 增强提示，提供prompt优化信息，基于新的prompt来生成新的安全答复信息
     FORTIFY_PROMPT = "fortify_prompt"
 
-    # 重新回答，大模型输出的内容存在风险，基于新的prompt或者新的模型来生成新的安全答复信息。
     REANSWER = "reanswer"
 
-    # 安全大模型分流，将接口返回的安全大模型，作为目标大模型重新生成回答内容返回。
     SAFE_MODEL = "safe_model"
 
-    # 安全回复，将接口返回的默认回复作为回答内容上屏。(暂时不支持)
     SAFE_ANSWER = "safe_answer"
 
-    # 拒答不上屏，并终止多轮对话。
     DISCONTINUE = "discontinue"
 
-    # 红线必答，将接口返回的红线必答字段作为回答内容上屏，并终止多轮对话。(暂时不支持)
     REDLINE = "redline"
 
-    # 仅内容不上屏，当前大模型输出内容不上屏，后续流程继续。示例场景：模型输出的思考内容识别到风险，思考内容不上屏，答复流程正常执行。
     HIDE_CONTINUE = "hide_continue"
 
-    # 内容不引用，当前内容存在风险回答时不引用。
     NONREFERENCE = "nonreference"
 
 
@@ -85,25 +72,20 @@ class IFlyAuditAPI(AuditAPI):
             raise ValueError(f"缺少必要环境变量: {', '.join(missing)}")
 
     def _signature(self, query_param: dict) -> str:
-        # 使用有序字典模拟 TreeMap（按 key 排序）
         sorted_params = OrderedDict(sorted(query_param.items()))
 
-        # 移除 signature 参数
         sorted_params.pop("signature", None)
 
-        # 构造 base string
         builder = []
         for key, value in sorted_params.items():
             if value is not None and value != "":
                 encoded_value = quote(
                     value, safe=""
-                )  # 等同于 URLEncoder.encode(..., "UTF-8")
+                )
                 builder.append(f"{key}={encoded_value}")
 
         base_string = "&".join(builder)
-        # print(f"baseString：{base_string}")
 
-        # HMAC-SHA1 签名并 Base64 编码
         mac = hmac.new(
             self.access_key_secret.encode("utf-8"),
             base_string.encode("utf-8"),

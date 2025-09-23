@@ -4,15 +4,13 @@ from enum import Enum
 
 from loguru import logger
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import \
+    OTLPSpanExporter
 from opentelemetry.propagate import extract, inject
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import SpanLimits, TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor,
-    SpanExporter,
-    SpanExportResult,
-)
+from opentelemetry.sdk.trace.export import (BatchSpanProcessor, SpanExporter,
+                                            SpanExportResult)
 from opentelemetry.trace import StatusCode
 
 from common.otlp.ip import local_ip
@@ -105,12 +103,10 @@ def init_trace(
 
         provider.add_span_processor(processor)
 
-    # 添加文件 exporter（本地持久化）
     file_exporter = FileSpanExporter()
     file_processor = BatchSpanProcessor(file_exporter)
     provider.add_span_processor(file_processor)
 
-    # 设置全局默认的跟踪器提供者
     trace.set_tracer_provider(provider)
     logger.debug("trace init success")
 

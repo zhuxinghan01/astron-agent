@@ -10,7 +10,6 @@ from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.util import types
 
-# 使用TYPE_CHECKING避免循环导入
 if TYPE_CHECKING:
     from common.service.oss.base_oss import BaseOSSService
 
@@ -100,8 +99,6 @@ class Span:
                         if f_code:
                             return f_code.co_name
         return "unknown"
-
-        # frame = inspect.currentframe().f_back.f_back
 
     def set_attribute(self, key: str, value, node_log: Optional[NodeLog] = None):
         """

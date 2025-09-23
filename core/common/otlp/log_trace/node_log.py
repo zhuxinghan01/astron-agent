@@ -16,29 +16,27 @@ class Data(BaseModel):
 
 
 class NodeLog(BaseModel):
-    # 日志ID
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     sid: str = ""
 
-    node_id: str = ""  # 节点ID（字段弃用，不删除）
-    node_type: str = ""  # 节点名称（字段弃用，不删除）
-    node_name: str = ""  # 节点类型（字段弃用，不删除）
+    node_id: str = "" 
+    node_type: str = "" 
+    node_name: str = "" 
 
-    func_id: str = ""  # 函数ID
-    func_type: str = ""  # 函数名
-    func_name: str = ""  # 函数类型
+    func_id: str = "" 
+    func_type: str = "" 
+    func_name: str = "" 
 
-    next_log_ids: Set[str] = set()  # 下一个日志ID
+    next_log_ids: Set[str] = set() 
 
     start_time: int = Field(default_factory=lambda: int(time.time() * 1000))
     end_time: int = Field(default_factory=lambda: int(time.time() * 1000))
     duration: int | tuple = (0,)
-    first_frame_duration: int = -1  # 调用外部流式接口，记录首帧耗时。-1表示无首帧
-    node_first_cost_time: float = -1  # 外部大模型首帧
+    first_frame_duration: int = -1
+    node_first_cost_time: float = -1
 
     llm_output: str = ""
     running_status: bool = True
-    # 首帧时间，-1表示未设置
     data: Data = Data()
     logs: list[str] = []
 
@@ -82,8 +80,6 @@ class NodeLog(BaseModel):
 
     def set_start(self):
         self.start_time = int(time.time() * 1000)
-        # print(f'========NodeLog====start===={time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
-        # print(f'========NodeLog====start===={self.start_time}')
 
     def set_end(self):
         """
@@ -92,8 +88,6 @@ class NodeLog(BaseModel):
         """
         self.end_time = int(time.time() * 1000)
         self.duration = self.end_time - self.start_time
-        # print(f'========NodeLog====end===={time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}')
-        # print(f'========NodeLog====end===={self.end_time}')
 
     def append_input_data(self, key: str, data: Any):
         """

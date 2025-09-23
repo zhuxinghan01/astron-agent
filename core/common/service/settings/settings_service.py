@@ -2,16 +2,11 @@ import os
 from typing import Any, Type
 
 from pydantic.fields import FieldInfo
-from pydantic_settings import (
-    BaseSettings,
-    PydanticBaseSettingsSource,
-    SettingsConfigDict,
-)
+from pydantic_settings import (BaseSettings, PydanticBaseSettingsSource,
+                               SettingsConfigDict)
 
-from common.service.settings.base_settings import (
-    BaseRemoteSettings,
-    BaseSettingsService,
-)
+from common.service.settings.base_settings import (BaseRemoteSettings,
+                                                   BaseSettingsService)
 from common.settings.polaris import ConfigFilter, Polaris
 from common.settings.settings import ProjectSettings
 

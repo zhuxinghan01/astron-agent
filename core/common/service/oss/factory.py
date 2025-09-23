@@ -4,7 +4,8 @@ from loguru import logger
 
 from common.service.base import ServiceFactory, ServiceType
 from common.service.oss.base_oss import BaseOSSService
-from common.service.oss.ifly_storage_gateway_service import IFlyGatewayStorageClient
+from common.service.oss.ifly_storage_gateway_service import \
+    IFlyGatewayStorageClient
 
 
 class OSSServiceFactory(ServiceFactory):

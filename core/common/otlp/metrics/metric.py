@@ -1,27 +1,17 @@
 import os
 
 from loguru import logger
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import \
+    OTLPMetricExporter
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
-from common.otlp.metrics.consts import (
-    SERVER_REQUEST_DESC,
-    SERVER_REQUEST_TIME_DESC,
-    SERVER_REQUEST_TIME_MICROSECONDS,
-    SERVER_REQUEST_TOTAL,
-)
-
-# sdk上报metric时间间隔 建议小于30000ms  默认1000ms
-# export_interval_millis = 3000
-# 默认配置 metrics上报服务端超时时间 单位ms 默认5000ms
-# export_timeout_millis = 5000
-# 默认配置 与服务端建连时间 单位ms 默认5000ms
-# timeout = 1000
-# open telemetry地址
-# endpoint = "172.30.209.27:4317"
+from common.otlp.metrics.consts import (SERVER_REQUEST_DESC,
+                                        SERVER_REQUEST_TIME_DESC,
+                                        SERVER_REQUEST_TIME_MICROSECONDS,
+                                        SERVER_REQUEST_TOTAL)
 
 counter = None
 histogram = None
@@ -78,10 +68,8 @@ def init_metric(
     resource = Resource(attributes={SERVICE_NAME: service_name})
     provider = MeterProvider(metric_readers=metric_readers, resource=resource)
 
-    # 设置全局默认的 MeterProvider
     set_meter_provider(provider)
 
-    # 从全局 MeterProvider 创建一个 Meter
     meter = get_meter_provider().get_meter(f"{service_name}_meter")
 
     counter = meter.create_counter(

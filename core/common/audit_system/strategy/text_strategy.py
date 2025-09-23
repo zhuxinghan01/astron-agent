@@ -2,11 +2,8 @@ import asyncio
 from typing import Literal
 
 from common.audit_system.audit_api.base import ContentType, Stage
-from common.audit_system.base import (
-    FrameAuditResult,
-    InputFrameAudit,
-    OutputFrameAudit,
-)
+from common.audit_system.base import (FrameAuditResult, InputFrameAudit,
+                                      OutputFrameAudit)
 from common.audit_system.enums import Status
 from common.audit_system.strategy.base_strategy import AuditStrategy
 from common.audit_system.utils import ALL_SENTENCE_LEN, Sentence
@@ -29,10 +26,8 @@ class TextAuditStrategy(AuditStrategy):
         :param span:         Span对象，用于跟踪请求的上下文信息。
         :return:
         """
-        # 文本审核
         if input_frame.content_type == ContentType.TEXT:
             for audit_api in self.audit_apis:
-                # 调用审核API进行内容审核
                 await audit_api.input_text(
                     content=input_frame.content,
                     chat_sid=self.context.chat_sid,
@@ -61,12 +56,10 @@ class TextAuditStrategy(AuditStrategy):
 
         self.context.add_source_content(output_frame)
 
-        # 首句未送审，进行中间帧送审
         if not self.context.first_sentence_audited:
             span.add_info_event("↓↓↓↓↓↓↓↓↓↓↓ 首句送审 ↓↓↓↓↓↓↓↓↓↓↓")
             await self._first_sentence_audit(output_frame, span)
 
-        # 首句送审完，走分句送审
         else:
             span.add_info_event("↓↓↓↓↓↓↓↓↓↓↓ 分句送审 ↓↓↓↓↓↓↓↓↓↓↓")
             await self._sentence_audit(output_frame, span)
@@ -84,7 +77,6 @@ class TextAuditStrategy(AuditStrategy):
         :return:
         """
 
-        # 如果首句判断条件：有结束性标点，或者内容长度超过阈值，或者当前帧送审阶段和上次送审阶段不一致
         first_sentence_conditions = (
             Sentence.has_end_symbol(self.context.remaining_content)
             or len(self.context.remaining_content) > WORKFLOW_MAX_SENTENCE_LEN
@@ -101,7 +93,6 @@ class TextAuditStrategy(AuditStrategy):
         else:
             fallback_length = ALL_SENTENCE_LEN
 
-        # 中间帧被审核，后续帧不再送审，直到获取首帧
         if self.context.frame_blocked:
             span.add_info_event("中间帧被审核，后续帧不再送审，直到获取首帧")
             if first_sentence_conditions:
@@ -109,11 +100,9 @@ class TextAuditStrategy(AuditStrategy):
             else:
                 pass
 
-        # 取非结束性标志符号，送审
         elif first_sentence_conditions:
             await self.__first_sentence_audit(output_frame, span, fallback_length)
 
-        # 如果没有达到首句送审条件，继续拼接内容，进行中间帧送审
         else:
             span.add_info_event("首句送审条件不满足，继续拼接内容，进行中间帧送审")
             frame_audit_result = FrameAuditResult(
@@ -128,9 +117,9 @@ class TextAuditStrategy(AuditStrategy):
                         content=self.context.remaining_content,
                         pindex=self.context.pindex,
                         span=span,
-                        is_pending=1,  # 片段送审
-                        is_stage_end=0,  # 当前阶段没有结束
-                        is_end=0,  # 整体没有结束
+                        is_pending=1,
+                        is_stage_end=0,
+                        is_end=0,
                         chat_sid=self.context.chat_sid,
                         chat_app_id=self.context.chat_app_id,
                         uid=self.context.uid,
@@ -149,7 +138,6 @@ class TextAuditStrategy(AuditStrategy):
         self, output_frame: OutputFrameAudit, span: Span, fallback_length: int
     ):
         span.add_info_event("首句送审条件满足，进行首句送审")
-        # 当前帧不需要分句，则全部送审
         if output_frame.not_need_submit:
             sentences = [self.context.remaining_content]
             self.context.remaining_content = ""
@@ -161,7 +149,6 @@ class TextAuditStrategy(AuditStrategy):
             [""]
             if (
                 (
-                    # 结束帧或者reasoning和answer帧发生变化，但是分句内容为空，需要单独给个空句送审
                     output_frame.status == Status.STOP
                     or self.context.last_content_stage != output_frame.stage
                 )
@@ -176,7 +163,6 @@ class TextAuditStrategy(AuditStrategy):
                 "remaining_content": self.context.remaining_content,
             }
         )
-        # 首句送审时，pindex需要重置为1
         self.context.pindex = 1
         await self._audit_api_output_text_async(sentences, output_frame, span)
         self.context.first_sentence_audited = True
@@ -188,7 +174,6 @@ class TextAuditStrategy(AuditStrategy):
         :return:
         """
 
-        # 送审content
         if (
             Sentence.has_end_symbol(self.context.remaining_content)
             or len(self.context.remaining_content) > WORKFLOW_MAX_SENTENCE_LEN
@@ -197,12 +182,10 @@ class TextAuditStrategy(AuditStrategy):
         ):
             sentences = []
 
-            # 当前帧不需要分句，则全部送审
             if output_frame.not_need_submit:
                 sentences = [self.context.remaining_content]
                 self.context.remaining_content = ""
 
-            # 如果当前帧送审阶段和上次送审阶段不一致，需要把剩余的文本分句后全部送审
             elif (
                 self.context.last_content_stage != output_frame.stage
                 or output_frame.status == Status.STOP
@@ -216,7 +199,6 @@ class TextAuditStrategy(AuditStrategy):
                     sentences.extend(sentences_temp)
                     if not self.context.remaining_content:
                         break
-                # 当前帧送审阶段和上次送审阶段不一致，也没有送审内容，需要补上空帧，用于is stage end送审
                 if not sentences:
                     sentences.append("")
             else:
@@ -226,7 +208,6 @@ class TextAuditStrategy(AuditStrategy):
                     )
                 )
 
-            # 结束帧送审内容可能为空，需要增加空字符串
             if (
                 output_frame.status == Status.STOP
                 and not sentences
@@ -236,7 +217,6 @@ class TextAuditStrategy(AuditStrategy):
 
             await self._audit_api_output_text_async(sentences, output_frame, span)
 
-        # 不一致的stage全部送审完，在送审当前的送审帧
         if self.context.last_content_stage != output_frame.stage:
             self.context.last_content_stage = output_frame.stage
             await self.output_review(output_frame, span)
@@ -256,7 +236,6 @@ class TextAuditStrategy(AuditStrategy):
         audit_tasks = []
 
         for idx, sentence in enumerate(sentences):
-            # 如果当前帧是结束帧，则最后一个分句需要标记为结束帧
             if current_status == Status.STOP:
                 output_frame.status = (
                     Status.STOP if idx == len(sentences) - 1 else Status.NONE
@@ -333,7 +312,7 @@ class TextAuditStrategy(AuditStrategy):
                     content=need_audit_content,
                     pindex=pindex,
                     span=span,
-                    is_pending=0,  # 首句送审不需要标记为不完整
+                    is_pending=0,
                     is_stage_end=is_stage_end,
                     is_end=is_end,
                     chat_sid=self.context.chat_sid,
