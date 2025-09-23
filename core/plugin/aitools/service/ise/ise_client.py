@@ -9,6 +9,7 @@ import hmac
 import io
 import json
 import ssl
+import os
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from time import mktime
@@ -372,7 +373,7 @@ class ISEClient:
         self.app_id = app_id
         self.api_key = api_key
         self.api_secret = api_secret
-        self.base_url = "wss://ise-api.xfyun.cn/v2/open-ise"
+        self.base_url = os.getenv("ISE_URL")
         self.evaluation_complete = False
 
     async def evaluate_audio(

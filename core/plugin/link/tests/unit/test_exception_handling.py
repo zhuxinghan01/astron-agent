@@ -7,9 +7,8 @@ the SparkLink plugin system.
 """
 
 import pytest
-from unittest.mock import Mock, patch
 
-from exceptions.sparklink_exceptions import (
+from plugin.link.exceptions.sparklink_exceptions import (
     SparkLinkBaseException,
     CallThirdApiException,
     ToolNotExistsException,
@@ -19,7 +18,7 @@ from exceptions.sparklink_exceptions import (
     SparkLinkLLMException,
     SparkLinkAppIdException
 )
-from utils.errors.code import ErrCode
+from plugin.link.utils.errors.code import ErrCode
 
 
 class TestSparkLinkBaseException:

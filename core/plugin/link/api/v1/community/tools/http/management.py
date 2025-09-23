@@ -5,12 +5,12 @@ creating, reading, updating, and deleting HTTP tool versions.
 """
 
 from fastapi import APIRouter, Query, Body
-from api.schemas.community.tools.http.management_schema import (
+from plugin.link.api.schemas.community.tools.http.management_schema import (
     ToolCreateRequest,
     ToolUpdateRequest,
     ToolManagerResponse,
 )
-from service.community.tools.http.management_server import (
+from plugin.link.service.community.tools.http.management_server import (
     create_version,
     delete_version,
     update_version,

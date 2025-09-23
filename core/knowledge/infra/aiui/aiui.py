@@ -23,19 +23,21 @@ from knowledge.utils.file_utils import get_file_extension_from_url
 from knowledge.utils.verification import check_not_empty
 
 
-async def assemble_auth_url(request_url: str, method: str, api_key: str, api_secret: str) -> str:
+async def assemble_auth_url(request_path: str, method: str = "POST") -> str:
     """
     Assemble authentication URL
 
     Args:
         request_url: Request URL
         method: HTTP method
-        api_key: API key
-        api_secret: API secret
 
     Returns:
         Complete URL with authentication parameters
     """
+    api_key = os.getenv("AIUI_API_KEY", "")
+    api_secret = os.getenv("AIUI_API_SECRET", "")
+    request_url =os.getenv("AIUI_URL_V2", "")+ request_path
+
     url_parsed = urlparse(request_url)
     host = url_parsed.hostname
     path = url_parsed.path
@@ -94,9 +96,14 @@ async def chunk_query(
         "match": {"docIds": doc_ids, "groups": repo_ids, "uid": None},
         "repoSources": [{"repoId": os.getenv("AIUI_QUERY_REPOID_V2", ""), "threshold": threshold}],
     }
-
-    data = await request(post_body, "/v2/aiui/cbm/chunk/query", **kwargs)
-    return data
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/chunk/query"
+    )
+    return await request(
+        post_body=post_body,
+        url=url,
+        **kwargs
+    )
 
 
 async def document_parse(file_url: str, resource_type: int, **kwargs: Any) -> Dict[str, Any]:
@@ -138,9 +145,14 @@ async def document_parse(file_url: str, resource_type: int, **kwargs: Any) -> Di
             e=CodeEnum.ParameterInvalid,
             msg="Resource type [resourceType] does not exist"
         )
-
-    return await request(post_body, "/v2/aiui/cbm/document/parse", **kwargs)
-
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/document/parse"
+    )
+    return await request(
+        post_body=post_body,
+        url=url,
+        **kwargs
+    )
 
 async def chunk_split(
         document: Any,
@@ -175,8 +187,15 @@ async def chunk_split(
         "titleSplit": title_split,
     }
 
-    return await request(post_body, "/v2/aiui/cbm/chunk/split", **kwargs)
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/chunk/split"
+    )
 
+    return await request(
+        post_body=post_body,
+        url=url,
+        **kwargs
+    )
 
 async def chunk_save(doc_id: str, group: str, chunks: List[Any], **kwargs: Any) -> Dict[str, Any]:
     """
@@ -192,9 +211,13 @@ async def chunk_save(doc_id: str, group: str, chunks: List[Any], **kwargs: Any) 
         Save results
     """
     post_body = {"docId": doc_id, "group": group, "chunks": chunks}
-    repoId = os.getenv("AIUI_QUERY_REPOID_V2", "")
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/chunk/" + os.getenv("AIUI_QUERY_REPOID_V2", "")
+    )
     return await request(
-        post_body, f"/v2/aiui/cbm/chunk/{repoId}", **kwargs
+        post_body=post_body,
+        url=url,
+        **kwargs
     )
 
 
@@ -211,10 +234,14 @@ async def chunk_delete(doc_id: str, chunk_ids: Optional[List[str]] = None, **kwa
         Delete results
     """
     post_body = {"docId": doc_id, "chunkIds": chunk_ids}
-    repoId = os.getenv("AIUI_QUERY_REPOID_V2", "")
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/chunk/" + os.getenv("AIUI_QUERY_REPOID_V2", ""),
+        method="DELETE"
+    )
+
     return await request(
-        post_body,
-        f"/v2/aiui/cbm/chunk/{repoId}",
+        post_body=post_body,
+        url=url,
         method="DELETE",
         **kwargs
     )
@@ -231,24 +258,27 @@ async def get_doc_content(doc_id: str, **kwargs: Any) -> Dict[str, Any]:
     Returns:
         Document content
     """
+    url = await assemble_auth_url(
+        request_path="/v2/aiui/cbm/chunk/"+os.getenv("AIUI_QUERY_REPOID_V2", ""),
+        method="GET"
+    )
     params = {"docId": doc_id}
-    repoId = os.getenv("AIUI_QUERY_REPOID_V2", "")
-    encoded_params = urlencode(params)
+    url += "&" + urlencode(params)
     return await request(
-        params,
-        f"/v2/aiui/cbm/chunk/{repoId}&{encoded_params}",
+        post_body=params,
+        url=url,
         method="GET",
         **kwargs
     )
 
 
-async def request(post_body: Dict[str, Any], url_path: str, method: str = "POST", **kwargs: Any) -> Dict[str, Any]:
+async def request(post_body: Dict[str, Any], url: str, method: str = "POST", **kwargs: Any) -> Dict[str, Any]:
     """
     Send request to AIUI service
 
     Args:
         post_body: Request body
-        url_path: URL path
+        url: URL
         method: HTTP method
         **kwargs: Other parameters
 
@@ -258,11 +288,6 @@ async def request(post_body: Dict[str, Any], url_path: str, method: str = "POST"
     Raises:
         ThirdPartyException: When AIUI service returns error or network exception occurs
     """
-    aiui_host = os.getenv("AIUI_URL_V2", "")
-    url = await assemble_auth_url(
-        f"{aiui_host}{url_path}", method, os.getenv("AIUI_API_KEY", ""), os.getenv("AIUI_API_SECRET", "")
-    )
-
     span = kwargs.get("span")
     if span:
         with span.start(
@@ -281,7 +306,7 @@ async def request(post_body: Dict[str, Any], url_path: str, method: str = "POST"
                             method=method,
                             url=url,
                             data=json.dumps(post_body),
-                            timeout=25.0,
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("AIUI_CLIENT_TIMEOUT", "30.0"))),
                     ) as response:
                         response_text = await response.text()
                         logger.info(

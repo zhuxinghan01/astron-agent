@@ -13,7 +13,7 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 
-from utils.otlp.metric.consts import (
+from plugin.link.utils.otlp.metric.consts import (
     SERVER_REQUEST_DESC,
     SERVER_REQUEST_TIME_DESC,
     SERVER_REQUEST_TOTAL,

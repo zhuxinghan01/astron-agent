@@ -7,28 +7,24 @@ with proper async support and telemetry integration.
 """
 
 import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from typing import Tuple
+from unittest.mock import Mock, patch, AsyncMock
 
-from service.community.tools.mcp.mcp_server import (
+from plugin.link.service.community.tools.mcp.mcp_server import (
     tool_list,
     call_tool,
     get_mcp_server_url
 )
-from api.schemas.community.tools.mcp.mcp_tools_schema import (
+from plugin.link.api.schemas.community.tools.mcp.mcp_tools_schema import (
     MCPToolListRequest,
     MCPToolListResponse,
     MCPCallToolRequest,
     MCPCallToolResponse,
-    MCPItemInfo,
-    MCPInfo,
     MCPCallToolData,
     MCPTextResponse,
     MCPImageResponse,
     MCPToolListData
 )
-from utils.errors.code import ErrCode
+from plugin.link.utils.errors.code import ErrCode
 
 
 class TestMCPToolList:
@@ -78,8 +74,8 @@ class TestMCPToolList:
     @patch('service.community.tools.mcp.mcp_server.is_local_url')
     @pytest.mark.asyncio
     async def test_tool_list_success_with_server_ids(self, mock_is_local, mock_client_session,
-                                                   mock_sse_client, mock_get_url, mock_span_class, mock_new_sid,
-                                                   mock_mcp_tools_response):
+                                                     mock_sse_client, mock_get_url, mock_span_class, mock_new_sid,
+                                                     mock_mcp_tools_response):
         """Test successful tool listing with server IDs."""
         # Create request with only server IDs (no URLs)
         server_ids_request = MCPToolListRequest(
@@ -120,8 +116,8 @@ class TestMCPToolList:
         mock_sse_client.return_value.__aenter__ = AsyncMock(return_value=(Mock(), Mock()))
         mock_sse_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -156,8 +152,8 @@ class TestMCPToolList:
     @patch('service.community.tools.mcp.mcp_server.ClientSession')
     @pytest.mark.asyncio
     async def test_tool_list_success_with_urls(self, mock_client_session, mock_sse_client,
-                                             mock_blacklist, mock_is_local, mock_span_class, mock_new_sid,
-                                             mock_mcp_tools_response):
+                                               mock_blacklist, mock_is_local, mock_span_class, mock_new_sid,
+                                               mock_mcp_tools_response):
         """Test successful tool listing with direct URLs."""
         # Mock session ID generation
         mock_new_sid.return_value = "test_session_id"
@@ -193,8 +189,8 @@ class TestMCPToolList:
             mcp_server_urls=["https://valid.example.com/mcp"]
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -237,8 +233,8 @@ class TestMCPToolList:
             mcp_server_urls=["http://localhost:8080/mcp"]
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -284,8 +280,8 @@ class TestMCPToolList:
             mcp_server_urls=["https://blacklisted.example.com/mcp"]
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -309,7 +305,7 @@ class TestMCPToolList:
     @patch('service.community.tools.mcp.mcp_server.sse_client')
     @pytest.mark.asyncio
     async def test_tool_list_connection_error(self, mock_sse_client, mock_blacklist,
-                                            mock_is_local, mock_span_class, mock_new_sid):
+                                              mock_is_local, mock_span_class, mock_new_sid):
         """Test tool listing with connection error."""
         # Mock session ID generation
         mock_new_sid.return_value = "test_session_id"
@@ -331,8 +327,8 @@ class TestMCPToolList:
             mcp_server_urls=["https://unreachable.example.com/mcp"]
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -389,8 +385,8 @@ class TestMCPCallTool:
     @patch('service.community.tools.mcp.mcp_server.ClientSession')
     @pytest.mark.asyncio
     async def test_call_tool_success(self, mock_client_session, mock_sse_client, mock_blacklist,
-                                   mock_is_local, mock_span_class, mock_new_sid, valid_call_request,
-                                   mock_call_result):
+                                     mock_is_local, mock_span_class, mock_new_sid, valid_call_request,
+                                     mock_call_result):
         """Test successful MCP tool call."""
         # Mock session ID generation
         mock_new_sid.return_value = "test_session_id"
@@ -422,8 +418,8 @@ class TestMCPCallTool:
         mock_sse_client.return_value.__aenter__ = AsyncMock(return_value=(Mock(), Mock()))
         mock_sse_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -441,7 +437,7 @@ class TestMCPCallTool:
         assert isinstance(result, MCPCallToolResponse)
         assert result.code == ErrCode.SUCCESSES.code
         assert result.message == ErrCode.SUCCESSES.msg
-        assert result.data.isError == False
+        assert result.data.isError is False
         assert len(result.data.content) == 2
 
         # Check text content
@@ -483,8 +479,8 @@ class TestMCPCallTool:
             tool_args={"query": "test"}
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -528,8 +524,8 @@ class TestMCPCallTool:
             tool_args={"query": "test"}
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -553,7 +549,7 @@ class TestMCPCallTool:
     @patch('service.community.tools.mcp.mcp_server.ClientSession')
     @pytest.mark.asyncio
     async def test_call_tool_initialization_error(self, mock_client_session, mock_sse_client,
-                                                 mock_blacklist, mock_is_local, mock_span_class, mock_new_sid):
+                                                  mock_blacklist, mock_is_local, mock_span_class, mock_new_sid):
         """Test MCP tool call with session initialization error."""
         # Mock session ID generation
         mock_new_sid.return_value = "test_session_id"
@@ -586,8 +582,8 @@ class TestMCPCallTool:
             tool_args={"query": "test"}
         )
 
-        with patch('service.community.tools.mcp.mcp_server.Meter') as mock_meter, \
-             patch('service.community.tools.mcp.mcp_server.NodeTrace') as mock_node_trace, \
+        with patch('service.community.tools.mcp.mcp_server.Meter'), \
+             patch('service.community.tools.mcp.mcp_server.NodeTraceLog'), \
              patch('os.getenv') as mock_getenv:
 
             # Mock environment variables for blacklist checking
@@ -784,7 +780,7 @@ class TestMCPErrorHandling:
         # Test that MCP functions properly integrate with telemetry
 
         telemetry_components = [
-            "Span", "Meter", "NodeTrace", "TraceStatus"
+            "Span", "Meter", "NodeTraceLog", "Status"
         ]
 
         for component in telemetry_components:
