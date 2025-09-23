@@ -12,10 +12,8 @@ import os
 import time
 import json
 import base64
-import re
 import threading
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
+from unittest.mock import Mock, patch
 
 from plugin.link.utils.uid.generate_uid import new_uid
 from plugin.link.utils.snowflake.gen_snowflake import Snowflake, gen_id
@@ -404,7 +402,7 @@ class TestOpenapiSchemaValidator:
         with patch('utils.open_api_schema.schema_validate.validate') as mock_validate:
             mock_validate.return_value = None  # Valid schema
 
-            result = validator.schema_validate()
+            _ = validator.schema_validate()
 
             # Should pass all validation
             mock_validate.assert_called_once()

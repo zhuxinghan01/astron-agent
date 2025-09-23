@@ -7,7 +7,6 @@ the SparkLink plugin system.
 """
 
 import pytest
-from unittest.mock import Mock, patch
 
 from plugin.link.exceptions.sparklink_exceptions import (
     SparkLinkBaseException,

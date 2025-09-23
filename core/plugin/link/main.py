@@ -46,6 +46,7 @@ def load_env_file(env_file: str) -> None:
 
     print(f"📋 Loading configuration file: {env_file}")
 
+    use_polaris = False
     os.environ["CONFIG_ENV_PATH"] = (env_file)
     with open(env_file, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, 1):
@@ -58,13 +59,18 @@ def load_env_file(env_file: str) -> None:
             # Parse environment variables
             if "=" in line:
                 key, value = line.split("=", 1)
-                os.environ[key.strip()] = value.strip()
-                print(f"  ✅ {key.strip()}={value.strip()}")
+                # Set CONFIG_ENV_PATH, common to load
+                if (os.environ.get(key.strip())):
+                    print(f"ENV  ✅ {key.strip()}={os.environ.get(key.strip())}")
+                else:
+                    print(f"CFG  ✅ {key.strip()}={value.strip()}")
+
+                if key.strip() == "use_polaris" and value.strip() == "true":
+                    use_polaris = True
             else:
                 print(f"  ⚠️  Line {line_num} format error: {line}")
 
-    use_polaris = os.getenv("use_polaris", "false")
-    if use_polaris == "false":
+    if not use_polaris:
         return
 
     print(f"🔧 Config: use_polaris :{use_polaris}")

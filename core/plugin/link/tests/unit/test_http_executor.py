@@ -7,11 +7,8 @@ and HTTP request execution with proper error handling scenarios.
 """
 
 import pytest
-import json
 import os
-import ipaddress
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from urllib.parse import urlparse
+from unittest.mock import Mock, patch, AsyncMock
 
 from plugin.link.infra.tool_exector.process import HttpRun
 from plugin.link.exceptions.sparklink_exceptions import CallThirdApiException
@@ -124,6 +121,7 @@ class TestHttpRunDoCall:
 
         # Create a Mock that can track calls and also return the context manager
         mock_request_method = Mock()
+
         def mock_request(*args, **kwargs):
             mock_request_method(*args, **kwargs)  # Track the call
             return MockRequestContextManager(mock_response)
@@ -213,7 +211,7 @@ class TestHttpRunDoCall:
         with patch('aiohttp.ClientSession') as mock_session_class:
             mock_session = self.setup_aiohttp_mock(mock_session_class, '{"user": "data"}', 200)
 
-            result = await http_run.do_call(mock_span)
+            _ = await http_run.do_call(mock_span)
 
             # Verify URL construction worked
             mock_session.request.assert_called_once()
@@ -237,7 +235,7 @@ class TestHttpRunDoCall:
              patch('aiohttp.ClientSession') as mock_session_class:
 
             mock_public_query.return_value = "https://api.example.com?auth=md5"
-            mock_session = self.setup_aiohttp_mock(mock_session_class, '{"authenticated": true}', 200)
+            _ = self.setup_aiohttp_mock(mock_session_class, '{"authenticated": true}', 200)
 
             result = await http_run.do_call(mock_span)
 
@@ -262,7 +260,7 @@ class TestHttpRunDoCall:
              patch('aiohttp.ClientSession') as mock_session_class:
 
             mock_assemble_auth.return_value = ("https://api.example.com?hmac=auth", {"Auth": "hmac"})
-            mock_session = self.setup_aiohttp_mock(mock_session_class, '{"hmac_authenticated": true}', 200)
+            _ = self.setup_aiohttp_mock(mock_session_class, '{"hmac_authenticated": true}', 200)
 
             result = await http_run.do_call(mock_span)
 
@@ -284,7 +282,7 @@ class TestHttpRunDoCall:
         with patch('aiohttp.ClientSession') as mock_session_class:
             mock_session = self.setup_aiohttp_mock(mock_session_class, '{"results": []}', 200)
 
-            result = await http_run.do_call(mock_span)
+            _ = await http_run.do_call(mock_span)
 
             # Verify URL contains query parameters
             call_args = mock_session._request_mock.call_args

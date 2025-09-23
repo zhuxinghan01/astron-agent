@@ -7,13 +7,10 @@ handling scenarios specific to enterprise environment requirements.
 """
 
 import pytest
-import json
-import os
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 from plugin.link.service.enterprise.extension import register_mcp
 from plugin.link.api.schemas.enterprise.extension_schema import (
-    MCPManagerRequest,
     MCPManagerResponse
 )
 from plugin.link.api.schemas.community.deprecated.management_schema import ToolManagerResponse
@@ -53,7 +50,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.get_db_engine')
     @patch('service.enterprise.extension.gen_id')
     def test_register_mcp_success_with_flow_id(self, mock_gen_id, mock_get_db, mock_crud_class,
-                                             mock_api_validate, mock_span_class, valid_mcp_request):
+                                               mock_api_validate, mock_span_class, valid_mcp_request):
         """Test successful MCP registration with flow_id."""
         # Mock validation
         mock_api_validate.return_value = None
@@ -80,10 +77,7 @@ class TestEnterpriseExtension:
         mock_request = Mock()
         mock_request.model_dump.return_value = valid_mcp_request
 
-        with patch('service.enterprise.extension.os.getenv') as mock_getenv, \
-             patch('service.enterprise.extension.Meter') as mock_meter, \
-             patch('service.enterprise.extension.NodeTraceLog') as mock_node_trace:
-
+        with patch('service.enterprise.extension.os.getenv') as mock_getenv:
             mock_getenv.return_value = "false"  # Disable OTLP
 
             result = register_mcp(mock_request)
@@ -112,7 +106,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.get_db_engine')
     @patch('service.enterprise.extension.gen_id')
     def test_register_mcp_success_without_flow_id(self, mock_gen_id, mock_get_db, mock_crud_class,
-                                                mock_api_validate, mock_span_class, minimal_mcp_request):
+                                                  mock_api_validate, mock_span_class, minimal_mcp_request):
         """Test successful MCP registration without flow_id (uses generated ID)."""
         mock_api_validate.return_value = None
         mock_gen_id.return_value = 0x123456789abcdef
@@ -204,7 +198,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.ToolCrudOperation')
     @patch('service.enterprise.extension.get_db_engine')
     def test_register_mcp_database_error(self, mock_get_db, mock_crud_class,
-                                       mock_api_validate, mock_span_class):
+                                         mock_api_validate, mock_span_class):
         """Test MCP registration with database error."""
         mock_api_validate.return_value = None
 
@@ -256,7 +250,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.ToolCrudOperation')
     @patch('service.enterprise.extension.get_db_engine')
     def test_register_mcp_with_telemetry_enabled(self, mock_get_db, mock_crud_class,
-                                               mock_api_validate, mock_span_class):
+                                                 mock_api_validate, mock_span_class):
         """Test MCP registration with telemetry enabled."""
         mock_api_validate.return_value = None
 

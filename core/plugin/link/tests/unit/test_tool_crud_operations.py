@@ -6,9 +6,8 @@ including edge cases, error scenarios, and boundary conditions for each method.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
-from plugin.link.sqlalchemy.exc import IntegrityError, NoResultFound
+from unittest.mock import patch, Mock
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from plugin.link.infra.tool_crud.process import ToolCrudOperation
 from plugin.link.domain.entity.tool_schema import Tools

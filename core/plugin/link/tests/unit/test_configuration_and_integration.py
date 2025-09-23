@@ -9,8 +9,7 @@ that test how different components work together.
 import pytest
 import os
 import json
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
 from plugin.link.consts import const
 from plugin.link.utils.errors.code import ErrCode
@@ -23,7 +22,7 @@ class TestConstantsValidation:
         """Test that all error codes have required structure."""
         # Get all ErrCode attributes that look like error codes
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         for error_code in error_codes:
             # Each error code should have code and msg attributes
@@ -40,7 +39,7 @@ class TestConstantsValidation:
     def test_error_code_uniqueness(self):
         """Test that error codes are unique."""
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         codes = [ec.code for ec in error_codes]
 
@@ -55,7 +54,7 @@ class TestConstantsValidation:
     def test_error_codes_are_positive(self):
         """Test that error codes (except success) are positive."""
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         for error_code in error_codes:
             if error_code != ErrCode.SUCCESSES:
@@ -80,7 +79,7 @@ class TestConstantsValidation:
         """Test that environment variable key constants follow naming convention."""
         # Get all attributes that look like environment variable keys
         env_keys = [getattr(const, attr) for attr in dir(const)
-                   if attr.endswith('_KEY') and not attr.startswith('_')]
+                    if attr.endswith('_KEY') and not attr.startswith('_')]
 
         for key in env_keys:
             assert isinstance(key, str)
