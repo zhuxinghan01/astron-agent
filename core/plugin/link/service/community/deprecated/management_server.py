@@ -39,7 +39,7 @@ def _extract_request_params(run_params_list):
     """Extract common parameters from request."""
     header = run_params_list.get("header", {})
     return {
-        "app_id": header.get("app_id") or os.getenv(const.APP_ID_KEY),
+        "app_id": header.get("app_id") or os.getenv(const.DEFAULT_APPID_KEY),
         "uid": header.get("uid") or new_uid(),
         "caller": header.get("caller", ""),
         "tool_type": header.get("tool_type", ""),
@@ -345,7 +345,7 @@ def delete_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
     caller = ""
     tool_type = ""
     span = Span(
-        app_id=app_id if app_id else os.getenv(const.APP_ID_KEY),
+        app_id=app_id if app_id else os.getenv(const.DEFAULT_APPID_KEY),
         uid=uid,
     )
     with span.start(func_name="delete_tools") as span_context:
@@ -510,7 +510,7 @@ def read_tools(tool_ids: list[str] = Query(), app_id: str = Query()):
     caller = ""
     tool_type = ""
     span = Span(
-        app_id=app_id if app_id else os.getenv(const.APP_ID_KEY),
+        app_id=app_id if app_id else os.getenv(const.DEFAULT_APPID_KEY),
         uid=uid,
     )
     with span.start(func_name="read_tools") as span_context:

@@ -1,7 +1,7 @@
 # xingchen-utils
 SERVICE_NAME_KEY = "service_name"
 
-ENABLE_OTLP_KEY = "enable_otlp"
+ENABLE_OTLP_KEY = "ENABLE_OTLP"
 METRIC_ENDPOINT_KEY = "metric_endpoint"
 METRIC_TIMEOUT_KEY = "metric_timeout"
 METRIC_EXPORT_INTERVAL_MILLIS_KEY = "metric_export_interval_millis"

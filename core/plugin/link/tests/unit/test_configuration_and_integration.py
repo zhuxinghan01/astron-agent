@@ -66,7 +66,7 @@ class TestConstantsValidation:
         expected_attrs = {
             'DEF_VER': str,    # Should be string version like "V1.0"
             'DEF_DEL': int,    # Should be integer deletion flag like 0
-            'APP_ID_KEY': str  # Should be string key name
+            'DEFAULT_APPID_KEY': str  # Should be string key name
         }
 
         for attr, expected_type in expected_attrs.items():
@@ -184,8 +184,8 @@ class TestConfigurationPatterns:
 
     def test_app_id_validation_pattern(self):
         """Test application ID validation patterns."""
-        # Test APP_ID_KEY exists and is string
-        app_id_key = const.APP_ID_KEY
+        # Test DEFAULT_APPID_KEY exists and is string
+        app_id_key = const.DEFAULT_APPID_KEY
         assert isinstance(app_id_key, str)
         assert len(app_id_key) > 0
 

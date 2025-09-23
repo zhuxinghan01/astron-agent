@@ -42,9 +42,13 @@ def _get_blacklist_config():
         tuple: (segment_black_list, ip_black_list)
     """
     segment_black_list = []
-    for black_i in os.getenv(const.SEGMENT_BLACK_LIST_KEY).split(","):
-        segment_black_list.append(ipaddress.ip_network(black_i))
-    ip_black_list = os.getenv(const.IP_BLACK_LIST_KEY).split(",")
+    for black_seg in os.getenv(const.SEGMENT_BLACK_LIST_KEY).split(","):
+        if black_seg:
+            segment_black_list.append(ipaddress.ip_network(black_seg))
+    ip_black_list =[]
+    for black_id in os.getenv(const.IP_BLACK_LIST_KEY).split(","):
+        if black_id:
+            ip_black_list.append(black_id)
     return segment_black_list, ip_black_list
 
 

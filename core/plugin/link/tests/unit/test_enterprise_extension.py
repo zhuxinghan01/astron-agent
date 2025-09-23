@@ -135,7 +135,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -177,7 +177,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -230,7 +230,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -285,7 +285,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "true"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -373,7 +373,7 @@ class TestEnterpriseExtension:
         """Test enterprise-specific configuration handling."""
         # Test enterprise environment variables and settings
         enterprise_configs = {
-            "APP_ID_KEY": "Default app ID for enterprise",
+            "DEFAULT_APPID_KEY": "Default app ID for enterprise",
             "DEF_VER": "Default version for MCP tools",
             "DEF_DEL": "Default deletion flag",
             "enable_otlp_key": "Enterprise telemetry setting"

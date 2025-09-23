@@ -65,7 +65,7 @@ def load_env_file(env_file: str) -> None:
                 else:
                     print(f"CFG  ✅ {key.strip()}={value.strip()}")
 
-                if key.strip() == "use_polaris" and value.strip() == "true":
+                if key.strip() == "USE_POLARIS" and value.strip() == "true":
                     use_polaris = True
             else:
                 print(f"  ⚠️  Line {line_num} format error: {line}")
@@ -73,7 +73,7 @@ def load_env_file(env_file: str) -> None:
     if not use_polaris:
         return
 
-    print(f"🔧 Config: use_polaris :{use_polaris}")
+    print(f"🔧 Config: USE_POLARIS :{use_polaris}")
     load_polaris()
 
 
@@ -83,12 +83,12 @@ def load_polaris() -> None:
     """
     from common.settings.polaris import ConfigFilter, Polaris
 
-    base_url = os.getenv("polaris_url")
-    project_name = os.getenv("project_name", "hy-spark-agent-builder")
-    cluster_group = os.getenv("polaris_cluster")
-    service_name = os.getenv("service_name", "spark-link")
-    version = os.getenv("version", "1.0.0")
-    config_file = os.getenv("config_file", "config.env")
+    base_url = os.getenv("POLARIS_URL")
+    project_name = os.getenv("PROJECT_NAME", "hy-spark-agent-builder")
+    cluster_group = os.getenv("POLARIS_CLUSTER")
+    service_name = os.getenv("SERVICE_NAME", "spark-link")
+    version = os.getenv("VERSION", "1.0.0")
+    config_file = os.getenv("CONFIG_FILE", "config.env")
     config_filter = ConfigFilter(
         project_name=project_name,
         cluster_group=cluster_group,
@@ -96,8 +96,8 @@ def load_polaris() -> None:
         version=version,
         config_file=config_file,
     )
-    username = os.getenv("polaris_username")
-    password = os.getenv("polaris_password")
+    username = os.getenv("POLARIS_USERNAME")
+    password = os.getenv("POLARIS_PASSWORD")
 
     # Ensure required parameters are not None
     if not base_url or not username or not password or not cluster_group:
@@ -125,11 +125,10 @@ def start_service() -> None:
     # Display key environment variables
     env_vars = [
         "PYTHONUNBUFFERED",
-        "polaris_cluster",
-        "polaris_url",
-        "polaris_username",
-        "run_environ",
-        "use_polaris",
+        "POLARIS_CLUSTER",
+        "POLARIS_URL",
+        "POLARIS_USERNAME",
+        "USE_POLARIS",
     ]
 
     print("📋 Environment configuration:")

@@ -167,7 +167,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -216,7 +216,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -268,7 +268,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -333,7 +333,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -429,7 +429,7 @@ class TestHttpRun:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -520,7 +520,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -586,7 +586,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"
@@ -671,7 +671,7 @@ class TestToolDebug:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
                 elif key == const.datacenter_id_key:
                     return "1"

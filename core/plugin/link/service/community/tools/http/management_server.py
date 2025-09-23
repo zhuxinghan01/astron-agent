@@ -56,7 +56,7 @@ def extract_management_params(run_params_list):
     app_id = (
         run_params_list.get("header", {}).get("app_id")
         if run_params_list.get("header", {}).get("app_id")
-        else os.getenv(const.APP_ID_KEY)
+        else os.getenv(const.DEFAULT_APPID_KEY)
     )
     uid = (
         run_params_list.get("header", {}).get("uid")
@@ -334,7 +334,7 @@ def delete_version(
     caller = ""
     tool_type = ""
     span = Span(
-        app_id=app_id if app_id else os.getenv(const.APP_ID_KEY),
+        app_id=app_id if app_id else os.getenv(const.DEFAULT_APPID_KEY),
         uid=uid,
     )
 
@@ -437,7 +437,7 @@ def read_version(
     caller = ""
     tool_type = ""
     span = Span(
-        app_id=app_id if app_id else os.getenv(const.APP_ID_KEY),
+        app_id=app_id if app_id else os.getenv(const.DEFAULT_APPID_KEY),
         uid=uid,
     )
 

@@ -50,7 +50,7 @@ def register_mcp(mcp_info: MCPManagerRequest):
     """
     try:
         run_params_list = mcp_info.model_dump()
-        app_id = run_params_list.get("app_id", os.getenv(const.APP_ID_KEY))
+        app_id = run_params_list.get("app_id", os.getenv(const.DEFAULT_APPID_KEY))
         flow_id = run_params_list.get("flow_id", "")
         span = Span(app_id=app_id, uid=flow_id)
         with span.start(func_name="register_mcp") as span_context:

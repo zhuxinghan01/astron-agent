@@ -57,7 +57,7 @@ def extract_request_params(run_params_list):
     app_id = (
         run_params_list.get("header", {}).get("app_id")
         if run_params_list.get("header", {}).get("app_id")
-        else os.getenv(const.APP_ID_KEY)
+        else os.getenv(const.DEFAULT_APPID_KEY)
     )
     uid = (
         run_params_list.get("header", {}).get("uid")

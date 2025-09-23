@@ -33,7 +33,6 @@ from plugin.link.consts.polaris_keys.xc_utils_keys import (
 # uvicorn keys
 # pylint: disable=unused-import  # These imports are used via module attribute access
 from plugin.link.consts.polaris_keys.uvicorn_keys import (
-    UVICORN_APP_KEY,
     UVICORN_HOST_KEY,
     UVICORN_PORT_KEY,
     UVICORN_WORKERS_KEY,
@@ -65,7 +64,6 @@ from plugin.link.consts.polaris_keys.redis_keys import (
 from plugin.link.consts.polaris_keys.spark_keys import (
     SPARK_LINK_LOG_LEVEL_KEY,
     SPARK_LINK_LOG_PATH_KEY,
-    SPARK_RUN_KEY,
 )
 
 # common
@@ -76,7 +74,7 @@ from plugin.link.consts.polaris_keys.common_keys import (
     DOMAIN_BLACK_LIST_KEY,
     OFFICIAL_TOOL_KEY,
     THIRD_TOOL_KEY,
-    APP_ID_KEY,
+    DEFAULT_APPID_KEY,
     DATACENTER_ID_KEY,
     WORKER_ID_KEY,
     HTTP_AUTH_QU_APP_ID_KEY,
@@ -140,7 +138,6 @@ kafka_server_key = KAFKA_SERVERS_KEY
 kafka_timeout_key = KAFKA_TIMEOUT_KEY
 kafka_topic_sparklink_log_trace_key = KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY
 
-uvicorn_app_key = UVICORN_APP_KEY
 uvicorn_host_key = UVICORN_HOST_KEY
 uvicorn_port_key = UVICORN_PORT_KEY
 uvicorn_workers_key = UVICORN_WORKERS_KEY
@@ -160,14 +157,13 @@ redis_password_key = REDIS_PASSWORD_KEY
 
 spark_link_log_level_key = SPARK_LINK_LOG_LEVEL_KEY
 spark_link_log_path_key = SPARK_LINK_LOG_PATH_KEY
-spark_run_key = SPARK_RUN_KEY
 
 segment_black_list_key = SEGMENT_BLACK_LIST_KEY
 ip_black_list_key = IP_BLACK_LIST_KEY
 domain_black_list_key = DOMAIN_BLACK_LIST_KEY
 official_tool_key = OFFICIAL_TOOL_KEY
 third_tool_key = THIRD_TOOL_KEY
-app_id_key = APP_ID_KEY
+app_id_key = DEFAULT_APPID_KEY
 datacenter_id_key = DATACENTER_ID_KEY
 worker_id_key = WORKER_ID_KEY
 http_auth_qu_app_id_key = HTTP_AUTH_QU_APP_ID_KEY
