@@ -51,10 +51,10 @@ fmt: fmt-all ## Format all project code
 
 fmt-all: ## Format code for all language projects
 	@echo "$(YELLOW)Formatting all projects...$(RESET)"
-	# @make --no-print-directory fmt-go
+	@make --no-print-directory fmt-go
 	@make --no-print-directory fmt-typescript
-	# @make --no-print-directory fmt-console-backend
-	# @make --no-print-directory fmt-python
+	@make --no-print-directory fmt-console-backend
+	@make --no-print-directory fmt-python
 	@echo "$(GREEN)All projects formatted!$(RESET)"
 
 check-all: ## Check code quality for all language projects
