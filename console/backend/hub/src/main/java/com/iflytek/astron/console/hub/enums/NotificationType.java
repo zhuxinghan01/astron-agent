@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum NotificationType {
-    PERSONAL("personal", "Personal message"),
-    BROADCAST("broadcast", "Broadcast message"),
-    SYSTEM("system", "System notification"),
-    PROMOTION("promotion", "Promotion message");
+    PERSONAL("PERSONAL", "Personal message"),
+    BROADCAST("BROADCAST", "Broadcast message"),
+    SYSTEM("SYSTEM", "System notification"),
+    PROMOTION("PROMOTION", "Promotion message");
 
     private final String code;
     private final String description;

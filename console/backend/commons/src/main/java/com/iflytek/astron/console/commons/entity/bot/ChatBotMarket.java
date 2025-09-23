@@ -102,4 +102,7 @@ public class ChatBotMarket {
 
     @Schema(description = "Used tools")
     private String openedTool;
+
+    @Schema(description = "Model ID")
+    private Long modelId;
 }

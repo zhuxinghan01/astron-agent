@@ -155,154 +155,22 @@ public class BotServiceImpl implements BotService {
 
     @Override
     public BotInfoDto insertWorkflowBot(String uid, BotCreateForm bot, Long spaceId) {
-        String lockKey = "user:create:workflow:bot:uid:" + uid;
-        RLock lock = redissonClient.getLock(lockKey);
-        ChatBotBase botBase = new ChatBotBase();
-        try {
-            // Try to acquire lock, wait up to 5 seconds, hold lock for up to 10 seconds
-            boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new IllegalStateException("Distributed lock acquisition timeout, please try again later");
-            }
-            String botName = bot.getName();
-            // Check if it duplicates with own assistant name
-            if (chatBotDataService.checkRepeatBotName(uid, null, botName, spaceId)) {
-                throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
-            }
-            Long count;
-            if (spaceId == null) {
-                // Check bot parameter validity
-                count = chatBotDataService.countBotsByUid(uid);
-            } else {
-                count = chatBotDataService.countBotsByUid(uid, spaceId);
-            }
-            if (count.intValue() > 100) {
-                throw new BusinessException(ResponseEnum.TOO_MANY_BOTS);
-            }
-            botBase.setUid(uid);
-            botBase.setBotType(bot.getBotType());
-            botBase.setBotName(botName);
-            botBase.setAvatar(bot.getAvatar());
-            botBase.setPcBackground(bot.getPcBackground());
-            botBase.setAppBackground(bot.getAppBackground());
-            botBase.setPrologue(bot.getPrologue());
-            botBase.setBotDesc(bot.getBotDesc());
-            botBase.setBotTemplate(bot.getBotTemplate());
-            botBase.setSupportContext(1);
-            botBase.setSupportSystem(bot.getSupportSystem());
-            botBase.setPromptType(0);
-            botBase.setSpaceId(spaceId);
-            if (bot.getInputExample() != null && !bot.getInputExample().isEmpty()) {
-                botBase.setInputExample(String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()));
-            }
-            botBase.setBotwebStatus(0);
-            // maas version = 3
-            botBase.setVersion(3);
-            chatBotDataService.createBot(botBase);
-            // Add bot to chat_bot_list
-            chatListDataService.insertChatBotList(botBase);
-        } catch (Exception e) {
-            log.error("uid insert bot error, uid:{}", uid, e);
-            throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-        BotInfoDto dto = new BotInfoDto();
-        dto.setBotId(botBase.getId());
-        return dto;
+        return executeWithLock("user:create:workflow:bot:uid:" + uid, () -> {
+            validateBotCreation(uid, bot.getName(), spaceId);
+            ChatBotBase botBase = createWorkflowBotBase(uid, bot, spaceId);
+            saveBotAndAddToList(botBase);
+            return createBotInfoDto(botBase.getId());
+        });
     }
 
     @Override
     public BotInfoDto insertBotBasicInfo(String uid, BotCreateForm bot, Long spaceId) {
-        String lockKey = "user:create:basic:bot:uid:" + uid;
-        RLock lock = redissonClient.getLock(lockKey);
-        ChatBotBase botBase = new ChatBotBase();
-        try {
-            // Try to acquire lock, wait up to 5 seconds, hold lock for up to 10 seconds
-            boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new IllegalStateException("Distributed lock acquisition timeout, please try again later");
-            }
-            String botName = bot.getName();
-            // Check if it duplicates with own assistant name
-            if (chatBotDataService.checkRepeatBotName(uid, null, botName, spaceId)) {
-                throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
-            }
-            Long count;
-            if (spaceId == null) {
-                // Check bot parameter validity
-                count = chatBotDataService.countBotsByUid(uid);
-            } else {
-                count = chatBotDataService.countBotsByUid(uid, spaceId);
-            }
-            if (count.intValue() > 100) {
-                throw new BusinessException(ResponseEnum.TOO_MANY_BOTS);
-            }
-
-            // Set basic bot information
-            botBase.setUid(uid);
-            botBase.setBotType(bot.getBotType());
-            botBase.setBotName(botName);
-            botBase.setAvatar(bot.getAvatar());
-            botBase.setPcBackground(bot.getPcBackground());
-            botBase.setAppBackground(bot.getAppBackground());
-            botBase.setBackgroundColor(bot.getBackgroundColor());
-            botBase.setPrologue(bot.getPrologue());
-            botBase.setBotDesc(bot.getBotDesc());
-            botBase.setBotTemplate(bot.getBotTemplate());
-            botBase.setSupportContext(bot.getSupportContext());
-            botBase.setSupportSystem(bot.getSupportSystem());
-            botBase.setSupportDocument(bot.getSupportDocument());
-            botBase.setPromptType(bot.getPromptType() != null ? bot.getPromptType() : 0);
-            botBase.setPrompt(bot.getPrompt());
-            botBase.setPromptSystem(bot.getPromptSystem());
-            botBase.setSupportUpload(bot.getSupportUpload());
-            botBase.setModel(bot.getModel());
-            botBase.setVcnCn(bot.getVcnCn());
-            botBase.setVcnEn(bot.getVcnEn());
-            botBase.setVcnSpeed(bot.getVcnSpeed());
-            botBase.setIsSentence(bot.getIsSentence());
-            botBase.setOpenedTool(bot.getOpenedTool());
-            botBase.setClientType(bot.getClientType());
-            botBase.setBotNameEn(bot.getBotNameEn());
-            botBase.setBotDescEn(bot.getBotDescEn());
-            botBase.setPrologueEn(bot.getPrologueEn());
-            botBase.setClientHide(bot.getClientHide());
-            botBase.setVirtualBotType(bot.getVirtualBotType());
-            botBase.setVirtualAgentId(bot.getVirtualAgentId());
-            botBase.setStyle(bot.getStyle());
-            botBase.setBackground(bot.getBackground());
-            botBase.setVirtualCharacter(bot.getVirtualCharacter());
-            botBase.setMassBotId(bot.getMassBotId());
-            botBase.setVersion(bot.getIsSentence());
-            botBase.setSpaceId(spaceId);
-
-            // Handle input examples
-            if (bot.getInputExample() != null && !bot.getInputExample().isEmpty()) {
-                botBase.setInputExample(String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()));
-            }
-            if (bot.getInputExampleEn() != null && !bot.getInputExampleEn().isEmpty()) {
-                botBase.setInputExampleEn(String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExampleEn()));
-            }
-
-            botBase.setBotwebStatus(0);
-
-            chatBotDataService.createBot(botBase);
-            // Add bot to chat_bot_list
-            chatListDataService.insertChatBotList(botBase);
-        } catch (Exception e) {
-            log.error("uid insert bot basic info error, uid:{}", uid, e);
-            throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-        BotInfoDto dto = new BotInfoDto();
-        dto.setBotId(botBase.getId());
-        return dto;
+        return executeWithLock("user:create:basic:bot:uid:" + uid, () -> {
+            validateBotCreation(uid, bot.getName(), spaceId);
+            ChatBotBase botBase = createBasicBotBase(uid, bot, spaceId);
+            saveBotAndAddToList(botBase);
+            return createBotInfoDto(botBase.getId());
+        });
     }
 
     @Override
@@ -328,137 +196,21 @@ public class BotServiceImpl implements BotService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateWorkflowBot(String uid, BotCreateForm bot, HttpServletRequest request, Long spaceId) {
-        String lockKey = "user:update:workflow:bot:uid:" + uid;
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            // Try to acquire lock, wait up to 5 seconds, hold lock for up to 10 seconds
-            boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new IllegalStateException("Distributed lock acquisition timeout, please try again later");
-            }
-            Integer botId = bot.getBotId();
-            String botName = bot.getName();
-            // Check if it duplicates with own assistant name
-            if (chatBotDataService.checkRepeatBotName(uid, null, botName, spaceId)) {
-                throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
-            }
-            // Update bot
-            ChatBotBase botBase = ChatBotBase.builder()
-                    .uid(uid)
-                    .id(botId)
-                    .botType(bot.getBotType())
-                    .botName(botName)
-                    .avatar(bot.getAvatar())
-                    .pcBackground(bot.getPcBackground())
-                    .appBackground(bot.getAppBackground())
-                    .prologue(bot.getPrologue())
-                    .botDesc(bot.getBotDesc())
-                    .botTemplate(bot.getBotTemplate())
-                    .prompt(bot.getPrompt())
-                    .supportContext(0)
-                    .supportDocument(bot.getSupportDocument())
-                    .supportSystem(bot.getSupportSystem())
-                    .promptType(bot.getPromptType())
-                    .inputExample(bot.getInputExample() != null && bot.getInputExample().size() > 0 ? String.join(",", bot.getInputExample()) : null)
-                    .build();
-            chatBotDataService.updateBot(botBase);
-            chatListDataService.updateChatBotList(botBase);
-            chatBotMarketService.
-            // Update market
-                    updateBotMarketStatus(uid, botId);
-            // Find flowId to synchronize to Astron, then publish
-            UserLangChainInfo userLangChainInfo = userLangChainDataService.findOneByBotId(botId);
-            // Here it may not be orchestrated yet, need to check
-            if (Objects.nonNull(userLangChainInfo)) {
-                maasUtil.synchronizeWorkFlow(userLangChainInfo, bot, request, spaceId);
-            }
-        } catch (Exception e) {
-            log.error("uid update bot error,uid:{}", uid, e);
-            throw new BusinessException(ResponseEnum.UPDATE_BOT_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-        return Boolean.TRUE;
+        return executeWithLock("user:update:workflow:bot:uid:" + uid, () -> {
+            validateBotNameForUpdate(uid, bot.getName(), spaceId);
+            updateWorkflowBotInternal(uid, bot, request, spaceId);
+            return Boolean.TRUE;
+        });
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateBotBasicInfo(String uid, BotCreateForm bot, Long spaceId) {
-        String lockKey = "user:update:basic:bot:uid:" + uid;
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            // Try to acquire lock, wait up to 5 seconds, hold lock for up to 10 seconds
-            boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new IllegalStateException("Distributed lock acquisition timeout, please try again later");
-            }
-
-            Integer botId = bot.getBotId();
-            String botName = bot.getName();
-
-            // Check if it duplicates with own assistant name
-            if (chatBotDataService.checkRepeatBotName(uid, botId, botName, spaceId)) {
-                throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
-            }
-
-            // Update bot basic information only
-            ChatBotBase botBase = ChatBotBase.builder()
-                    .uid(uid)
-                    .id(botId)
-                    .botType(bot.getBotType())
-                    .botName(botName)
-                    .avatar(bot.getAvatar())
-                    .pcBackground(bot.getPcBackground())
-                    .appBackground(bot.getAppBackground())
-                    .backgroundColor(bot.getBackgroundColor())
-                    .prologue(bot.getPrologue())
-                    .botDesc(bot.getBotDesc())
-                    .botTemplate(bot.getBotTemplate())
-                    .supportSystem(bot.getSupportSystem())
-                    .supportDocument(bot.getSupportDocument())
-                    .promptType(bot.getPromptType())
-                    .prompt(bot.getPrompt())
-                    .promptSystem(bot.getPromptSystem())
-                    .supportUpload(bot.getSupportUpload())
-                    .model(bot.getModel())
-                    .vcnCn(bot.getVcnCn())
-                    .vcnEn(bot.getVcnEn())
-                    .vcnSpeed(bot.getVcnSpeed())
-                    .isSentence(bot.getIsSentence())
-                    .openedTool(bot.getOpenedTool())
-                    .clientType(bot.getClientType())
-                    .botNameEn(bot.getBotNameEn())
-                    .botDescEn(bot.getBotDescEn())
-                    .prologueEn(bot.getPrologueEn())
-                    .clientHide(bot.getClientHide())
-                    .virtualBotType(bot.getVirtualBotType())
-                    .virtualAgentId(bot.getVirtualAgentId())
-                    .style(bot.getStyle())
-                    .background(bot.getBackground())
-                    .virtualCharacter(bot.getVirtualCharacter())
-                    .massBotId(bot.getMassBotId())
-                    .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
-                    .build();
-
-            // Handle English input examples
-            if (bot.getInputExampleEn() != null && !bot.getInputExampleEn().isEmpty()) {
-                botBase.setInputExampleEn(String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExampleEn()));
-            }
-
-            chatBotDataService.updateBot(botBase);
-            chatListDataService.updateChatBotList(botBase);
-
+        return executeWithLock("user:update:basic:bot:uid:" + uid, () -> {
+            validateBotNameForUpdate(uid, bot.getName(), bot.getBotId(), spaceId);
+            updateBasicBotInternal(uid, bot);
             return Boolean.TRUE;
-        } catch (Exception e) {
-            log.error("uid update bot basic info error, uid:{}", uid, e);
-            throw new BusinessException(ResponseEnum.UPDATE_BOT_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        });
     }
 
     @Override
@@ -486,6 +238,239 @@ public class BotServiceImpl implements BotService {
                 .updateTime(LocalDateTime.now())
                 .build();
         userLangChainDataService.insertUserLangChainInfo(userLangChainInfo);
+    }
+
+    private <T> T executeWithLock(String lockKey, java.util.function.Supplier<T> operation) {
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
+            if (!acquired) {
+                throw new IllegalStateException("Distributed lock acquisition timeout, please try again later");
+            }
+            return operation.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted while acquiring lock", e);
+        } catch (Exception e) {
+            log.error("Operation failed with lock: {}", lockKey, e);
+            throw e;
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    private void validateBotCreation(String uid, String botName, Long spaceId) {
+        if (chatBotDataService.checkRepeatBotName(uid, null, botName, spaceId)) {
+            throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
+        }
+
+        Long count = (spaceId == null) ? chatBotDataService.countBotsByUid(uid) : chatBotDataService.countBotsByUid(uid, spaceId);
+
+        if (count.intValue() > 100) {
+            throw new BusinessException(ResponseEnum.TOO_MANY_BOTS);
+        }
+    }
+
+    private void validateBotNameForUpdate(String uid, String botName, Long spaceId) {
+        if (chatBotDataService.checkRepeatBotName(uid, null, botName, spaceId)) {
+            throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
+        }
+    }
+
+    private void validateBotNameForUpdate(String uid, String botName, Integer botId, Long spaceId) {
+        if (chatBotDataService.checkRepeatBotName(uid, botId, botName, spaceId)) {
+            throw new BusinessException(ResponseEnum.DUPLICATE_BOT_NAME);
+        }
+    }
+
+    private ChatBotBase createWorkflowBotBase(String uid, BotCreateForm bot, Long spaceId) {
+        ChatBotBase botBase = new ChatBotBase();
+        botBase.setUid(uid);
+        botBase.setBotType(bot.getBotType());
+        botBase.setBotName(bot.getName());
+        botBase.setAvatar(bot.getAvatar());
+        botBase.setPcBackground(bot.getPcBackground());
+        botBase.setAppBackground(bot.getAppBackground());
+        botBase.setPrologue(bot.getPrologue());
+        botBase.setBotDesc(bot.getBotDesc());
+        botBase.setBotTemplate(bot.getBotTemplate());
+        botBase.setSupportContext(1);
+        botBase.setSupportSystem(bot.getSupportSystem());
+        botBase.setPromptType(0);
+        botBase.setSpaceId(spaceId);
+        setInputExamples(botBase, bot.getInputExample(), null);
+        botBase.setBotwebStatus(0);
+        botBase.setVersion(3);
+        return botBase;
+    }
+
+    private ChatBotBase createBasicBotBase(String uid, BotCreateForm bot, Long spaceId) {
+        ChatBotBase botBase = new ChatBotBase();
+        botBase.setUid(uid);
+        botBase.setBotType(bot.getBotType());
+        botBase.setBotName(bot.getName());
+        botBase.setAvatar(bot.getAvatar());
+        botBase.setPcBackground(bot.getPcBackground());
+        botBase.setAppBackground(bot.getAppBackground());
+        botBase.setBackgroundColor(bot.getBackgroundColor());
+        botBase.setPrologue(bot.getPrologue());
+        botBase.setBotDesc(bot.getBotDesc());
+        botBase.setBotTemplate(bot.getBotTemplate());
+        botBase.setSupportContext(bot.getSupportContext());
+        botBase.setSupportSystem(bot.getSupportSystem());
+        botBase.setSupportDocument(bot.getSupportDocument());
+        botBase.setPromptType(bot.getPromptType() != null ? bot.getPromptType() : 0);
+        botBase.setPrompt(bot.getPrompt());
+        botBase.setPromptSystem(bot.getPromptSystem());
+        botBase.setSupportUpload(bot.getSupportUpload());
+        botBase.setModel(bot.getModel());
+        botBase.setVcnCn(bot.getVcnCn());
+        botBase.setVcnEn(bot.getVcnEn());
+        botBase.setVcnSpeed(bot.getVcnSpeed());
+        botBase.setIsSentence(bot.getIsSentence());
+        botBase.setOpenedTool(bot.getOpenedTool());
+        botBase.setClientType(bot.getClientType());
+        botBase.setBotNameEn(bot.getBotNameEn());
+        botBase.setBotDescEn(bot.getBotDescEn());
+        botBase.setPrologueEn(bot.getPrologueEn());
+        botBase.setClientHide(bot.getClientHide());
+        botBase.setVirtualBotType(bot.getVirtualBotType());
+        botBase.setVirtualAgentId(bot.getVirtualAgentId());
+        botBase.setStyle(bot.getStyle());
+        botBase.setBackground(bot.getBackground());
+        botBase.setVirtualCharacter(bot.getVirtualCharacter());
+        botBase.setMassBotId(bot.getMassBotId());
+        botBase.setVersion(bot.getIsSentence());
+        botBase.setSpaceId(spaceId);
+        setInputExamples(botBase, bot.getInputExample(), bot.getInputExampleEn());
+        botBase.setBotwebStatus(0);
+        return botBase;
+    }
+
+    private void setInputExamples(ChatBotBase botBase, List<String> inputExample, List<String> inputExampleEn) {
+        if (inputExample != null && !inputExample.isEmpty()) {
+            botBase.setInputExample(String.join(BOT_INPUT_EXAMPLE_SPLIT, inputExample));
+        }
+        if (inputExampleEn != null && !inputExampleEn.isEmpty()) {
+            botBase.setInputExampleEn(String.join(BOT_INPUT_EXAMPLE_SPLIT, inputExampleEn));
+        }
+    }
+
+    private void saveBotAndAddToList(ChatBotBase botBase) {
+        try {
+            chatBotDataService.createBot(botBase);
+            chatListDataService.insertChatBotList(botBase);
+        } catch (Exception e) {
+            log.error("Failed to save bot, uid: {}", botBase.getUid(), e);
+            throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
+        }
+    }
+
+    private BotInfoDto createBotInfoDto(Integer botId) {
+        BotInfoDto dto = new BotInfoDto();
+        dto.setBotId(botId);
+        return dto;
+    }
+
+    private void updateWorkflowBotInternal(String uid, BotCreateForm bot, HttpServletRequest request, Long spaceId) {
+        try {
+            Integer botId = bot.getBotId();
+            ChatBotBase botBase = ChatBotBase.builder()
+                    .uid(uid)
+                    .id(botId)
+                    .botType(bot.getBotType())
+                    .botName(bot.getName())
+                    .avatar(bot.getAvatar())
+                    .pcBackground(bot.getPcBackground())
+                    .appBackground(bot.getAppBackground())
+                    .prologue(bot.getPrologue())
+                    .botDesc(bot.getBotDesc())
+                    .botTemplate(bot.getBotTemplate())
+                    .prompt(bot.getPrompt())
+                    .supportContext(0)
+                    .supportDocument(bot.getSupportDocument())
+                    .supportSystem(bot.getSupportSystem())
+                    .promptType(bot.getPromptType())
+                    .inputExample(bot.getInputExample() != null && bot.getInputExample().size() > 0 ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
+                    .build();
+
+            chatBotDataService.updateBot(botBase);
+            chatListDataService.updateChatBotList(botBase);
+            chatBotMarketService.updateBotMarketStatus(uid, botId);
+
+            synchronizeWorkflowIfNeeded(botId, bot, request, spaceId);
+        } catch (Exception e) {
+            log.error("uid update bot error, uid: {}", uid, e);
+            throw new BusinessException(ResponseEnum.UPDATE_BOT_FAILED);
+        }
+    }
+
+    private void synchronizeWorkflowIfNeeded(Integer botId, BotCreateForm bot, HttpServletRequest request, Long spaceId) {
+        UserLangChainInfo userLangChainInfo = userLangChainDataService.findOneByBotId(botId);
+        if (Objects.nonNull(userLangChainInfo)) {
+            maasUtil.synchronizeWorkFlow(userLangChainInfo, bot, request, spaceId);
+        }
+    }
+
+    private void updateBasicBotInternal(String uid, BotCreateForm bot) {
+        try {
+            ChatBotBase botBase = createUpdateBotBase(uid, bot);
+            setEnglishInputExamplesIfPresent(botBase, bot.getInputExampleEn());
+
+            chatBotDataService.updateBot(botBase);
+            chatListDataService.updateChatBotList(botBase);
+        } catch (Exception e) {
+            log.error("uid update bot basic info error, uid: {}", uid, e);
+            throw new BusinessException(ResponseEnum.UPDATE_BOT_FAILED);
+        }
+    }
+
+    private ChatBotBase createUpdateBotBase(String uid, BotCreateForm bot) {
+        return ChatBotBase.builder()
+                .uid(uid)
+                .id(bot.getBotId())
+                .botType(bot.getBotType())
+                .botName(bot.getName())
+                .avatar(bot.getAvatar())
+                .pcBackground(bot.getPcBackground())
+                .appBackground(bot.getAppBackground())
+                .backgroundColor(bot.getBackgroundColor())
+                .prologue(bot.getPrologue())
+                .botDesc(bot.getBotDesc())
+                .botTemplate(bot.getBotTemplate())
+                .supportSystem(bot.getSupportSystem())
+                .supportDocument(bot.getSupportDocument())
+                .promptType(bot.getPromptType())
+                .prompt(bot.getPrompt())
+                .promptSystem(bot.getPromptSystem())
+                .supportUpload(bot.getSupportUpload())
+                .model(bot.getModel())
+                .vcnCn(bot.getVcnCn())
+                .vcnEn(bot.getVcnEn())
+                .vcnSpeed(bot.getVcnSpeed())
+                .isSentence(bot.getIsSentence())
+                .openedTool(bot.getOpenedTool())
+                .clientType(bot.getClientType())
+                .botNameEn(bot.getBotNameEn())
+                .botDescEn(bot.getBotDescEn())
+                .prologueEn(bot.getPrologueEn())
+                .clientHide(bot.getClientHide())
+                .virtualBotType(bot.getVirtualBotType())
+                .virtualAgentId(bot.getVirtualAgentId())
+                .style(bot.getStyle())
+                .background(bot.getBackground())
+                .virtualCharacter(bot.getVirtualCharacter())
+                .massBotId(bot.getMassBotId())
+                .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
+                .build();
+    }
+
+    private void setEnglishInputExamplesIfPresent(ChatBotBase botBase, List<String> inputExampleEn) {
+        if (inputExampleEn != null && !inputExampleEn.isEmpty()) {
+            botBase.setInputExampleEn(String.join(BOT_INPUT_EXAMPLE_SPLIT, inputExampleEn));
+        }
     }
 
     private BotInfoDto createBasicBotInfo(ChatBotBase chatBotBase) {
