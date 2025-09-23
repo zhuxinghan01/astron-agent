@@ -36,9 +36,7 @@ export default [
         clearInterval: 'readonly',
       },
     },
-    extends: [
-      eslintConfigPrettier,
-    ],
+    extends: [eslintConfigPrettier],
     plugins: {
       '@typescript-eslint': tseslint,
       prettier: prettier,

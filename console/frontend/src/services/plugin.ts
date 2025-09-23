@@ -98,7 +98,7 @@ export async function debugServerToolAPI(params: {
   toolId: string;
   toolArgs: Record<string, unknown>;
 }): Promise<{ content: { text: string }[] }> {
- return await http.post('/workflow/debug-server-tool', params);
+  return await http.post('/workflow/debug-server-tool', params);
 }
 
 export async function workflowGetEnvKey(

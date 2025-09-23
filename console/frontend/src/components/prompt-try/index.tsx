@@ -417,7 +417,7 @@ const PromptTry = ({
     let err = '';
     let answerAllGet = false;
     let sid = '';
-   
+
     let multiModalData: any = null;
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -556,8 +556,7 @@ const PromptTry = ({
           }
           ans = `${ans}${Base64.decode(event.data)}`;
           setAnswer(ans);
-        }
-        else {
+        } else {
           err += event.data;
         }
       },
@@ -730,7 +729,7 @@ const PromptTry = ({
               </div>
             </div>
           )}
-        
+
           {mergedList.map((item: any, index: any) => {
             if (!item) return null;
             else

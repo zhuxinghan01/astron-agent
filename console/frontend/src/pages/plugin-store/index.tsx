@@ -5,23 +5,23 @@
  * @LastEditTime: 2025-09-23 10:08:47
  * @Description: 插件广场
  */
-import React, { useEffect, useState, useRef, memo, ReactElement } from "react";
-import { message, Select, Spin } from "antd";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { listToolSquare } from "@/services/tool";
-import { getTags } from "@/services/square";
-import { useTranslation } from "react-i18next";
-import { useDebounceFn } from "ahooks";
-import RetractableInput from "@/components/ui/global/retract-table-input";
-import { Tool, ListToolSquareParams, Classify } from "@/types/plugin-store";
-import type { ResponseBusinessError, ResponseResultPage } from "@/types/global";
+import React, { useEffect, useState, useRef, memo, ReactElement } from 'react';
+import { message, Select, Spin } from 'antd';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { listToolSquare } from '@/services/tool';
+import { getTags } from '@/services/square';
+import { useTranslation } from 'react-i18next';
+import { useDebounceFn } from 'ahooks';
+import RetractableInput from '@/components/ui/global/retract-table-input';
+import { Tool, ListToolSquareParams, Classify } from '@/types/plugin-store';
+import type { ResponseBusinessError, ResponseResultPage } from '@/types/global';
 
-import formSelect from "@/assets/svgs/icon-nav-dropdown.svg";
-import defaultPng from "@/assets/imgs/tool-square/default.png";
+import formSelect from '@/assets/svgs/icon-nav-dropdown.svg';
+import defaultPng from '@/assets/imgs/tool-square/default.png';
 // todo-newImg
-import toolAuthor from "@/assets/imgs/bot-square/tool-store-author-logo.png";
-import headLogo from "@/assets/imgs/bot-square/tool-store-head-logo.png";
-import "./style.css";
+import toolAuthor from '@/assets/imgs/bot-square/tool-store-author-logo.png';
+import headLogo from '@/assets/imgs/bot-square/tool-store-head-logo.png';
+import './style.css';
 
 function PluginStore(): ReactElement {
   const { t } = useTranslation();
@@ -42,18 +42,18 @@ function PluginStore(): ReactElement {
     pageSize: 30,
     orderFlag: category ? Number(category) : 0,
   });
-  const [content, setContent] = useState(searchInput || "");
+  const [content, setContent] = useState(searchInput || '');
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [classifyList, setClassifyList] = useState<Classify[]>([]);
   const [classify, setClassify] = useState<string | number>(
-    tab ? Number(tab) : ""
+    tab ? Number(tab) : ''
   );
-  const [hoverClassify, setHoverClassify] = useState<string | number>("");
-  const [tagFlag, setTagFlag] = useState<string | number>(tab ? "" : 0);
+  const [hoverClassify, setHoverClassify] = useState<string | number>('');
+  const [tagFlag, setTagFlag] = useState<string | number>(tab ? '' : 0);
 
   const { run } = useDebounceFn(
-    (inputValue) => {
+    inputValue => {
       getTools(inputValue);
     },
     { wait: 500 }
@@ -107,7 +107,7 @@ function PluginStore(): ReactElement {
         }
       })
       .catch((error: ResponseBusinessError) => {
-        message.error(error?.message || "获取插件列表失败");
+        message.error(error?.message || '获取插件列表失败');
         setTools([]);
       })
       .finally(() => {
@@ -134,7 +134,7 @@ function PluginStore(): ReactElement {
     listToolSquare(params)
       .then((data: ResponseResultPage<Tool>) => {
         setTools(data?.pageData || []);
-        setSearchValue((searchValue) => ({ ...searchValue, page: 2 }));
+        setSearchValue(searchValue => ({ ...searchValue, page: 2 }));
         if (30 < data.totalCount) {
           setHasMore(true);
         } else {
@@ -142,7 +142,7 @@ function PluginStore(): ReactElement {
         }
       })
       .catch((error: ResponseBusinessError) => {
-        message.error(error?.message || "获取插件列表失败");
+        message.error(error?.message || '获取插件列表失败');
         setTools([]);
       })
       .finally(() => {
@@ -150,9 +150,9 @@ function PluginStore(): ReactElement {
         loadingRef.current = false;
       });
   };
-  
+
   useEffect(() => {
-    getTags("tool_v2")
+    getTags('tool_v2')
       .then((data: Classify[]) => {
         setClassifyList(data);
       })
@@ -171,7 +171,7 @@ function PluginStore(): ReactElement {
       <div className="w-full max-w-[1425px] flex flex-col justify-start items-center pl-6 pr-[30px]">
         <div className="w-full flex justify-between pt-6 pb-[11px]">
           <div className="flex items-center gap-2.5 text-2xl font-medium leading-normal tracking-wider text-[#333333]">
-            <span>{t("common.storePlugin.pluginSquare")}</span>
+            <span>{t('common.storePlugin.pluginSquare')}</span>
           </div>
         </div>
         {/* 导航栏 */}
@@ -182,20 +182,20 @@ function PluginStore(): ReactElement {
                 className="px-4 py-1.5 rounded-lg cursor-pointer text-sm flex items-center justify-center h-[32px] font-medium"
                 style={{
                   background: [hoverClassify, tagFlag].includes(0)
-                    ? "#FFFFFF"
-                    : "",
+                    ? '#FFFFFF'
+                    : '',
                   color: [hoverClassify, tagFlag].includes(0)
-                    ? "#275EFF"
-                    : "#757575",
+                    ? '#275EFF'
+                    : '#757575',
                 }}
                 onMouseEnter={() => setHoverClassify(0)}
-                onMouseLeave={() => setHoverClassify("")}
+                onMouseLeave={() => setHoverClassify('')}
                 onClick={() => {
                   setTagFlag(0);
-                  setClassify("");
+                  setClassify('');
                 }}
               >
-                {t("common.storePlugin.all")}
+                {t('common.storePlugin.all')}
               </div>
 
               {classifyList.map((item: Classify) => (
@@ -204,16 +204,16 @@ function PluginStore(): ReactElement {
                   className="px-4 py-1.5 rounded-lg cursor-pointer text-sm flex items-center justify-center font-medium h-[32px]"
                   style={{
                     background: [hoverClassify, classify].includes(item.id)
-                      ? "#FFFFFF"
-                      : "",
+                      ? '#FFFFFF'
+                      : '',
                     color: [hoverClassify, classify].includes(item.id)
-                      ? "#275EFF"
-                      : "#757575",
+                      ? '#275EFF'
+                      : '#757575',
                   }}
                   onMouseEnter={() => setHoverClassify(item.id)}
-                  onMouseLeave={() => setHoverClassify("")}
+                  onMouseLeave={() => setHoverClassify('')}
                   onClick={() => {
-                    setTagFlag("");
+                    setTagFlag('');
                     setClassify(item.id);
                   }}
                 >
@@ -227,8 +227,8 @@ function PluginStore(): ReactElement {
               suffixIcon={<img src={formSelect} className="w-4 h-4" />}
               className="search-select detail-select"
               value={searchValue.orderFlag}
-              style={{ borderRadius: "8px" }}
-              onChange={(value) => {
+              style={{ borderRadius: '8px' }}
+              onChange={value => {
                 setSearchValue(() => ({
                   ...searchValue,
                   orderFlag: value,
@@ -236,8 +236,8 @@ function PluginStore(): ReactElement {
                 getTools(content, value);
               }}
               options={[
-                { label: t("common.storePlugin.mostPopular"), value: 0 },
-                { label: t("common.storePlugin.recentlyUsed"), value: 1 },
+                { label: t('common.storePlugin.mostPopular'), value: 0 },
+                { label: t('common.storePlugin.recentlyUsed'), value: 1 },
               ]}
             ></Select>
             <div className="relative ml-6 search-input-rounded">
@@ -317,7 +317,7 @@ function PluginStore(): ReactElement {
                                 key={index}
                                 className="mr-2 text-[14px] px-2 py-1 rounded flex items-center justify-center text-[#333333] fit-content h-[28px]"
                                 style={{
-                                  backgroundColor: "rgba(223, 229, 255, 0.6)",
+                                  backgroundColor: 'rgba(223, 229, 255, 0.6)',
                                 }}
                               >
                                 {tag}
@@ -337,7 +337,7 @@ function PluginStore(): ReactElement {
                           />
                         </div>
                         <div>
-                          {t("common.storePlugin.xingchenAgentOfficial")}
+                          {t('common.storePlugin.xingchenAgentOfficial')}
                         </div>
                       </div>
                       <div className="flex">
@@ -367,7 +367,7 @@ function PluginStore(): ReactElement {
       {!loading && tools?.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-2">
           <img src={defaultPng} className="w-[140px] h-[140px]" alt="" />
-          <div>{t("common.storePlugin.noPlugins")}</div>
+          <div>{t('common.storePlugin.noPlugins')}</div>
         </div>
       )}
     </div>

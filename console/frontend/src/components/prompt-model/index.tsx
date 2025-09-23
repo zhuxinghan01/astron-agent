@@ -506,7 +506,7 @@ const PromptTry = ({
           err += event.data;
           return;
         }
-       
+
         if (event.data === '[belongerr]') {
           // chatid 不属于 当前账号, 这次chat接口只会返回这个头
           window.location.reload();
@@ -569,7 +569,7 @@ const PromptTry = ({
         // 正常走
         if (!err) {
           if (answerAllGet) {
-            sid = event.data.split('<sid>')[0]||'';
+            sid = event.data.split('<sid>')[0] || '';
             otherProps = handleOtherProps(otherProps, ansContent, ansType);
             newResp(
               ans,
@@ -761,7 +761,7 @@ const PromptTry = ({
               </div>
             </div>
           )}
-          
+
           {mergedList.map((item: any, index: any) => {
             if (!item) return null;
             else

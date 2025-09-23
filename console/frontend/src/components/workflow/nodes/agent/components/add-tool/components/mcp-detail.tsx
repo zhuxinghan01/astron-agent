@@ -5,20 +5,20 @@
  * @LastEditTime: 2025-09-23 10:07:09
  * @Description: MCPDetail组件(MCP工具详情)
  */
-import React, { useMemo, useState, useEffect } from "react";
-import { Input, Button, InputNumber, Select, message } from "antd";
-import { cloneDeep } from "lodash";
-import dayjs from "dayjs";
-import { getServerToolDetailAPI, debugServerToolAPI } from "@/services/plugin";
-import MarkdownRender from "@/components/markdown-render";
-import JsonMonacoEditor from "@/components/monaco-editor/JsonMonacoEditor";
-import { useTranslation } from "react-i18next";
-import { MCPToolDetail, InputSchema, ToolArg } from "@/types/plugin-store";
-import toolArrowLeft from "@/assets/imgs/workflow/tool-arrow-left.png";
-import publishIcon from "@/assets/imgs/workflow/publish-icon.png";
-import trialRunIcon from "@/assets/imgs/workflow/trial-run-icon.png";
-import mcpArrowDown from "@/assets/imgs/mcp/mcp-arrow-down.svg";
-import mcpArrowUp from "@/assets/imgs/mcp/mcp-arrow-up.svg";
+import React, { useMemo, useState, useEffect } from 'react';
+import { Input, Button, InputNumber, Select, message } from 'antd';
+import { cloneDeep } from 'lodash';
+import dayjs from 'dayjs';
+import { getServerToolDetailAPI, debugServerToolAPI } from '@/services/plugin';
+import MarkdownRender from '@/components/markdown-render';
+import JsonMonacoEditor from '@/components/monaco-editor/JsonMonacoEditor';
+import { useTranslation } from 'react-i18next';
+import { MCPToolDetail, InputSchema, ToolArg } from '@/types/plugin-store';
+import toolArrowLeft from '@/assets/imgs/workflow/tool-arrow-left.png';
+import publishIcon from '@/assets/imgs/workflow/publish-icon.png';
+import trialRunIcon from '@/assets/imgs/workflow/trial-run-icon.png';
+import mcpArrowDown from '@/assets/imgs/mcp/mcp-arrow-down.svg';
+import mcpArrowUp from '@/assets/imgs/mcp/mcp-arrow-up.svg';
 
 function MCPDetailWrapper({
   currentToolId,
@@ -32,13 +32,13 @@ function MCPDetailWrapper({
     <div
       className="w-full h-full flex flex-col overflow-hidden bg-[#fff] gap-9"
       style={{
-        padding: "65px 0px 43px",
+        padding: '65px 0px 43px',
       }}
     >
       <div
         className="flex mx-auto"
         style={{
-          width: "90%",
+          width: '90%',
         }}
       >
         <div
@@ -50,14 +50,14 @@ function MCPDetailWrapper({
             className="w-[14px] h-[12px] cursor-pointer"
             alt=""
           />
-          <span className="font-medium">{t("workflow.nodes.common.back")}</span>
+          <span className="font-medium">{t('workflow.nodes.common.back')}</span>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         <div
           className="mx-auto"
           style={{
-            width: "90%",
+            width: '90%',
           }}
         >
           <MCPDetail currentToolId={currentToolId} />
@@ -73,7 +73,7 @@ export function MCPDetail({
   currentToolId: string;
 }): React.ReactElement {
   const { t } = useTranslation();
-  const [currentTab, setCurrentTab] = useState("content");
+  const [currentTab, setCurrentTab] = useState('content');
   const [currentMcp, setCurrentMcp] = useState<MCPToolDetail>(
     {} as MCPToolDetail
   );
@@ -83,18 +83,18 @@ export function MCPDetail({
   }, [currentMcp]);
 
   const generateDefaultInputValue = (type: string): unknown => {
-    if (type === "string") {
-      return "";
-    } else if (type === "number") {
+    if (type === 'string') {
+      return '';
+    } else if (type === 'number') {
       return 0;
-    } else if (type === "boolean") {
+    } else if (type === 'boolean') {
       return false;
-    } else if (type === "int" || type === "integer") {
+    } else if (type === 'int' || type === 'integer') {
       return 0;
-    } else if (type === "array") {
-      return "[]";
-    } else if (type === "object") {
-      return "{}";
+    } else if (type === 'array') {
+      return '[]';
+    } else if (type === 'object') {
+      return '{}';
     }
   };
 
@@ -117,7 +117,7 @@ export function MCPDetail({
     argIndex: number,
     value: unknown
   ): void => {
-    setCurrentMcp((mcp) => {
+    setCurrentMcp(mcp => {
       const tool = mcp?.tools?.find((item, index) => index === toolIndex);
       if (tool) {
         const arg = tool.args?.find((item, index) => index === argIndex);
@@ -140,18 +140,18 @@ export function MCPDetail({
     const toolArgs: Record<string, unknown> = {};
     for (const item of tool.args || []) {
       toolArgs[item.name] =
-        item.type === "array" || item.type === "object"
+        item.type === 'array' || item.type === 'object'
           ? JSON.parse(item.value as string)
           : item.value;
     }
     const params = {
-      mcpServerId: "",
+      mcpServerId: '',
       mcpServerUrl: currentMcp.serverUrl,
       toolName: tool.name,
       toolId: currentToolId,
       toolArgs,
     };
-    setCurrentMcp((mcp) => {
+    setCurrentMcp(mcp => {
       const tool = mcp?.tools?.find((item, index) => index === toolIndex);
       if (tool) {
         tool.loading = true;
@@ -159,8 +159,8 @@ export function MCPDetail({
       return cloneDeep(mcp);
     });
     debugServerToolAPI(params)
-      .then((data) => {
-        setCurrentMcp((mcp) => {
+      .then(data => {
+        setCurrentMcp(mcp => {
           const tool = mcp?.tools?.find((item, index) => index === toolIndex);
           if (tool && data?.content) {
             tool.textResult = (
@@ -170,11 +170,11 @@ export function MCPDetail({
           return cloneDeep(mcp);
         });
       })
-      .catch((error) => {
+      .catch(error => {
         message.error(error?.message);
       })
       .finally(() => {
-        setCurrentMcp((mcp) => {
+        setCurrentMcp(mcp => {
           const tool = mcp?.tools?.find((item, index) => index === toolIndex);
           if (tool) {
             tool.loading = false;
@@ -193,87 +193,87 @@ export function MCPDetail({
       return (
         <Select
           className="h-10 global-select"
-          placeholder={t("workflow.nodes.common.selectPlaceholder")}
+          placeholder={t('workflow.nodes.common.selectPlaceholder')}
           options={arg?.enum?.map((item: string) => ({
             label: item,
             value: item,
           }))}
           style={{ height: 40 }}
           value={arg?.value}
-          onChange={(value) => handleInputParamsChange(toolIndex, index, value)}
+          onChange={value => handleInputParamsChange(toolIndex, index, value)}
         />
       );
-    } else if (arg.type === "string") {
+    } else if (arg.type === 'string') {
       return (
         <Input.TextArea
           autoSize={{ minRows: 1, maxRows: 6 }}
           className="w-full global-input search-input mcp-input"
-          placeholder={t("workflow.nodes.common.inputPlaceholder")}
+          placeholder={t('workflow.nodes.common.inputPlaceholder')}
           style={{
             borderRadius: 8,
-            background: "#fff !important",
-            resize: "none",
+            background: '#fff !important',
+            resize: 'none',
           }}
           value={arg?.value as string}
-          onChange={(e) =>
+          onChange={e =>
             handleInputParamsChange(toolIndex, index, e.target.value)
           }
         />
       );
-    } else if (arg.type === "boolean") {
+    } else if (arg.type === 'boolean') {
       return (
         <Select
           style={{ height: 40 }}
           className="global-select"
-          placeholder={t("workflow.nodes.common.selectPlaceholder")}
+          placeholder={t('workflow.nodes.common.selectPlaceholder')}
           options={[
             {
-              label: "true",
+              label: 'true',
               value: true,
             },
             {
-              label: "false",
+              label: 'false',
               value: false,
             },
           ]}
           value={arg?.value}
-          onChange={(value) => handleInputParamsChange(toolIndex, index, value)}
+          onChange={value => handleInputParamsChange(toolIndex, index, value)}
         />
       );
-    } else if (arg.type === "integer") {
+    } else if (arg.type === 'integer') {
       return (
         <InputNumber
           step={1}
           precision={0}
           className="w-full global-input search-input"
-          placeholder={t("workflow.nodes.common.inputPlaceholder")}
-          style={{ borderRadius: 8, height: 40, background: "#fff !important" }}
+          placeholder={t('workflow.nodes.common.inputPlaceholder')}
+          style={{ borderRadius: 8, height: 40, background: '#fff !important' }}
           value={arg?.value as number}
-          onChange={(value) => handleInputParamsChange(toolIndex, index, value)}
+          onChange={value => handleInputParamsChange(toolIndex, index, value)}
         />
       );
-    } else if (arg.type === "number") {
+    } else if (arg.type === 'number') {
       return (
         <InputNumber
           className="w-full global-input search-input"
-          placeholder={t("workflow.nodes.common.inputPlaceholder")}
-          style={{ borderRadius: 8, height: 40, background: "#fff !important" }}
+          placeholder={t('workflow.nodes.common.inputPlaceholder')}
+          style={{ borderRadius: 8, height: 40, background: '#fff !important' }}
           value={arg?.value as number}
-          onChange={(value) => handleInputParamsChange(toolIndex, index, value)}
+          onChange={value => handleInputParamsChange(toolIndex, index, value)}
         />
       );
-    } else if (arg.type === "array" || arg.type === "object") {
+    } else if (arg.type === 'array' || arg.type === 'object') {
       return (
         <JsonMonacoEditor
           value={arg?.value as string}
-          onChange={(value) => handleInputParamsChange(toolIndex, index, value)}
+          onChange={value => handleInputParamsChange(toolIndex, index, value)}
         />
       );
     }
   };
 
   const handleOpenTool = (toolIndex: number): void => {
-    setCurrentMcp((mcp) => {
+    setCurrentMcp(mcp => {
       const tool = mcp?.tools?.find((item, index) => index === toolIndex);
       if (tool) {
         tool.open = !tool?.open;
@@ -285,14 +285,14 @@ export function MCPDetail({
   useEffect(() => {
     if (currentToolId) {
       getServerToolDetailAPI(currentToolId).then((data: MCPToolDetail) => {
-        data.tools = data.tools?.map((item) => ({
+        data.tools = data.tools?.map(item => ({
           ...item,
           args: item.inputSchema
             ? transformSchemaToArray(item.inputSchema)
             : [],
         }));
         setCurrentMcp(data);
-        if (data?.mcpType !== "flow") {
+        if (data?.mcpType !== 'flow') {
           // handleAddEnvKey(data);
         }
       });
@@ -304,7 +304,7 @@ export function MCPDetail({
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
           <img
-            src={currentMcp?.["logoUrl"]}
+            src={currentMcp?.['logoUrl']}
             className="w-[48px] h-[48px]"
             alt=""
           />
@@ -316,8 +316,8 @@ export function MCPDetail({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <img src={publishIcon} className="w-3 h-3" alt="" />
           <p className="text-[#757575] text-xs">
-            {t("workflow.nodes.toolNode.publishedAt")}{" "}
-            {dayjs(currentMcp["createTime"])?.format("YYYY-MM-DD HH:mm:ss")}
+            {t('workflow.nodes.toolNode.publishedAt')}{' '}
+            {dayjs(currentMcp['createTime'])?.format('YYYY-MM-DD HH:mm:ss')}
           </p>
         </div>
       </div>
@@ -327,25 +327,25 @@ export function MCPDetail({
             <div
               className="px-5 py-2 text-[#7F7F7F] rounded-lg cursor-pointer hover:bg-[#fff] hover:text-[#275EFF]"
               style={{
-                background: currentTab === "content" ? "#fff" : "",
-                color: currentTab === "content" ? "#275EFF" : "",
+                background: currentTab === 'content' ? '#fff' : '',
+                color: currentTab === 'content' ? '#275EFF' : '',
               }}
-              onClick={() => setCurrentTab("content")}
+              onClick={() => setCurrentTab('content')}
             >
               Content
             </div>
             <div
               className="px-5 py-2 text-[#7F7F7F] rounded-lg cursor-pointer hover:bg-[#fff] hover:text-[#275EFF]"
               style={{
-                background: currentTab === "tools" ? "#fff" : "",
-                color: currentTab === "tools" ? "#275EFF" : "",
+                background: currentTab === 'tools' ? '#fff' : '',
+                color: currentTab === 'tools' ? '#275EFF' : '',
               }}
-              onClick={() => setCurrentTab("tools")}
+              onClick={() => setCurrentTab('tools')}
             >
               Tools
             </div>
           </div>
-          {currentTab === "overview" && (
+          {currentTab === 'overview' && (
             <div className="w-full rounded-lg border border-[#E4EAFF] bg-[#fcfdff] px-4 py-3">
               <MarkdownRender
                 content={currentMcp?.overview}
@@ -353,15 +353,15 @@ export function MCPDetail({
               />
             </div>
           )}
-          {currentTab === "content" && (
+          {currentTab === 'content' && (
             <div className="rounded-lg border border-[#E4EAFF] bg-[#fcfdff] px-4 py-3">
               <MarkdownRender content={currentMcp?.content} isSending={false} />
             </div>
           )}
-          {currentTab === "tools" && (
+          {currentTab === 'tools' && (
             <div>
               <div className="font-semibold">
-                {t("workflow.nodes.toolNode.tool")}
+                {t('workflow.nodes.toolNode.tool')}
               </div>
               <div className="flex flex-col gap-4 mt-4">
                 {tools.map((tool, toolIndex) => (
@@ -388,9 +388,9 @@ export function MCPDetail({
                         <Button
                           loading={tool?.loading}
                           disabled={tool?.args?.some(
-                            (arg) =>
+                            arg =>
                               arg.required &&
-                              typeof arg?.value === "string" &&
+                              typeof arg?.value === 'string' &&
                               !arg.value?.trim()
                           )}
                           type="primary"
@@ -400,7 +400,7 @@ export function MCPDetail({
                           }
                         >
                           <img src={trialRunIcon} className="w-3 h-3" alt="" />
-                          <span>{t("workflow.nodes.toolNode.test")}</span>
+                          <span>{t('workflow.nodes.toolNode.test')}</span>
                         </Button>
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export function MCPDetail({
                       <div className="flex gap-2 mt-6 overflow-hidden">
                         <div className="flex flex-col gap-6 bg-[#F2F5FE] rounded-lg p-4 flex-1 min-h-[100px] flex-shrink-0">
                           <div className="text-base text-[#275EFF] font-medium">
-                            {t("workflow.nodes.codeIDEA.inputTest")}
+                            {t('workflow.nodes.codeIDEA.inputTest')}
                           </div>
                           {tool?.args?.map((arg, index) => (
                             <div key={index} className="flex flex-col gap-1">
@@ -429,7 +429,7 @@ export function MCPDetail({
                         </div>
                         <div className="flex flex-col gap-6 bg-[#F2F5FE] rounded-lg p-4 flex-1 min-h-[100px] flex-shrink-0">
                           <div className="text-base text-[#275EFF] font-medium">
-                            {t("workflow.nodes.codeIDEA.outputResult")}
+                            {t('workflow.nodes.codeIDEA.outputResult')}
                           </div>
                           {tool.textResult !== undefined && (
                             <pre className="break-all whitespace-pre-wrap">
