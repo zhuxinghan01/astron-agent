@@ -85,9 +85,9 @@ public class LLMService {
     /**
      * Get LLM authorization list based on scene and node type
      *
-     * @param request  HTTP servlet request
-     * @param appId    Application ID
-     * @param scene    Scene identifier (workflow, etc.)
+     * @param request HTTP servlet request
+     * @param appId Application ID
+     * @param scene Scene identifier (workflow, etc.)
      * @param nodeType Node type (agent, plan, summary, etc.)
      * @return Authorization list containing available models grouped by categories
      */
@@ -126,7 +126,7 @@ public class LLMService {
         List<Map<String, Object>> builtSceneList = buildSceneList(filter.sceneFilter, userId, personalList);
         sceneList.addAll(builtSceneList);
         sceneList.add(sceneFt);
-//        sceneList.add(personalFt);
+        // sceneList.add(personalFt);
 
         // 5) Return (consistent with original logic)
         if (isScene) {
@@ -214,30 +214,30 @@ public class LLMService {
 
     private void dealWithSelfModel(String nodeType, ConfigInfo selfModelConfig, String userId, List<LLMInfoVo> personalList) {
         List<String> valueList = new ArrayList<>();
-        if(selfModelConfig != null && StringUtils.isNotBlank(selfModelConfig.getValue())){
+        if (selfModelConfig != null && StringUtils.isNotBlank(selfModelConfig.getValue())) {
             valueList = Arrays.asList(selfModelConfig.getValue().split(","));
         }
         if (CollUtil.isNotEmpty(valueList) && !valueList.contains(nodeType)) {
             return;
         }
-            List<Model> models = modelMapper.selectList(new LambdaQueryWrapper<Model>()
-                    .eq(Model::getUid, userId)
-                    .eq(Model::getEnable, 1)
-                    .eq(Model::getIsDeleted, 0));
-            for (Model model : models) {
-                LLMInfoVo llmInfoVo = new LLMInfoVo();
-                llmInfoVo.setId(model.getId());
-                llmInfoVo.setLlmId(generate9DigitRandomFromId(model.getId()));
-                llmInfoVo.setServiceId(model.getDomain());
-                llmInfoVo.setUrl(model.getUrl());
-                llmInfoVo.setName(model.getName());
-                llmInfoVo.setAddress(s3UtilClient.getS3Prefix());
-                llmInfoVo.setIcon(model.getImageUrl());
-                llmInfoVo.setTag(JSONArray.parseArray(model.getTag(), String.class));
-                llmInfoVo.setLlmSource(0);
-                llmInfoVo.setDomain(model.getDomain());
-                llmInfoVo.setConfig(model.getConfig());
-                personalList.add(llmInfoVo);
+        List<Model> models = modelMapper.selectList(new LambdaQueryWrapper<Model>()
+                .eq(Model::getUid, userId)
+                .eq(Model::getEnable, 1)
+                .eq(Model::getIsDeleted, 0));
+        for (Model model : models) {
+            LLMInfoVo llmInfoVo = new LLMInfoVo();
+            llmInfoVo.setId(model.getId());
+            llmInfoVo.setLlmId(generate9DigitRandomFromId(model.getId()));
+            llmInfoVo.setServiceId(model.getDomain());
+            llmInfoVo.setUrl(model.getUrl());
+            llmInfoVo.setName(model.getName());
+            llmInfoVo.setAddress(s3UtilClient.getS3Prefix());
+            llmInfoVo.setIcon(model.getImageUrl());
+            llmInfoVo.setTag(JSONArray.parseArray(model.getTag(), String.class));
+            llmInfoVo.setLlmSource(0);
+            llmInfoVo.setDomain(model.getDomain());
+            llmInfoVo.setConfig(model.getConfig());
+            personalList.add(llmInfoVo);
         }
     }
 
@@ -278,8 +278,7 @@ public class LLMService {
             try {
                 enabledMap = JSON.parseObject(
                         String.valueOf(enabledCache),
-                        new TypeReference<Map<String, Boolean>>() {
-                        });
+                        new TypeReference<Map<String, Boolean>>() {});
             } catch (Exception ex) {
                 log.warn("enabledMap parse failed, will re-init. raw={}", enabledCache);
                 enabledMap = new HashMap<>();

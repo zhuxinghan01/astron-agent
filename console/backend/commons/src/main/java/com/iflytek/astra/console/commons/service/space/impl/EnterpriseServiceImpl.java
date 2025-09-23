@@ -12,7 +12,6 @@ import com.iflytek.astra.console.commons.mapper.space.EnterpriseMapper;
 import com.iflytek.astra.console.commons.service.space.EnterpriseService;
 import com.iflytek.astra.console.commons.service.space.EnterpriseUserService;
 import com.iflytek.astra.console.commons.util.space.EnterpriseInfoUtil;
-import com.iflytek.astra.console.commons.util.space.OrderInfoUtil;
 import com.iflytek.astra.console.commons.dto.space.EnterpriseVO;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
@@ -67,23 +66,23 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
     public Integer checkNeedCreateTeam() {
         // TODO refactor: never need to create team for now.
         return 0;
-//        String uid = RequestContextUtil.getUID();
-//        Enterprise enterprise = getEnterpriseByUid(uid);
-//        if (enterprise != null) {
-//            return 0;
-//        }
-//        OrderInfoUtil.EnterpriseResult result = OrderInfoUtil.getEnterpriseResult(uid);
-//        if (result.getServiceType() == null) {
-//            return 0;
-//        }
-//        return result.getServiceType().getCode();
+        // String uid = RequestContextUtil.getUID();
+        // Enterprise enterprise = getEnterpriseByUid(uid);
+        // if (enterprise != null) {
+        // return 0;
+        // }
+        // OrderInfoUtil.EnterpriseResult result = OrderInfoUtil.getEnterpriseResult(uid);
+        // if (result.getServiceType() == null) {
+        // return 0;
+        // }
+        // return result.getServiceType().getCode();
     }
 
     @Override
     @Transactional
     public void orderChangeNotify(String uid, LocalDateTime endTime) {
         Enterprise enterprise = this.baseMapper.selectOne(Wrappers.<Enterprise>lambdaQuery()
-                        .eq(Enterprise::getUid, uid));
+                .eq(Enterprise::getUid, uid));
         if (enterprise != null) {
             enterprise.setExpireTime(endTime);
             this.updateById(enterprise);
@@ -131,18 +130,18 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
     public boolean checkExistByName(String name, Long id) {
         if (id != null) {
             return this.count(Wrappers.<Enterprise>lambdaQuery()
-                            .eq(Enterprise::getName, name)
-                            .ne(Enterprise::getId, id)) > 0;
+                    .eq(Enterprise::getName, name)
+                    .ne(Enterprise::getId, id)) > 0;
         } else {
             return this.count(Wrappers.<Enterprise>lambdaQuery()
-                            .eq(Enterprise::getName, name)) > 0;
+                    .eq(Enterprise::getName, name)) > 0;
         }
     }
 
     @Override
     public boolean checkExistByUid(String uid) {
         return this.count(Wrappers.<Enterprise>lambdaQuery()
-                        .eq(Enterprise::getUid, uid)) > 0;
+                .eq(Enterprise::getUid, uid)) > 0;
     }
 
     @Override
@@ -153,7 +152,7 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
     @Override
     public Enterprise getEnterpriseByUid(String uid) {
         return this.baseMapper.selectOne(Wrappers.<Enterprise>lambdaQuery()
-                        .eq(Enterprise::getUid, uid));
+                .eq(Enterprise::getUid, uid));
     }
 
     @Override
@@ -164,8 +163,8 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
     @Override
     public int updateExpireTime(Enterprise enterprise) {
         return this.baseMapper.update(Wrappers.<Enterprise>lambdaUpdate()
-                        .set(Enterprise::getExpireTime, enterprise.getExpireTime())
-                        .eq(Enterprise::getId, enterprise.getId()));
+                .set(Enterprise::getExpireTime, enterprise.getExpireTime())
+                .eq(Enterprise::getId, enterprise.getId()));
     }
 
     @Override

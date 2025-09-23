@@ -117,7 +117,7 @@ public class DataPermissionCheckTool {
     /**
      * Throw access denied exception when resource is not visible (and print necessary context).
      *
-     * @param action   the action being performed
+     * @param action the action being performed
      * @param resource the resource being accessed
      * @throws BusinessException with EXCEED_AUTHORITY error
      */
@@ -303,7 +303,7 @@ public class DataPermissionCheckTool {
      * Check workflow ownership (space first, then user; public allowed).
      *
      * @param workflow the workflow to check
-     * @param spaceId  the space ID context
+     * @param spaceId the space ID context
      * @throws BusinessException if access denied or data not exists
      */
     public void checkWorkflowBelong(Workflow workflow, Long spaceId) {
@@ -313,10 +313,10 @@ public class DataPermissionCheckTool {
 
         boolean noPermission = (spaceId == null)
                 ? (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getUid(), uid)
-                && !isAdmin(workflow.getUid()))
+                        && !Objects.equals(workflow.getUid(), uid)
+                        && !isAdmin(workflow.getUid()))
                 : (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getSpaceId(), spaceId));
+                        && !Objects.equals(workflow.getSpaceId(), spaceId));
 
         if (noPermission)
             deny("checkWorkflowBelong", workflow);
@@ -326,7 +326,7 @@ public class DataPermissionCheckTool {
      * Check workflow visibility (same strategy as ownership).
      *
      * @param workflow the workflow to check
-     * @param spaceId  the space ID context
+     * @param spaceId the space ID context
      * @throws BusinessException if access denied or data not exists
      */
     public void checkWorkflowVisible(Workflow workflow, Long spaceId) {
@@ -336,10 +336,10 @@ public class DataPermissionCheckTool {
 
         boolean noPermission = (spaceId == null)
                 ? (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getUid(), uid)
-                && !isAdmin(workflow.getUid()))
+                        && !Objects.equals(workflow.getUid(), uid)
+                        && !isAdmin(workflow.getUid()))
                 : (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getSpaceId(), spaceId));
+                        && !Objects.equals(workflow.getSpaceId(), spaceId));
 
         if (noPermission)
             deny("checkWorkflowVisible", workflow);
@@ -357,7 +357,7 @@ public class DataPermissionCheckTool {
      * </p>
      *
      * @param workflow the workflow to check
-     * @param spaceId  the space ID context
+     * @param spaceId the space ID context
      * @throws BusinessException if access denied or data not exists
      */
     public void checkWorkflowVisibleForDetail(Workflow workflow, Long spaceId) {
@@ -368,10 +368,10 @@ public class DataPermissionCheckTool {
         // Public/owner/admin evaluation first
         boolean baseDenied = (spaceId == null)
                 ? (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getUid(), uid)
-                && !isAdmin(workflow.getUid()))
+                        && !Objects.equals(workflow.getUid(), uid)
+                        && !isAdmin(workflow.getUid()))
                 : (!Boolean.TRUE.equals(workflow.getIsPublic())
-                && !Objects.equals(workflow.getSpaceId(), spaceId));
+                        && !Objects.equals(workflow.getSpaceId(), spaceId));
 
         if (!baseDenied)
             return;

@@ -219,9 +219,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                     StrUtil.isBlank(rawBlacklist)
                             ? Collections.emptyList()
                             : Arrays.stream(rawBlacklist.split(","))
-                            .map(String::trim)
-                            .filter(StrUtil::isNotBlank)
-                            .collect(toList());
+                                    .map(String::trim)
+                                    .filter(StrUtil::isNotBlank)
+                                    .collect(toList());
 
             SsrfProperties ssrfProperties = new SsrfProperties();
             // Note: The underlying object field name is ipBlaklist (third-party spelling), maintain
@@ -445,7 +445,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                     matched =
                             modelConfig != null
                                     && (Objects.equals(model.getDomain(), modelConfig.getString("domain"))
-                                    || Objects.equals(model.getUrl(), modelConfig.getString("api")));
+                                            || Objects.equals(model.getUrl(), modelConfig.getString("api")));
                 }
 
                 if (!matched) {
@@ -645,7 +645,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
 
         merged.sort(
                 Comparator.comparing(
-                                LLMInfoVo::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
+                        LLMInfoVo::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
                         .reversed());
 
         int start = Math.max(0, (dto.getPage() - 1) * dto.getPageSize());
@@ -982,7 +982,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
 
         merged.sort(
                 Comparator.comparing(
-                                LLMInfoVo::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
+                        LLMInfoVo::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
                         .reversed()
                         .thenComparing(v -> Optional.ofNullable(v.getId()).orElse(0L)));
 

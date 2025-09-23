@@ -296,7 +296,7 @@ public class UserBotServiceImpl implements UserBotService {
         final Set<Integer> botIdMcpSet;
 
         ReleaseInfo(List<Integer> favoriteBotIdList, Set<Long> wechatBotId,
-                    Set<Integer> apiBotId, Set<Integer> botIdMcpSet) {
+                Set<Integer> apiBotId, Set<Integer> botIdMcpSet) {
             this.favoriteBotIdList = favoriteBotIdList;
             this.wechatBotId = wechatBotId;
             this.apiBotId = apiBotId;

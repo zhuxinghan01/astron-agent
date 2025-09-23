@@ -254,7 +254,7 @@ public class VersionService {
      * Increment version number based on type.
      *
      * @param maxVersion Current maximum version
-     * @param type       Whether to increment (true) or keep same (false)
+     * @param type Whether to increment (true) or keep same (false)
      * @return New version string
      */
     public static String incrementVersion(String maxVersion, Boolean type) {
@@ -345,7 +345,7 @@ public class VersionService {
      * Update workflow data for a specific flowId.
      *
      * @param flowId Flow ID to update
-     * @param data   New workflow data
+     * @param data New workflow data
      */
     public void updateFlowIdWorkflow(String flowId, String data) {
         // Build update conditions
@@ -388,7 +388,7 @@ public class VersionService {
      * Query publish results for a specific workflow version.
      *
      * @param flowId Flow ID to query
-     * @param name   Version name to query
+     * @param name Version name to query
      * @return List of publish results by channel
      */
     public Object publishResult(String flowId, String name) {

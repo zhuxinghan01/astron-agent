@@ -25,8 +25,7 @@ public class BotUtil {
 
     public static final String BOT_INPUT_EXAMPLE_SPLIT = "%%split%%";
 
-    public BotUtil(ChatBotDataService chatBotDataService) {
-    }
+    public BotUtil(ChatBotDataService chatBotDataService) {}
 
     public static String convertNumToStr(int number, String langCode) {
         String numStr = "";
@@ -56,7 +55,7 @@ public class BotUtil {
         if (bot.getInputExample() != null && !bot.getInputExample().isEmpty()) {
             botBase.setInputExample(String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()));
         }
-        // 专业版工作流的 version = 3
+        // Professional version workflow version = 3
         botBase.setVersion(3);
         botBase.setBotwebStatus(1);
         chatBotDataService.createBot(botBase);

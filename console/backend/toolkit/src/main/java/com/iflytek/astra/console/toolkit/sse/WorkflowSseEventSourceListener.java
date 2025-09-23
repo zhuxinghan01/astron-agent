@@ -46,7 +46,7 @@ public class WorkflowSseEventSourceListener extends EventSourceListener {
     /**
      * 1 : Direct output 2 : Typewriter mode
      */
-    public static final int[] outputTypeEnum = new int[]{1, 2};
+    public static final int[] outputTypeEnum = new int[] {1, 2};
 
     String sseId;
     String flowId;
