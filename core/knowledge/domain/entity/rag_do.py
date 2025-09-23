@@ -50,4 +50,3 @@ class FileInfo:
     def __repr__(self) -> str:
         """String representation of FileInfo"""
         return f"FileInfo(docId={self.docId}, fileName={self.fileName}, fileStatus={self.fileStatus}, fileQuantity={self.fileQuantity})"
-
