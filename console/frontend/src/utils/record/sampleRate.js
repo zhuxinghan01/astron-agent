@@ -3,7 +3,7 @@ export const SampleRate = function (
   pcmSampleRate,
   newSampleRate,
   prevChunkInfo,
-  option
+  option,
 ) {
   prevChunkInfo || (prevChunkInfo = {});
   let index = prevChunkInfo.index || 0;
@@ -13,12 +13,12 @@ export const SampleRate = function (
   option || (option = {});
   let frameSize = option.frameSize || 1;
   if (option.frameType) {
-    frameSize = option.frameType == 'mp3' ? 1152 : 1;
+    frameSize = option.frameType == "mp3" ? 1152 : 1;
   }
 
   let nLen = pcmDatas.length;
   if (index > nLen + 1) {
-    console.log('SampleData似乎传入了未重置chunk ' + index + '>' + nLen, 3);
+    console.log("SampleData似乎传入了未重置chunk " + index + ">" + nLen, 3);
   }
   let size = 0;
   for (let fi = index; fi < nLen; fi++) {
@@ -26,7 +26,7 @@ export const SampleRate = function (
   }
   size = Math.max(0, size - Math.floor(offset));
 
-  //采样 
+  //采样
   let step = pcmSampleRate / newSampleRate;
   if (step > 1) {
     //新采样低于录音采样，进行抽样
