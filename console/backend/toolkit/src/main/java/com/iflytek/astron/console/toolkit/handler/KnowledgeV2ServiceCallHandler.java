@@ -62,7 +62,6 @@ public class KnowledgeV2ServiceCallHandler {
 
     public KnowledgeResponse knowledgeQuery(QueryRequest request) {
         String url = apiUrl.getKnowledgeUrl().concat("/v1/chunk/query");
-        url = HttpAuthTool.assembleRequestUrl(url, "POST", repoAuthorizedConfig.getApiKey(), repoAuthorizedConfig.getApiSecret());
         String reqBody = JSON.toJSONString(request);
         log.info("knowledgeQuery request url:{}\ndata:{}", url, reqBody);
         String respData = OkHttpUtil.post(url, reqBody);
