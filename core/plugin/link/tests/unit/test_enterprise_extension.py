@@ -7,18 +7,15 @@ handling scenarios specific to enterprise environment requirements.
 """
 
 import pytest
-import json
-import os
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
-from service.enterprise.extension import register_mcp
-from api.schemas.enterprise.extension_schema import (
-    MCPManagerRequest,
+from plugin.link.service.enterprise.extension import register_mcp
+from plugin.link.api.schemas.enterprise.extension_schema import (
     MCPManagerResponse
 )
-from api.schemas.community.deprecated.management_schema import ToolManagerResponse
-from utils.errors.code import ErrCode
-from consts import const
+from plugin.link.api.schemas.community.deprecated.management_schema import ToolManagerResponse
+from plugin.link.utils.errors.code import ErrCode
+from plugin.link.consts import const
 
 
 class TestEnterpriseExtension:
@@ -53,7 +50,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.get_db_engine')
     @patch('service.enterprise.extension.gen_id')
     def test_register_mcp_success_with_flow_id(self, mock_gen_id, mock_get_db, mock_crud_class,
-                                             mock_api_validate, mock_span_class, valid_mcp_request):
+                                               mock_api_validate, mock_span_class, valid_mcp_request):
         """Test successful MCP registration with flow_id."""
         # Mock validation
         mock_api_validate.return_value = None
@@ -80,10 +77,7 @@ class TestEnterpriseExtension:
         mock_request = Mock()
         mock_request.model_dump.return_value = valid_mcp_request
 
-        with patch('service.enterprise.extension.os.getenv') as mock_getenv, \
-             patch('service.enterprise.extension.Meter') as mock_meter, \
-             patch('service.enterprise.extension.NodeTrace') as mock_node_trace:
-
+        with patch('service.enterprise.extension.os.getenv') as mock_getenv:
             mock_getenv.return_value = "false"  # Disable OTLP
 
             result = register_mcp(mock_request)
@@ -112,7 +106,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.get_db_engine')
     @patch('service.enterprise.extension.gen_id')
     def test_register_mcp_success_without_flow_id(self, mock_gen_id, mock_get_db, mock_crud_class,
-                                                mock_api_validate, mock_span_class, minimal_mcp_request):
+                                                  mock_api_validate, mock_span_class, minimal_mcp_request):
         """Test successful MCP registration without flow_id (uses generated ID)."""
         mock_api_validate.return_value = None
         mock_gen_id.return_value = 0x123456789abcdef
@@ -141,7 +135,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -183,7 +177,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -204,7 +198,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.ToolCrudOperation')
     @patch('service.enterprise.extension.get_db_engine')
     def test_register_mcp_database_error(self, mock_get_db, mock_crud_class,
-                                       mock_api_validate, mock_span_class):
+                                         mock_api_validate, mock_span_class):
         """Test MCP registration with database error."""
         mock_api_validate.return_value = None
 
@@ -236,7 +230,7 @@ class TestEnterpriseExtension:
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "false"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -256,7 +250,7 @@ class TestEnterpriseExtension:
     @patch('service.enterprise.extension.ToolCrudOperation')
     @patch('service.enterprise.extension.get_db_engine')
     def test_register_mcp_with_telemetry_enabled(self, mock_get_db, mock_crud_class,
-                                               mock_api_validate, mock_span_class):
+                                                 mock_api_validate, mock_span_class):
         """Test MCP registration with telemetry enabled."""
         mock_api_validate.return_value = None
 
@@ -285,13 +279,13 @@ class TestEnterpriseExtension:
 
         with patch('service.enterprise.extension.os.getenv') as mock_getenv, \
              patch('service.enterprise.extension.Meter') as mock_meter_class, \
-             patch('service.enterprise.extension.NodeTrace') as mock_node_trace_class:
+             patch('service.enterprise.extension.NodeTraceLog') as mock_node_trace_class:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
                 if key == const.enable_otlp_key:
                     return "true"
-                elif key == const.APP_ID_KEY:
+                elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
                 elif key == const.datacenter_id_key:
                     return "1"  # Return a valid datacenter_id
@@ -379,7 +373,7 @@ class TestEnterpriseExtension:
         """Test enterprise-specific configuration handling."""
         # Test enterprise environment variables and settings
         enterprise_configs = {
-            "APP_ID_KEY": "Default app ID for enterprise",
+            "DEFAULT_APPID_KEY": "Default app ID for enterprise",
             "DEF_VER": "Default version for MCP tools",
             "DEF_DEL": "Default deletion flag",
             "enable_otlp_key": "Enterprise telemetry setting"
@@ -513,8 +507,8 @@ class TestEnterpriseErrorHandling:
         telemetry_components = [
             "Span",
             "Meter",
-            "NodeTrace",
-            "TraceStatus"
+            "NodeTraceLog",
+            "Status"
         ]
 
         telemetry_operations = [

@@ -20,7 +20,7 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import OperationalError
 from sqlmodel import SQLModel, Session, create_engine
 
-from consts import const
+from plugin.link.consts import const
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Engine

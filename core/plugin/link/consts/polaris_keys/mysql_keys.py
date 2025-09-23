@@ -1,7 +1,7 @@
 # MySQL configuration
 
-MYSQL_HOST_KEY = "mysql_host"
-MYSQL_PORT_KEY = "mysql_port"
-MYSQL_USER_KEY = "mysql_user"
-MYSQL_PASSWORD_KEY = "mysql_password"
-MYSQL_DB_KEY = "mysql_db"
+MYSQL_HOST_KEY = "MYSQL_HOST"
+MYSQL_PORT_KEY = "MYSQL_PORT"
+MYSQL_USER_KEY = "MYSQL_USER"
+MYSQL_PASSWORD_KEY = "MYSQL_PASSWORD"
+MYSQL_DB_KEY = "MYSQL_DB"
