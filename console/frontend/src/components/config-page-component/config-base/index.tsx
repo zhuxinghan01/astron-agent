@@ -815,7 +815,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     if (multiModelDebugging) {
       flag = false;
     }
-    for (let key in growOrShrinkConfig) {
+    for (const key in growOrShrinkConfig) {
       growOrShrinkConfig[key] = flag;
     }
     setGrowOrShrinkConfig(JSON.parse(JSON.stringify(growOrShrinkConfig)));
