@@ -18,8 +18,7 @@ import java.util.List;
 /**
  * REST controller for image management.
  * <p>
- * Provides APIs to upload images to S3 storage and return
- * the object key and download link.
+ * Provides APIs to upload images to S3 storage and return the object key and download link.
  * </p>
  */
 @RestController
@@ -37,19 +36,18 @@ public class ImageController {
     /**
      * Upload an image file to S3.
      * <p>
-     * Validates the file suffix (only supports png, jpg, jpeg),
-     * uploads to S3, and returns the object key and download link.
+     * Validates the file suffix (only supports png, jpg, jpeg), uploads to S3, and returns the object
+     * key and download link.
      * </p>
      *
      * @param file multipart file to upload; must not be {@code null}
      * @return {@link ApiResult} wrapping a JSON object containing:
      *         <ul>
-     *           <li>{@code s3Key} - object key in S3</li>
-     *           <li>{@code downloadLink} - accessible download URL</li>
+     *         <li>{@code s3Key} - object key in S3</li>
+     *         <li>{@code downloadLink} - accessible download URL</li>
      *         </ul>
-     * @throws BusinessException if the file name is invalid,
-     *                           file suffix is unsupported,
-     *                           or upload fails
+     * @throws BusinessException if the file name is invalid, file suffix is unsupported, or upload
+     *         fails
      */
     @PostMapping("/upload")
     public ApiResult<JSONObject> upload(@RequestParam("file") MultipartFile file) {

@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  * REST controller for managing workflow versions.
  * <p>
- * Provides APIs for listing, creating, restoring, updating,
- * and querying workflow version information.
+ * Provides APIs for listing, creating, restoring, updating, and querying workflow version
+ * information.
  * </p>
  */
 @RestController
@@ -31,42 +31,43 @@ public class VersionController {
     /**
      * Query workflow versions by flowId with pagination.
      *
-     * @param page  pagination information
+     * @param page pagination information
      * @param flowId workflow identifier
      * @return paginated list of workflow versions
      * @throws IllegalArgumentException if {@code flowId} is blank
      */
     @GetMapping("/list")
     public Object list(Page<WorkflowVersion> page,
-                       @RequestParam String flowId) {
+            @RequestParam String flowId) {
         return versionService.listPage(page, flowId);
     }
 
     /**
      * Query workflow versions by botId with pagination.
      *
-     * @param page  pagination information
+     * @param page pagination information
      * @param botId bot identifier
      * @return paginated list of workflow versions
      * @throws IllegalArgumentException if {@code botId} is blank
      */
     @GetMapping("/list-botId")
     public Object list_botId(Page<WorkflowVersion> page,
-                             @RequestParam String botId) {
+            @RequestParam String botId) {
         return versionService.list_botId_Page(page, botId);
     }
 
     /**
      * Create a new workflow version.
      *
-     * <p>Request body fields:
+     * <p>
+     * Request body fields:
      * <ul>
-     *   <li>flowId - workflow identifier</li>
-     *   <li>botId - bot identifier</li>
-     *   <li>name - version name</li>
-     *   <li>publishChannel - publish channel (1: WeChat, 2: Spark Desk, 3: API, 4: MCP)</li>
-     *   <li>publishResult - publish result (success / failed / reviewing)</li>
-     *   <li>description - version description</li>
+     * <li>flowId - workflow identifier</li>
+     * <li>botId - bot identifier</li>
+     * <li>name - version name</li>
+     * <li>publishChannel - publish channel (1: WeChat, 2: Spark Desk, 3: API, 4: MCP)</li>
+     * <li>publishResult - publish result (success / failed / reviewing)</li>
+     * <li>description - version description</li>
      * </ul>
      * </p>
      *
@@ -155,13 +156,13 @@ public class VersionController {
      * Query publish result of a workflow version by flowId and name.
      *
      * @param flowId workflow identifier
-     * @param name   version name
+     * @param name version name
      * @return publish result object
      * @throws IllegalArgumentException if {@code flowId} or {@code name} is blank
      */
     @GetMapping("/publish-result")
     public Object publishResult(@RequestParam String flowId,
-                                @RequestParam String name) {
+            @RequestParam String name) {
         return versionService.publishResult(flowId, name);
     }
 }

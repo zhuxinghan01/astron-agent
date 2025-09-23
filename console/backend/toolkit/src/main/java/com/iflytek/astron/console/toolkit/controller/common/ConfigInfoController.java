@@ -39,56 +39,53 @@ public class ConfigInfoController {
     public ApiResult<List<ConfigInfo>> getListByCategory(@RequestParam("category") String category) {
         // Professional version currently only uses CBG; sharding strategy uses CBG
         /*
-         * if (category.equals("DEFAULT_SLICE_RULES") || category.equals("CUSTOM_SLICE_RULES")) {
-         *     category = category + "_CBG";
-         * }
+         * if (category.equals("DEFAULT_SLICE_RULES") || category.equals("CUSTOM_SLICE_RULES")) { category =
+         * category + "_CBG"; }
          */
         return ApiResult.success(
                 configInfoService.list(Wrappers.lambdaQuery(ConfigInfo.class)
                         .eq(ConfigInfo::getCategory, category)
-                        .eq(ConfigInfo::getIsValid, 1))
-        );
+                        .eq(ConfigInfo::getIsValid, 1)));
     }
 
     /**
      * Get a configuration by category and code.
      *
      * @param category configuration category
-     * @param code     configuration code
+     * @param code configuration code
      * @return {@link ApiResult} containing a single {@link ConfigInfo}
      * @throws IllegalArgumentException if no record is found
      */
     @GetMapping("/get-by-category-and-code")
     public ApiResult<ConfigInfo> getByCategoryAndCode(@RequestParam("category") String category,
-                                                      @RequestParam("code") String code) {
+            @RequestParam("code") String code) {
         return ApiResult.success(
-                configInfoService.getBaseMapper().selectOne(
-                        Wrappers.lambdaQuery(ConfigInfo.class)
-                                .eq(ConfigInfo::getCategory, category)
-                                .eq(ConfigInfo::getCode, code)
-                                .eq(ConfigInfo::getIsValid, 1)
-                                .last("limit 1"))
-        );
+                configInfoService.getBaseMapper()
+                        .selectOne(
+                                Wrappers.lambdaQuery(ConfigInfo.class)
+                                        .eq(ConfigInfo::getCategory, category)
+                                        .eq(ConfigInfo::getCode, code)
+                                        .eq(ConfigInfo::getIsValid, 1)
+                                        .last("limit 1")));
     }
 
     /**
      * Get configuration list by category and code.
      *
      * @param category configuration category
-     * @param code     configuration code
+     * @param code configuration code
      * @return {@link ApiResult} containing a list of {@link ConfigInfo}
      * @throws IllegalArgumentException if no records are found
      */
     @GetMapping("/list-by-category-and-code")
     public ApiResult<List<ConfigInfo>> listByCategoryAndCode(@RequestParam("category") String category,
-                                                             @RequestParam("code") String code) {
+            @RequestParam("code") String code) {
         return ApiResult.success(
                 configInfoService.list(
                         Wrappers.lambdaQuery(ConfigInfo.class)
                                 .eq(ConfigInfo::getCategory, category)
                                 .eq(ConfigInfo::getCode, code)
-                                .eq(ConfigInfo::getIsValid, 1))
-        );
+                                .eq(ConfigInfo::getIsValid, 1)));
     }
 
     /**

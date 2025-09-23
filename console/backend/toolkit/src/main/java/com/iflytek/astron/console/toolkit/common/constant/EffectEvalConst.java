@@ -5,8 +5,8 @@ import com.alibaba.fastjson2.JSONObject;
 /**
  * Constants for evaluation tasks and related configurations.
  * <p>
- * Includes directory paths, dataset templates, file limits,
- * and enumerations for evaluation modes, statuses, and task types.
+ * Includes directory paths, dataset templates, file limits, and enumerations for evaluation modes,
+ * statuses, and task types.
  * </p>
  */
 public class EffectEvalConst {
@@ -56,7 +56,7 @@ public class EffectEvalConst {
      * Modes for obtaining data.
      */
     public static final class GetDataMode {
-        public static final int ONLINE = 1;  // Online mode
+        public static final int ONLINE = 1; // Online mode
         public static final int OFFLINE = 2; // Offline mode
     }
 
@@ -175,7 +175,9 @@ public class EffectEvalConst {
 
     /**
      * Model server deployment statuses (shared with fine-tuning side).
-     * <p>0 = not deployed, 1 = deploying, 2 = deploy failed, 3 = deploy succeeded</p>
+     * <p>
+     * 0 = not deployed, 1 = deploying, 2 = deploy failed, 3 = deploy succeeded
+     * </p>
      */
     public static final class ModelServerStatus {
         public static final int UNDEPLOY = 0;

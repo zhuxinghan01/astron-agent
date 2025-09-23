@@ -29,8 +29,8 @@ public class ImageService {
     private static final long MULTIPART_PART_SIZE = 5L * 1024 * 1024;
 
     /**
-     * Upload an image and return an accessible URL (if the bucket policy is not public,
-     * consider returning the object key or a pre-signed URL instead).
+     * Upload an image and return an accessible URL (if the bucket policy is not public, consider
+     * returning the object key or a pre-signed URL instead).
      *
      * @param file multipart file to upload; must not be {@code null} or empty
      * @return the object key (or URL depending on bucket policy) of the uploaded image
@@ -70,7 +70,9 @@ public class ImageService {
 
     /**
      * Check whether the given Content-Type is allowed.
-     * <p>Fallback allows any {@code image/*} if needed.</p>
+     * <p>
+     * Fallback allows any {@code image/*} if needed.
+     * </p>
      *
      * @param contentType HTTP Content-Type of the file
      * @return {@code true} if allowed; {@code false} otherwise
@@ -100,9 +102,11 @@ public class ImageService {
 
     /**
      * Build a safe, non-identifying filename.
-     * <p>Pattern: {@code sparkBot_<uuid>.<ext>} where {@code <ext>} is inferred.</p>
+     * <p>
+     * Pattern: {@code sparkBot_<uuid>.<ext>} where {@code <ext>} is inferred.
+     * </p>
      *
-     * @param original    original filename (may be {@code null})
+     * @param original original filename (may be {@code null})
      * @param contentType HTTP Content-Type used for extension inference if needed
      * @return sanitized file name suitable for use as an object key suffix
      */
@@ -116,7 +120,7 @@ public class ImageService {
     /**
      * Infer file extension by original name first, then by Content-Type as a fallback.
      *
-     * @param original    original filename (may be {@code null})
+     * @param original original filename (may be {@code null})
      * @param contentType HTTP Content-Type
      * @return lower-cased file extension without leading dot; empty string if unknown
      */
@@ -163,7 +167,8 @@ public class ImageService {
      * @return sanitized filename without suspicious characters or path segments
      */
     private static String stripUnsafe(String name) {
-        // Remove whitespaces and dangerous characters to avoid path traversal while keeping basic readability
+        // Remove whitespaces and dangerous characters to avoid path traversal while keeping basic
+        // readability
         String cleaned = new String(name.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", "")
                 .replaceAll("[\\\\/:*?\"<>|]+", "_");

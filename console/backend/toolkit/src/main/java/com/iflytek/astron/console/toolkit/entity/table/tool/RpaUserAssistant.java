@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 /**
  * Entity of the user's RPA assistant (main table).
  * <p>
- * Mapped to table {@code rpa_user_assistant}. This entity stores the basic metadata
- * of an RPA assistant created/owned by a user under a specific space/tenant.
+ * Mapped to table {@code rpa_user_assistant}. This entity stores the basic metadata of an RPA
+ * assistant created/owned by a user under a specific space/tenant.
  */
 @TableName("rpa_user_assistant")
 @Data
@@ -28,7 +28,9 @@ public class RpaUserAssistant {
 
     /**
      * Platform ID that defines the RPA vendor/source this assistant belongs to.
-     * <p>References {@code rpa_info.id}.</p>
+     * <p>
+     * References {@code rpa_info.id}.
+     * </p>
      */
     private Long platformId;
 
@@ -39,7 +41,9 @@ public class RpaUserAssistant {
 
     /**
      * Assistant status (e.g., enabled/disabled).
-     * <p>Exact semantics depend on the service layer.</p>
+     * <p>
+     * Exact semantics depend on the service layer.
+     * </p>
      */
     private Integer status;
 
@@ -60,7 +64,9 @@ public class RpaUserAssistant {
 
     /**
      * Cached number of robots/workflows associated with this assistant.
-     * <p>Maintained by service calls to the RPA platform.</p>
+     * <p>
+     * Maintained by service calls to the RPA platform.
+     * </p>
      */
     private Integer robotCount;
 

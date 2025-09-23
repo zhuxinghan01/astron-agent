@@ -13,9 +13,8 @@ import java.util.*;
 /**
  * Excel read listener for database table field import.
  * <p>
- * This class validates header format, parses each row,
- * validates field types and required constraints, and
- * converts them into {@link DbTableFieldDto} objects.
+ * This class validates header format, parses each row, validates field types and required
+ * constraints, and converts them into {@link DbTableFieldDto} objects.
  */
 public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer, String>> {
 
@@ -62,11 +61,10 @@ public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer,
     /**
      * Parse and validate each row, then convert to {@link DbTableFieldDto}.
      *
-     * @param row     the row data, key is column index, value is cell content
+     * @param row the row data, key is column index, value is cell content
      * @param context analysis context
-     * @throws BusinessException if required fields are empty,
-     *                           type is illegal,
-     *                           or default value is invalid
+     * @throws BusinessException if required fields are empty, type is illegal, or default value is
+     *         invalid
      */
     @Override
     public void invoke(Map<Integer, String> row, AnalysisContext context) {

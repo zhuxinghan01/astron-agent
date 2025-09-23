@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 /**
  * Entity of assistant field configuration.
  * <p>
- * Represents a single key-value pair of an assistant's credential or parameter,
- * associated with {@code rpa_user_assistant}.
+ * Represents a single key-value pair of an assistant's credential or parameter, associated with
+ * {@code rpa_user_assistant}.
  */
 @Data
 @TableName("rpa_user_assistant_field")
