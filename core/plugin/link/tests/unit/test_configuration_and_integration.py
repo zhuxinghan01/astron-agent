@@ -9,11 +9,10 @@ that test how different components work together.
 import pytest
 import os
 import json
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
-from consts import const
-from utils.errors.code import ErrCode
+from plugin.link.consts import const
+from plugin.link.utils.errors.code import ErrCode
 
 
 class TestConstantsValidation:
@@ -23,7 +22,7 @@ class TestConstantsValidation:
         """Test that all error codes have required structure."""
         # Get all ErrCode attributes that look like error codes
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         for error_code in error_codes:
             # Each error code should have code and msg attributes
@@ -40,7 +39,7 @@ class TestConstantsValidation:
     def test_error_code_uniqueness(self):
         """Test that error codes are unique."""
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         codes = [ec.code for ec in error_codes]
 
@@ -55,7 +54,7 @@ class TestConstantsValidation:
     def test_error_codes_are_positive(self):
         """Test that error codes (except success) are positive."""
         error_codes = [getattr(ErrCode, attr) for attr in dir(ErrCode)
-                      if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
+                       if not attr.startswith('_') and hasattr(getattr(ErrCode, attr), 'code')]
 
         for error_code in error_codes:
             if error_code != ErrCode.SUCCESSES:
@@ -67,7 +66,7 @@ class TestConstantsValidation:
         expected_attrs = {
             'DEF_VER': str,    # Should be string version like "V1.0"
             'DEF_DEL': int,    # Should be integer deletion flag like 0
-            'APP_ID_KEY': str  # Should be string key name
+            'DEFAULT_APPID_KEY': str  # Should be string key name
         }
 
         for attr, expected_type in expected_attrs.items():
@@ -80,7 +79,7 @@ class TestConstantsValidation:
         """Test that environment variable key constants follow naming convention."""
         # Get all attributes that look like environment variable keys
         env_keys = [getattr(const, attr) for attr in dir(const)
-                   if attr.endswith('_KEY') and not attr.startswith('_')]
+                    if attr.endswith('_KEY') and not attr.startswith('_')]
 
         for key in env_keys:
             assert isinstance(key, str)
@@ -185,8 +184,8 @@ class TestConfigurationPatterns:
 
     def test_app_id_validation_pattern(self):
         """Test application ID validation patterns."""
-        # Test APP_ID_KEY exists and is string
-        app_id_key = const.APP_ID_KEY
+        # Test DEFAULT_APPID_KEY exists and is string
+        app_id_key = const.DEFAULT_APPID_KEY
         assert isinstance(app_id_key, str)
         assert len(app_id_key) > 0
 
@@ -216,7 +215,7 @@ class TestModuleIntegration:
 
     def test_exception_and_error_code_integration(self):
         """Test integration between exceptions and error codes."""
-        from exceptions.sparklink_exceptions import SparkLinkBaseException
+        from plugin.link.exceptions.sparklink_exceptions import SparkLinkBaseException
 
         # Test that exceptions can use error codes
         exception = SparkLinkBaseException(
@@ -230,7 +229,7 @@ class TestModuleIntegration:
 
     def test_uid_and_tool_id_integration(self):
         """Test integration between UID generation and tool ID patterns."""
-        from utils.uid.generate_uid import new_uid
+        from plugin.link.utils.uid.generate_uid import new_uid
 
         # Generate UID and create tool ID
         uid = new_uid()
@@ -243,7 +242,7 @@ class TestModuleIntegration:
 
     def test_snowflake_and_tool_id_integration(self):
         """Test integration between Snowflake ID and tool ID patterns."""
-        from utils.snowflake.gen_snowflake import Snowflake
+        from plugin.link.utils.snowflake.gen_snowflake import Snowflake
 
         snowflake = Snowflake(1, 1)
         snowflake_id = snowflake.get_id()
@@ -405,8 +404,8 @@ class TestErrorHandlingIntegration:
         assert isinstance(error_response["message"], str)
 
     def test_exception_to_response_conversion(self):
-        """Test conversion from exceptions to response format."""
-        from exceptions.sparklink_exceptions import ToolNotExistsException
+        """Test conversion from plugin.link.exceptions to response format."""
+        from plugin.link.exceptions.sparklink_exceptions import ToolNotExistsException
 
         exception = ToolNotExistsException(
             code=ErrCode.TOOL_NOT_EXIST_ERR.code,
@@ -448,7 +447,7 @@ class TestPerformanceAndScalability:
 
     def test_uid_generation_performance(self):
         """Test UID generation performance characteristics."""
-        from utils.uid.generate_uid import new_uid
+        from plugin.link.utils.uid.generate_uid import new_uid
         import time
 
         # Generate many UIDs and measure time
@@ -464,7 +463,7 @@ class TestPerformanceAndScalability:
 
     def test_snowflake_id_generation_performance(self):
         """Test Snowflake ID generation performance."""
-        from utils.snowflake.gen_snowflake import Snowflake
+        from plugin.link.utils.snowflake.gen_snowflake import Snowflake
         import time
 
         snowflake = Snowflake(1, 1)
@@ -506,7 +505,7 @@ class TestEdgeCasesAndBoundaryConditions:
 
     def test_concurrent_uid_generation(self):
         """Test concurrent UID generation doesn't produce duplicates."""
-        from utils.uid.generate_uid import new_uid
+        from plugin.link.utils.uid.generate_uid import new_uid
         import threading
 
         uids = []

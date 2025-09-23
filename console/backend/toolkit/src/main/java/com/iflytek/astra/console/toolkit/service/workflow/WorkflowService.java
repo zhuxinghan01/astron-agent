@@ -268,21 +268,21 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
      * pagination if needed).
      *
      * @param apiSpaceId Space ID from API parameter
-     * @param current    Current page number
-     * @param pageSize   Page size
-     * @param search     Search keyword for workflow name or flowId
-     * @param status     Workflow status filter
-     * @param order      Sort order (1: by create time desc, 2: by update time desc)
-     * @param flowId     Specific flow ID to exclude from results
+     * @param current Current page number
+     * @param pageSize Page size
+     * @param search Search keyword for workflow name or flowId
+     * @param status Workflow status filter
+     * @param order Sort order (1: by create time desc, 2: by update time desc)
+     * @param flowId Specific flow ID to exclude from results
      * @return Paginated workflow list
      */
     public PageData<WorkflowVo> listPage(Long apiSpaceId,
-                                         Integer current,
-                                         Integer pageSize,
-                                         String search,
-                                         Integer status,
-                                         Integer order,
-                                         String flowId) {
+            Integer current,
+            Integer pageSize,
+            String search,
+            Integer status,
+            Integer order,
+            String flowId) {
         // 1) Parse spaceId priority: Header > parameter
         final Long headSpaceId = SpaceInfoUtil.getSpaceId();
         final Long spaceId = headSpaceId != null ? (apiSpaceId == null ? headSpaceId : apiSpaceId) : apiSpaceId;
@@ -367,10 +367,10 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
      * Filter status and map to VO.
      */
     private void delwithResultList(Integer status,
-                                   List<Workflow> list,
-                                   List<WorkflowVo> workflowVos,
-                                   String flowId,
-                                   Map<String, String> workflowVersionMap) {
+            List<Workflow> list,
+            List<WorkflowVo> workflowVos,
+            String flowId,
+            Map<String, String> workflowVersionMap) {
         for (Workflow w : list) {
             WorkflowVo vo = new WorkflowVo();
             org.springframework.beans.BeanUtils.copyProperties(w, vo, "data", "publishedData");
@@ -577,8 +577,8 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     }
 
     private static boolean computeLatestFlag(String pluginId,
-                                             String version,
-                                             Map<String, String> toolLastVersionMap) {
+            String version,
+            Map<String, String> toolLastVersionMap) {
         final String last = toolLastVersionMap.get(pluginId);
         if (StringUtils.isBlank(version)) {
             // No version info, and no online version => consider as latest
@@ -591,10 +591,10 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     }
 
     private static void markLatestFlagForPluginNode(BizWorkflowNode n,
-                                                    String pluginId,
-                                                    String version,
-                                                    Map<String, String> toolLastVersionMap,
-                                                    Map<String, String> toolLastPluginMap) {
+            String pluginId,
+            String version,
+            Map<String, String> toolLastVersionMap,
+            Map<String, String> toolLastPluginMap) {
         boolean isLatest = computeLatestFlag(pluginId, version, toolLastVersionMap);
         n.getData().setIsLatest(isLatest);
         if (!isLatest) {
@@ -686,7 +686,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     /**
      * Parse Agent's tools field (supports array string or object array).
      *
-     * @param jsonString     JSON string to parse
+     * @param jsonString JSON string to parse
      * @param toolVersionMap Map to store tool versions
      * @return Updated tool version map
      */
@@ -733,7 +733,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
      * Create workflow: first call core "add protocol", then store locally.
      *
      * @param createReq Create request parameters
-     * @param request   HTTP request
+     * @param request HTTP request
      * @return Created workflow
      */
     public Workflow create(WorkflowReq createReq, HttpServletRequest request) {
@@ -869,7 +869,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     /**
      * Clone capability for certain internal workflows (with request context).
      *
-     * @param id      Workflow ID
+     * @param id Workflow ID
      * @param spaceId Space ID
      * @param request HTTP request
      * @return Cloned workflow
@@ -1040,7 +1040,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     /**
      * Single node debug: convert Biz protocol to core protocol and call.
      *
-     * @param nodeId   Node ID
+     * @param nodeId Node ID
      * @param debugDto Debug request
      * @return Debug result
      */
@@ -1111,7 +1111,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     /**
      * Logical delete: local flag + call core delete + cleanup tool/knowledge base relationships.
      *
-     * @param id      Workflow ID
+     * @param id Workflow ID
      * @param spaceId Space ID
      * @return Delete result
      */
@@ -2208,8 +2208,8 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
         // Update core system
         if (
-            // workflow.getStatus() == WorkflowConst.Status.PUBLISHED &&
-                bizWorkflowData != null) {
+        // workflow.getStatus() == WorkflowConst.Status.PUBLISHED &&
+        bizWorkflowData != null) {
             flowReq.setData(bizWorkflowData);
             saveRemote(flowReq, nFlowId);
         }
@@ -2533,9 +2533,9 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         // saveRemote(req, workflow.getFlowId());
 
         return update(Wrappers.lambdaUpdate(Workflow.class)
-                        .eq(Workflow::getId, id)
-                        .set(Workflow::getCanPublish, false)
-                // .set(Workflow::getStatus, WorkflowConst.Status.UNPUBLISHED)
+                .eq(Workflow::getId, id)
+                .set(Workflow::getCanPublish, false)
+        // .set(Workflow::getStatus, WorkflowConst.Status.UNPUBLISHED)
         );
     }
 
@@ -3112,8 +3112,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         String key = "mcp_list:mcp_id_".concat(req.getMcpId());
         String storedJson = (String) redisTemplate.opsForValue().get(key);
         if (StringUtils.isNotBlank(storedJson)) {
-            Map<String, String> existMap = JSON.parseObject(storedJson, new TypeReference<Map<String, String>>() {
-            });
+            Map<String, String> existMap = JSON.parseObject(storedJson, new TypeReference<Map<String, String>>() {});
             Map<String, String> envMap = req.getEnv();
             if (MapUtils.isNotEmpty(envMap)) {
                 envMap.forEach(existMap::put);
@@ -3611,7 +3610,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     }
 
     public List<McpServerTool> getMcpServerListLocally(String categoryId, Integer pageNo, Integer pageSize, Boolean authorized,
-                                                       HttpServletRequest request) {
+            HttpServletRequest request) {
         // Check if cache has expired, reload if expired
         checkAndRefreshCache();
 

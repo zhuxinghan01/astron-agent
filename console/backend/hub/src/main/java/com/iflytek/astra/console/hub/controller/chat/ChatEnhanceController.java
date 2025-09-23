@@ -17,10 +17,8 @@ import com.iflytek.astra.console.hub.dto.chat.LongFileDto;
 import com.iflytek.astra.console.hub.service.chat.ChatEnhanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,7 +77,7 @@ public class ChatEnhanceController {
         return ApiResult.error(-1, errorMsg);
     }
 
-    @Operation(summary = "文件的FileId和ChatId解除绑定")
+    @Operation(summary = "Unbind file's FileId and ChatId")
     @PostMapping(path = "unbind-file")
     public ApiResult<Object> unbindFile(@RequestBody LongFileDto longFileDto) {
         if (StringUtils.isBlank(longFileDto.getChatId())) {
@@ -93,7 +91,7 @@ public class ChatEnhanceController {
             throw new BusinessException(ResponseEnum.LONG_CONTENT_MISS_FILE_INFO);
         }
         String uid = RequestContextUtil.getUID();
-        // 获取最新的chat_id
+        // Get the latest chat_id
         List<ChatTreeIndex> chatTreeIndexList = chatListDataService.findChatTreeIndexByChatIdOrderById(chatId);
         if (chatTreeIndexList.isEmpty()) {
             throw new BusinessException(ResponseEnum.DATA_NOT_FOUND);
@@ -103,7 +101,7 @@ public class ChatEnhanceController {
         if (chatList == null || chatList.getEnable() == 0) {
             throw new BusinessException(ResponseEnum.LONG_CONTENT_CHAT_ID_ERROR);
         }
-        // 逻辑删除chatFileReq（将文件与chatID解绑）
+        // Logical deletion of chatFileReq (unbind file from chatID)
         if (StringUtils.isNotBlank(linkIdString)) {
             ChatFileUser chatFileUser = chatEnhanceService.findById(Long.valueOf(linkIdString), uid);
             if (chatFileUser == null || chatFileUser.getFileId() == null) {

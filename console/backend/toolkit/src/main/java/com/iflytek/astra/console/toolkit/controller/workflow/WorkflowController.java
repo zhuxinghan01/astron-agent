@@ -76,11 +76,11 @@ public class WorkflowController {
      * Get workflow list.
      *
      * @param pagination Pagination parameters (required)
-     * @param search     Search keyword (optional)
-     * @param flowId     Workflow unique identifier (optional)
-     * @param status     Publish status: -1=all, 0=unpublished, 1=published (optional)
-     * @param order      Sort order: 1=by creation time, 2=by update time (optional)
-     * @param spaceId    Space ID (optional, fallback to SpaceInfoUtil in service layer if empty)
+     * @param search Search keyword (optional)
+     * @param flowId Workflow unique identifier (optional)
+     * @param status Publish status: -1=all, 0=unpublished, 1=published (optional)
+     * @param order Sort order: 1=by creation time, 2=by update time (optional)
+     * @param spaceId Space ID (optional, fallback to SpaceInfoUtil in service layer if empty)
      * @return Paginated data
      */
     @GetMapping("/list")
@@ -349,10 +349,10 @@ public class WorkflowController {
 
     @GetMapping("/get-mcp-server-list-locally")
     public ApiResult<List<McpServerTool>> getMcpServerListLocally(@RequestParam(required = false) String categoryId,
-                                                                  @RequestParam(required = false, defaultValue = "1") Integer pageNo,
-                                                                  @RequestParam(required = false, defaultValue = "1000") Integer pageSize,
-                                                                  @RequestParam(required = false) Boolean authorized,
-                                                                  HttpServletRequest request) {
+            @RequestParam(required = false, defaultValue = "1") Integer pageNo,
+            @RequestParam(required = false, defaultValue = "1000") Integer pageSize,
+            @RequestParam(required = false) Boolean authorized,
+            HttpServletRequest request) {
         return ApiResult.success(workflowService.getMcpServerListLocally(categoryId, pageNo, pageSize, authorized, request));
     }
 

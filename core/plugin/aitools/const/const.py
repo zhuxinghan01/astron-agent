@@ -5,18 +5,12 @@ parameters used in the project.
 
 import os
 
-from xingchen_utils.runtime.const import DevelopmentEnv, ProductionEnv
-
 # 环境变量
 Env = os.getenv("ENVIRONMENT")
 ENV_PRODUCTION = "production"
 ENV_PRERELEASE = "prerelease"
 ENV_DEVELOPMENT = "development"
-XINGCHEN_ENVIRON = (
-    ProductionEnv
-    if (Env == ENV_PRODUCTION or Env == ENV_PRERELEASE)
-    else DevelopmentEnv
-)
+
 
 
 # 配置中心连接

@@ -7,7 +7,7 @@ across distributed systems using timestamp, datacenter, worker, and sequence.
 import time
 import threading
 import os
-from consts import const
+from plugin.link.consts import const
 
 
 class Snowflake:

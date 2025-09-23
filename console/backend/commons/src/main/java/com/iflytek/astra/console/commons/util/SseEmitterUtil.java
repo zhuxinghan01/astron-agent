@@ -29,11 +29,11 @@ public class SseEmitterUtil {
     private static final String END_DATA = "{\"end\":true,\"timestamp\":" + System.currentTimeMillis() + "}";
 
     private static final Cache<String, Boolean> streamStopSignalSet = CacheBuilder.newBuilder()
-                    .expireAfterWrite(16, TimeUnit.SECONDS)
-                    .build();
+            .expireAfterWrite(16, TimeUnit.SECONDS)
+            .build();
 
     /**
-     * 使用map对象，便于根据userId来获取对应的SseEmitter，或者放redis里面
+     * Use Map object for easy access to SseEmitter by userId, or store in Redis
      */
     private static final Map<String, SseEmitter> SESSION_MAP = new ConcurrentHashMap<>(256);
 
@@ -48,17 +48,17 @@ public class SseEmitterUtil {
     }
 
     /**
-     * sse返回
+     * SSE response
      */
     public static void sendMsgLikeTypeWriter(String content, String sseId, Long interval) {
         try {
-            // 字符串中不包含英文字母，逐个字符输出
+            // String contains no English letters, output character by character
             for (int j = 0; j < content.length(); j++) {
-                // 逐个字刷入sse进行发送
+                // Send character by character through SSE
                 SseEmitterUtil.sendMessage(sseId, Base64Util.encode(String.valueOf(content.charAt(j))));
                 char codePoint = content.charAt(j);
                 if ((codePoint >= 65 && codePoint <= 90)
-                                || (codePoint >= 97 && codePoint <= 122)) {
+                        || (codePoint >= 97 && codePoint <= 122)) {
                     ThreadUtil.sleep(1);
                 } else {
                     if (interval > 0) {
@@ -67,23 +67,23 @@ public class SseEmitterUtil {
                 }
             }
         } catch (Exception e) {
-            // 关ws
+            // Close WS
             if (e instanceof IllegalStateException) {
-                log.error("过期的发送内容,sse已关闭");
+                log.error("Expired send content, SSE already closed");
             } else {
-                log.error("sse发送异常", e);
+                log.error("SSE send exception", e);
             }
         }
     }
 
     /**
-     * 创建用户连接并返回 SseEmitter
+     * Create user connection and return SseEmitter
      *
      * @return SseEmitter
      */
     public static SseEmitter create(String sseId) {
         SseEmitter sseEmitter = new SseEmitter();
-        // 注册回调
+        // Register callbacks
         sseEmitter.onCompletion(completionCallBack(sseId));
         sseEmitter.onError(errorCallBack(sseId));
         sseEmitter.onTimeout(timeoutCallBack(sseId));
@@ -93,7 +93,7 @@ public class SseEmitterUtil {
 
     public static SseEmitter create(String sseId, long timeout) {
         SseEmitter sseEmitter = new SseEmitter(timeout);
-        // 注册回调
+        // Register callbacks
         sseEmitter.onCompletion(completionCallBack(sseId));
         sseEmitter.onError(errorCallBack(sseId));
         sseEmitter.onTimeout(timeoutCallBack(sseId));
@@ -102,15 +102,15 @@ public class SseEmitterUtil {
     }
 
     /**
-     * 给指定用户发送信息
+     * Send message to specific user
      */
     public static void sendMessage(String sseId, Object message) {
         if (SESSION_MAP.containsKey(sseId)) {
             try {
                 SESSION_MAP.get(sseId).send(message);
             } catch (IOException e) {
-                if (e.getMessage().contains("断开的管道")) {
-                    // 前端浏览器存在断开连接，则调整为info级别
+                if (e.getMessage().contains("Broken pipe")) {
+                    // Frontend browser connection disconnected, adjust to info level
                     log.info("SSE[{}]推送异常:{}", sseId, e.getMessage());
                 } else {
                     log.error("SSE[{}]推送异常:{}", sseId, e.getMessage());
@@ -121,18 +121,18 @@ public class SseEmitterUtil {
     }
 
     /**
-     * 移除用户连接
+     * Remove user connection
      */
     public static void close(String sseId) {
         try {
             SseEmitter sseEmitter = SESSION_MAP.get(sseId);
             if (sseEmitter != null) {
-                // 关闭sse
+                // Close SSE
                 sseEmitter.complete();
                 SESSION_MAP.remove(sseId);
             }
         } catch (IllegalStateException e) {
-            log.info("sse已被关闭过 : {}", e.getMessage());
+            log.info("SSE already closed: {}", e.getMessage());
         }
     }
 
@@ -140,12 +140,12 @@ public class SseEmitterUtil {
         try {
             SseEmitter sseEmitter = SESSION_MAP.get(sseId);
             if (sseEmitter != null) {
-                // 关闭sse
+                // Close SSE
                 sseEmitter.completeWithError(t);
                 SESSION_MAP.remove(sseId);
             }
         } catch (IllegalStateException e) {
-            log.info("sse已被关闭过 : {}", e.getMessage());
+            log.info("SSE already closed: {}", e.getMessage());
         }
     }
 
@@ -181,14 +181,14 @@ public class SseEmitterUtil {
         try {
             sseEmitter.send(message);
         } catch (IOException e) {
-            log.info("newSseAndSendMessageClose异常:{}", e.getMessage());
+            log.info("newSseAndSendMessageClose exception: {}", e.getMessage());
         }
         sseEmitter.complete();
         return sseEmitter;
     }
 
     /**
-     * 发送错误信息并关闭连接
+     * Send error message and close connection
      */
     public static void sendAndCompleteWithError(String sseId, Object errorResponse) {
         SseEmitter emitter = SESSION_MAP.get(sseId);
@@ -196,17 +196,17 @@ public class SseEmitterUtil {
             try {
                 emitter.send(SseEmitter.event().name("error").data(errorResponse));
             } catch (IOException e) {
-                log.warn("SSE[{}] 发送错误消息异常: {}", sseId, e.getMessage(), e);
+                log.warn("SSE[{}] send error message exception: {}", sseId, e.getMessage(), e);
             } finally {
                 try {
                     emitter.completeWithError(new RuntimeException(errorResponse.toString()));
                 } catch (Exception ex) {
-                    log.warn("SSE[{}] completeWithError 异常: {}", sseId, ex.getMessage(), ex);
+                    log.warn("SSE[{}] completeWithError exception: {}", sseId, ex.getMessage(), ex);
                 }
                 SESSION_MAP.remove(sseId);
             }
         } else {
-            log.warn("SSE[{}] 不存在，无法发送错误信息", sseId);
+            log.warn("SSE[{}] does not exist, cannot send error message", sseId);
         }
     }
 
@@ -230,11 +230,11 @@ public class SseEmitterUtil {
     }
 
     public static <T> void asyncSendStreamAndClose(
-                    SseEmitter emitter,
-                    Stream<T> dataStream,
-                    String streamId,
-                    Function<T, Object> dataMapper,
-                    Consumer<Exception> errorHandler) {
+            SseEmitter emitter,
+            Stream<T> dataStream,
+            String streamId,
+            Function<T, Object> dataMapper,
+            Consumer<Exception> errorHandler) {
         Thread.startVirtualThread(() -> {
             try {
                 sendStream(emitter, dataStream, streamId, dataMapper, errorHandler);
@@ -250,11 +250,11 @@ public class SseEmitterUtil {
     }
 
     public static <T> void sendStream(
-                    SseEmitter emitter,
-                    Stream<T> dataStream,
-                    String streamId,
-                    Function<T, Object> dataMapper,
-                    Consumer<Exception> errorHandler) {
+            SseEmitter emitter,
+            Stream<T> dataStream,
+            String streamId,
+            Function<T, Object> dataMapper,
+            Consumer<Exception> errorHandler) {
         if (dataStream == null) {
             log.warn("Data stream is null for streamId: {}", streamId);
             return;
@@ -293,11 +293,11 @@ public class SseEmitterUtil {
     }
 
     public static void sendBufferedStream(
-                    SseEmitter emitter,
-                    Stream<String> dataStream,
-                    String streamId,
-                    int bufferSize,
-                    Consumer<String> onBufferReady) {
+            SseEmitter emitter,
+            Stream<String> dataStream,
+            String streamId,
+            int bufferSize,
+            Consumer<String> onBufferReady) {
         if (dataStream == null) {
             log.warn("Data stream is null for streamId: {}", streamId);
             return;
@@ -334,11 +334,11 @@ public class SseEmitterUtil {
     }
 
     public static void sendWithCallback(
-                    SseEmitter emitter,
-                    Supplier<Object> dataSupplier,
-                    Consumer<Object> beforeSend,
-                    Consumer<Object> afterSend,
-                    Consumer<Exception> errorHandler) {
+            SseEmitter emitter,
+            Supplier<Object> dataSupplier,
+            Consumer<Object> beforeSend,
+            Consumer<Object> afterSend,
+            Consumer<Exception> errorHandler) {
         try {
             Object data = dataSupplier.get();
 
@@ -393,9 +393,9 @@ public class SseEmitterUtil {
 
         try {
             Map<String, Object> errorData = Map.of(
-                            "error", true,
-                            "message", errorMessage != null ? errorMessage : "Unknown error",
-                            "timestamp", System.currentTimeMillis());
+                    "error", true,
+                    "message", errorMessage != null ? errorMessage : "Unknown error",
+                    "timestamp", System.currentTimeMillis());
 
             emitter.send(SseEmitter.event().name("error").data(JSON.toJSONString(errorData)));
 
@@ -415,9 +415,9 @@ public class SseEmitterUtil {
 
         try {
             Map<String, Object> completeData = Map.of(
-                            "complete", true,
-                            "timestamp", System.currentTimeMillis(),
-                            "data", completionData != null ? completionData : Map.of());
+                    "complete", true,
+                    "timestamp", System.currentTimeMillis(),
+                    "data", completionData != null ? completionData : Map.of());
 
             emitter.send(SseEmitter.event().name("complete").data(JSON.toJSONString(completeData)));
 
@@ -561,7 +561,7 @@ public class SseEmitterUtil {
         }
 
         private void asyncSendStreamAndCloseWithBuffer(SseEmitter emitter, Stream<T> dataStream, String streamId,
-                        Function<T, Object> processor, Consumer<Exception> errorHandler) {
+                Function<T, Object> processor, Consumer<Exception> errorHandler) {
             Thread.startVirtualThread(() -> {
                 try {
                     List<Object> processedDataList = new ArrayList<>();

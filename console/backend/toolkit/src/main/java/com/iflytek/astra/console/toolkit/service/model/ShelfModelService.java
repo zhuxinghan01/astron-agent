@@ -39,8 +39,8 @@ public class ShelfModelService {
     /**
      * Remove model from shelf and update related workflows
      *
-     * @param llmId     The LLM model ID to remove from shelf
-     * @param flowId    Specific workflow ID to update (optional)
+     * @param llmId The LLM model ID to remove from shelf
+     * @param flowId Specific workflow ID to update (optional)
      * @param serviceId The service ID of the model being removed
      * @return Processing result
      * @throws BusinessException if parameters are invalid or operation fails

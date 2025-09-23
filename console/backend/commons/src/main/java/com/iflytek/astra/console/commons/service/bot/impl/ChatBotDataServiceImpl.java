@@ -189,14 +189,14 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
     /**
      * Generic update method to update entity status based on two condition fields.
      *
-     * @param <T>            Entity type
-     * @param mapper         Corresponding MyBatis Plus Mapper
-     * @param field1         First query condition field (usually ID related)
-     * @param field2         Second query condition field (such as user ID)
-     * @param value1         Value of the first field
-     * @param value2         Value of the second field
+     * @param <T> Entity type
+     * @param mapper Corresponding MyBatis Plus Mapper
+     * @param field1 First query condition field (usually ID related)
+     * @param field2 Second query condition field (such as user ID)
+     * @param value1 Value of the first field
+     * @param value2 Value of the second field
      * @param entitySupplier // Supplier for creating new entity
-     * @param configurator   Configuration on how to set updated entity attributes
+     * @param configurator Configuration on how to set updated entity attributes
      * @return Returns true if update is successful and affected rows > 0; otherwise returns false
      */
     private <T> boolean updateEntity(
@@ -411,9 +411,9 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         }
         // Query botId based on spaceId
         List<Integer> spaceBotIdList = chatBotBaseMapper.selectList(Wrappers.lambdaQuery(ChatBotBase.class)
-                        .eq(ChatBotBase::getSpaceId, spaceId)
-                        .eq(ChatBotBase::getIsDelete, 0)
-                        .select(ChatBotBase::getId))
+                .eq(ChatBotBase::getSpaceId, spaceId)
+                .eq(ChatBotBase::getIsDelete, 0)
+                .select(ChatBotBase::getId))
                 .stream()
                 .map(ChatBotBase::getId)
                 .toList();
@@ -474,11 +474,11 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
 
     @Override
     public ChatBotBase copyBot(String uid, Integer botId, Long spaceId) {
-        // 创建新的同名助手
+        // Create new assistant with same name
         BotDetail botDetail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         botDetail.setId(null);
         ChatBotBase base = new ChatBotBase();
-        // 设置一个新助手名，作为区别
+        // Set a new assistant name as differentiation
         base.setUid(uid);
         base.setSpaceId(spaceId);
         base.setBotName(base.getBotName() + RandomUtil.randomString(6));
@@ -496,7 +496,7 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         if (!chatBotMarketMapper.exists(wrapper)) {
             return Boolean.TRUE;
         }
-        // 直接下架助手, 无需经过综管审核
+        // Directly remove assistant from shelf, no need for comprehensive management review
         wrapper.set("bot_status", 0);
         chatBotMarketMapper.update(null, wrapper);
         botFavoriteService.delete(uid, botId);
@@ -548,7 +548,7 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         List<DatasetInfo> datasetInfoList = datasetInfoService.getDatasetByBot(uid, botId);
         promptBotDetail.setDatasetList(datasetInfoList);
 
-        // bot_type转成parent_type_key的值
+        // Convert bot_type to parent_type_key value
         Integer botType = promptBotDetail.getBotType();
         if (botType == null) {
             botType = 0;
@@ -563,7 +563,7 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         } else {
             promptBotDetail.setEditable(true);
         }
-        // 获取助手发布渠道
+        // Get assistant release channels
         promptBotDetail.setReleaseType(getReleaseChannel(uid, botId));
         return promptBotDetail;
     }
@@ -600,11 +600,13 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
             releaseList.add(ReleaseTypeEnum.MARKET.getCode());
         }
         boolean apiExist = botApiMapper.exists(Wrappers.lambdaQuery(ChatBotApi.class)
-                .eq(ChatBotApi::getUid, uid).eq(ChatBotApi::getBotId, botId).orderByDesc(ChatBotApi::getUpdateTime));
+                .eq(ChatBotApi::getUid, uid)
+                .eq(ChatBotApi::getBotId, botId)
+                .orderByDesc(ChatBotApi::getUpdateTime));
         if (apiExist) {
             releaseList.add(ReleaseTypeEnum.BOT_API.getCode());
         }
-        // mcp渠道处理
+        // MCP channel processing
         McpData mcp = mcpDataService.getMcp(botId.longValue());
         if (Objects.nonNull(mcp) && "1".equals(mcp.getReleased())) {
             releaseList.add(ReleaseTypeEnum.MCP.getCode());

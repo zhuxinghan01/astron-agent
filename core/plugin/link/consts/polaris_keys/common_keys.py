@@ -1,16 +1,16 @@
 # Common general configuration
 # Blacklist configuration
-SEGMENT_BLACK_LIST_KEY = "segment_black_list"
-IP_BLACK_LIST_KEY = "ip_black_list"
-DOMAIN_BLACK_LIST_KEY = "domain_black_list"
+SEGMENT_BLACK_LIST_KEY = "SEGMENT_BLACK_LIST"
+IP_BLACK_LIST_KEY = "IP_BLACK_LIST"
+DOMAIN_BLACK_LIST_KEY = "DOMAIN_BLACK_LIST"
 # Distinguish between official and third-party tools
-OFFICIAL_TOOL_KEY = "official_tool"
-THIRD_TOOL_KEY = "third_tool"
+OFFICIAL_TOOL_KEY = "OFFICIAL_TOOL"
+THIRD_TOOL_KEY = "THIRD_TOOL"
 # Official default app ID
-APP_ID_KEY = "app_id"
+DEFAULT_APPID_KEY = "DEFAULT_APPID"
 # ID generation
-DATACENTER_ID_KEY = "datacenter_id"
-WORKER_ID_KEY = "worker_id"
+DATACENTER_ID_KEY = "DATACENTER_ID"
+WORKER_ID_KEY = "WORKER_ID"
 
 HTTP_AUTH_QU_APP_ID_KEY = "http_auth_qu_app_id"
 HTTP_AUTH_QU_APP_KEY_KEY = "http_auth_qu_app_key"

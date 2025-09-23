@@ -30,9 +30,9 @@ public class ChatBotMarketServiceImpl implements ChatBotMarketService {
     public Page<ChatBotMarket> getBotPage(Integer type, String search, Integer pageSize, Integer page) {
         Page<ChatBotMarket> marketPage = new Page<>(page, pageSize);
         LambdaQueryWrapper<ChatBotMarket> queryWrapper = Wrappers.lambdaQuery(ChatBotMarket.class)
-                        .eq(ChatBotMarket::getBotType, type)
-                        .eq(ChatBotMarket::getIsDelete, NOT_DELETED)
-                        .orderByDesc(ChatBotMarket::getCreateTime);
+                .eq(ChatBotMarket::getBotType, type)
+                .eq(ChatBotMarket::getIsDelete, NOT_DELETED)
+                .orderByDesc(ChatBotMarket::getCreateTime);
         if (StringUtils.isNotBlank(search)) {
             queryWrapper.like(ChatBotMarket::getBotName, "%" + search + "%");
         }
@@ -42,12 +42,12 @@ public class ChatBotMarketServiceImpl implements ChatBotMarketService {
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public void updateBotMarketStatus(String uid, Integer botId) {
-        // 先查一下botId是否上架市场
+        // First check if botId is listed in the market
         Long count = chatBotMarketMapper.selectCount(Wrappers.lambdaQuery(ChatBotMarket.class)
-                        .eq(ChatBotMarket::getUid, uid)
-                        .eq(ChatBotMarket::getBotId, botId)
-                        .eq(ChatBotMarket::getBotStatus, BotStatusEnum.PUBLISHED.getCode())
-                        .eq(ChatBotMarket::getIsDelete, 0));
+                .eq(ChatBotMarket::getUid, uid)
+                .eq(ChatBotMarket::getBotId, botId)
+                .eq(ChatBotMarket::getBotStatus, BotStatusEnum.PUBLISHED.getCode())
+                .eq(ChatBotMarket::getIsDelete, 0));
         if (count != null && count.intValue() > 0) {
             UpdateWrapper<ChatBotMarket> marketWrapper = new UpdateWrapper<>();
             marketWrapper.eq("uid", uid);

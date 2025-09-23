@@ -307,12 +307,12 @@ public class BotServiceImpl implements BotService {
 
     @Override
     public ChatBotBase copyBot(String uid, Integer botId, Long spaceId) {
-        // 创建新的同名助手
+        // Create new assistant with same name
         BotDetail detail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         ChatBotBase botBase = new ChatBotBase();
         BeanUtils.copyProperties(detail, botBase);
         botBase.setId(null);
-        // 设置一个新助手名，作为区别
+        // Set a new assistant name as differentiation
         botBase.setUid(uid);
         botBase.setSpaceId(spaceId);
         botBase.setBotName(detail.getBotName() + RandomUtil.randomString(6));
@@ -364,8 +364,8 @@ public class BotServiceImpl implements BotService {
             chatBotDataService.updateBot(botBase);
             chatListDataService.updateChatBotList(botBase);
             chatBotMarketService.
-                    // Update market
-                            updateBotMarketStatus(uid, botId);
+            // Update market
+                    updateBotMarketStatus(uid, botId);
             // Find flowId to synchronize to Astra, then publish
             UserLangChainInfo userLangChainInfo = userLangChainDataService.findOneByBotId(botId);
             // Here it may not be orchestrated yet, need to check
@@ -439,8 +439,7 @@ public class BotServiceImpl implements BotService {
                     .background(bot.getBackground())
                     .virtualCharacter(bot.getVirtualCharacter())
                     .massBotId(bot.getMassBotId())
-                    .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ?
-                            String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
+                    .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
                     .build();
 
             // Handle English input examples
@@ -502,7 +501,7 @@ public class BotServiceImpl implements BotService {
      * Set file upload configuration.
      *
      * @param botInfo Bot information data transfer object
-     * @param botId   Bot ID
+     * @param botId Bot ID
      */
     private void setupFileUploadConfig(BotInfoDto botInfo, Integer botId) {
         try {
@@ -520,7 +519,7 @@ public class BotServiceImpl implements BotService {
     /**
      * Function to handle file upload configuration
      *
-     * @param botInfo           Bot information object
+     * @param botInfo Bot information object
      * @param userLangChainInfo User language chain information object
      */
     private void processFileUploadConfig(BotInfoDto botInfo, UserLangChainInfo userLangChainInfo) {
@@ -643,7 +642,7 @@ public class BotServiceImpl implements BotService {
     }
 
     private void setupWorkflowInfo(BotInfoDto botInfo, ChatBotBase chatBotBase, HttpServletRequest request,
-                                   Integer botId, String workflowVersion, String uid) {
+            Integer botId, String workflowVersion, String uid) {
         Integer version = chatBotBase.getVersion();
         if (!version.equals(BotTypeEnum.WORKFLOW_BOT.getType())) {
             return;
@@ -668,7 +667,7 @@ public class BotServiceImpl implements BotService {
             if (!releaseStatusJson.getJSONArray("data").isEmpty()) {
                 String releaseStatus = releaseStatusJson.getJSONArray("data").getJSONObject(0).getString("publishResult");
                 log.info("botId:{} query release status: {}", botId, releaseStatus);
-                botInfo.setBotStatus(Objects.equals(releaseStatus, "成功") ? ShelfStatusEnum.ON_SHELF.getCode() : ShelfStatusEnum.OFF_SHELF.getCode());
+                botInfo.setBotStatus(Objects.equals(releaseStatus, "success") ? ShelfStatusEnum.ON_SHELF.getCode() : ShelfStatusEnum.OFF_SHELF.getCode());
             }
 
             String versionMax = versionResult.getJSONObject("data").getString("workflowMaxVersion");

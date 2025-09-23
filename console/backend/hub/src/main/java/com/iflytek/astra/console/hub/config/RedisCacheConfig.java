@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -25,6 +24,7 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 @Slf4j
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class RedisCacheConfig implements CachingConfigurer {
 
     private final ObjectMapper objectMapper;
@@ -66,10 +66,10 @@ public class RedisCacheConfig implements CachingConfigurer {
 
     private RedisCacheConfiguration createBaseCacheConfiguration(Duration ttl) {
         return RedisCacheConfiguration.defaultCacheConfig()
-                        .entryTtl(ttl)
-                        .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer()))
-                        .disableCachingNullValues();
+                .entryTtl(ttl)
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer()))
+                .disableCachingNullValues();
     }
 
     /**
@@ -86,9 +86,9 @@ public class RedisCacheConfig implements CachingConfigurer {
         // ObjectMapper.DefaultTyping.NON_FINAL indicates that type information is included for all
         // non-final types
         redisObjectMapper.activateDefaultTyping(
-                        LaissezFaireSubTypeValidator.instance,
-                        ObjectMapper.DefaultTyping.NON_FINAL,
-                        JsonTypeInfo.As.PROPERTY);
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY);
 
         return new GenericJackson2JsonRedisSerializer(redisObjectMapper);
     }

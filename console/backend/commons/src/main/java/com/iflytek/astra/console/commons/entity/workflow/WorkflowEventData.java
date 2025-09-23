@@ -67,11 +67,11 @@ public class WorkflowEventData {
                 return this;
             }
             return EventValue.builder()
-                            .type(type)
-                            .message(this.message)
-                            .option(this.option)
-                            .content(this.content)
-                            .build();
+                    .type(type)
+                    .message(this.message)
+                    .option(this.option)
+                    .content(this.content)
+                    .build();
         }
 
         public EventValue withMessage(String message) {
@@ -79,11 +79,11 @@ public class WorkflowEventData {
                 return this;
             }
             return EventValue.builder()
-                            .type(this.type)
-                            .message(message)
-                            .option(this.option)
-                            .content(this.content)
-                            .build();
+                    .type(this.type)
+                    .message(message)
+                    .option(this.option)
+                    .content(this.content)
+                    .build();
         }
 
         public EventValue withContent(String content) {
@@ -91,11 +91,11 @@ public class WorkflowEventData {
                 return this;
             }
             return EventValue.builder()
-                            .type(this.type)
-                            .message(this.message)
-                            .option(this.option)
-                            .content(content)
-                            .build();
+                    .type(this.type)
+                    .message(this.message)
+                    .option(this.option)
+                    .content(content)
+                    .build();
         }
 
         @Data
@@ -148,12 +148,12 @@ public class WorkflowEventData {
     @Getter
     @AllArgsConstructor
     public enum WorkflowOperation {
-        RESUME("resume", "request", "恢复此问题"),
-        IGNORE("ignore", "request", "忽略此问题"),
-        ABORT("abort", "request", "结束本轮对话"),
+        RESUME("resume", "request", "Resume this question"),
+        IGNORE("ignore", "request", "Ignore this question"),
+        ABORT("abort", "request", "End this conversation"),
 
-        INTERRUPT("interrupt", "response", "中断本轮对话"),
-        STOP("stop", "response", "结束本轮对话"),
+        INTERRUPT("interrupt", "response", "Interrupt this conversation"),
+        STOP("stop", "response", "End this conversation"),
         ;
 
         /**

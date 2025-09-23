@@ -75,8 +75,8 @@ public class WorkflowExportService {
     WorkflowService workflowService;
     @Resource
     ModelService modelService;
-     @Autowired
-     private BotUtil botUtil;
+    @Autowired
+    private BotUtil botUtil;
     @Resource
     BizConfig bizConfig;
     @Resource
@@ -93,7 +93,7 @@ public class WorkflowExportService {
     /**
      * Export workflow data as YAML format.
      *
-     * @param workflow     Workflow to export
+     * @param workflow Workflow to export
      * @param outputStream Output stream to write YAML data
      */
     public void exportWorkflowDataAsYaml(Workflow workflow, OutputStream outputStream) {
@@ -160,7 +160,7 @@ public class WorkflowExportService {
      * Import workflow from YAML format.
      *
      * @param inputStream Input stream containing YAML data
-     * @param request     HTTP request context
+     * @param request HTTP request context
      * @return API result with imported workflow
      */
     @SneakyThrows
@@ -222,7 +222,7 @@ public class WorkflowExportService {
         wf.setSpaceId(spaceId);
         workflowService.save(wf);
         // Sync to Spark database
-         Integer botId = botUtil.syncToSparkDatabase(wf, UserInfoManagerHandler.getUserId(), spaceId);
+        Integer botId = botUtil.syncToSparkDatabase(wf, UserInfoManagerHandler.getUserId(), spaceId);
         JSONObject jsonData = new JSONObject();
         jsonData.put("botId", botId);
         // Update botId
@@ -255,8 +255,8 @@ public class WorkflowExportService {
      * Clean private information during workflow import.
      *
      * @param bizWorkflowData Workflow data to clean
-     * @param uid             User ID
-     * @param request         HTTP request context
+     * @param uid User ID
+     * @param request HTTP request context
      */
     public void cleanNodesForImport(BizWorkflowData bizWorkflowData, String uid, HttpServletRequest request) {
         List<BizWorkflowNode> nodes = bizWorkflowData.getNodes();
@@ -309,7 +309,7 @@ public class WorkflowExportService {
     /**
      * Process database node during import.
      *
-     * @param param   Node parameters
+     * @param param Node parameters
      * @param request HTTP request context
      */
     private void cleanDataBaseNode(JSONObject param, HttpServletRequest request) {
@@ -333,9 +333,9 @@ public class WorkflowExportService {
     /**
      * Process LLM (Large Language Model) node during import.
      *
-     * @param param         Node parameters
+     * @param param Node parameters
      * @param allowedLlmSet Set of allowed LLM IDs
-     * @param uid           User ID
+     * @param uid User ID
      */
     private void cleanLlmNode(JSONObject param, Set<Long> allowedLlmSet, String uid) {
         String source = param.getString("source");
@@ -357,11 +357,11 @@ public class WorkflowExportService {
      * Process plugin/tool node during import.
      *
      * @param param Node parameters
-     * @param uid   User ID
-     * @param data  Node data
+     * @param uid User ID
+     * @param data Node data
      */
     private void cleanPluginNode(JSONObject param, String uid,
-                                 BizNodeData data) {
+            BizNodeData data) {
         String pluginId = param.getString("pluginId");
         ToolBox toolBox = toolBoxService.getOnly(new LambdaQueryWrapper<ToolBox>()
                 .eq(ToolBox::getToolId, pluginId));
@@ -379,8 +379,8 @@ public class WorkflowExportService {
      * Process workflow node during import.
      *
      * @param param Node parameters
-     * @param uid   User ID
-     * @param data  Node data
+     * @param uid User ID
+     * @param data Node data
      */
     private void cleanFlowNode(JSONObject param, String uid, BizNodeData data) {
         String flowId = param.getString("flowId");
@@ -395,13 +395,13 @@ public class WorkflowExportService {
     /**
      * Process knowledge base or knowledge base pro node during import.
      *
-     * @param param         Node parameters
-     * @param uid           User ID
+     * @param param Node parameters
+     * @param uid User ID
      * @param allowedLlmSet Set of allowed LLM IDs
-     * @param prefix        Node type prefix
+     * @param prefix Node type prefix
      */
     private void cleanKnowledgeNode(JSONObject param, String uid,
-                                    Set<Long> allowedLlmSet, String prefix) {
+            Set<Long> allowedLlmSet, String prefix) {
         if ("knowledge-pro".equals(prefix)) {
             cleanLlmNode(param, allowedLlmSet, uid);
         }
@@ -419,13 +419,13 @@ public class WorkflowExportService {
     /**
      * Process agent node during import.
      *
-     * @param param         Node parameters
+     * @param param Node parameters
      * @param allowedLlmSet Set of allowed LLM IDs
-     * @param request       HTTP request context
+     * @param request HTTP request context
      */
     private void cleanAgentNode(JSONObject param,
-                                Set<Long> allowedLlmSet,
-                                HttpServletRequest request) {
+            Set<Long> allowedLlmSet,
+            HttpServletRequest request) {
 
         if (!allowedLlmSet.contains(param.getLong("llmId"))) {
             param.remove("serviceId");

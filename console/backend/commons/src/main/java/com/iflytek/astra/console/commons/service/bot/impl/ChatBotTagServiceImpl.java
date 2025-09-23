@@ -24,8 +24,8 @@ public class ChatBotTagServiceImpl extends ServiceImpl<ChatBotTagMapper, ChatBot
         }
         LambdaQueryWrapper<ChatBotTag> chatBotTagQueryWrapper = Wrappers.lambdaQuery();
         chatBotTagQueryWrapper.eq(ChatBotTag::getBotId, botId)
-                        .eq(ChatBotTag::getVerify, 1)
-                        .orderByDesc(ChatBotTag::getOrder);
+                .eq(ChatBotTag::getVerify, 1)
+                .orderByDesc(ChatBotTag::getOrder);
         List<ChatBotTag> chatBotTags = baseMapper.selectList(chatBotTagQueryWrapper);
         if (Objects.nonNull(chatBotTags) && !chatBotTags.isEmpty()) {
             List<String> tags = new ArrayList<>();
@@ -38,11 +38,11 @@ public class ChatBotTagServiceImpl extends ServiceImpl<ChatBotTagMapper, ChatBot
     @Override
     @Transactional
     public void updateTags(Long botId) {
-        // 先将原来可用的标签变为不可用
+        // First make the originally available tags unavailable
         ChatBotTag updateChatBotTag = new ChatBotTag();
         updateChatBotTag.setVerify(0);
         baseMapper.update(updateChatBotTag, Wrappers.lambdaQuery(ChatBotTag.class).eq(ChatBotTag::getBotId, botId));
-        // 将最新的标签变为可用状态
+        // Make the latest tags available
         updateChatBotTag.setVerify(1);
         baseMapper.update(updateChatBotTag, Wrappers.lambdaQuery(ChatBotTag.class).eq(ChatBotTag::getBotId, botId).eq(ChatBotTag::getIsAct, 1));
     }
