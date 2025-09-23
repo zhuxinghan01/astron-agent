@@ -1,0 +1,443 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # 中间件服务 (Infrastructure Services)
+  # ============================================================================
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:14
+    container_name: astra-agent-postgres
+    environment:
+      POSTGRES_DB: sparkdb_manager
+      POSTGRES_USER: ${POSTGRES_USER:-spark}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spark123}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./pgsql/:/docker-entrypoint-initdb.d/
+    networks:
+      - astra-agent-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spark} -d sparkdb_manager"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.4
+    container_name: astra-agent-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/:/docker-entrypoint-initdb.d/
+    networks:
+      - astra-agent-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # Redis 缓存
+  redis:
+    image: redis:7
+    container_name: astra-agent-redis
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - astra-agent-network
+    restart: always
+    command: redis-server ${REDIS_PASSWORD:+--requirepass} ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep PONG"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # Elasticsearch 搜索引擎
+  elasticsearch:
+    image: elasticsearch:7.16.2
+    container_name: astra-agent-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=${ES_JAVA_OPTS:--Xms512m -Xmx512m}"
+      - xpack.security.enabled=${ELASTICSEARCH_SECURITY_ENABLED:-false}
+      - cluster.name=astra-agent-cluster
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+      - "${ELASTICSEARCH_TRANSPORT_PORT:-9300}:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - astra-agent-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # Kafka 消息队列
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: astra-agent-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_PORT:-9092}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:${KAFKA_PORT:-9092}
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:29093
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR:-1}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR:-1}
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-MkU3OEVBNTcwNTJENDM2Qk}
+    ports:
+      - "${KAFKA_PORT:-9092}:${KAFKA_PORT:-9092}"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - astra-agent-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:${KAFKA_PORT:-9092}"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    container_name: astra-agent-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - astra-agent-network
+    restart: always
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
+  # ============================================================================
+  # astra-agent 核心服务 (Core Services)
+  # ============================================================================
+
+  # 租户服务
+  core-tenant:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-tenant:latest
+    container_name: astra-agent-core-tenant
+    ports:
+      - "${CORE_TENANT_PORT:-5052}:5052"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/tenant/logs:/opt/tenant/logs
+      - /home/xingchen-opensource-config/tenant/config.toml:/opt/tenant/config/config.toml
+      - /etc/localtime:/etc/localtime
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 内存数据库服务
+
+  core-memory:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-memory:latest
+    container_name: astra-agent-core-memory
+    ports:
+      - "${CORE_MEMORY_PORT:-7990}:7990"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/database/config.env:/opt/database/memory/database/config.env
+      - /home/xingchen-opensource-config/database/logs/:/opt/database/memory/database/logs
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # RPA 插件服务
+  core-rpa:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-rpa:latest
+    container_name: astra-agent-core-rpa
+    ports:
+      - "${CORE_RPA_PORT:-8003}:8000"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 链接插件服务
+  core-link:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-link:latest
+    container_name: astra-agent-core-link
+    ports:
+      - "${CORE_LINK_PORT:-8004}:8000"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/link/config.env:/opt/link/config.env
+      - /home/xingchen-opensource-config/link/logs/:/opt/link/logs/
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # AI工具插件服务
+  core-aitools:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-aitools:latest
+    container_name: astra-agent-core-aitools
+    ports:
+      - "${CORE_AITOOLS_PORT:-18668}:18668"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/aitools/config.env:/opt/aitools/config.env
+      - /home/xingchen-opensource-config/aitools/logs/:/opt/aitools/logs/
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # Agent 服务
+  core-agent:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-agent:latest
+    container_name: astra-agent-core-agent
+    ports:
+      - "${CORE_AGENT_PORT:-17870}:17870"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/agent/config.env:/opt/agent/config.env
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 知识库服务
+  core-knowledge:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-knowledge:latest
+    container_name: astra-agent-core-knowledge
+    ports:
+      - "${CORE_KNOWLEDGE_PORT:-20010}:20010"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    volumes:
+      - /home/xingchen-opensource-config/knowledge/config.env:/opt/core/knowledge/config.env
+      - /home/xingchen-opensource-config/knowledge/logs/:/opt/core/knowledge/logs
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 工作流服务
+  core-workflow:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-core-workflow:latest
+    container_name: astra-agent-core-workflow
+    ports:
+      - "${CORE_WORKFLOW_PORT:-7880}:7880"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    environment:
+      - RUNTIME_ENV=dev
+    volumes:
+      - /home/xingchen-opensource-config/workflow/config.env:/opt/openstellar/workflow/config.env
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # ============================================================================
+  # astra-agent 控制台服务 (Console Services)
+  # ============================================================================
+
+  # 控制台前端
+  console-frontend:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-console-frontend:latest
+    container_name: astra-agent-console-frontend
+    ports:
+      - "${CONSOLE_FRONTEND_PORT:-3000}:80"
+#    depends_on:
+#      - console-hub
+#      - console-toolkit
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 控制台Hub服务
+  console-hub:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-console-hub:latest
+    container_name: astra-agent-console-hub
+    ports:
+      - "${CONSOLE_HUB_PORT:-8080}:8080"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    networks:
+      - astra-agent-network
+    restart: always
+
+  # 控制台Toolkit服务
+  console-toolkit:
+    image: ghcr.io/lyj715824/openstellar/astra-agent-console-toolkit:latest
+    container_name: astra-agent-console-toolkit
+    ports:
+      - "${CONSOLE_TOOLKIT_PORT:-8081}:8080"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      mysql:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+    networks:
+      - astra-agent-network
+    restart: always
+
+# ============================================================================
+# 网络配置
+# ============================================================================
+networks:
+  astra-agent-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NETWORK_SUBNET:-172.30.0.0/16}
+
+# ============================================================================
+# 存储卷配置
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  kafka_data:
+    driver: local
+  minio_data:
+    driver: local
