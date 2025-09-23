@@ -318,4 +318,3 @@ class CBGRAGStrategy(RAGStrategy):
             fileStatus=datas.get("fileStatus", ""),
             fileQuantity=datas.get("quantity", 0),
         ).__dict__
-

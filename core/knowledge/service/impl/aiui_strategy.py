@@ -5,7 +5,7 @@ Provides Retrieval-Augmented Generation (RAG) functionality based on AIUI
 
 from typing import Any, Dict, List, Optional
 
-from knowledge.domain.entity.rag_do import ChunkInfo, FileInfo
+from knowledge.domain.entity.rag_do import ChunkInfo
 from knowledge.infra.aiui import aiui
 from knowledge.service.rag_strategy import RAGStrategy
 from knowledge.utils.verification import check_not_empty
