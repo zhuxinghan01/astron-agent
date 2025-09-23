@@ -1,3 +1,4 @@
+select 'workflow DATABASE initialization started' as '';
 CREATE DATABASE IF NOT EXISTS workflow;
 
 USE workflow;
@@ -123,3 +124,5 @@ CREATE TABLE `workflow_node_history` (
 ) ENGINE=InnoDB AUTO_INCREMENT=302851 DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+select 'workflow DATABASE initialization completed' as '';

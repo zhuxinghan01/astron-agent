@@ -1,3 +1,4 @@
+select 'agent DATABASE initialization started' as '';
 CREATE DATABASE IF NOT EXISTS agent;
 
 USE agent;
@@ -25,4 +26,6 @@ CREATE TABLE `bot_config` (
   `is_deleted` tinyint(4) NOT NULL COMMENT '是否删除',
   PRIMARY KEY (`id`),
   KEY `union_app_bot` (`app_id`,`bot_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+select 'agent DATABASE initialization completed' as '';

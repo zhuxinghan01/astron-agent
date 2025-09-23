@@ -1,4 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `spark-link`
+select 'spark-link DATABASE initialization started' as '';
+CREATE DATABASE IF NOT EXISTS `spark-link`;
 
 USE spark-link;
 
@@ -25,3 +26,5 @@ CREATE TABLE tools_schema (
     `is_deleted` BIGINT NOT NULL DEFAULT 0 COMMENT '是否已删除',
     UNIQUE KEY unique_tool_version (tool_id, version, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具数据库表';
+
+select 'spark-link DATABASE initialization completed' as '';

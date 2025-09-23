@@ -6,7 +6,7 @@
 \c sparkdb_manager
 
 -- Create schema
-CREATE SCHEMA sparkdb_manager;
+CREATE SCHEMA IF NOT EXISTS sparkdb_manager;
 
 -- Create database metadata table
 CREATE TABLE IF NOT EXISTS sparkdb_manager.database_meta (
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS sparkdb_manager.schema_meta (
   update_at timestamp without time zone not null default CURRENT_TIMESTAMP,
   create_by character varying,
   update_by character varying
-);
+)
 
 -- Output initialization completion information
 \echo 'PostgreSQL database initialization completed'
