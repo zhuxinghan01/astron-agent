@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Duration;
+import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,14 +24,13 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * Requires MinIO test environment to run these tests
  *
- * Test configuration: - MinIO connection details configurable via environment variables
- * Environment variables:
- * - MINIO_TEST_ENDPOINT: MinIO server endpoint (default: http://localhost:9000)
- * - MINIO_TEST_ACCESS_KEY: Access key for authentication (default: minioadmin)
- * - MINIO_TEST_SECRET_KEY: Secret key for authentication (default: minioadmin)
- * - MINIO_TEST_BUCKET: Bucket name for testing (default: astron-project)
- * - MINIO_INVALID_ACCESS_KEY: Invalid access key for negative testing (default: invalid-user)
- * - MINIO_INVALID_SECRET_KEY: Invalid secret key for negative testing (default: invalid-secret)
+ * Test configuration: - MinIO connection details configurable via environment variables Environment
+ * variables: - MINIO_TEST_ENDPOINT: MinIO server endpoint (default: http://localhost:9000) -
+ * MINIO_TEST_ACCESS_KEY: Access key for authentication (default: minioadmin) -
+ * MINIO_TEST_SECRET_KEY: Secret key for authentication (default: minioadmin) - MINIO_TEST_BUCKET:
+ * Bucket name for testing (default: astron-project) - MINIO_INVALID_ACCESS_KEY: Invalid access key
+ * for negative testing (default: invalid-user) - MINIO_INVALID_SECRET_KEY: Invalid secret key for
+ * negative testing (default: invalid-secret)
  *
  * Note: If MinIO service is unavailable, some tests will be skipped
  */
@@ -77,9 +78,16 @@ class S3ClientUtilTest {
     }
 
     private void ensureBucketExists() throws Exception {
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .writeTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
         MinioClient client = MinioClient.builder()
                 .endpoint(TEST_ENDPOINT)
                 .credentials(TEST_ACCESS_KEY, TEST_SECRET_KEY)
+                .httpClient(httpClient)
                 .build();
 
         boolean bucketExists = client.bucketExists(BucketExistsArgs.builder()
@@ -325,8 +333,8 @@ class S3ClientUtilTest {
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(2000);
             int responseCode = connection.getResponseCode();
             connection.disconnect();
             return responseCode == 200;
@@ -339,8 +347,8 @@ class S3ClientUtilTest {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
+        connection.setConnectTimeout(2000);
+        connection.setReadTimeout(2000);
 
         try (InputStream inputStream = connection.getInputStream()) {
             return new String(inputStream.readAllBytes());
@@ -434,8 +442,8 @@ class S3ClientUtilTest {
         connection.setRequestMethod("PUT");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "text/plain");
-        connection.setConnectTimeout(10000);
-        connection.setReadTimeout(10000);
+        connection.setConnectTimeout(2000);
+        connection.setReadTimeout(2000);
 
         try {
             connection.getOutputStream().write(testContentBytes);

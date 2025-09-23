@@ -102,9 +102,6 @@ public class BotController {
         botPermissionUtil.checkBot(Integer.parseInt(botId));
         maasUtil.setBotTag(botJson);
         log.info("***** uid: {}, botId: {} 提交MASS助手", uid, botId);
-        BotCreateForm form = new BotCreateForm();
-        form.setName(botJson.getString("name"));
-        form.setBotDesc(botJson.getString("description"));
         String flowId = botJson.getString("flowId");
         JSONObject result = maasUtil.createApi(flowId, tenantId);
         if (Objects.isNull(result)) {
