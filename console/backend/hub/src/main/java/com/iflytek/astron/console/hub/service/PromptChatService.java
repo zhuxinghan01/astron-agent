@@ -1,14 +1,14 @@
-package com.iflytek.astra.console.hub.service;
+package com.iflytek.astron.console.hub.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.iflytek.astra.console.commons.service.data.ChatDataService;
-import com.iflytek.astra.console.commons.util.SseEmitterUtil;
-import com.iflytek.astra.console.commons.entity.chat.ChatReqRecords;
-import com.iflytek.astra.console.commons.entity.chat.ChatTraceSource;
-import com.iflytek.astra.console.commons.service.ChatRecordModelService;
-import com.iflytek.astra.console.hub.config.DeepSeekConfig;
-import com.iflytek.astra.console.hub.dto.DeepSeekChatRequest;
+import com.iflytek.astron.console.commons.service.data.ChatDataService;
+import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import com.iflytek.astron.console.commons.entity.chat.ChatReqRecords;
+import com.iflytek.astron.console.commons.entity.chat.ChatTraceSource;
+import com.iflytek.astron.console.commons.service.ChatRecordModelService;
+import com.iflytek.astron.console.hub.config.DeepSeekConfig;
+import com.iflytek.astron.console.hub.dto.DeepSeekChatRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -28,21 +28,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PromptChatService {
 
-    private final DeepSeekConfig deepSeekConfig;
-    private final OkHttpClient deepSeekHttpClient;
+    private final OkHttpClient httpClient;
 
     @Autowired
     private ChatDataService chatDataService;
 
     @Autowired
     private ChatRecordModelService chatRecordModelService;
-
-    public SseEmitter chatStream(DeepSeekChatRequest request) {
-        SseEmitter emitter = SseEmitterUtil.createSseEmitter();
-        String streamId = request.getChatId() + "_" + request.getUserId() + "_" + System.currentTimeMillis();
-        chatStream(request, emitter, streamId, null, false, false);
-        return emitter;
-    }
 
     /**
      * Function to handle chat stream requests
@@ -52,7 +44,7 @@ public class PromptChatService {
      * @param streamId Stream identifier
      * @param chatReqRecords Chat request records
      */
-    public void chatStream(DeepSeekChatRequest request, SseEmitter emitter, String streamId, ChatReqRecords chatReqRecords, boolean edit, boolean isDebug) {
+    public void chatStream(JSONObject request, SseEmitter emitter, String streamId, ChatReqRecords chatReqRecords, boolean edit, boolean isDebug) {
         if (!isDebug && (chatReqRecords == null || chatReqRecords.getUid() == null || chatReqRecords.getChatId() == null)) {
             SseEmitterUtil.completeWithError(emitter, "Message is empty");
             return;
@@ -66,19 +58,19 @@ public class PromptChatService {
         }
     }
 
-    private void performChatRequest(DeepSeekChatRequest request, SseEmitter emitter, String streamId, ChatReqRecords chatReqRecords, boolean edit, boolean isDebug) throws IOException {
-        request.setStream(true);
-        String requestBody = buildRequestBody(request);
+    private void performChatRequest(JSONObject request, SseEmitter emitter, String streamId, ChatReqRecords chatReqRecords, boolean edit, boolean isDebug) throws IOException {
+        request.put("stream", true);
+        String requestBody = JSON.toJSONString(request);
 
         Request httpRequest = new Request.Builder()
-                        .url(deepSeekConfig.getChatCompletionUrl())
-                        .post(RequestBody.create(requestBody, MediaType.get("application/json; charset=utf-8")))
-                        .addHeader("Authorization", "Bearer " + deepSeekConfig.getApiKey())
-                        .addHeader("Content-Type", "application/json")
-                        .addHeader("Accept", "text/event-stream")
-                        .build();
+                .url(request.getString("url"))
+                .post(RequestBody.create(requestBody, MediaType.get("application/json; charset=utf-8")))
+                .addHeader("Authorization", "Bearer " + request.getString("apiKey"))
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "text/event-stream")
+                .build();
 
-        Call call = deepSeekHttpClient.newCall(httpRequest);
+        Call call = httpClient.newCall(httpRequest);
         log.info("request:{}", request);
 
         call.enqueue(new Callback() {
@@ -391,7 +383,7 @@ public class PromptChatService {
         trySendCompleteAndEnd(emitter, interruptedData, streamId);
 
         log.info("Saved data at interruption, streamId: {}, finalResult length: {}, thinkingResult length: {}, traceResult length: {}",
-                        streamId, finalResult.length(), thinkingResult.length(), traceResult.length());
+                streamId, finalResult.length(), thinkingResult.length(), traceResult.length());
     }
 
     /**
@@ -492,9 +484,9 @@ public class PromptChatService {
         if (edit) {
             // Edit mode: query existing record and update
             ChatTraceSource existingRecord = chatDataService.findTraceSourceByUidAndChatIdAndReqId(
-                            chatReqRecords.getUid(),
-                            chatReqRecords.getChatId(),
-                            chatReqRecords.getId());
+                    chatReqRecords.getUid(),
+                    chatReqRecords.getChatId(),
+                    chatReqRecords.getId());
 
             if (existingRecord != null) {
                 existingRecord.setContent(traceResult.toString());
@@ -502,7 +494,7 @@ public class PromptChatService {
 
                 chatDataService.updateTraceSourceByUidAndChatIdAndReqId(existingRecord);
                 log.info("Update trace record, reqId: {}, chatId: {}, uid: {}",
-                                chatReqRecords.getId(), chatReqRecords.getChatId(), chatReqRecords.getUid());
+                        chatReqRecords.getId(), chatReqRecords.getChatId(), chatReqRecords.getUid());
             }
         } else {
             // New mode: create new record
@@ -525,45 +517,6 @@ public class PromptChatService {
 
         chatDataService.createTraceSource(chatTraceSource);
         log.info("Create new trace record, reqId: {}, chatId: {}, uid: {}",
-                        chatReqRecords.getId(), chatReqRecords.getChatId(), chatReqRecords.getUid());
-    }
-
-    private String buildRequestBody(DeepSeekChatRequest request) {
-        Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("model", request.getModel());
-        requestMap.put("messages", buildMessages(request.getMessages()));
-        requestMap.put("stream", request.getStream());
-
-        if (request.getTemperature() != null) {
-            requestMap.put("temperature", request.getTemperature());
-        }
-        if (request.getTopP() != null) {
-            requestMap.put("top_p", request.getTopP());
-        }
-        if (request.getMaxTokens() != null) {
-            requestMap.put("max_tokens", request.getMaxTokens());
-        }
-        if (request.getStop() != null && !request.getStop().isEmpty()) {
-            requestMap.put("stop", request.getStop());
-        }
-        if (request.getFrequencyPenalty() != null) {
-            requestMap.put("frequency_penalty", request.getFrequencyPenalty());
-        }
-        if (request.getPresencePenalty() != null) {
-            requestMap.put("presence_penalty", request.getPresencePenalty());
-        }
-
-        return JSON.toJSONString(requestMap);
-    }
-
-    private List<Map<String, String>> buildMessages(List<DeepSeekChatRequest.MessageDto> messages) {
-        return messages.stream()
-                        .map(msg -> {
-                            Map<String, String> message = new HashMap<>();
-                            message.put("role", msg.getRole());
-                            message.put("content", msg.getContent());
-                            return message;
-                        })
-                        .collect(Collectors.toList());
+                chatReqRecords.getId(), chatReqRecords.getChatId(), chatReqRecords.getUid());
     }
 }

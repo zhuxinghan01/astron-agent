@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -201,7 +200,8 @@ public class ChatEnhanceServiceImpl implements ChatEnhanceService {
             Integer documentType, String paramName) {
         // Metering
         redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).expire(Duration.ofSeconds(CommonUtil.calculateSecondsUntilEndOfDay()));
-        // log.info("User {} currently uploaded file count: {}", uid, redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).get());
+        // log.info("User {} currently uploaded file count: {}", uid,
+        // redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).get());
         // External link has already implemented the insert operation
         if (chatFileUserId == null) {
             // First write to chat_file_user table as placeholder to get chatFileUserId
