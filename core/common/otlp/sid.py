@@ -23,7 +23,6 @@ def init_sid(sid_info: SidInfo):
 
 
 class SidGenerator2:
-    # 2.0架构专用后缀
     sid2 = 2
 
     def __init__(self, sid_info: SidInfo):
