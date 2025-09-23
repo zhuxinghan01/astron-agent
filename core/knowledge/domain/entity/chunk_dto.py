@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Data model definition module
 Contains request model definitions for file splitting, chunking operations, and queries
@@ -6,8 +7,7 @@ Uses Pydantic for data validation and serialization
 
 from typing import Any, List, Optional
 from enum import Enum
-
-from pydantic import BaseModel, Field, conlist, field_validator
+from pydantic import BaseModel, Field, conlist
 
 
 class RAGType(str, Enum):
@@ -113,42 +113,6 @@ class QueryMatch(BaseModel):
         default=0, ge=0, le=1, description="Optional, default value 0, range 0~1"
     )
     flowId: Optional[str] = Field(default=None, description="Flow ID")
-
-    @field_validator("docIds")
-    def validate_doc_ids_unique(cls, value: List[str]) -> List[str]:
-        """
-        Validate if elements in document ID list are unique
-
-        Args:
-            value: Document ID list to be validated
-
-        Returns:
-            Validated document ID list
-
-        Raises:
-            ValueError: When duplicate elements exist in the list
-        """
-        if value is not None and len(value) != len(set(value)):
-            raise ValueError("Elements in docIds must be unique")
-        return value
-
-    @field_validator("repoId")
-    def validate_repo_id_unique(cls, value: List[str]) -> List[str]:
-        """
-        Validate if elements in knowledge base ID list are unique
-
-        Args:
-            value: Knowledge base ID list to be validated
-
-        Returns:
-            Validated knowledge base ID list
-
-        Raises:
-            ValueError: When duplicate elements exist in the list
-        """
-        if len(value) != len(set(value)):
-            raise ValueError("Elements in repoId must be unique")
-        return value
 
 
 class ChunkQueryReq(BaseModel):

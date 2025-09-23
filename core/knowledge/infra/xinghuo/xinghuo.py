@@ -399,7 +399,7 @@ async def async_request(
                             url=url,
                             data=json.dumps(body),
                             headers=headers,
-                            timeout=60.0,
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))),
                     ) as response:
                         background_json = await response.text()
                         span_context.add_info_events({"RAG_OUTPUT": background_json})
@@ -575,7 +575,7 @@ async def async_form_request(
                             url=url,
                             data=form_data,
                             headers=headers,
-                            timeout=aiohttp.ClientTimeout(total=60.0)
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0")))
                     ) as resp:
                         return await _process_form_response(resp, url, span_context)
 

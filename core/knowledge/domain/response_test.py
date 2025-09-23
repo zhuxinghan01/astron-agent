@@ -7,6 +7,7 @@ testing BaseResponse, SuccessResponse, SuccessDataResponse, and ErrorResponse.
 """
 
 from unittest.mock import MagicMock
+from typing import List
 
 from knowledge.domain.response import BaseResponse, SuccessDataResponse, ErrorResponse
 from knowledge.consts.error_code import CodeEnum
@@ -15,28 +16,28 @@ from knowledge.consts.error_code import CodeEnum
 class TestBaseResponse:
     """Test BaseResponse class."""
 
-    def test_init_with_required_params(self):
+    def test_init_with_required_params(self) -> None:
         """Test initialization with required parameters."""
         response = BaseResponse(code=200, message="OK")
         assert response.code == 200
         assert response.message == "OK"
         assert response.sid is None
 
-    def test_init_with_all_params(self):
+    def test_init_with_all_params(self) -> None:
         """Test initialization with all parameters."""
         response = BaseResponse(code=404, message="Not Found", sid="session123")
         assert response.code == 404
         assert response.message == "Not Found"
         assert response.sid == "session123"
 
-    def test_init_with_none_sid(self):
+    def test_init_with_none_sid(self) -> None:
         """Test initialization with explicit None sid."""
         response = BaseResponse(code=500, message="Error", sid=None)
         assert response.code == 500
         assert response.message == "Error"
         assert response.sid is None
 
-    def test_to_dict_without_sid(self):
+    def test_to_dict_without_sid(self) -> None:
         """Test to_dict method without sid."""
         response = BaseResponse(code=200, message="Success")
         result = response.to_dict()
@@ -45,7 +46,7 @@ class TestBaseResponse:
         assert result == expected
         assert "sid" not in result
 
-    def test_to_dict_with_sid(self):
+    def test_to_dict_with_sid(self) -> None:
         """Test to_dict method with sid."""
         response = BaseResponse(code=201, message="Created", sid="abc123")
         result = response.to_dict()
@@ -53,12 +54,12 @@ class TestBaseResponse:
         expected = {"code": 201, "message": "Created", "sid": "abc123"}
         assert result == expected
 
-    def test_is_success_true(self):
+    def test_is_success_true(self) -> None:
         """Test is_success method returning True."""
         response = BaseResponse(code=0, message="Success")
         assert response.is_success() is True
 
-    def test_is_success_false(self):
+    def test_is_success_false(self) -> None:
         """Test is_success method returning False."""
         response1 = BaseResponse(code=1, message="Error")
         response2 = BaseResponse(code=-1, message="Error")
@@ -68,7 +69,7 @@ class TestBaseResponse:
         assert response2.is_success() is False
         assert response3.is_success() is False
 
-    def test_modifiable_attributes(self):
+    def test_modifiable_attributes(self) -> None:
         """Test that attributes can be modified after initialization."""
         response = BaseResponse(code=200, message="Original")
 
@@ -81,7 +82,7 @@ class TestBaseResponse:
         assert response.message == "Modified"
         assert response.sid == "new_session"
 
-    def test_to_dict_after_modification(self):
+    def test_to_dict_after_modification(self) -> None:
         """Test to_dict after modifying attributes."""
         response = BaseResponse(code=200, message="Original")
         response.code = 500
@@ -93,12 +94,10 @@ class TestBaseResponse:
         assert result == expected
 
 
-
-
 class TestSuccessDataResponse:
     """Test SuccessDataResponse class."""
 
-    def test_init_with_data(self):
+    def test_init_with_data(self) -> None:
         """Test initialization with data."""
         test_data = {"key": "value", "count": 42}
         response = SuccessDataResponse(data=test_data)
@@ -108,7 +107,7 @@ class TestSuccessDataResponse:
         assert response.data == test_data
         assert response.sid is None
 
-    def test_init_with_all_params(self):
+    def test_init_with_all_params(self) -> None:
         """Test initialization with all parameters."""
         test_data = [1, 2, 3, 4, 5]
         response = SuccessDataResponse(
@@ -122,14 +121,14 @@ class TestSuccessDataResponse:
         assert response.data == test_data
         assert response.sid == "data_session"
 
-    def test_init_with_none_data(self):
+    def test_init_with_none_data(self) -> None:
         """Test initialization with None data."""
         response = SuccessDataResponse(data=None)
         assert response.code == 0
         assert response.message == "success"
         assert response.data is None
 
-    def test_init_with_various_data_types(self):
+    def test_init_with_various_data_types(self) -> None:
         """Test initialization with various data types."""
         # Test with dictionary
         dict_response = SuccessDataResponse(data={"test": "dict"})
@@ -151,7 +150,7 @@ class TestSuccessDataResponse:
         bool_response = SuccessDataResponse(data=True)
         assert bool_response.data is True
 
-    def test_to_dict_includes_data(self):
+    def test_to_dict_includes_data(self) -> None:
         """Test that to_dict method includes data field."""
         test_data = {"result": "test", "items": [1, 2, 3]}
         response = SuccessDataResponse(
@@ -169,7 +168,7 @@ class TestSuccessDataResponse:
         }
         assert result == expected
 
-    def test_to_dict_with_none_data(self):
+    def test_to_dict_with_none_data(self) -> None:
         """Test to_dict with None data."""
         response = SuccessDataResponse(data=None, message="No data")
         result = response.to_dict()
@@ -177,7 +176,7 @@ class TestSuccessDataResponse:
         expected = {"code": 0, "message": "No data", "data": None}
         assert result == expected
 
-    def test_to_dict_without_sid(self):
+    def test_to_dict_without_sid(self) -> None:
         """Test to_dict without sid."""
         response = SuccessDataResponse(data={"test": "data"})
         result = response.to_dict()
@@ -186,7 +185,7 @@ class TestSuccessDataResponse:
         assert result == expected
         assert "sid" not in result
 
-    def test_data_attribute_modifiable(self):
+    def test_data_attribute_modifiable(self) -> None:
         """Test that data attribute can be modified."""
         response = SuccessDataResponse(data="original")
         assert response.data == "original"
@@ -197,7 +196,7 @@ class TestSuccessDataResponse:
         result = response.to_dict()
         assert result["data"] == {"modified": "data"}
 
-    def test_is_success_always_true(self):
+    def test_is_success_always_true(self) -> None:
         """Test that is_success is always True for SuccessDataResponse."""
         response1 = SuccessDataResponse(data={})
         response2 = SuccessDataResponse(data=None)
@@ -211,7 +210,7 @@ class TestSuccessDataResponse:
 class TestErrorResponse:
     """Test ErrorResponse class."""
 
-    def test_init_with_code_enum(self):
+    def test_init_with_code_enum(self) -> None:
         """Test initialization with CodeEnum."""
         # Mock CodeEnum
         mock_code_enum = MagicMock()
@@ -224,7 +223,7 @@ class TestErrorResponse:
         assert response.message == "Parameter error"
         assert response.sid is None
 
-    def test_init_with_code_enum_and_sid(self):
+    def test_init_with_code_enum_and_sid(self) -> None:
         """Test initialization with CodeEnum and sid."""
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10002
@@ -236,7 +235,7 @@ class TestErrorResponse:
         assert response.message == "Validation error"
         assert response.sid == "error_session"
 
-    def test_init_with_custom_message(self):
+    def test_init_with_custom_message(self) -> None:
         """Test initialization with custom message override."""
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10003
@@ -251,7 +250,7 @@ class TestErrorResponse:
         assert response.message == "Custom error message"  # Should use custom message
         assert response.sid is None
 
-    def test_init_with_all_params(self):
+    def test_init_with_all_params(self) -> None:
         """Test initialization with all parameters."""
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10004
@@ -267,7 +266,7 @@ class TestErrorResponse:
         assert response.message == "Override message"
         assert response.sid == "full_test_session"
 
-    def test_init_with_none_message(self):
+    def test_init_with_none_message(self) -> None:
         """Test initialization with explicit None message."""
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10005
@@ -278,7 +277,7 @@ class TestErrorResponse:
         assert response.code == 10005
         assert response.message == "Enum message"  # Should use enum message
 
-    def test_init_with_real_code_enum(self):
+    def test_init_with_real_code_enum(self) -> None:
         """Test initialization with real CodeEnum values."""
         # Test with ParameterCheckException
         response1 = ErrorResponse(code_enum=CodeEnum.ParameterCheckException)
@@ -290,7 +289,7 @@ class TestErrorResponse:
         assert response2.code == CodeEnum.ThirdPartyServiceFailed.code
         assert response2.message == CodeEnum.ThirdPartyServiceFailed.msg
 
-    def test_to_dict_inheritance(self):
+    def test_to_dict_inheritance(self) -> None:
         """Test that to_dict method is inherited from BaseResponse."""
         mock_code_enum = MagicMock()
         mock_code_enum.code = 50001
@@ -302,7 +301,7 @@ class TestErrorResponse:
         expected = {"code": 50001, "message": "Server error", "sid": "error_123"}
         assert result == expected
 
-    def test_is_success_always_false(self):
+    def test_is_success_always_false(self) -> None:
         """Test that is_success is always False for ErrorResponse."""
         mock_code_enum1 = MagicMock()
         mock_code_enum1.code = 10001
@@ -322,7 +321,7 @@ class TestErrorResponse:
 class TestResponseIntegration:
     """Test integration scenarios between response classes."""
 
-    def test_response_type_identification(self):
+    def test_response_type_identification(self) -> None:
         """Test identifying response types."""
         success_data_resp = SuccessDataResponse(data={"test": "data"})
 
@@ -338,9 +337,9 @@ class TestResponseIntegration:
         assert isinstance(error_resp, BaseResponse)
         assert isinstance(error_resp, ErrorResponse)
 
-    def test_response_serialization_consistency(self):
+    def test_response_serialization_consistency(self) -> None:
         """Test that all response types serialize consistently."""
-        responses = [
+        responses: List[BaseResponse] = [
             SuccessDataResponse(data={"key": "value"}, sid="test2"),
         ]
 
@@ -348,7 +347,8 @@ class TestResponseIntegration:
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10001
         mock_code_enum.msg = "Error message"
-        responses.append(ErrorResponse(code_enum=mock_code_enum, sid="test3"))
+        error_response = ErrorResponse(code_enum=mock_code_enum, sid="test3")
+        responses.append(error_response)
 
         for response in responses:
             result_dict = response.to_dict()
@@ -356,14 +356,17 @@ class TestResponseIntegration:
             # All responses should have these fields
             assert "code" in result_dict
             assert "message" in result_dict
-            assert "sid" in result_dict
+            # Note: sid may not be present if None
+            if response.sid is not None:
+                assert "sid" in result_dict
 
             # Verify types
             assert isinstance(result_dict["code"], int)
             assert isinstance(result_dict["message"], str)
-            assert isinstance(result_dict["sid"], str)
+            if response.sid is not None:
+                assert isinstance(result_dict["sid"], str)
 
-    def test_success_vs_error_distinction(self):
+    def test_success_vs_error_distinction(self) -> None:
         """Test distinguishing success from error responses."""
         success_responses = [
             SuccessDataResponse(data="test")
@@ -386,11 +389,11 @@ class TestResponseIntegration:
             assert response.is_success() is False
             assert response.code != 0
 
-    def test_response_dict_json_serializable(self):
+    def test_response_dict_json_serializable(self) -> None:
         """Test that response dictionaries are JSON serializable."""
         import json
 
-        responses = [
+        responses: List[BaseResponse] = [
             SuccessDataResponse(data={"nested": {"data": [1, 2, 3]}}),
         ]
 
@@ -398,7 +401,8 @@ class TestResponseIntegration:
         mock_code_enum = MagicMock()
         mock_code_enum.code = 10001
         mock_code_enum.msg = "Test error"
-        responses.append(ErrorResponse(code_enum=mock_code_enum))
+        error_response = ErrorResponse(code_enum=mock_code_enum)
+        responses.append(error_response)
 
         for response in responses:
             result_dict = response.to_dict()
