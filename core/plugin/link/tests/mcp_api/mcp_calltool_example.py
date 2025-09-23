@@ -18,7 +18,7 @@ calc_payload = json.dumps(
         "mcp_server_id": "",
         "mcp_server_url": "http://xingchen-api.xf-yun.com/mcp/7369188804684468224/sse",
         "tool_name": "工具名",
-        "tool_args": {"name":"nihao"}
+        "tool_args": {"name": "nihao"}
     }
 )
 
