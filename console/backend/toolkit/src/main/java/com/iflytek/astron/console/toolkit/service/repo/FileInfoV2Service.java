@@ -1443,7 +1443,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
                 extractKnowledgeTask.setTaskId(fileInfoV2.getUuid());
                 extractKnowledgeTask.setFileId(fileId);
                 extractKnowledgeTask.setStatus(0);
-                extractKnowledgeTask.setUserId(UserInfoManagerHandler.getUserId());
+                extractKnowledgeTask.setUserId(fileInfoV2.getUid());
                 extractKnowledgeTask.setTaskStatus(2);
                 Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                 extractKnowledgeTask.setCreateTime(timestamp);
