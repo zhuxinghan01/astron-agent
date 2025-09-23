@@ -85,8 +85,10 @@ public class BotChatServiceImpl implements BotChatService {
             } else {
                 List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt);
                 ChatReqRecords chatReqRecords = createChatRequest(chatBotReqDto);
-                SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
-                sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                if (botConfig.modelId == null) {
+                    SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
+                    sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                }
             }
         } catch (Exception e) {
             log.error("Bot chat error for sseId: {}, chatId: {}, uid: {}", sseId, chatBotReqDto.getChatId(), chatBotReqDto.getUid(), e);
@@ -196,7 +198,8 @@ public class BotChatServiceImpl implements BotChatService {
                             chatBotMarket.getSupportContext() == 1,
                             chatBotMarket.getModel(),
                             chatBotMarket.getOpenedTool(),
-                            chatBotMarket.getVersion());
+                            chatBotMarket.getVersion(),
+                            chatBotMarket.getModelId());
         } else {
             ChatBotBase chatBotBase = chatBotDataService.findById(botId)
                             .orElseThrow(() -> new BusinessException(ResponseEnum.BOT_NOT_EXISTS));
@@ -205,7 +208,8 @@ public class BotChatServiceImpl implements BotChatService {
                             chatBotBase.getSupportContext() == 1,
                             chatBotBase.getModel(),
                             chatBotBase.getOpenedTool(),
-                            chatBotBase.getVersion());
+                            chatBotBase.getVersion(),
+                            chatBotBase.getModelId());
         }
     }
 
@@ -375,7 +379,7 @@ public class BotChatServiceImpl implements BotChatService {
         return sparkChatRequest;
     }
 
-    private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool, Integer version) {}
+    private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool, Integer version, Long modelId) {}
 
     /**
      * Determine whether to enable web search

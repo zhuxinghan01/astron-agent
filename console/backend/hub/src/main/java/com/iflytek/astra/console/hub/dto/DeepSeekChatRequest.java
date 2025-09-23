@@ -22,7 +22,7 @@ public class DeepSeekChatRequest {
     private String userId;
 
     @Schema(description = "Model name", example = "deepseek-chat")
-    private String model = "deepseek-chat";
+    private String model = "x1";
 
     @Schema(description = "Controls randomness, between 0.0-2.0", example = "0.7")
     private Double temperature = 0.7;

@@ -26,6 +26,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -200,8 +201,8 @@ public class ChatEnhanceServiceImpl implements ChatEnhanceService {
                     ChatFileLimitEnum limitEnum, String fileBusinessKey,
                     Integer documentType, String paramName) {
         // Metering
-        redissonClient.getKeys().expire(limitEnum.getRedisPrefix() + uid, CommonUtil.calculateSecondsUntilEndOfDay(), TimeUnit.SECONDS);
-        log.info("User {} currently uploaded file count: {}", uid, redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).get());
+        redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).expire(Duration.ofSeconds(CommonUtil.calculateSecondsUntilEndOfDay()));
+        // log.info("User {} currently uploaded file count: {}", uid, redissonClient.getBucket(limitEnum.getRedisPrefix() + uid).get());
         // External link has already implemented the insert operation
         if (chatFileUserId == null) {
             // First write to chat_file_user table as placeholder to get chatFileUserId
