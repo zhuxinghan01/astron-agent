@@ -6,7 +6,7 @@ This module contains unit tests for the SparkDeskRAGStrategy class, testing its 
 """
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from knowledge.service.impl.sparkdesk_strategy import SparkDeskRAGStrategy
 from knowledge.service.rag_strategy import RAGStrategy
@@ -19,17 +19,17 @@ class TestSparkDeskRAGStrategy:
     """Test SparkDeskRAGStrategy class."""
 
     @pytest.fixture
-    def strategy(self):
+    def strategy(self) -> SparkDeskRAGStrategy:
         """Provide a SparkDeskRAGStrategy instance as test fixture."""
         return SparkDeskRAGStrategy()
 
-    def test_inheritance(self, strategy):
+    def test_inheritance(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that SparkDeskRAGStrategy inherits from RAGStrategy."""
         assert isinstance(strategy, RAGStrategy)
         assert isinstance(strategy, SparkDeskRAGStrategy)
 
     @patch('knowledge.service.impl.sparkdesk_strategy.sparkdesk_query_async')
-    async def test_query_success(self, mock_sparkdesk_query, strategy):
+    async def test_query_success(self, mock_sparkdesk_query: MagicMock, strategy: SparkDeskRAGStrategy) -> None:
         """Test successful query execution."""
         # Mock the sparkdesk_query_async function
         expected_result = {"data": "test_result", "status": "success"}
@@ -51,7 +51,7 @@ class TestSparkDeskRAGStrategy:
         )
 
     @patch('knowledge.service.impl.sparkdesk_strategy.sparkdesk_query_async')
-    async def test_query_minimal_params(self, mock_sparkdesk_query, strategy):
+    async def test_query_minimal_params(self, mock_sparkdesk_query: MagicMock, strategy: SparkDeskRAGStrategy) -> None:
         """Test query with minimal parameters."""
         expected_result = {"data": "minimal_test"}
         mock_sparkdesk_query.return_value = expected_result
@@ -65,7 +65,7 @@ class TestSparkDeskRAGStrategy:
         )
 
     @patch('knowledge.service.impl.sparkdesk_strategy.sparkdesk_query_async')
-    async def test_query_with_kwargs(self, mock_sparkdesk_query, strategy):
+    async def test_query_with_kwargs(self, mock_sparkdesk_query: MagicMock, strategy: SparkDeskRAGStrategy) -> None:
         """Test query with additional kwargs."""
         expected_result = {"data": "kwargs_test"}
         mock_sparkdesk_query.return_value = expected_result
@@ -86,14 +86,14 @@ class TestSparkDeskRAGStrategy:
         )
 
     @patch('knowledge.service.impl.sparkdesk_strategy.sparkdesk_query_async')
-    async def test_query_exception_propagation(self, mock_sparkdesk_query, strategy):
+    async def test_query_exception_propagation(self, mock_sparkdesk_query: MagicMock, strategy: SparkDeskRAGStrategy) -> None:
         """Test that exceptions from sparkdesk_query_async are propagated."""
         mock_sparkdesk_query.side_effect = Exception("SparkDesk API error")
 
         with pytest.raises(Exception, match="SparkDesk API error"):
             await strategy.query(query="error query")
 
-    async def test_split_not_implemented(self, strategy):
+    async def test_split_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that split method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support split operation"):
             await strategy.split(
@@ -106,7 +106,7 @@ class TestSparkDeskRAGStrategy:
                 cutOff=["EOF"]
             )
 
-    async def test_chunks_save_not_implemented(self, strategy):
+    async def test_chunks_save_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that chunks_save method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support chunks_save operation"):
             await strategy.chunks_save(
@@ -116,7 +116,7 @@ class TestSparkDeskRAGStrategy:
                 chunks=[{"content": "test"}]
             )
 
-    async def test_chunks_update_not_implemented(self, strategy):
+    async def test_chunks_update_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that chunks_update method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support chunks_update operation"):
             await strategy.chunks_update(
@@ -126,7 +126,7 @@ class TestSparkDeskRAGStrategy:
                 chunks=[{"id": "chunk1", "content": "updated"}]
             )
 
-    async def test_chunks_delete_not_implemented(self, strategy):
+    async def test_chunks_delete_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that chunks_delete method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support chunks_delete operation"):
             await strategy.chunks_delete(
@@ -134,17 +134,17 @@ class TestSparkDeskRAGStrategy:
                 chunkIds=["chunk1", "chunk2"]
             )
 
-    async def test_query_doc_not_implemented(self, strategy):
+    async def test_query_doc_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that query_doc method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support query_doc operation"):
             await strategy.query_doc(docId="doc123")
 
-    async def test_query_doc_name_not_implemented(self, strategy):
+    async def test_query_doc_name_not_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that query_doc_name method raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="SparkDesk-RAG does not support query_doc_name operation"):
             await strategy.query_doc_name(docId="doc123")
 
-    async def test_all_abstract_methods_implemented(self, strategy):
+    async def test_all_abstract_methods_implemented(self, strategy: SparkDeskRAGStrategy) -> None:
         """Test that all abstract methods from RAGStrategy are implemented (even if they raise NotImplementedError)."""
         methods_to_test = [
             ("query", {"query": "test"}),
