@@ -417,8 +417,7 @@ const PromptTry = ({
     let err = '';
     let answerAllGet = false;
     let sid = '';
-    // 删除gee变量
-    // let gee = '';
+   
     let multiModalData: any = null;
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -478,28 +477,6 @@ const PromptTry = ({
           controller.abort(t('configBase.promptTry.end'));
           return;
         }
-        // 删除极验错误处理
-        // else if (event.data === '<end>' && gee) {
-        //   setGeeError(JSON.parse(gee.slice(10)).descr);
-        //   setAnswerCompleted(true);
-        //   $godownFlag.current = false;
-        //   $answerRef.current = '';
-        //   controller.abort(t('configBase.promptTry.end'));
-        //   captchaObj?.verify();
-        //   return;
-        // }
-
-        // 出错请求头
-        // if (event.data === '[geeError]') {
-        //   gtObj.current = {
-        //     url,
-        //     form,
-        //     oldList: originMergedList,
-        //     token,
-        //   };
-        //   gee += event.data;
-        //   return;
-        // }
 
         if (event.data === '[belongerr]') {
           // chatid 不属于 当前账号, 这次chat接口只会返回这个头
@@ -562,9 +539,8 @@ const PromptTry = ({
         }
         // 正常走
         if (!err) {
-          // 删除 && !gee
           if (answerAllGet) {
-            sid = event.data.split('<sid>')[0];
+            sid = event.data.split('<sid>')[0] || '';
             otherProps = handleOtherProps(otherProps, ansContent, ansType);
             newResp(
               ans,
@@ -581,10 +557,6 @@ const PromptTry = ({
           ans = `${ans}${Base64.decode(event.data)}`;
           setAnswer(ans);
         }
-        // 删除gee相关的else if分支
-        // else if (gee) {
-        //   gee += event.data;
-        // }
         else {
           err += event.data;
         }
@@ -758,18 +730,7 @@ const PromptTry = ({
               </div>
             </div>
           )}
-          {/* {geeError && (
-            <div className={styles.chat_content}>
-              <img
-                className={botMode ? styles.avatorImage : styles.user_image}
-                src={coverUrl ? coverUrl : errorIcon}
-                alt=""
-              />
-              <div className={styles.content_gpt}>
-                <span>{geeError}</span>
-              </div>
-            </div>
-          )} */}
+        
           {mergedList.map((item: any, index: any) => {
             if (!item) return null;
             else

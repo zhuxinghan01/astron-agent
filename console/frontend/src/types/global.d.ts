@@ -27,17 +27,6 @@ declare global {
   }
 
   const performance: Performance;
-
-  // GeeGuard 极验类型定义
-  interface Window {
-    initGeeGuard: (
-      config: { appId: string },
-      callback: (res: {
-        status: string;
-        data: { gee_token: string; local_id: string };
-      }) => void
-    ) => void;
-  }
 }
 
 declare module 'js-base64' {  // 明确声明模块名，与导入的包名一致

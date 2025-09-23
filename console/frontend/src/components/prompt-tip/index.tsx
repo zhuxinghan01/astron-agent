@@ -14,28 +14,19 @@ import { Base64 } from 'js-base64';
 import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useLocaleStore } from '@/store/spark-store/locale-store';
 import {
-  // jumpTologin,
   transformMultiModal,
   getQueryString,
   getBase64DecodeStr,
   transformMathThinkData,
   transformDeepthinkData,
 } from '@/utils/spark-utils';
-// import { initGt } from '@/utils/geetest'; // TODO: 相关都要删除， 仿照 prompt-try
 import { handleOtherProps } from '@/utils/chat';
 import eventBus from '@/utils/event-bus';
 import { getLanguageCode } from '@/utils/http';
-// import CodeWin from '@/components/code-win';
 import { installPlugin } from '@/services/plugin';
 import { DeleteIcon } from '@/components/svg-icons';
 import { PluginContext } from '@/components/plugin/PluginContext';
 import { localeConfig } from '@/locales/localeConfig';
-// import MultiModeModal from '../muti-modal-components/multiModeModal';
-// import MultiModeCpn from '../muti-modal-components/multi_mode_cpn';
-// import $ from 'jquery';
-// import ViewBigimg from 'view-bigimg';
-// import MathThinkProgress from '../MathThinkProgress';
-// import DeepThinkProgress from '../DeepThinkProgress';
 import { useGetState } from 'ahooks';
 import { useTranslation } from 'react-i18next';
 
@@ -121,7 +112,6 @@ const PromptTry = ({
   /* state */
   const [answer, setAnswer]: any = useState('');
   const [error, setError]: any = useState('');
-  const [geeError, setGeeError] = useState(''); // 极验错误信息
   const [mergedList, setMergedList]: any = useState([]); // 对话列表
   const {
     data: { infoId, flag, status },
@@ -440,7 +430,6 @@ const PromptTry = ({
     let err = '';
     let answerAllGet = false;
     let sid = '';
-    let gee = '';
     let multiModalData: any = null;
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -480,7 +469,7 @@ const PromptTry = ({
         const deCodedData = getBase64DecodeStr(event.data);
         onAnswerLoadingGoDown();
         // 未出错，正常结束
-        if (event.data === '<end>' && !err && !gee) {
+        if (event.data === '<end>' && !err) {
           setAnswerCompleted(true);
           setQuestionTip('');
           item.promptAnswerCompleted = true;
@@ -506,32 +495,13 @@ const PromptTry = ({
           }
           controller.abort(t('configBase.promptTip.end'));
           return;
-        } else if (event.data === '<end>' && gee) {
-          setGeeError(JSON.parse(gee.slice(10)).descr);
-          setAnswerCompleted(true);
-          setQuestionTip('');
-          item.promptAnswerCompleted = true;
-          $godownFlag.current = false;
-          $answerRef.current = '';
-          controller.abort(t('configBase.promptTip.end'));
-          captchaObj?.verify();
-          return;
         }
         // 出错请求头
         if (event.data === '[error]') {
           err += event.data;
           return;
         }
-        if (event.data === '[geeError]') {
-          gtObj.current = {
-            url,
-            form,
-            oldList: originMergedList,
-            token,
-          };
-          gee += event.data;
-          return;
-        }
+       
         if (event.data === '[belongerr]') {
           // chatid 不属于 当前账号, 这次chat接口只会返回这个头
           window.location.reload();
@@ -592,7 +562,7 @@ const PromptTry = ({
           return;
         }
         // 正常走
-        if (!err && !gee) {
+        if (!err) {
           if (answerAllGet) {
             sid = event.data.split('<sid>')[0];
             otherProps = handleOtherProps(otherProps, ansContent, ansType);
@@ -610,8 +580,6 @@ const PromptTry = ({
           }
           ans = `${ans}${Base64.decode(event.data)}`;
           setAnswer(ans);
-        } else if (gee) {
-          gee += event.data;
         } else {
           err += event.data;
         }
@@ -732,7 +700,7 @@ const PromptTry = ({
               </div>
             </div>
           )}
-          {!item?.promptAnswerCompleted && !error && !geeError && (
+          {!item?.promptAnswerCompleted && !error && (
             <div className={styles.chat_content} id="answer-box">
               <img
                 className={botMode ? styles.avatorImage : styles.user_image}
@@ -788,18 +756,7 @@ const PromptTry = ({
               </div>
             </div>
           )}
-          {geeError && (
-            <div className={styles.chat_content}>
-              <img
-                className={botMode ? styles.avatorImage : styles.user_image}
-                src={coverUrl ? coverUrl : errorIcon}
-                alt=""
-              />
-              <div className={styles.content_gpt}>
-                <span>{geeError}</span>
-              </div>
-            </div>
-          )}
+          
           {mergedList.map((item: any, index: any) => {
             if (!item) return null;
             else
