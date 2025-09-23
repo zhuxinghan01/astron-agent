@@ -3,7 +3,7 @@ CBG-RAG strategy implementation module
 Implements RAG (Retrieval-Augmented Generation) functionality based on Spark LLM
 """
 import base64
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict, Tuple
 from urllib.parse import unquote
 
 from knowledge.domain.entity.rag_do import ChunkInfo, FileInfo
@@ -65,66 +65,85 @@ class CBGRAGStrategy(RAGStrategy):
             query=query, doc_ids=doc_ids, top_n=top_k, **kwargs
         )
 
-        results = [dict]
+        results = []
         if check_not_empty(query_results):
             for result in query_results:
-                if isinstance(result, dict):
-                    if result.get("score", 0) < threshold:
-                        continue
-
-                    chunk_context = []
-                    chunk_img_reference: Dict[str, Any] = {}  # Added type annotation
-                    sorted_objects = []
-                    chunk_info = result.get("chunk")
-
-                    # Handle chunk_info as dictionary
-                    if check_not_empty(chunk_info) and isinstance(chunk_info, dict):
-                        chunk_context.append(chunk_info)
-
-                        # Safely handle imgReference
-                        img_ref = chunk_info.get("imgReference")
-                        if check_not_empty(img_ref) and isinstance(img_ref, dict):
-                            chunk_img_reference.update(img_ref)
-
-                        # Handle overlap chunks
-                        overlap_chunks = result.get("overlap", [])
-                        if check_not_empty(overlap_chunks):
-                            chunk_context.extend(overlap_chunks)
-                            sorted_objects = sorted(
-                                chunk_context, key=lambda x: x.get("dataIndex", 0)
-                            )
-
-                        # Build full context text
-                        full_context = "".join(
-                            obj.get("content", "") for obj in sorted_objects
-                        ) if sorted_objects else chunk_info.get("content", "")
-
-                        # Collect references from all chunks
-                        for obj in sorted_objects or chunk_context:
-                            obj_img_ref = obj.get("imgReference") if isinstance(obj, dict) else None
-                            if check_not_empty(obj_img_ref) and isinstance(obj_img_ref, dict):
-                                chunk_img_reference.update(obj_img_ref)
-
-                        # Append processed result
-                        results.append(
-                            {
-                                "score": result.get("score"),
-                                "docId": chunk_info.get("fileId", ""),
-                                "chunkId": chunk_info.get("id", ""),
-                                "fileName": unquote(
-                                    str(result.get("fileName", "")), encoding="utf-8"
-                                ),
-                                "content": chunk_info.get("content", ""),
-                                "context": full_context,
-                                "references": chunk_img_reference,
-                            }
-                        )
+                processed_result = self._process_query_result(result, threshold)
+                if processed_result:
+                    results.append(processed_result)
 
         return {
             "query": query,
             "count": len(results),
             "results": results,
         }
+
+    def _process_query_result(self, result: Dict[str, Any], threshold: float) -> Optional[Dict[str, Any]]:
+        """Process individual query result"""
+        if not isinstance(result, dict):
+            return None
+
+        if result.get("score", 0) < threshold:
+            return None
+
+        chunk_info = result.get("chunk")
+        if not (check_not_empty(chunk_info) and isinstance(chunk_info, dict)):
+            return None
+
+        chunk_context, chunk_img_reference = self._process_chunk_context(chunk_info, result)
+
+        return {
+            "score": result.get("score"),
+            "docId": chunk_info.get("fileId", ""),
+            "chunkId": chunk_info.get("id", ""),
+            "fileName": unquote(
+                str(result.get("fileName", "")), encoding="utf-8"
+            ),
+            "content": chunk_info.get("content", ""),
+            "context": chunk_context,
+            "references": chunk_img_reference,
+        }
+
+    def _process_chunk_context(self, chunk_info: Dict[str, Any], result: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        """Process chunk context and references"""
+        chunk_context = [chunk_info]
+        chunk_img_reference: Dict[str, Any] = {}
+
+        # Handle imgReference from main chunk
+        img_ref = chunk_info.get("imgReference")
+        if check_not_empty(img_ref) and isinstance(img_ref, dict):
+            chunk_img_reference.update(img_ref)
+
+        # Handle overlap chunks
+        overlap_chunks = result.get("overlap", [])
+        if check_not_empty(overlap_chunks):
+            chunk_context.extend(overlap_chunks)
+
+        # Sort objects by dataIndex
+        sorted_objects = sorted(
+            chunk_context, key=lambda x: x.get("dataIndex", 0)
+        ) if len(chunk_context) > 1 else []
+
+        # Build full context text
+        full_context = self._build_full_context(sorted_objects, chunk_info)
+
+        # Collect references from all chunks
+        self._collect_references(sorted_objects or chunk_context, chunk_img_reference)
+
+        return full_context, chunk_img_reference
+
+    def _build_full_context(self, sorted_objects: List[Dict[str, Any]], chunk_info: Dict[str, Any]) -> str:
+        """Build full context text from sorted objects"""
+        if sorted_objects:
+            return "".join(obj.get("content", "") for obj in sorted_objects)
+        return chunk_info.get("content", "")
+
+    def _collect_references(self, objects: List[Dict[str, Any]], chunk_img_reference: Dict[str, Any]) -> None:
+        """Collect image references from all chunk objects"""
+        for obj in objects:
+            obj_img_ref = obj.get("imgReference") if isinstance(obj, dict) else None
+            if check_not_empty(obj_img_ref) and isinstance(obj_img_ref, dict):
+                chunk_img_reference.update(obj_img_ref)
 
     async def split(
         self,
