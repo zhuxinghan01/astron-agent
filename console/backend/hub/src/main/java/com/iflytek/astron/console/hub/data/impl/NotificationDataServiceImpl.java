@@ -72,7 +72,7 @@ public class NotificationDataServiceImpl implements NotificationDataService {
         notificationMapper.insert(notification);
 
         // Determine cache eviction strategy based on message type
-        if (NotificationType.BROADCAST.getCode().equals(notification.getType())) {
+        if (notification.getType() != null && NotificationType.BROADCAST.getCode().equals(notification.getType())) {
             // Broadcast message: evict internal broadcast count cache
             evictBroadcastCountInternalCache();
             log.debug("Created broadcast notification: {}", notification.getId());
@@ -209,7 +209,7 @@ public class NotificationDataServiceImpl implements NotificationDataService {
 
         List<Notification> notifications = notificationMapper.selectBatchIds(notificationIds);
         return notifications.stream()
-                .filter(notification -> NotificationType.BROADCAST.getCode().equals(notification.getType()))
+                .filter(notification -> notification.getType() != null && NotificationType.BROADCAST.getCode().equals(notification.getType()))
                 .map(Notification::getId)
                 .toList();
     }
