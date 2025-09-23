@@ -6,10 +6,6 @@ This module is responsible for:
 2. Creating and configuring FastAPI application
 3. Setting up global exception handling
 4. Starting UVicorn server
-
-@author: your-name
-@version: 1.0.0
-@created: 2024-01-01
 """
 
 import json
