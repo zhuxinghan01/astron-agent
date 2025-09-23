@@ -26,7 +26,7 @@ export const SampleRate = function (
   }
   size = Math.max(0, size - Math.floor(offset));
 
-  //采样 
+  //采样
   let step = pcmSampleRate / newSampleRate;
   if (step > 1) {
     //新采样低于录音采样，进行抽样

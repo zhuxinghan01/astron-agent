@@ -5,6 +5,7 @@ import CreateButton from './create-button';
 import BottomLogin from './bottom-login';
 import PersonalCenter from './personal-center';
 import MenuList from './menu-list';
+import IconEntry from './icon-entry';
 
 interface User {
   nickname?: string;
@@ -30,6 +31,13 @@ interface SidebarProps {
   // Bottom login props
   user?: User;
   OrderTypeComponent?: ReactElement;
+
+  // Icon entry props
+  myMessage?: {
+    messages?: Array<{ isRead: number }>;
+  };
+  onDocumentClick?: () => void;
+  onMessageClick?: () => void;
 }
 
 const Sidebar = ({
@@ -49,6 +57,11 @@ const Sidebar = ({
   // Bottom login props
   user,
   OrderTypeComponent,
+
+  // Icon entry props
+  myMessage,
+  onDocumentClick,
+  onMessageClick,
 }: SidebarProps): ReactElement => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPersonCenterOpen, setIsPersonCenterOpen] = useState(false);
@@ -108,6 +121,15 @@ const Sidebar = ({
         />
 
         <MenuList />
+
+        {/* Icon Entry */}
+        <IconEntry
+          isLogin={isLogin}
+          myMessage={myMessage}
+          onDocumentClick={onDocumentClick}
+          onMessageClick={onMessageClick}
+          onNotLogin={onNotLogin}
+        />
 
         {/* Bottom Login */}
         <BottomLogin

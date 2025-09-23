@@ -140,7 +140,6 @@ export interface ChatHistoryResponse {
   historyList: MessageListType[];
 }
 
-
 //语音转写
 export interface RtasrTokenResponse {
   appid: string; // 应用ID

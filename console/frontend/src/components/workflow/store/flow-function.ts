@@ -94,7 +94,9 @@ const setHistorys = (
 
 const moveToPosition = (
   viewport: unknown,
-  get: () => { reactFlowInstance: { setViewport: (viewport: unknown) => void } }
+  get: () => {
+    reactFlowInstance: { setViewport: (viewport: unknown) => void };
+  }
 ): void => {
   get().reactFlowInstance.setViewport(viewport);
 };
