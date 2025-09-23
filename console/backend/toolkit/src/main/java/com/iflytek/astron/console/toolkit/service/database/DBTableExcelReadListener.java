@@ -10,6 +10,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
+/**
+ * Excel read listener for database table field import.
+ * <p>
+ * This class validates header format, parses each row,
+ * validates field types and required constraints, and
+ * converts them into {@link DbTableFieldDto} objects.
+ */
 public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer, String>> {
 
     private static final List<String> expectedHeaders = Arrays.asList(
@@ -22,14 +29,26 @@ public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer,
 
     private List<DbTableFieldDto> tableFields;
 
+    /**
+     * Construct a new listener with a target list to hold parsed fields.
+     *
+     * @param tableFields the list to which parsed {@link DbTableFieldDto} will be added
+     */
     public DBTableExcelReadListener(List<DbTableFieldDto> tableFields) {
         this.tableFields = tableFields;
     }
 
+    /**
+     * Validate header format before parsing rows.
+     *
+     * @param headMap the header map from Excel
+     * @param context analysis context
+     * @throws BusinessException if the header format does not match expected
+     */
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
         List<String> actualHeaders = new ArrayList<>(headMap.values());
-        List<String> expectedHeadersFormat = new ArrayList<>();
+        List<String> expectedHeadersFormat;
         if (LanguageContext.isEn()) {
             expectedHeadersFormat = expectedHeadersEn;
         } else {
@@ -40,10 +59,18 @@ public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer,
         }
     }
 
-
+    /**
+     * Parse and validate each row, then convert to {@link DbTableFieldDto}.
+     *
+     * @param row     the row data, key is column index, value is cell content
+     * @param context analysis context
+     * @throws BusinessException if required fields are empty,
+     *                           type is illegal,
+     *                           or default value is invalid
+     */
     @Override
     public void invoke(Map<Integer, String> row, AnalysisContext context) {
-        // 校验必填项是否为空
+        // Validate required fields are not empty
         DbTableFieldDto dbTableFieldDto = new DbTableFieldDto();
         if (row.get(0) == null || row.get(1) == null || row.get(2) == null || row.get(4) == null) {
             throw new BusinessException(ResponseEnum.DATABASE_CANNOT_EMPTY);
@@ -78,10 +105,16 @@ public class DBTableExcelReadListener extends AnalysisEventListener<Map<Integer,
         tableFields.add(dbTableFieldDto);
     }
 
+    /**
+     * Final callback after all rows are analyzed.
+     *
+     * @param analysisContext analysis context
+     * @throws IllegalArgumentException if no field information was found
+     */
     @Override
     public void doAfterAllAnalysed(AnalysisContext analysisContext) {
         if (tableFields.isEmpty()) {
-            throw new IllegalArgumentException("没有字段相关信息，请检查数据是否正确！");
+            throw new IllegalArgumentException("No field information found, please check if the data is correct!");
         }
     }
 }

@@ -20,16 +20,21 @@ public class ImageService {
     @Resource
     private S3Util s3UtilClient;
 
-    // 允许的 Content-Type（按需扩展）
+    // Allowed Content-Types (extend as needed)
     private static final String[] ALLOWED_TYPES = {
             "image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/svg+xml"
     };
 
-    // MinIO/亚马逊分片上传最小建议：5MB
+    // Recommended minimal part size for MinIO/Amazon multipart upload: 5MB
     private static final long MULTIPART_PART_SIZE = 5L * 1024 * 1024;
 
     /**
-     * 上传图片并返回可访问的 URL（若桶策略非公开，可改为返回 key 或预签名地址）
+     * Upload an image and return an accessible URL (if the bucket policy is not public,
+     * consider returning the object key or a pre-signed URL instead).
+     *
+     * @param file multipart file to upload; must not be {@code null} or empty
+     * @return the object key (or URL depending on bucket policy) of the uploaded image
+     * @throws BusinessException if validation fails, upload fails, or an I/O error occurs
      */
     public String upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -49,10 +54,10 @@ public class ImageService {
 
         try (InputStream in = file.getInputStream()) {
             if (size > 0) {
-                // 已知大小直传（优先）
+                // Known content length: prefer direct upload
                 s3UtilClient.putObject(objectKey, in, size, contentType);
             } else {
-                // 未知大小，走 multipart 分片
+                // Unknown content length: fallback to multipart upload
                 s3UtilClient.putObject(objectKey, in, contentType, MULTIPART_PART_SIZE);
             }
         } catch (Exception e) {
@@ -63,6 +68,13 @@ public class ImageService {
         return objectKey;
     }
 
+    /**
+     * Check whether the given Content-Type is allowed.
+     * <p>Fallback allows any {@code image/*} if needed.</p>
+     *
+     * @param contentType HTTP Content-Type of the file
+     * @return {@code true} if allowed; {@code false} otherwise
+     */
     private static boolean isAllowedType(String contentType) {
         if (contentType == null)
             return false;
@@ -70,25 +82,46 @@ public class ImageService {
             if (t.equalsIgnoreCase(contentType))
                 return true;
         }
-        // 兜底允许 image/*（可按需关闭）
+        // Fallback: allow image/* (can be disabled as needed)
         return contentType.toLowerCase(Locale.ROOT).startsWith("image/");
     }
 
+    /**
+     * Normalize the Content-Type.
+     *
+     * @param ct raw content type from request
+     * @return trimmed content type; returns {@code application/octet-stream} if blank
+     */
     private static String normalizeContentType(String ct) {
         if (ct == null || ct.isBlank())
             return "application/octet-stream";
         return ct.trim();
     }
 
+    /**
+     * Build a safe, non-identifying filename.
+     * <p>Pattern: {@code sparkBot_<uuid>.<ext>} where {@code <ext>} is inferred.</p>
+     *
+     * @param original    original filename (may be {@code null})
+     * @param contentType HTTP Content-Type used for extension inference if needed
+     * @return sanitized file name suitable for use as an object key suffix
+     */
     private static String buildSafeFileName(String original, String contentType) {
-        // 生成可追踪但不暴露原名的文件名：sparkBot_<uuid>.<ext>
+        // Generate a traceable but non-identifying filename: sparkBot_<uuid>.<ext>
         String ext = guessExtension(original, contentType);
         String uuid = UUID.randomUUID().toString().replace("-", "");
         return "sparkBot_" + uuid + (ext.isEmpty() ? "" : "." + ext);
     }
 
+    /**
+     * Infer file extension by original name first, then by Content-Type as a fallback.
+     *
+     * @param original    original filename (may be {@code null})
+     * @param contentType HTTP Content-Type
+     * @return lower-cased file extension without leading dot; empty string if unknown
+     */
     private static String guessExtension(String original, String contentType) {
-        // 先从原始文件名取扩展名
+        // Prefer extension from original filename
         String ext = "";
         if (original != null) {
             String clean = stripUnsafe(original);
@@ -97,7 +130,7 @@ public class ImageService {
                 ext = clean.substring(dot + 1);
             }
         }
-        // 内容类型兜底推断
+        // Fallback: infer from content type
         if (ext.isBlank() && contentType != null) {
             switch (contentType.toLowerCase(Locale.ROOT)) {
                 case "image/png":
@@ -117,18 +150,24 @@ public class ImageService {
                     ext = "svg";
                     break;
                 default:
-                    ext = ""; // 保持无后缀
+                    ext = ""; // keep no extension
             }
         }
         return ext.toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Remove unsafe characters to avoid path traversal and keep minimal readability.
+     *
+     * @param name original filename
+     * @return sanitized filename without suspicious characters or path segments
+     */
     private static String stripUnsafe(String name) {
-        // 去掉空白与危险字符，避免路径穿越；保留基本可读性
+        // Remove whitespaces and dangerous characters to avoid path traversal while keeping basic readability
         String cleaned = new String(name.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", "")
                 .replaceAll("[\\\\/:*?\"<>|]+", "_");
-        // 防止包含路径
+        // Prevent embedded paths
         cleaned = cleaned.replaceAll("\\.\\.+", ".");
         cleaned = cleaned.replaceAll("^\\.+", "");
         return cleaned;
