@@ -103,7 +103,7 @@ def send_telemetry_mgmt(node_trace):
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+            os.getenv(const.KAFKA_TOPIC_KEY),
             node_trace.to_json()
         )
 

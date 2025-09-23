@@ -17,6 +17,7 @@ from plugin.link.consts.keys.xc_utils_keys import (
     SERVICE_SUB_KEY,
     SERVICE_LOCATION_KEY,
     SERVICE_PORT_KEY,
+    KAFKA_TOPIC_KEY,
 )
 
 # mysql
