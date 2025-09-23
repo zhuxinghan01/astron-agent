@@ -8,17 +8,14 @@ WebSocket auth URL assembly, and timestamp generation functions.
 
 import pytest
 import hashlib
-import hmac
 import base64
 import json
 import os
 import time
 from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock
-from wsgiref.handlers import format_date_time
-from time import mktime
+from unittest.mock import patch
 
-from infra.tool_exector.http_auth import (
+from plugin.link.infra.tool_exector.http_auth import (
     generate_13_digit_timestamp,
     md5_encode,
     public_query_url,
@@ -29,7 +26,7 @@ from infra.tool_exector.http_auth import (
     Url,
     AssembleHeaderException
 )
-from consts import const
+from plugin.link.consts import const
 
 
 class TestTimestampGeneration:

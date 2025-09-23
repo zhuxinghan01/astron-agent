@@ -1,8 +1,8 @@
 import os
 from typing import Optional
-from domain.models.utils import DatabaseService, RedisService
-from domain.entity.tool_schema import Tools
-from consts import const
+from plugin.link.domain.models.utils import DatabaseService, RedisService
+from plugin.link.domain.entity.tool_schema import Tools
+from plugin.link.consts import const
 
 data_base_singleton: Optional[DatabaseService] = None
 redis_singleton: Optional[RedisService] = None

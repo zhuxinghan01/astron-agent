@@ -11,7 +11,7 @@ from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from utils.sid.sid_generator2 import get_host_ip
+from plugin.link.utils.sid.sid_generator2 import get_host_ip
 
 
 def init_trace(

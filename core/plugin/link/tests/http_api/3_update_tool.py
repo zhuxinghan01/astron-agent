@@ -35,7 +35,7 @@ if __name__ == "__main__":
         "payload": {
             "tools": [
                 {
-                    "id": "tool@89c889936c21000",
+                    "id": "tool@8ad8969e4421000",
                     "schema_type": 0,
                     "version": "V3.0",
                     "name": "909 Test",
