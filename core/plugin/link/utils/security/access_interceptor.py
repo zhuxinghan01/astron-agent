@@ -45,7 +45,7 @@ def _get_blacklist_config():
     for black_seg in os.getenv(const.SEGMENT_BLACK_LIST_KEY).split(","):
         if black_seg:
             segment_black_list.append(ipaddress.ip_network(black_seg))
-    ip_black_list =[]
+    ip_black_list = []
     for black_id in os.getenv(const.IP_BLACK_LIST_KEY).split(","):
         if black_id:
             ip_black_list.append(black_id)
