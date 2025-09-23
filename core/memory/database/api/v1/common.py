@@ -27,7 +27,8 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
             )
             return None, format_response(
                 code=CodeEnum.DatabaseNotExistError.code,
-                message=f"uid: {uid} or database_id: {database_id} error, please verify",
+                message=f"uid: {uid} or database_id: {database_id} error, "
+                        "please verify",
                 sid=span_context.sid,
             )
 
@@ -47,7 +48,8 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
         )
         return None, format_response(
             code=CodeEnum.DatabaseExecutionError.code,
-            message=f"Database execution failed. Please check if the passed database id and uid are correct, {str(e.__cause__)}",
+            message=f"Database execution failed. Please check if the passed "
+                    f"database id and uid are correct, {str(e.__cause__)}",
             sid=span_context.sid,
         )
     except Exception as e:  # pylint: disable=broad-except

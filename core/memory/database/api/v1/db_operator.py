@@ -288,7 +288,8 @@ async def create_db(
             span_context.record_exception(e)
             return format_response(
                 CodeEnum.DatabaseExecutionError.code,
-                message="Database consistency error, created database name cannot be duplicated",
+                message="Database consistency error, "
+                        "created database name cannot be duplicated",
                 sid=span_context.sid,
             )
         except Exception as e:  # pylint: disable=broad-except
@@ -455,7 +456,8 @@ async def modify_db_description(
                 )
                 return format_response(
                     code=CodeEnum.DatabaseNotExistError.code,
-                    message=f"uid: {uid} or database_id: {database_id} error, please verify",
+                    message=f"uid: {uid} or database_id: {database_id} error, "
+                            "please verify",
                     sid=span_context.sid,
                 )
             await update_database_meta_by_did_uid(

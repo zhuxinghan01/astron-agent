@@ -26,7 +26,8 @@ class CreateDBInput(UidCommon):  # pylint: disable=too-few-public-methods
         min_length=1,
         max_length=20,
         pattern=r"^[a-zA-Z][a-zA-Z0-9_]{0,19}$",
-        description="Required, starts with letter, contains only letters, numbers and underscores, max 20 characters",
+        description="Required, starts with letter, contains only letters, "
+                    "numbers and underscores, max 20 characters",
     )
     # description: Optional, max 200 characters
     description: Optional[str] = Field(

@@ -35,7 +35,7 @@ def rewrite_dml_with_uid_and_limit(
     app_id: str,
     uid: str,
     limit_num: int,
-    env: str,
+    env: str,  # pylint: disable=unused-argument
     span_context: Span,  # pylint: disable=unused-argument
 ) -> tuple[str, list]:
     """
@@ -109,8 +109,8 @@ def _dml_insert_add_params(parsed, insert_ids, app_id, uid):
     extra_fields = ["id", "uid"]
 
     need_del_index = []
-    for index in range(len(existing_columns)):
-        if existing_columns[index].this in INSERT_EXTRA_COLUMNS:
+    for index, column in enumerate(existing_columns):
+        if column.this in INSERT_EXTRA_COLUMNS:
             need_del_index.append(index)
 
     need_del_index.reverse()
@@ -153,6 +153,70 @@ def to_jsonable(obj):
     return obj
 
 
+async def _validate_and_prepare_dml(
+    db, dml_input, span_context, m
+):
+    """Validate input and prepare DML execution."""
+    app_id = dml_input.app_id
+    uid = dml_input.uid
+    database_id = dml_input.database_id
+    dml = dml_input.dml
+    env = dml_input.env
+    space_id = dml_input.space_id
+
+    need_check = {
+        "app_id": app_id,
+        "database_id": database_id,
+        "uid": uid,
+        "dml": dml,
+        "env": env,
+        "space_id": space_id,
+    }
+    span_context.add_info_events(need_check)
+    span_context.add_info_event(f"app_id: {app_id}")
+    span_context.add_info_event(f"database_id: {database_id}")
+    span_context.add_info_event(f"uid: {uid}")
+
+    if space_id:
+        _, error_spaceid = await check_space_id_and_get_uid(
+            db, database_id, space_id, span_context, m
+        )
+        if error_spaceid:
+            return None, error_spaceid
+
+    schema_list, error_resp = await check_database_exists_by_did(
+        db, database_id, uid, span_context, m
+    )
+    if error_resp:
+        return None, error_resp
+
+    return (app_id, uid, database_id, dml, env, schema_list), None
+
+
+async def _process_dml_statements(
+    dmls, app_id, uid, env, span_context
+):
+    """Process and rewrite DML statements."""
+    rewrite_dmls = []
+    for statement in dmls:
+        rewrite_dml, insert_ids = rewrite_dml_with_uid_and_limit(
+            dml=statement,
+            app_id=app_id,
+            uid=uid,
+            limit_num=100,
+            env=env,
+            span_context=span_context,
+        )
+        span_context.add_info_event(f"rewrite dml: {rewrite_dml}")
+        rewrite_dmls.append(
+            {
+                "rewrite_dml": rewrite_dml,
+                "insert_ids": insert_ids,
+            }
+        )
+    return rewrite_dmls
+
+
 @exec_dml_router.post("/exec_dml", response_class=JSONResponse)
 async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_session)):
     """
@@ -165,15 +229,8 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
     Returns:
         JSONResponse: Result of DML execution
     """
-    app_id = dml_input.app_id
     uid = dml_input.uid
     database_id = dml_input.database_id
-    dml = dml_input.dml
-    env = dml_input.env
-    space_id = dml_input.space_id
-
-    # span = Span(uid=uid)
-    # m = Meter(func="exec_dml")
     metric_service = get_otlp_metric_service()
     m = metric_service.get_meter()(func="exec_dml")
     span_service = get_otlp_span_service()
@@ -185,31 +242,13 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
         attributes={"uid": uid, "database_id": database_id},
     ) as span_context:
         try:
-            need_check = {
-                "app_id": app_id,
-                "database_id": database_id,
-                "uid": uid,
-                "dml": dml,
-                "env": env,
-                "space_id": space_id,
-            }
-            span_context.add_info_events(need_check)
-            span_context.add_info_event(f"app_id: {app_id}")
-            span_context.add_info_event(f"database_id: {database_id}")
-            span_context.add_info_event(f"uid: {uid}")
-
-            if space_id:
-                _, error_spaceid = await check_space_id_and_get_uid(
-                    db, database_id, space_id, span_context, m
-                )
-                if error_spaceid:
-                    return error_spaceid
-
-            schema_list, error_resp = await check_database_exists_by_did(
-                db, database_id, uid, span_context, m
+            validated_data, error = await _validate_and_prepare_dml(
+                db, dml_input, span_context, m
             )
-            if error_resp:
-                return error_resp
+            if error:
+                return error
+
+            app_id, uid, database_id, dml, env, schema_list = validated_data
 
             schema, error_search = await _set_search_path(
                 db, schema_list, env, uid, span_context, m
@@ -221,23 +260,9 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
             if error_split:
                 return error_split
 
-            rewrite_dmls = []
-            for statement in dmls:
-                rewrite_dml, insert_ids = rewrite_dml_with_uid_and_limit(
-                    dml=statement,
-                    app_id=app_id,
-                    uid=uid,
-                    limit_num=100,
-                    env=env,
-                    span_context=span_context,
-                )
-                span_context.add_info_event(f"rewrite dml: {rewrite_dml}")
-                rewrite_dmls.append(
-                    {
-                        "rewrite_dml": rewrite_dml,
-                        "insert_ids": insert_ids,
-                    }
-                )
+            rewrite_dmls = await _process_dml_statements(
+                dmls, app_id, uid, env, span_context
+            )
 
             final_exec_success_res, exec_time, error_exec = await _exec_dml_sql(
                 db, rewrite_dmls, uid, span_context, m
@@ -396,7 +421,8 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
             )
             return None, format_response(
                 code=CodeEnum.NoAuthorityError.code,
-                message=f"Table does not exist or no permission: {', '.join(not_found)}",
+                message=f"Table does not exist or no permission: "
+                        f"{', '.join(not_found)}",
                 sid=span_context.sid,
             )
 
@@ -410,7 +436,8 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
             )
             return None, format_response(
                 code=CodeEnum.DMLNotAllowed.code,
-                message="Unsupported SQL type, only SELECT/INSERT/UPDATE/DELETE allowed",
+                message="Unsupported SQL type, only "
+                        "SELECT/INSERT/UPDATE/DELETE allowed",
                 sid=span_context.sid,
             )
 

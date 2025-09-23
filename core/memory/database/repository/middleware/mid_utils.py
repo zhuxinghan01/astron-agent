@@ -23,7 +23,7 @@ def get_factories_and_deps():
         list: List of tuples containing (factory, dependencies) pairs
     """
     from memory.database.repository.middleware.database import \
-        db_factory as database_factory
+        db_factory as database_factory  # pylint: disable=import-outside-toplevel
 
     return [
         (

@@ -14,7 +14,6 @@ from memory.database.api.v1.exec_dml import (_dml_add_where,
                                              _set_search_path, exec_dml,
                                              rewrite_dml_with_uid_and_limit,
                                              to_jsonable)
-from memory.database.exceptions.error_code import CodeEnum
 from sqlglot import parse_one
 from sqlmodel.ext.asyncio.session import AsyncSession
 

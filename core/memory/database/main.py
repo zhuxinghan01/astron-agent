@@ -22,6 +22,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 
 async def initialize_extensions():
+    """Initialize required extensions and services for the application."""
     os.environ["CONFIG_ENV_PATH"] = "./memory/database/config.env"
 
     need_init_services = [
@@ -34,7 +35,7 @@ async def initialize_extensions():
     initialize_services(services=need_init_services)
 
     from repository.middleware.initialize import \
-        initialize_services as rep_initialize_services
+        initialize_services as rep_initialize_services  # pylint: disable=import-outside-toplevel
 
     await rep_initialize_services()
 

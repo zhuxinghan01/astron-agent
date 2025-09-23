@@ -207,7 +207,8 @@ async def upload_data(
             if diff:
                 raise CustomException(
                     CodeEnum.UploadFileTypeError,
-                    err_msg="Upload data column names do not match target table, please check",
+                    err_msg="Upload data column names do not match target table, "
+                           "please check",
                 )
 
             success_rows, failed_rows = await insert_in_batches(

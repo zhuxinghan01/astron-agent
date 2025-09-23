@@ -359,3 +359,255 @@ async def test_drop_db_success():
                         assert response_body["code"] == CodeEnum.Successes.code
                         assert response_body["sid"] == "drop-sid"
                         assert "data" not in response_body
+
+
+@pytest.mark.asyncio
+async def test_modify_db_description_success():
+    """Test modify_db_description endpoint success scenario."""
+    mock_db = AsyncMock()
+    mock_db.commit = AsyncMock(return_value=None)
+    mock_db.rollback = AsyncMock(return_value=None)
+
+    test_input = ModifyDBDescInput(
+        uid="u1",
+        database_id=123,
+        description="Updated test database description",
+        space_id="",
+    )
+
+    fake_span_context = MagicMock()
+    fake_span_context.sid = "modify-desc-sid"
+    fake_span_context.add_info_events = MagicMock()
+    fake_span_context.add_info_event = MagicMock()
+    fake_span_context.record_exception = MagicMock()
+
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
+            # Mock meter instance
+            mock_meter_instance = MagicMock()
+            mock_meter_instance.in_success_count = MagicMock()
+
+            # Mock metric service
+            mock_metric_service = MagicMock()
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
+            mock_metric_service_func.return_value = mock_metric_service
+
+            # Mock span service and instance
+            mock_span_instance = MagicMock()
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
+            mock_span_service = MagicMock()
+            mock_span_service.get_span.return_value = lambda uid: mock_span_instance
+            mock_span_service_func.return_value = mock_span_service
+
+            with patch(
+                "memory.database.api.v1.db_operator.get_id_by_did_uid",
+                new_callable=AsyncMock,
+            ) as mock_get_id:
+                mock_get_id.return_value = [123]  # Database exists
+
+                with patch(
+                    "memory.database.api.v1.db_operator."
+                    "update_database_meta_by_did_uid",
+                    new_callable=AsyncMock,
+                ) as mock_update_db_meta:
+                    mock_update_db_meta.return_value = None
+
+                    response = await modify_db_description(test_input, mock_db)
+
+                    response_body = json.loads(response.body)
+                    assert "code" in response_body
+                    assert "message" in response_body
+                    assert "sid" in response_body
+
+                    assert response_body["code"] == CodeEnum.Successes.code
+                    assert response_body["message"] == CodeEnum.Successes.msg
+                    assert response_body["sid"] == "modify-desc-sid"
+
+                    mock_get_id.assert_called_once_with(
+                        mock_db, database_id=123, uid="u1"
+                    )
+                    mock_update_db_meta.assert_called_once_with(
+                        mock_db,
+                        database_id=123,
+                        uid="u1",
+                        description="Updated test database description"
+                    )
+                    mock_db.commit.assert_called_once()
+                    mock_meter_instance.in_success_count.assert_called_once_with(
+                        lables={"uid": "u1"}
+                    )
+                    fake_span_context.add_info_events.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_modify_db_description_database_not_exist():
+    """Test modify_db_description endpoint when database does not exist."""
+    mock_db = AsyncMock()
+    mock_db.rollback = AsyncMock(return_value=None)
+
+    test_input = ModifyDBDescInput(
+        uid="u1",
+        database_id=999,
+        description="New description",
+        space_id="",
+    )
+
+    fake_span_context = MagicMock()
+    fake_span_context.sid = "modify-desc-error-sid"
+    fake_span_context.add_info_events = MagicMock()
+    fake_span_context.add_info_event = MagicMock()
+    fake_span_context.add_error_event = MagicMock()
+
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
+            # Mock meter instance
+            mock_meter_instance = MagicMock()
+            mock_meter_instance.in_error_count = MagicMock()
+
+            # Mock metric service
+            mock_metric_service = MagicMock()
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
+            mock_metric_service_func.return_value = mock_metric_service
+
+            # Mock span service and instance
+            mock_span_instance = MagicMock()
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
+            mock_span_service = MagicMock()
+            mock_span_service.get_span.return_value = lambda uid: mock_span_instance
+            mock_span_service_func.return_value = mock_span_service
+
+            with patch(
+                "memory.database.api.v1.db_operator.get_id_by_did_uid",
+                new_callable=AsyncMock,
+            ) as mock_get_id:
+                mock_get_id.return_value = None  # Database does not exist
+
+                response = await modify_db_description(test_input, mock_db)
+
+                response_body = json.loads(response.body)
+                assert "code" in response_body
+                assert "message" in response_body
+                assert "sid" in response_body
+
+                assert response_body["code"] == CodeEnum.DatabaseNotExistError.code
+                assert ("uid: u1 or database_id: 999 error, please verify" in
+                        response_body["message"])
+                assert response_body["sid"] == "modify-desc-error-sid"
+
+                mock_get_id.assert_called_once_with(mock_db, database_id=999, uid="u1")
+                mock_meter_instance.in_error_count.assert_called_once_with(
+                    CodeEnum.DatabaseNotExistError.code,
+                    lables={"uid": "u1"},
+                    span=fake_span_context,
+                )
+                fake_span_context.add_error_event.assert_called_with(
+                    "User: u1 does not have database: 999"
+                )
+
+
+@pytest.mark.asyncio
+async def test_modify_db_description_with_space_id():
+    """Test modify_db_description endpoint with space_id."""
+    mock_db = AsyncMock()
+    mock_db.commit = AsyncMock(return_value=None)
+    mock_db.rollback = AsyncMock(return_value=None)
+
+    test_input = ModifyDBDescInput(
+        uid="u1",
+        database_id=123,
+        description="Updated description for team space",
+        space_id="space123",
+    )
+
+    fake_span_context = MagicMock()
+    fake_span_context.sid = "modify-desc-space-sid"
+    fake_span_context.add_info_events = MagicMock()
+    fake_span_context.add_info_event = MagicMock()
+    fake_span_context.record_exception = MagicMock()
+
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
+            # Mock meter instance
+            mock_meter_instance = MagicMock()
+            mock_meter_instance.in_success_count = MagicMock()
+
+            # Mock metric service
+            mock_metric_service = MagicMock()
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
+            mock_metric_service_func.return_value = mock_metric_service
+
+            # Mock span service and instance
+            mock_span_instance = MagicMock()
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
+            mock_span_service = MagicMock()
+            mock_span_service.get_span.return_value = lambda uid: mock_span_instance
+            mock_span_service_func.return_value = mock_span_service
+
+            with patch(
+                "memory.database.api.v1.db_operator.get_uid_by_did_space_id",
+                new_callable=AsyncMock,
+            ) as mock_get_uid_by_space:
+                mock_get_uid_by_space.return_value = [["team_u1"]]
+
+                with patch(
+                    "memory.database.api.v1.db_operator.get_id_by_did_uid",
+                    new_callable=AsyncMock,
+                ) as mock_get_id:
+                    mock_get_id.return_value = [123]  # Database exists
+
+                    with patch(
+                        "memory.database.api.v1.db_operator."
+                        "update_database_meta_by_did_uid",
+                        new_callable=AsyncMock,
+                    ) as mock_update_db_meta:
+                        mock_update_db_meta.return_value = None
+
+                        response = await modify_db_description(test_input, mock_db)
+
+                        response_body = json.loads(response.body)
+                        assert "code" in response_body
+                        assert "message" in response_body
+                        assert "sid" in response_body
+
+                        assert response_body["code"] == CodeEnum.Successes.code
+                        assert response_body["message"] == CodeEnum.Successes.msg
+                        assert response_body["sid"] == "modify-desc-space-sid"
+
+                        mock_get_uid_by_space.assert_called_once_with(
+                            mock_db, 123, "space123"
+                        )
+                        mock_get_id.assert_called_once_with(
+                            mock_db, database_id=123, uid="team_u1"
+                        )
+                        mock_update_db_meta.assert_called_once_with(
+                            mock_db,
+                            database_id=123,
+                            uid="team_u1",
+                            description=("Updated description for team space")
+                        )
+                        mock_db.commit.assert_called_once()
+                        fake_span_context.add_info_event.assert_any_call("space_id: space123")

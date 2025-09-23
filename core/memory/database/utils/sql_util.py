@@ -95,7 +95,8 @@ def _handle_literal(expression, counter):
 
 def convert_sql_to_parametric(sql):
     """
-    Replace all literals (numbers, strings, booleans) in SQL statement with parameters, and return parameterized SQL and parameter dictionary.
+    Replace all literals (numbers, strings, booleans) in SQL statement with
+    parameters, and return parameterized SQL and parameter dictionary.
     """
     # Parse SQL syntax tree
     tree = parse_one(sql)

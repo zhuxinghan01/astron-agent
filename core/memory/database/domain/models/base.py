@@ -24,7 +24,7 @@ def orjson_dumps(v, *, default=None, sort_keys=False, indent_2=True):
             option |= orjson.OPT_INDENT_2  # pylint: disable=no-member
     if default is None:
         return orjson.dumps(v, option=option).decode()  # pylint: disable=no-member
-    return orjson.dumps(
+    return orjson.dumps(  # pylint: disable=no-member
         v, default=default, option=option
     ).decode()  # pylint: disable=no-member
 

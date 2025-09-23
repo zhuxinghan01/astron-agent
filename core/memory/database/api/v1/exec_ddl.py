@@ -72,6 +72,43 @@ def is_ddl_allowed(sql: str, span_context: Span) -> bool:
         return False
 
 
+async def _execute_ddl_statements(db, schema_list, ddls, span_context):
+    """Execute DDL statements across all schemas."""
+    for schema in schema_list:
+        span_context.add_info_event(
+            f"set search path: SET search_path = '{schema[0]}'"
+        )
+        await set_search_path_by_schema(db, schema[0])
+        for statement in ddls:
+            try:
+                await exec_sql_statement(db, statement)
+                span_context.add_info_event(f"exec ddl: {statement}")
+            except Exception as exec_error:
+                span_context.add_error_event(f"Unsupported syntax, {statement}")
+                raise exec_error
+
+
+async def _handle_ddl_error(ddl_error, db, m, uid, span_context):
+    """Handle DDL execution errors."""
+    span_context.record_exception(ddl_error)
+    await db.rollback()
+    m.in_error_count(
+        CodeEnum.DDLExecutionError.code, lables={"uid": uid}, span=span_context
+    )
+    root_exc = unwrap_cause(ddl_error)
+    if isinstance(root_exc, asyncpg.exceptions.DatatypeMismatchError):
+        return format_response(
+            code=CodeEnum.DDLExecutionError.code,
+            message=f"Data type mismatch error, reason: {str(root_exc)}",
+            sid=span_context.sid,
+        )
+    return format_response(
+        code=CodeEnum.DDLExecutionError.code,
+        message=f"DDL statement execution failed, reason: {str(root_exc)}",
+        sid=span_context.sid,
+    )
+
+
 @exec_ddl_router.post("/exec_ddl", response_class=JSONResponse)
 async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_session)):
     """
@@ -86,8 +123,6 @@ async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_sessi
     """
     uid = ddl_input.uid
     database_id = ddl_input.database_id
-    # span = Span(uid=uid)
-    # m = Meter(func="exec_ddl")
     metric_service = get_otlp_metric_service()
     m = metric_service.get_meter()(func="exec_ddl")
     span_service = get_otlp_span_service()
@@ -127,18 +162,7 @@ async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_sessi
             return error_split
 
         try:
-            for schema in schema_list:
-                span_context.add_info_event(
-                    f"set search path: SET search_path = '{schema[0]}'"
-                )
-                await set_search_path_by_schema(db, schema[0])
-                for statement in ddls:
-                    try:
-                        await exec_sql_statement(db, statement)
-                        span_context.add_info_event(f"exec ddl: {statement}")
-                    except Exception as exec_error:
-                        span_context.add_error_event(f"Unsupported syntax, {statement}")
-                        raise exec_error
+            await _execute_ddl_statements(db, schema_list, ddls, span_context)
             await db.commit()
             m.in_success_count(lables={"uid": uid})
             return format_response(
@@ -147,23 +171,7 @@ async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_sessi
                 sid=span_context.sid,
             )
         except Exception as ddl_error:  # pylint: disable=broad-except
-            span_context.record_exception(ddl_error)
-            await db.rollback()
-            m.in_error_count(
-                CodeEnum.DDLExecutionError.code, lables={"uid": uid}, span=span_context
-            )
-            root_exc = unwrap_cause(ddl_error)
-            if isinstance(root_exc, asyncpg.exceptions.DatatypeMismatchError):
-                return format_response(
-                    code=CodeEnum.DDLExecutionError.code,
-                    message=f"Data type mismatch error, reason: {str(root_exc)}",
-                    sid=span_context.sid,
-                )
-            return format_response(
-                code=CodeEnum.DDLExecutionError.code,
-                message=f"DDL statement execution failed, reason: {str(root_exc)}",
-                sid=span_context.sid,
-            )
+            return await _handle_ddl_error(ddl_error, db, m, uid, span_context)
 
 
 async def _reset_uid(db, database_id, space_id, uid, span_context, m):

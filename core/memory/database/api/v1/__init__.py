@@ -2,7 +2,7 @@
 
 This module imports and exposes all v1 version API routers including:
 - Database operations routers
-- DDL execution routers  
+- DDL execution routers
 - DML execution routers
 - Data import/export routers
 """
