@@ -67,7 +67,7 @@ class SmartTTSClient:
         self.api_key = api_key
         self.api_secret = api_secret
         self.text = text
-        self.request_url = "wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/mcd9m97e6"
+        self.request_url = os.getenv("TTS_URL")
         self.ws_url = None
         self.ws = None
         self._prepare_ws_url()
