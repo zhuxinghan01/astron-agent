@@ -22,8 +22,14 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * Requires MinIO test environment to run these tests
  *
- * Test configuration: - MinIO Endpoint: http://172.31.205.72:17900 - Admin credentials:
- * minioadmin/minioadmin - Test Bucket: astron-agent
+ * Test configuration: - MinIO connection details configurable via environment variables
+ * Environment variables:
+ * - MINIO_TEST_ENDPOINT: MinIO server endpoint (default: http://localhost:9000)
+ * - MINIO_TEST_ACCESS_KEY: Access key for authentication (default: minioadmin)
+ * - MINIO_TEST_SECRET_KEY: Secret key for authentication (default: minioadmin)
+ * - MINIO_TEST_BUCKET: Bucket name for testing (default: astron-project)
+ * - MINIO_INVALID_ACCESS_KEY: Invalid access key for negative testing (default: invalid-user)
+ * - MINIO_INVALID_SECRET_KEY: Invalid secret key for negative testing (default: invalid-secret)
  *
  * Note: If MinIO service is unavailable, some tests will be skipped
  */
@@ -31,16 +37,15 @@ class S3ClientUtilTest {
 
     private S3ClientUtil s3ClientUtil;
 
-    // MinIO test environment configuration - from .env.dev and docker-compose
-    private static final String TEST_ENDPOINT = "http://172.31.205.72:17900";
-    // Use admin credentials for testing (astron-uploader user may need additional configuration)
-    private static final String TEST_ACCESS_KEY = "minioadmin";
-    private static final String TEST_SECRET_KEY = "minioadmin";
-    private static final String TEST_BUCKET = "astron-agent";
+    // MinIO test environment configuration - from environment variables
+    private static final String TEST_ENDPOINT = System.getenv().getOrDefault("MINIO_TEST_ENDPOINT", "http://localhost:9000");
+    private static final String TEST_ACCESS_KEY = System.getenv().getOrDefault("MINIO_TEST_ACCESS_KEY", "minioadmin");
+    private static final String TEST_SECRET_KEY = System.getenv().getOrDefault("MINIO_TEST_SECRET_KEY", "minioadmin");
+    private static final String TEST_BUCKET = System.getenv().getOrDefault("MINIO_TEST_BUCKET", "astron-project");
 
     // Configuration for testing invalid credentials
-    private static final String INVALID_ACCESS_KEY = "astron-uploader";
-    private static final String INVALID_SECRET_KEY = "astron-uploader-secret";
+    private static final String INVALID_ACCESS_KEY = System.getenv().getOrDefault("MINIO_INVALID_ACCESS_KEY", "invalid-user");
+    private static final String INVALID_SECRET_KEY = System.getenv().getOrDefault("MINIO_INVALID_SECRET_KEY", "invalid-secret");
 
     private static boolean minioAvailable = true;
 

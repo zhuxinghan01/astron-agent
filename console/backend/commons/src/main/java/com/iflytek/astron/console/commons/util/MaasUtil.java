@@ -452,8 +452,9 @@ public class MaasUtil {
                 // Handle request failure
                 throw new IOException("Unexpected code " + response);
             }
-            if (response.body() != null) {
-                responseBody = response.body().string();
+            ResponseBody body = response.body();
+            if (body != null) {
+                responseBody = body.string();
             } else {
                 throw new IOException("Response body is null");
             }
