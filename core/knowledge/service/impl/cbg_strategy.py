@@ -65,7 +65,7 @@ class CBGRAGStrategy(RAGStrategy):
             query=query, doc_ids=doc_ids, top_n=top_k, **kwargs
         )
 
-        results = []
+        results = [dict]
         if check_not_empty(query_results):
             for result in query_results:
                 processed_result = self._process_query_result(result, threshold)
