@@ -7,22 +7,23 @@ import time
 import uuid
 
 import sqlparse
+from common.otlp.trace.span import Span
+from common.service import get_otlp_metric_service, get_otlp_span_service
 from fastapi import APIRouter, Depends
-from sqlglot import exp, parse_one
-from sqlmodel.ext.asyncio.session import AsyncSession
-from starlette.responses import JSONResponse
-
 from memory.database.api.schemas.exec_dml_types import ExecDMLInput
-from memory.database.api.v1.common import check_database_exists_by_did, check_space_id_and_get_uid
-from memory.database.domain.entity.general import exec_sql_statement, parse_and_exec_sql
+from memory.database.api.v1.common import (check_database_exists_by_did,
+                                           check_space_id_and_get_uid)
+from memory.database.domain.entity.general import (exec_sql_statement,
+                                                   parse_and_exec_sql)
 from memory.database.domain.entity.schema import set_search_path_by_schema
 from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.exceptions.e import CustomException
 from memory.database.exceptions.error_code import CodeEnum
-from common.service import get_otlp_span_service, get_otlp_metric_service
-from common.otlp.trace.span import Span
 from memory.database.repository.middleware.getters import get_session
 from memory.database.utils.snowfake import get_id
+from sqlglot import exp, parse_one
+from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette.responses import JSONResponse
 
 exec_dml_router = APIRouter(tags=["EXEC_DML"])
 
@@ -30,7 +31,12 @@ INSERT_EXTRA_COLUMNS = ["id", "uid", "create_time", "update_time"]
 
 
 def rewrite_dml_with_uid_and_limit(
-        dml: str, app_id: str, uid: str, limit_num: int, env: str, span_context: Span  # pylint: disable=unused-argument
+    dml: str,
+    app_id: str,
+    uid: str,
+    limit_num: int,
+    env: str,
+    span_context: Span,  # pylint: disable=unused-argument
 ) -> tuple[str, list]:
     """
     Rewrite DML with UID and limit expressions.
@@ -174,9 +180,9 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
     span = span_service.get_span()(uid=uid)
 
     with span.start(
-            func_name="exec_dml",
-            add_source_function_name=True,
-            attributes={"uid": uid, "database_id": database_id},
+        func_name="exec_dml",
+        add_source_function_name=True,
+        attributes={"uid": uid, "database_id": database_id},
     ) as span_context:
         try:
             need_check = {
@@ -226,10 +232,12 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
                     span_context=span_context,
                 )
                 span_context.add_info_event(f"rewrite dml: {rewrite_dml}")
-                rewrite_dmls.append({
-                    "rewrite_dml": rewrite_dml,
-                    "insert_ids": insert_ids,
-                })
+                rewrite_dmls.append(
+                    {
+                        "rewrite_dml": rewrite_dml,
+                        "insert_ids": insert_ids,
+                    }
+                )
 
             final_exec_success_res, exec_time, error_exec = await _exec_dml_sql(
                 db, rewrite_dmls, uid, span_context, m
@@ -253,13 +261,11 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
             return format_response(
                 code=custom_error.code,
                 message="Database execution failed",
-                sid=span_context.sid
+                sid=span_context.sid,
             )
-        except Exception as unexpected_error: # pylint: disable=broad-except
+        except Exception as unexpected_error:  # pylint: disable=broad-except
             m.in_error_count(
-                CodeEnum.DMLExecutionError.code,
-                lables={"uid": uid},
-                span=span_context
+                CodeEnum.DMLExecutionError.code, lables={"uid": uid}, span=span_context
             )
             span_context.record_exception(unexpected_error)
             return format_response(
@@ -301,13 +307,11 @@ async def _exec_dml_sql(db, rewrite_dmls, uid, span_context, m):
         exec_time = time.time() - start_time
         return final_exec_success_res, exec_time, None
 
-    except Exception as exec_error: # pylint: disable=broad-except
+    except Exception as exec_error:  # pylint: disable=broad-except
         span_context.record_exception(exec_error)
         await db.rollback()
         m.in_error_count(
-            CodeEnum.DatabaseExecutionError.code,
-            lables={"uid": uid},
-            span=span_context
+            CodeEnum.DatabaseExecutionError.code, lables={"uid": uid}, span=span_context
         )
         return (
             None,
@@ -326,9 +330,7 @@ async def _set_search_path(db, schema_list, env, uid, span_context, m):
     if not schema:
         span_context.add_error_event("Corresponding schema not found")
         m.in_error_count(
-            CodeEnum.NoSchemaError.code,
-            lables={"uid": uid},
-            span=span_context
+            CodeEnum.NoSchemaError.code, lables={"uid": uid}, span=span_context
         )
         return None, format_response(
             code=CodeEnum.NoSchemaError.code,
@@ -340,12 +342,10 @@ async def _set_search_path(db, schema_list, env, uid, span_context, m):
     try:
         await set_search_path_by_schema(db, schema)
         return schema, None
-    except Exception as schema_error: # pylint: disable=broad-except
+    except Exception as schema_error:  # pylint: disable=broad-except
         span_context.record_exception(schema_error)
         m.in_error_count(
-            CodeEnum.NoSchemaError.code,
-            lables={"uid": uid},
-            span=span_context
+            CodeEnum.NoSchemaError.code, lables={"uid": uid}, span=span_context
         )
         return None, format_response(
             code=CodeEnum.NoSchemaError.code,
@@ -364,7 +364,7 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
         try:
             parsed = parse_one(statement)
             tables = {table.name for table in parsed.find_all(exp.Table)}
-        except Exception as parse_error: # pylint: disable=broad-except
+        except Exception as parse_error:  # pylint: disable=broad-except
             span_context.record_exception(parse_error)
             m.in_error_count(
                 CodeEnum.SQLParseError.code,
@@ -386,7 +386,9 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
         not_found = tables - valid_tables
 
         if not_found:
-            span_context.add_error_event(f"Table does not exist or no permission: {', '.join(not_found)}")
+            span_context.add_error_event(
+                f"Table does not exist or no permission: {', '.join(not_found)}"
+            )
             m.in_error_count(
                 CodeEnum.NoAuthorityError.code,
                 lables={"uid": uid},

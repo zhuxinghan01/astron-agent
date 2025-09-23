@@ -7,15 +7,16 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from memory.database.api.schemas.exec_dml_types import ExecDMLInput
+from memory.database.api.v1.exec_dml import (_dml_add_where,
+                                             _dml_insert_add_params,
+                                             _dml_split, _exec_dml_sql,
+                                             _set_search_path, exec_dml,
+                                             rewrite_dml_with_uid_and_limit,
+                                             to_jsonable)
+from memory.database.exceptions.error_code import CodeEnum
 from sqlglot import parse_one
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-from memory.database.api.schemas.exec_dml_types import ExecDMLInput
-from memory.database.api.v1.exec_dml import (_dml_add_where, _dml_insert_add_params,
-                            _dml_split, _exec_dml_sql, _set_search_path,
-                            exec_dml, rewrite_dml_with_uid_and_limit,
-                            to_jsonable)
-from memory.database.exceptions.error_code import CodeEnum
 
 
 def test_rewrite_dml_with_uid_and_limit():
@@ -70,7 +71,8 @@ async def test_set_search_path_success():
     mock_meter = MagicMock()
 
     with patch(
-        "memory.database.api.v1.exec_dml.set_search_path_by_schema", new_callable=AsyncMock
+        "memory.database.api.v1.exec_dml.set_search_path_by_schema",
+        new_callable=AsyncMock,
     ) as mock_set_search:
         mock_set_search.return_value = None
 
@@ -216,22 +218,22 @@ async def test_exec_dml_success():
 
     with patch("memory.database.api.v1.exec_dml.Span") as mock_span_cls:
         mock_span_instance = MagicMock()
-        mock_span_instance.start.return_value.__enter__.return_value = (
-            fake_span_context
-        )
+        mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
         mock_span_cls.return_value = mock_span_instance
 
         with patch(
-            "memory.database.api.v1.exec_dml.check_space_id_and_get_uid", new_callable=AsyncMock
+            "memory.database.api.v1.exec_dml.check_space_id_and_get_uid",
+            new_callable=AsyncMock,
         ) as mock_check_space:
             mock_check_space.return_value = None
 
             with patch(
-                "memory.database.api.v1.exec_dml.check_database_exists_by_did", new_callable=AsyncMock
+                "memory.database.api.v1.exec_dml.check_database_exists_by_did",
+                new_callable=AsyncMock,
             ) as mock_check_db:
                 mock_check_db.return_value = (
                     [["prod_u1_1001"], ["test_u1_1001"]],
-                    None
+                    None,
                 )
 
                 with patch(
@@ -243,7 +245,8 @@ async def test_exec_dml_success():
                     )
 
                     with patch(
-                        "memory.database.api.v1.exec_dml._set_search_path", new_callable=AsyncMock
+                        "memory.database.api.v1.exec_dml._set_search_path",
+                        new_callable=AsyncMock,
                     ) as mock_set_search:
                         mock_set_search.return_value = ("prod_u1_1001", None)
 
@@ -266,24 +269,40 @@ async def test_exec_dml_success():
                                 ]
                                 mock_exec_sql.return_value = select_result
 
-                                with patch("memory.database.api.v1.exec_dml.get_otlp_metric_service") as mock_metric_service_func:
-                                    with patch("memory.database.api.v1.exec_dml.get_otlp_span_service") as mock_span_service_func:
+                                with patch(
+                                    "memory.database.api.v1.exec_dml.get_otlp_metric_service"
+                                ) as mock_metric_service_func:
+                                    with patch(
+                                        "memory.database.api.v1.exec_dml.get_otlp_span_service"
+                                    ) as mock_span_service_func:
                                         # Mock meter instance
                                         mock_meter_instance = MagicMock()
-                                        mock_meter_instance.in_success_count = MagicMock()
+                                        mock_meter_instance.in_success_count = (
+                                            MagicMock()
+                                        )
                                         mock_meter_instance.in_error_count = MagicMock()
 
                                         # Mock metric service
                                         mock_metric_service = MagicMock()
-                                        mock_metric_service.get_meter.return_value = lambda func: mock_meter_instance
-                                        mock_metric_service_func.return_value = mock_metric_service
+                                        mock_metric_service.get_meter.return_value = (
+                                            lambda func: mock_meter_instance
+                                        )
+                                        mock_metric_service_func.return_value = (
+                                            mock_metric_service
+                                        )
 
                                         # Mock span service and instance
                                         mock_span_instance = MagicMock()
-                                        mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
+                                        mock_span_instance.start.return_value.__enter__.return_value = (
+                                            fake_span_context
+                                        )
                                         mock_span_service = MagicMock()
-                                        mock_span_service.get_span.return_value = lambda uid: mock_span_instance
-                                        mock_span_service_func.return_value = mock_span_service
+                                        mock_span_service.get_span.return_value = (
+                                            lambda uid: mock_span_instance
+                                        )
+                                        mock_span_service_func.return_value = (
+                                            mock_span_service
+                                        )
 
                                         response = await exec_dml(test_input, mock_db)
 

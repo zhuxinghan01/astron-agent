@@ -1,9 +1,8 @@
 """Module providing schema-related database operations."""
 
+from memory.database.utils.retry import retry_on_invalid_cached_statement
 from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-from memory.database.utils.retry import retry_on_invalid_cached_statement
 
 
 @retry_on_invalid_cached_statement(max_retries=3)

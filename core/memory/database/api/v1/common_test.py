@@ -5,14 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import sqlalchemy.exc
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from memory.database.api.v1.common import (
-    check_database_exists_by_did_uid,
-    check_database_exists_by_did,
-    check_space_id_and_get_uid
-)
+from memory.database.api.v1.common import (check_database_exists_by_did,
+                                           check_database_exists_by_did_uid,
+                                           check_space_id_and_get_uid)
 from memory.database.exceptions.error_code import CodeEnum
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -39,7 +36,8 @@ async def test_check_database_exists_by_did_uid_success():
         mock_get_id.return_value = database_id
 
         with patch(
-            "memory.database.api.v1.common.get_schema_name_by_did", new_callable=AsyncMock
+            "memory.database.api.v1.common.get_schema_name_by_did",
+            new_callable=AsyncMock,
         ) as mock_get_schema:
             mock_get_schema.return_value = [["prod_schema"], ["test_schema"]]
 
@@ -89,7 +87,10 @@ async def test_check_database_exists_by_did_uid_database_not_exist():
         # Parse the response
         response_body = json.loads(error.body)
         assert response_body["code"] == CodeEnum.DatabaseNotExistError.code
-        assert f"uid: {uid} or database_id: {database_id} error, please verify" in response_body["message"]
+        assert (
+            f"uid: {uid} or database_id: {database_id} error, please verify"
+            in response_body["message"]
+        )
         assert response_body["sid"] == "test-sid"
 
         # Check that error was logged
@@ -123,7 +124,8 @@ async def test_check_database_exists_by_did_uid_schema_not_exist():
         mock_get_id.return_value = database_id
 
         with patch(
-            "memory.database.api.v1.common.get_schema_name_by_did", new_callable=AsyncMock
+            "memory.database.api.v1.common.get_schema_name_by_did",
+            new_callable=AsyncMock,
         ) as mock_get_schema:
             mock_get_schema.return_value = None
 
@@ -188,7 +190,7 @@ async def test_check_database_exists_by_did_uid_dbapi_error():
         mock_meter.in_error_count.assert_called_once_with(
             CodeEnum.DatabaseExecutionError.code,
             lables={"uid": uid},
-            span=mock_span_context
+            span=mock_span_context,
         )
 
 
@@ -235,7 +237,7 @@ async def test_check_database_exists_by_did_uid_general_exception():
         mock_meter.in_error_count.assert_called_once_with(
             CodeEnum.DatabaseExecutionError.code,
             lables={"uid": uid},
-            span=mock_span_context
+            span=mock_span_context,
         )
 
 
@@ -259,7 +261,8 @@ async def test_check_database_exists_by_did_success():
         mock_get_id.return_value = database_id
 
         with patch(
-            "memory.database.api.v1.common.get_schema_name_by_did", new_callable=AsyncMock
+            "memory.database.api.v1.common.get_schema_name_by_did",
+            new_callable=AsyncMock,
         ) as mock_get_schema:
             mock_get_schema.return_value = [["prod_schema"], ["test_schema"]]
 
@@ -306,7 +309,10 @@ async def test_check_database_exists_by_did_not_found():
         # Parse the response
         response_body = json.loads(error.body)
         assert response_body["code"] == CodeEnum.DatabaseNotExistError.code
-        assert f"database_id: {database_id} error, please verify" in response_body["message"]
+        assert (
+            f"database_id: {database_id} error, please verify"
+            in response_body["message"]
+        )
         assert response_body["sid"] == "test-sid"
 
         mock_span_context.add_error_event.assert_called_once_with(
@@ -340,7 +346,8 @@ async def test_check_database_exists_by_did_schema_not_found():
         mock_get_id.return_value = database_id
 
         with patch(
-            "memory.database.api.v1.common.get_schema_name_by_did", new_callable=AsyncMock
+            "memory.database.api.v1.common.get_schema_name_by_did",
+            new_callable=AsyncMock,
         ) as mock_get_schema:
             mock_get_schema.return_value = None
 
@@ -479,7 +486,10 @@ async def test_check_space_id_and_get_uid_not_found():
         # Parse the response
         response_body = json.loads(error.body)
         assert response_body["code"] == CodeEnum.SpaceIDNotExistError.code
-        assert f"space_id: {space_id} does not contain database_id: {database_id}" in response_body["message"]
+        assert (
+            f"space_id: {space_id} does not contain database_id: {database_id}"
+            in response_body["message"]
+        )
         assert response_body["sid"] == "test-sid"
 
         mock_span_context.add_info_event.assert_called_once_with(
@@ -500,7 +510,7 @@ async def test_check_space_id_and_get_uid_edge_cases():
     """Test check_space_id_and_get_uid with edge cases."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 0  # Edge case: zero database_id
-    space_id = ""    # Edge case: empty space_id
+    space_id = ""  # Edge case: empty space_id
 
     # Mock span context
     mock_span_context = MagicMock()

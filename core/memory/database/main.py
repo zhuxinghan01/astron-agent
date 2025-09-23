@@ -10,28 +10,32 @@ import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
+from common.initialize.initialize import initialize_services
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from loguru import logger
-from starlette.middleware.cors import CORSMiddleware
-
-from common.initialize.initialize import initialize_services
-
 from memory.database.api import router
 from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.exceptions.error_code import CodeEnum
+from starlette.middleware.cors import CORSMiddleware
 
 
 async def initialize_extensions():
-    os.environ["CONFIG_ENV_PATH"] = (
-        "./memory/database/config.env"
-    )
+    os.environ["CONFIG_ENV_PATH"] = "./memory/database/config.env"
 
-    need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
+    need_init_services = [
+        "settings_service",
+        "log_service",
+        "otlp_sid_service",
+        "otlp_span_service",
+        "otlp_metric_service",
+    ]
     initialize_services(services=need_init_services)
 
-    from repository.middleware.initialize import initialize_services as rep_initialize_services
+    from repository.middleware.initialize import \
+        initialize_services as rep_initialize_services
+
     await rep_initialize_services()
 
 
@@ -108,7 +112,8 @@ def create_app():
                 for err in exc.errors()
             ]
             return format_response(
-                code=CodeEnum.ParamError.code, message=f"Parameter validation failed: {error_details}"
+                code=CodeEnum.ParamError.code,
+                message=f"Parameter validation failed: {error_details}",
             )
 
         # Register global exception handler
@@ -128,7 +133,8 @@ def create_app():
             )
 
         # Register custom exception handler
-        from api import CustomException  # pylint: disable=import-outside-toplevel
+        from api import \
+            CustomException  # pylint: disable=import-outside-toplevel
 
         @app.exception_handler(CustomException)
         async def custom_exception_handler(_request: Request, exc: CustomException):

@@ -1,6 +1,8 @@
 """
 Unwrap cause module for error.
 """
+
+
 def unwrap_cause(exc: BaseException):
     """
     Layer by layer unwrap __cause__ until getting the underlying exception.

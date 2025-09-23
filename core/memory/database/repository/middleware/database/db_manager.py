@@ -5,14 +5,13 @@ Database service manager module for handling async database connections and sess
 from typing import AsyncGenerator
 
 from loguru import logger
+from memory.database.repository.middleware.base import Service
+from memory.database.repository.middleware.mid_utils import ServiceType
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-from memory.database.repository.middleware.base import Service
-from memory.database.repository.middleware.mid_utils import ServiceType
 
 
 class DatabaseService(Service):
@@ -32,12 +31,12 @@ class DatabaseService(Service):
     name = ServiceType.DATABASE_SERVICE
 
     def __init__(
-            self,
-            database_url: str,
-            connect_timeout: int = 10,
-            pool_size: int = 200,
-            max_overflow: int = 800,
-            pool_recycle: int = 3600,
+        self,
+        database_url: str,
+        connect_timeout: int = 10,
+        pool_size: int = 200,
+        max_overflow: int = 800,
+        pool_recycle: int = 3600,
     ):
         """Initialize database service with connection parameters.
 
@@ -58,12 +57,12 @@ class DatabaseService(Service):
 
     @classmethod
     async def create(
-            cls,
-            database_url: str,
-            connect_timeout: int = 10,
-            pool_size: int = 200,
-            max_overflow: int = 800,
-            pool_recycle: int = 3600,
+        cls,
+        database_url: str,
+        connect_timeout: int = 10,
+        pool_size: int = 200,
+        max_overflow: int = 800,
+        pool_recycle: int = 3600,
     ):
         """Create and initialize database service instance.
 
@@ -98,9 +97,7 @@ class DatabaseService(Service):
             max_overflow=self.max_overflow,
             pool_recycle=self.pool_recycle,
             pool_pre_ping=True,
-            connect_args={
-                "statement_cache_size": 0  # Disable asyncpg statement cache
-            },
+            connect_args={"statement_cache_size": 0},  # Disable asyncpg statement cache
         )
 
     async def init_db(self):

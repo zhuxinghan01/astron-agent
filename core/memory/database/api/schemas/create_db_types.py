@@ -5,9 +5,8 @@ This module contains Pydantic models for create database operation input validat
 
 from typing import Optional
 
-from pydantic import Field
-
 from memory.database.api.schemas.common_types import UidCommon
+from pydantic import Field
 
 
 class CreateDBInput(UidCommon):  # pylint: disable=too-few-public-methods
@@ -20,6 +19,7 @@ class CreateDBInput(UidCommon):  # pylint: disable=too-few-public-methods
         description: Optional description (max 200 chars)
         space_id: Optional team space ID
     """
+
     # database_name: Required, length 1-20, regex restriction
     database_name: str = Field(
         ...,

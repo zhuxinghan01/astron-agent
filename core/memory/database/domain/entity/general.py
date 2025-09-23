@@ -5,12 +5,11 @@ for async database operations.
 
 import re
 
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from memory.database.exceptions.e import CustomException
 from memory.database.exceptions.error_code import CodeEnum
 from memory.database.utils.retry import retry_on_invalid_cached_statement
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def extract_sql_params(sql: str) -> set:
@@ -46,7 +45,8 @@ async def parse_and_exec_sql(session: AsyncSession, sql: str, params: dict = Non
     missing = param_names - provided_keys
     if missing:
         raise CustomException(
-            err_code=CodeEnum.SQLParseError.code, err_msg=f"Missing binding parameters: {missing}"
+            err_code=CodeEnum.SQLParseError.code,
+            err_msg=f"Missing binding parameters: {missing}",
         )
 
     return await session.execute(text(sql), params or {})

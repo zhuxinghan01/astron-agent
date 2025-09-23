@@ -5,22 +5,22 @@ import re
 import asyncpg
 import asyncpg.exceptions
 import sqlglot
+from common.otlp.trace.span import Span
+from common.service import get_otlp_metric_service, get_otlp_span_service
 from fastapi import APIRouter, Depends
-from sqlglot.errors import ParseError
-from sqlglot.expressions import Alter, Command, Create, Drop
-from sqlmodel.ext.asyncio.session import AsyncSession
-from starlette.responses import JSONResponse
-
 from memory.database.api.schemas.exec_ddl_types import ExecDDLInput
-from memory.database.api.v1.common import check_database_exists_by_did_uid, check_space_id_and_get_uid
+from memory.database.api.v1.common import (check_database_exists_by_did_uid,
+                                           check_space_id_and_get_uid)
 from memory.database.domain.entity.general import exec_sql_statement
 from memory.database.domain.entity.schema import set_search_path_by_schema
 from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.exceptions.error_code import CodeEnum
-from common.service import get_otlp_span_service, get_otlp_metric_service
-from common.otlp.trace.span import Span
 from memory.database.repository.middleware.getters import get_session
 from memory.database.utils.exception_util import unwrap_cause
+from sqlglot.errors import ParseError
+from sqlglot.expressions import Alter, Command, Create, Drop
+from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette.responses import JSONResponse
 
 exec_ddl_router = APIRouter(tags=["EXEC_DDL"])
 
@@ -94,9 +94,9 @@ async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_sessi
     span = span_service.get_span()(uid=uid)
 
     with span.start(
-            func_name="exec_ddl",
-            add_source_function_name=True,
-            attributes={"uid": uid, "database_id": database_id},
+        func_name="exec_ddl",
+        add_source_function_name=True,
+        attributes={"uid": uid, "database_id": database_id},
     ) as span_context:
         ddl = ddl_input.ddl
         space_id = ddl_input.space_id
@@ -146,7 +146,7 @@ async def exec_ddl(ddl_input: ExecDDLInput, db: AsyncSession = Depends(get_sessi
                 message=CodeEnum.Successes.msg,
                 sid=span_context.sid,
             )
-        except Exception as ddl_error: # pylint: disable=broad-except
+        except Exception as ddl_error:  # pylint: disable=broad-except
             span_context.record_exception(ddl_error)
             await db.rollback()
             m.in_error_count(

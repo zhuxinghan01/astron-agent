@@ -26,6 +26,7 @@ class AtomicCounter:  # pylint: disable=too-few-public-methods
         with self.lock:
             self.value += 1
 
+
 # Example usage:
 # counter = AtomicCounter()
 #

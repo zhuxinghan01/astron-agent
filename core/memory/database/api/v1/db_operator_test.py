@@ -4,20 +4,18 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from memory.database.api.schemas.clone_db_types import CloneDBInput
 from memory.database.api.schemas.create_db_types import CreateDBInput
 from memory.database.api.schemas.drop_db_types import DropDBInput
 from memory.database.api.schemas.modify_db_desc_types import ModifyDBDescInput
-from memory.database.api.v1.db_operator import (DatabaseInfo, clone_db,
-                               create_db, drop_db, exec_generate_schema,
-                               generate_copy_data_sql,
-                               generate_copy_table_structures_sql,
-                               modify_db_description)
+from memory.database.api.v1.db_operator import (
+    DatabaseInfo, clone_db, create_db, drop_db, exec_generate_schema,
+    generate_copy_data_sql, generate_copy_table_structures_sql,
+    modify_db_description)
 from memory.database.domain.models.database_meta import DatabaseMeta
 from memory.database.domain.models.schema_meta import SchemaMeta
 from memory.database.exceptions.error_code import CodeEnum
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 def test_generate_copy_table_structures_sql():
@@ -92,33 +90,46 @@ async def test_clone_db_success():
     fake_span_context.add_info_events = MagicMock()
     fake_span_context.record_exception = MagicMock()
 
-    with patch("memory.database.api.v1.db_operator.get_otlp_metric_service") as mock_metric_service_func:
-        with patch("memory.database.api.v1.db_operator.get_otlp_span_service") as mock_span_service_func:
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
             # Mock meter instance
             mock_meter_instance = MagicMock()
             mock_meter_instance.in_success_count = MagicMock()
 
             # Mock metric service
             mock_metric_service = MagicMock()
-            mock_metric_service.get_meter.return_value = lambda func: mock_meter_instance
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
             mock_metric_service_func.return_value = mock_metric_service
 
             # Mock span service and instance
             mock_span_instance = MagicMock()
-            mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
             mock_span_service = MagicMock()
             mock_span_service.get_span.return_value = lambda uid: mock_span_instance
             mock_span_service_func.return_value = mock_span_service
 
             with patch(
-                "memory.database.api.v1.db_operator.get_schema_name_by_did", new_callable=AsyncMock
+                "memory.database.api.v1.db_operator.get_schema_name_by_did",
+                new_callable=AsyncMock,
             ) as mock_get_schema:
                 mock_get_schema.return_value = [["prod_schema"], ["test_schema"]]
 
                 with patch(
-                    "memory.database.api.v1.db_operator.exec_generate_schema", new_callable=AsyncMock
+                    "memory.database.api.v1.db_operator.exec_generate_schema",
+                    new_callable=AsyncMock,
                 ) as mock_exec_schema:
-                    async def fake_exec_generate_schema(*args, **kwargs):  # pylint: disable=unused-argument
+
+                    async def fake_exec_generate_schema(
+                        *args, **kwargs
+                    ):  # pylint: disable=unused-argument
                         return DatabaseInfo(
                             database_id=456,
                             prod_schema="prod_new",
@@ -229,29 +240,40 @@ async def test_create_db_success():
     fake_span_context.add_info_event = MagicMock()
     fake_span_context.record_exception = MagicMock()
 
-    with patch("memory.database.api.v1.db_operator.get_otlp_metric_service") as mock_metric_service_func:
-        with patch("memory.database.api.v1.db_operator.get_otlp_span_service") as mock_span_service_func:
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
             # Mock meter instance
             mock_meter_instance = MagicMock()
             mock_meter_instance.in_success_count = MagicMock()
 
             # Mock metric service
             mock_metric_service = MagicMock()
-            mock_metric_service.get_meter.return_value = lambda func: mock_meter_instance
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
             mock_metric_service_func.return_value = mock_metric_service
 
             # Mock span service and instance
             mock_span_instance = MagicMock()
-            mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
             mock_span_service = MagicMock()
             mock_span_service.get_span.return_value = lambda uid: mock_span_instance
             mock_span_service_func.return_value = mock_span_service
 
             with patch(
-                "memory.database.api.v1.db_operator.exec_generate_schema", new_callable=AsyncMock
+                "memory.database.api.v1.db_operator.exec_generate_schema",
+                new_callable=AsyncMock,
             ) as mock_exec_schema:
                 mock_exec_schema.return_value = DatabaseInfo(
-                    database_id=789, prod_schema="prod_u1_789", test_schema="test_u1_789"
+                    database_id=789,
+                    prod_schema="prod_u1_789",
+                    test_schema="test_u1_789",
                 )
 
                 response = await create_db(test_input, mock_db)
@@ -282,27 +304,35 @@ async def test_drop_db_success():
     fake_span_context.record_exception = MagicMock()
     fake_span_context.report_exception = MagicMock()
 
-    with patch("memory.database.api.v1.db_operator.get_otlp_metric_service") as mock_metric_service_func:
-        with patch("memory.database.api.v1.db_operator.get_otlp_span_service") as mock_span_service_func:
+    with patch(
+        "memory.database.api.v1.db_operator.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.db_operator.get_otlp_span_service"
+        ) as mock_span_service_func:
             # Mock meter instance
             mock_meter_instance = MagicMock()
             mock_meter_instance.in_success_count = MagicMock()
 
             # Mock metric service
             mock_metric_service = MagicMock()
-            mock_metric_service.get_meter.return_value = lambda func: mock_meter_instance
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
             mock_metric_service_func.return_value = mock_metric_service
 
             # Mock span service and instance
             mock_span_instance = MagicMock()
-            mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
+            mock_span_instance.start.return_value.__enter__.return_value = (
+                fake_span_context
+            )
             mock_span_service = MagicMock()
             mock_span_service.get_span.return_value = lambda uid: mock_span_instance
             mock_span_service_func.return_value = mock_span_service
 
             with patch(
                 "memory.database.api.v1.db_operator.check_database_exists_by_did_uid",
-                new_callable=AsyncMock
+                new_callable=AsyncMock,
             ) as mock_check_db:
                 mock_check_db.return_value = (
                     [["prod_u1_123"], ["test_u1_123"]],
@@ -310,12 +340,14 @@ async def test_drop_db_success():
                 )
 
                 with patch(
-                    "memory.database.api.v1.db_operator.del_database_meta_by_did", new_callable=AsyncMock
+                    "memory.database.api.v1.db_operator.del_database_meta_by_did",
+                    new_callable=AsyncMock,
                 ) as mock_del_db_meta:
                     mock_del_db_meta.return_value = None
 
                     with patch(
-                        "memory.database.api.v1.db_operator.del_schema_meta_by_did", new_callable=AsyncMock
+                        "memory.database.api.v1.db_operator.del_schema_meta_by_did",
+                        new_callable=AsyncMock,
                     ) as mock_del_schema_meta:
                         mock_del_schema_meta.return_value = None
 

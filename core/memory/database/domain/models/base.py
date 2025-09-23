@@ -24,7 +24,9 @@ def orjson_dumps(v, *, default=None, sort_keys=False, indent_2=True):
             option |= orjson.OPT_INDENT_2  # pylint: disable=no-member
     if default is None:
         return orjson.dumps(v, option=option).decode()  # pylint: disable=no-member
-    return orjson.dumps(v, default=default, option=option).decode()  # pylint: disable=no-member
+    return orjson.dumps(
+        v, default=default, option=option
+    ).decode()  # pylint: disable=no-member
 
 
 class SQLModelSerializable(SQLModel):
@@ -35,6 +37,7 @@ class SQLModelSerializable(SQLModel):
 
     class Config:  # pylint: disable=too-few-public-methods
         """Configuration for SQLModel serialization behavior."""
+
         from_attributes = True
 
     def json(self, **kwargs):

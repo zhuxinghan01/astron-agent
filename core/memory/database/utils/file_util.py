@@ -42,7 +42,9 @@ def get_image_extension(image_url, response=None):
         content_type = response.headers.get("Content-Type")
         if content_type:
             extension = content_type.split("/")[-1]
-            extension = extension.replace("jpeg", "jpg")  # Handle jpeg and jpg unification
+            extension = extension.replace(
+                "jpeg", "jpg"
+            )  # Handle jpeg and jpg unification
 
     return extension
 

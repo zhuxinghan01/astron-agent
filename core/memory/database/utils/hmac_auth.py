@@ -48,8 +48,10 @@ class HMACAuth:
         """
         url_result = parse.urlparse(request_url)
         date = format_date_time(mktime(datetime.now().timetuple()))
-        signature_origin = (f"host: {url_result.hostname}\n"
-                            f"date: {date}\n{method} {url_result.path} HTTP/1.1")
+        signature_origin = (
+            f"host: {url_result.hostname}\n"
+            f"date: {date}\n{method} {url_result.path} HTTP/1.1"
+        )
         signature_sha = hmac.new(
             api_secret.encode("utf-8"),
             signature_origin.encode("utf-8"),

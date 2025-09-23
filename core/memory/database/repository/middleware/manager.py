@@ -26,9 +26,9 @@ class ServiceManager:
         self.dependencies = {}
 
     async def register_factory(
-            self,
-            service_factory: "ServiceFactory",
-            dependencies: Optional[List[ServiceType]] = None,
+        self,
+        service_factory: "ServiceFactory",
+        dependencies: Optional[List[ServiceType]] = None,
     ):
         """
         Registers a new factory with dependencies.

@@ -4,7 +4,8 @@ Database service factory module for creating and configuring DatabaseService ins
 
 import os
 
-from memory.database.repository.middleware.database.db_manager import DatabaseService
+from memory.database.repository.middleware.database.db_manager import \
+    DatabaseService
 from memory.database.repository.middleware.factory import ServiceFactory
 
 

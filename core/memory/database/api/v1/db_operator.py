@@ -5,32 +5,29 @@ for creating, cloning, dropping and modifying databases.
 
 import sqlalchemy
 import sqlalchemy.exc
+from common.otlp.trace.span import Span
+from common.service import get_otlp_metric_service, get_otlp_span_service
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from sqlalchemy import text
-from sqlmodel.ext.asyncio.session import AsyncSession
-from starlette.responses import JSONResponse
-
 from memory.database.api.schemas.clone_db_types import CloneDBInput
 from memory.database.api.schemas.create_db_types import CreateDBInput
 from memory.database.api.schemas.drop_db_types import DropDBInput
 from memory.database.api.schemas.modify_db_desc_types import ModifyDBDescInput
 from memory.database.api.v1.common import check_database_exists_by_did_uid
-from memory.database.domain.entity.database_meta import (del_database_meta_by_did,
-                                        get_id_by_did_uid,
-                                        get_uid_by_did_space_id,
-                                        get_uid_by_space_id,
-                                        update_database_meta_by_did_uid)
+from memory.database.domain.entity.database_meta import (
+    del_database_meta_by_did, get_id_by_did_uid, get_uid_by_did_space_id,
+    get_uid_by_space_id, update_database_meta_by_did_uid)
 from memory.database.domain.entity.schema_meta import (del_schema_meta_by_did,
-                                      get_schema_name_by_did)
+                                                       get_schema_name_by_did)
 from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.domain.models.database_meta import DatabaseMeta
 from memory.database.domain.models.schema_meta import SchemaMeta
 from memory.database.exceptions.error_code import CodeEnum
-from common.service import get_otlp_span_service, get_otlp_metric_service
-from common.otlp.trace.span import Span
 from memory.database.repository.middleware.getters import get_session
 from memory.database.utils.snowfake import get_id
+from pydantic import BaseModel
+from sqlalchemy import text
+from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette.responses import JSONResponse
 
 clone_db_router = APIRouter(tags=["CLONE_DB"])
 create_db_router = APIRouter(tags=["CREATE_DB"])
@@ -85,10 +82,7 @@ def generate_copy_data_sql(source_schema: str, target_schema: str):
     return copy_data_sql
 
 
-@clone_db_router.post(
-    "/clone_database",
-    response_class=JSONResponse
-)
+@clone_db_router.post("/clone_database", response_class=JSONResponse)
 async def clone_db(clone_input: CloneDBInput, db: AsyncSession = Depends(get_session)):
     """Clone an existing database with all its schemas and data."""
     database_id = clone_input.database_id
@@ -247,13 +241,9 @@ async def exec_generate_schema(
         raise e
 
 
-@create_db_router.post(
-    "/create_database",
-    response_class=JSONResponse
-)
+@create_db_router.post("/create_database", response_class=JSONResponse)
 async def create_db(
-        create_input: CreateDBInput,
-        db: AsyncSession = Depends(get_session)
+    create_input: CreateDBInput, db: AsyncSession = Depends(get_session)
 ):
     """Create a new database with production and test schemas."""
     uid = create_input.uid
@@ -378,11 +368,7 @@ async def drop_db(drop_input: DropDBInput, db: AsyncSession = Depends(get_sessio
 
         try:
             for schema in schema_list:
-                await db.exec(
-                    text(
-                        f'DROP SCHEMA IF EXISTS "{schema[0]}" CASCADE;'
-                    )
-                )
+                await db.exec(text(f'DROP SCHEMA IF EXISTS "{schema[0]}" CASCADE;'))
             await db.commit()
             m.in_success_count(lables={"uid": uid})
             return format_response(
@@ -464,7 +450,9 @@ async def modify_db_description(
                     lables={"uid": uid},
                     span=span_context,
                 )
-                span_context.add_error_event(f"User: {uid} does not have database: {database_id}")
+                span_context.add_error_event(
+                    f"User: {uid} does not have database: {database_id}"
+                )
                 return format_response(
                     code=CodeEnum.DatabaseNotExistError.code,
                     message=f"uid: {uid} or database_id: {database_id} error, please verify",

@@ -5,13 +5,12 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from memory.database.api.schemas.upload_data_types import UploadDataInput
+from memory.database.api.v1.upload_data import (insert_in_batches,
+                                                parse_upload_file, upload_data)
+from memory.database.exceptions.error_code import CodeEnum
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.responses import JSONResponse
-
-from memory.database.api.schemas.upload_data_types import UploadDataInput
-from memory.database.api.v1.upload_data import (insert_in_batches, parse_upload_file,
-                               upload_data)
-from memory.database.exceptions.error_code import CodeEnum
 
 
 @pytest.mark.asyncio
@@ -124,9 +123,7 @@ async def test_upload_data_success():
     fake_span_context.add_info_event = MagicMock()
 
     mock_span_instance = MagicMock()
-    mock_span_instance.start.return_value.__enter__.return_value = (
-        fake_span_context
-    )
+    mock_span_instance.start.return_value.__enter__.return_value = fake_span_context
 
     mock_parse_file = AsyncMock()
     mock_parse_file.return_value = (
@@ -157,11 +154,17 @@ async def test_upload_data_success():
     mock_meter_instance.in_success_count = MagicMock()
     mock_meter_instance.in_error_count = MagicMock()
 
-    with patch("memory.database.api.v1.upload_data.get_otlp_metric_service") as mock_metric_service_func:
-        with patch("memory.database.api.v1.upload_data.get_otlp_span_service") as mock_span_service_func:
+    with patch(
+        "memory.database.api.v1.upload_data.get_otlp_metric_service"
+    ) as mock_metric_service_func:
+        with patch(
+            "memory.database.api.v1.upload_data.get_otlp_span_service"
+        ) as mock_span_service_func:
             # Mock the metric service
             mock_metric_service = MagicMock()
-            mock_metric_service.get_meter.return_value = lambda func: mock_meter_instance
+            mock_metric_service.get_meter.return_value = (
+                lambda func: mock_meter_instance
+            )
             mock_metric_service_func.return_value = mock_metric_service
 
             # Mock the span service
@@ -169,9 +172,17 @@ async def test_upload_data_success():
             mock_span_service.get_span.return_value = lambda uid: mock_span_instance
             mock_span_service_func.return_value = mock_span_service
 
-            with patch("memory.database.api.v1.upload_data.parse_upload_file", new=mock_parse_file):
-                with patch("memory.database.api.v1.upload_data.insert_in_batches", new=mock_insert):
-                    with patch("memory.database.api.v1.upload_data.get_id", new=mock_get_id):
+            with patch(
+                "memory.database.api.v1.upload_data.parse_upload_file",
+                new=mock_parse_file,
+            ):
+                with patch(
+                    "memory.database.api.v1.upload_data.insert_in_batches",
+                    new=mock_insert,
+                ):
+                    with patch(
+                        "memory.database.api.v1.upload_data.get_id", new=mock_get_id
+                    ):
                         response = await upload_data(
                             app_id=test_input.app_id,
                             database_id=test_input.database_id,

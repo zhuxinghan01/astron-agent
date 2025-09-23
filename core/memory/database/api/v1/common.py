@@ -5,10 +5,8 @@ for common databases.
 
 import sqlalchemy
 import sqlalchemy.exc
-
-from memory.database.domain.entity.database_meta import (get_id_by_did_uid,
-                                         get_id_by_did,
-                                         get_uid_by_did_space_id)
+from memory.database.domain.entity.database_meta import (
+    get_id_by_did, get_id_by_did_uid, get_uid_by_did_space_id)
 from memory.database.domain.entity.schema_meta import get_schema_name_by_did
 from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.exceptions.error_code import CodeEnum
@@ -24,7 +22,9 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
                 lables={"uid": uid},
                 span=span_context,
             )
-            span_context.add_error_event(f"User: {uid} does not have database: {database_id}")
+            span_context.add_error_event(
+                f"User: {uid} does not have database: {database_id}"
+            )
             return None, format_response(
                 code=CodeEnum.DatabaseNotExistError.code,
                 message=f"uid: {uid} or database_id: {database_id} error, please verify",

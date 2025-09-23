@@ -33,7 +33,7 @@ def replace_literals_with_params(expression, param_map, counter) -> exp.Expressi
     if isinstance(expression, exp.Boolean):
         key = generate_param_name(next(counter))
         param_map[key] = (
-                expression.this is True or str(expression.this).upper() == "TRUE"
+            expression.this is True or str(expression.this).upper() == "TRUE"
         )
         return exp.Var(this=f":{key}")
 

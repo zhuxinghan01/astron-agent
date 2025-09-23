@@ -1,9 +1,8 @@
 """Module providing database metadata operations for async database interactions."""
 
+from memory.database.utils.retry import retry_on_invalid_cached_statement
 from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-from memory.database.utils.retry import retry_on_invalid_cached_statement
 
 
 @retry_on_invalid_cached_statement(max_retries=3)
@@ -73,7 +72,7 @@ async def del_database_meta_by_did(session: AsyncSession, database_id: int):
 
 @retry_on_invalid_cached_statement(max_retries=3)
 async def update_database_meta_by_did_uid(
-        session: AsyncSession, database_id: int, uid: str, description: str
+    session: AsyncSession, database_id: int, uid: str, description: str
 ):
     """Update database description by database ID and user ID.
 
@@ -97,7 +96,7 @@ async def update_database_meta_by_did_uid(
 
 @retry_on_invalid_cached_statement(max_retries=3)
 async def get_uid_by_did_space_id(
-        session: AsyncSession, database_id: int, space_id: str
+    session: AsyncSession, database_id: int, space_id: str
 ):
     """Get user ID by database ID and space ID.
 
