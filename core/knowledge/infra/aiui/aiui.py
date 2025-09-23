@@ -36,7 +36,7 @@ async def assemble_auth_url(request_path: str, method: str = "POST") -> str:
     """
     api_key = os.getenv("AIUI_API_KEY", "")
     api_secret = os.getenv("AIUI_API_SECRET", "")
-    request_url =os.getenv("AIUI_URL_V2", "")+ request_path
+    request_url = os.getenv("AIUI_URL_V2", "") + request_path
 
     url_parsed = urlparse(request_url)
     host = url_parsed.hostname
@@ -154,6 +154,7 @@ async def document_parse(file_url: str, resource_type: int, **kwargs: Any) -> Di
         **kwargs
     )
 
+
 async def chunk_split(
         document: Any,
         length_range: Optional[List[int]] = None,
@@ -196,6 +197,7 @@ async def chunk_split(
         url=url,
         **kwargs
     )
+
 
 async def chunk_save(doc_id: str, group: str, chunks: List[Any], **kwargs: Any) -> Dict[str, Any]:
     """
@@ -259,7 +261,7 @@ async def get_doc_content(doc_id: str, **kwargs: Any) -> Dict[str, Any]:
         Document content
     """
     url = await assemble_auth_url(
-        request_path="/v2/aiui/cbm/chunk/"+os.getenv("AIUI_QUERY_REPOID_V2", ""),
+        request_path="/v2/aiui/cbm/chunk/" + os.getenv("AIUI_QUERY_REPOID_V2", ""),
         method="GET"
     )
     params = {"docId": doc_id}
