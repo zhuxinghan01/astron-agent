@@ -10,7 +10,7 @@ from sqlmodel import Field
 
 
 class DatabaseMeta(
-    SQLModelSerializable, table=True
+    SQLModelSerializable, table=True  # type: ignore[call-arg]
 ):  # pylint: disable=too-few-public-methods
     """Database metadata model representing database information and ownership.
 

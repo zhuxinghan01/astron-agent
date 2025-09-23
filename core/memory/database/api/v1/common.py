@@ -3,6 +3,8 @@ Database operator API endpoints
 for common databases.
 """
 
+from typing import Any, List, Optional, Tuple
+
 import sqlalchemy
 import sqlalchemy.exc
 from memory.database.domain.entity.database_meta import (
@@ -12,7 +14,9 @@ from memory.database.domain.entity.views.http_resp import format_response
 from memory.database.exceptions.error_code import CodeEnum
 
 
-async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m):
+async def check_database_exists_by_did_uid(
+    db: Any, database_id: int, uid: str, span_context: Any, m: Any
+) -> Tuple[Optional[List[List[str]]], Optional[Any]]:
     """Check if database exists and return its schemas."""
     try:
         db_id_res = await get_id_by_did_uid(db, database_id=database_id, uid=uid)
@@ -28,7 +32,7 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
             return None, format_response(
                 code=CodeEnum.DatabaseNotExistError.code,
                 message=f"uid: {uid} or database_id: {database_id} error, "
-                        "please verify",
+                "please verify",
                 sid=span_context.sid,
             )
 
@@ -49,7 +53,7 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
         return None, format_response(
             code=CodeEnum.DatabaseExecutionError.code,
             message=f"Database execution failed. Please check if the passed "
-                    f"database id and uid are correct, {str(e.__cause__)}",
+            f"database id and uid are correct, {str(e.__cause__)}",
             sid=span_context.sid,
         )
     except Exception as e:  # pylint: disable=broad-except
@@ -64,7 +68,9 @@ async def check_database_exists_by_did_uid(db, database_id, uid, span_context, m
         )
 
 
-async def check_database_exists_by_did(db, database_id, uid, span_context, m):
+async def check_database_exists_by_did(
+    db: Any, database_id: int, uid: str, span_context: Any, m: Any
+) -> Tuple[Optional[List[List[str]]], Optional[Any]]:
     """Check if database exists."""
     try:
         db_id_res = await get_id_by_did(db, database_id)
@@ -109,7 +115,9 @@ async def check_database_exists_by_did(db, database_id, uid, span_context, m):
         )
 
 
-async def check_space_id_and_get_uid(db, database_id, space_id, span_context, m):
+async def check_space_id_and_get_uid(
+    db: Any, database_id: int, space_id: str, span_context: Any, m: Any
+) -> Tuple[Optional[List[List[str]]], Optional[Any]]:
     """Check if space ID is valid."""
     span_context.add_info_event(f"space_id: {space_id}")
     create_uid_res = await get_uid_by_did_space_id(db, database_id, space_id)

@@ -8,7 +8,7 @@ from memory.database.repository.middleware.mid_utils import \
     get_factories_and_deps
 
 
-async def initialize_services():
+async def initialize_services() -> None:
     """
     Initialize all the services needed.
 

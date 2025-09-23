@@ -11,7 +11,7 @@ from memory.database.exceptions.error_code import CodeEnum
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
-def test_is_ddl_allowed_allowed_statements():
+def test_is_ddl_allowed_allowed_statements() -> None:
     """Test allowed DDL statements (CREATE TABLE/ALTER TABLE etc)."""
     allowed_sql_cases = [
         "CREATE TABLE users (id INT);",
@@ -31,7 +31,7 @@ def test_is_ddl_allowed_allowed_statements():
 
 
 @pytest.mark.asyncio
-async def test_reset_uid_with_valid_space_id_reset_success():
+async def test_reset_uid_with_valid_space_id_reset_success() -> None:
     """Test _reset_uid with valid space_id resets to new uid."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_span_context = MagicMock()
@@ -73,7 +73,7 @@ async def test_reset_uid_with_valid_space_id_reset_success():
 
 
 @pytest.mark.asyncio
-async def test_ddl_split_success():
+async def test_ddl_split_success() -> None:
     """Test successful DDL splitting (multiple valid statements)."""
     mock_span_context = MagicMock()
     mock_meter = MagicMock()
@@ -101,7 +101,7 @@ async def test_ddl_split_success():
 
 
 @pytest.mark.asyncio
-async def test_exec_ddl_success():
+async def test_exec_ddl_success() -> None:
     """Test successful exec_ddl endpoint (valid DDL + database exists)."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_db.commit = AsyncMock(return_value=None)

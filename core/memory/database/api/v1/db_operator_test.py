@@ -1,6 +1,7 @@
 """Unit tests for database operator functionality."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,7 +19,7 @@ from memory.database.exceptions.error_code import CodeEnum
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
-def test_generate_copy_table_structures_sql():
+def test_generate_copy_table_structures_sql() -> None:
     """Test generate_copy_table_structures_sql function."""
     source_schema = "prod_u1_123"
     target_schema = "prod_u1_456"
@@ -45,7 +46,7 @@ def test_generate_copy_table_structures_sql():
     assert f"LIKE {source_schema}." in result_sql
 
 
-def test_generate_copy_data_sql():
+def test_generate_copy_data_sql() -> None:
     """Test generate_copy_data_sql function."""
     source_schema = "test_u1_789"
     target_schema = "test_u1_012"
@@ -72,7 +73,7 @@ def test_generate_copy_data_sql():
 
 
 @pytest.mark.asyncio
-async def test_clone_db_success():
+async def test_clone_db_success() -> None:
     """Test clone_db endpoint success scenario."""
     mock_db = AsyncMock()
     mock_db.exec = AsyncMock(return_value=None)
@@ -128,8 +129,8 @@ async def test_clone_db_success():
                 ) as mock_exec_schema:
 
                     async def fake_exec_generate_schema(
-                        *args, **kwargs
-                    ):  # pylint: disable=unused-argument
+                        *args: Any, **kwargs: Any
+                    ) -> DatabaseInfo:  # pylint: disable=unused-argument
                         return DatabaseInfo(
                             database_id=456,
                             prod_schema="prod_new",
@@ -161,7 +162,7 @@ async def test_clone_db_success():
 
 
 @pytest.mark.asyncio
-async def test_exec_generate_schema_success():
+async def test_exec_generate_schema_success() -> None:
     """Test exec_generate_schema success scenario."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_db.exec = AsyncMock(return_value=None)
@@ -219,7 +220,7 @@ async def test_exec_generate_schema_success():
 
 
 @pytest.mark.asyncio
-async def test_create_db_success():
+async def test_create_db_success() -> None:
     """Test create_db endpoint success scenario."""
     mock_db = AsyncMock()
     mock_db.exec = AsyncMock(return_value=None)
@@ -289,7 +290,7 @@ async def test_create_db_success():
 
 
 @pytest.mark.asyncio
-async def test_drop_db_success():
+async def test_drop_db_success() -> None:
     """Test drop_db endpoint success scenario."""
     mock_db = AsyncMock()
     mock_db.exec = AsyncMock(return_value=None)
@@ -362,7 +363,7 @@ async def test_drop_db_success():
 
 
 @pytest.mark.asyncio
-async def test_modify_db_description_success():
+async def test_modify_db_description_success() -> None:
     """Test modify_db_description endpoint success scenario."""
     mock_db = AsyncMock()
     mock_db.commit = AsyncMock(return_value=None)
@@ -438,7 +439,7 @@ async def test_modify_db_description_success():
                         mock_db,
                         database_id=123,
                         uid="u1",
-                        description="Updated test database description"
+                        description="Updated test database description",
                     )
                     mock_db.commit.assert_called_once()
                     mock_meter_instance.in_success_count.assert_called_once_with(
@@ -448,7 +449,7 @@ async def test_modify_db_description_success():
 
 
 @pytest.mark.asyncio
-async def test_modify_db_description_database_not_exist():
+async def test_modify_db_description_database_not_exist() -> None:
     """Test modify_db_description endpoint when database does not exist."""
     mock_db = AsyncMock()
     mock_db.rollback = AsyncMock(return_value=None)
@@ -506,8 +507,10 @@ async def test_modify_db_description_database_not_exist():
                 assert "sid" in response_body
 
                 assert response_body["code"] == CodeEnum.DatabaseNotExistError.code
-                assert ("uid: u1 or database_id: 999 error, please verify" in
-                        response_body["message"])
+                assert (
+                    "uid: u1 or database_id: 999 error, please verify"
+                    in response_body["message"]
+                )
                 assert response_body["sid"] == "modify-desc-error-sid"
 
                 mock_get_id.assert_called_once_with(mock_db, database_id=999, uid="u1")
@@ -522,7 +525,7 @@ async def test_modify_db_description_database_not_exist():
 
 
 @pytest.mark.asyncio
-async def test_modify_db_description_with_space_id():
+async def test_modify_db_description_with_space_id() -> None:
     """Test modify_db_description endpoint with space_id."""
     mock_db = AsyncMock()
     mock_db.commit = AsyncMock(return_value=None)
@@ -607,7 +610,9 @@ async def test_modify_db_description_with_space_id():
                             mock_db,
                             database_id=123,
                             uid="team_u1",
-                            description=("Updated description for team space")
+                            description=("Updated description for team space"),
                         )
                         mock_db.commit.assert_called_once()
-                        fake_span_context.add_info_event.assert_any_call("space_id: space123")
+                        fake_span_context.add_info_event.assert_any_call(
+                            "space_id: space123"
+                        )

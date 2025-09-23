@@ -10,7 +10,7 @@ from sqlmodel import Field
 
 
 class SchemaMeta(
-    SQLModelSerializable, table=True
+    SQLModelSerializable, table=True  # type: ignore[call-arg]
 ):  # pylint: disable=too-few-public-methods
     """Database schema metadata model representing schema information and ownership.
 

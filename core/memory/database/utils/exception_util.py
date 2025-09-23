@@ -3,7 +3,7 @@ Unwrap cause module for error.
 """
 
 
-def unwrap_cause(exc: BaseException):
+def unwrap_cause(exc: BaseException) -> BaseException:
     """
     Layer by layer unwrap __cause__ until getting the underlying exception.
     """

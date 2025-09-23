@@ -43,7 +43,7 @@ async def parse_upload_file(
     """
     content = await file.read()
 
-    if not file.filename.endswith(SUPPORT_DATA_FILE_TYPES):
+    if not file.filename or not file.filename.endswith(SUPPORT_DATA_FILE_TYPES):
         raise CustomException(
             CodeEnum.UploadFileTypeError.code,
             message="Data file type only supports csv, xls or xlsx",
@@ -121,7 +121,7 @@ async def insert_in_batches(
             try:
                 row_id = get_id()
                 item.update({"id": row_id, "uid": uid})
-                await db.execute(sql, item)
+                await db.execute(sql, item)  # type: ignore[call-overload]
                 success_rows.append(row_id)
             except Exception as insert_error:  # pylint: disable=broad-except
                 failed_rows.append({"line": line_no, "error": str(insert_error)})
@@ -140,7 +140,7 @@ async def upload_data(
         ..., description="Upload data file, supports csv or xlsx format"
     ),
     db: AsyncSession = Depends(get_session),
-):
+) -> JSONResponse:
     """
     Upload data from file to specified database table.
 
@@ -156,7 +156,6 @@ async def upload_data(
     Returns:
         JSON response with upload results
     """
-    # span = Span(uid=uid)
     metric_service = get_otlp_metric_service()
     m = metric_service.get_meter()(func="upload_data")
     span_service = get_otlp_span_service()
@@ -179,7 +178,7 @@ async def upload_data(
             schema = f"{env}_{uid}_{database_id}"
             span_context.add_info_event(f"schema: {schema}")
             try:
-                await db.execute(text(f'SET search_path TO "{schema}"'))
+                await db.execute(text(f'SET search_path TO "{schema}"'))  # type: ignore[call-overload]
             except Exception as schema_error:  # pylint: disable=broad-except
                 span_context.record_exception(schema_error)
                 raise CustomException(
@@ -193,7 +192,7 @@ async def upload_data(
                 WHERE table_name = :table_name AND table_schema = :table_schema
             """
             )
-            result = await db.execute(
+            result = await db.execute(  # type: ignore[call-overload]
                 sql, {"table_name": table_name, "table_schema": schema}
             )
             table_columns = [row[0] for row in result.fetchall()]
@@ -208,7 +207,7 @@ async def upload_data(
                 raise CustomException(
                     CodeEnum.UploadFileTypeError,
                     err_msg="Upload data column names do not match target table, "
-                           "please check",
+                    "please check",
                 )
 
             success_rows, failed_rows = await insert_in_batches(
@@ -228,14 +227,14 @@ async def upload_data(
                 ) from commit_error
 
             m.in_success_count(lables={"uid": uid})
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 0,
                 message="success",
                 data={"success_rows": success_rows, "failed_rows": failed_rows},
             )
         except CustomException as custom_error:
             m.in_error_count(custom_error.code, lables={"uid": uid}, span=span_context)
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 code=custom_error.code,
                 message=custom_error.message,
                 sid=span_context.sid,
@@ -247,6 +246,6 @@ async def upload_data(
                 lables={"uid": uid},
                 span=span_context,
             )
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 code="-1", message="Upload data failed", sid=span_context.sid
             )

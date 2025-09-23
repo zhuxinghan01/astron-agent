@@ -5,6 +5,7 @@ import decimal
 import re
 import time
 import uuid
+from typing import Any, List
 
 import sqlparse
 from common.otlp.trace.span import Span
@@ -53,7 +54,7 @@ def rewrite_dml_with_uid_and_limit(
         tuple: (rewritten_sql, insert_ids)
     """
     parsed = parse_one(dml)
-    insert_ids = []
+    insert_ids: List[int] = []
 
     tables = [table.alias_or_name for table in parsed.find_all(exp.Table)]
 
@@ -71,7 +72,7 @@ def rewrite_dml_with_uid_and_limit(
     return parsed.sql(dialect="postgres"), insert_ids
 
 
-def _dml_add_where(parsed, tables, app_id, uid):
+def _dml_add_where(parsed: Any, tables: List[str], app_id: str, uid: str) -> None:
     """Add WHERE conditions to DML statements."""
     where_expr = parsed.args.get("where")
     uid_conditions = []
@@ -89,7 +90,7 @@ def _dml_add_where(parsed, tables, app_id, uid):
 
     final_condition = uid_conditions[0]
     for cond in uid_conditions[1:]:
-        final_condition = exp.and_(final_condition, cond)
+        final_condition = exp.and_(final_condition, cond)  # type: ignore[assignment]
 
     if where_expr:
         grouped_where = exp.Paren(this=where_expr.this)
@@ -100,7 +101,9 @@ def _dml_add_where(parsed, tables, app_id, uid):
     parsed.set("where", exp.Where(this=new_where))
 
 
-def _dml_insert_add_params(parsed, insert_ids, app_id, uid):
+def _dml_insert_add_params(
+    parsed: Any, insert_ids: List[int], app_id: str, uid: str
+) -> None:
     """Add parameters to INSERT statements."""
     existing_columns = parsed.args["this"].expressions or []
     insert_exprs = parsed.args["expression"]
@@ -136,7 +139,7 @@ def _dml_insert_add_params(parsed, insert_ids, app_id, uid):
     parsed.set("expression", insert_exprs)
 
 
-def to_jsonable(obj):
+def to_jsonable(obj: Any) -> Any:
     """Convert object to JSON-serializable format."""
     if isinstance(obj, dict):
         return {k: to_jsonable(v) for k, v in obj.items()}
@@ -145,7 +148,7 @@ def to_jsonable(obj):
     if isinstance(obj, datetime.datetime):
         return obj.isoformat(sep=" ", timespec="seconds")
     if isinstance(obj, datetime.date):
-        return obj.isoformat(sep=" ", timespec="seconds")
+        return obj.isoformat()
     if isinstance(obj, decimal.Decimal):
         return float(obj)
     if isinstance(obj, uuid.UUID):
@@ -154,8 +157,8 @@ def to_jsonable(obj):
 
 
 async def _validate_and_prepare_dml(
-    db, dml_input, span_context, m
-):
+    db: Any, dml_input: Any, span_context: Any, m: Any
+) -> Any:
     """Validate input and prepare DML execution."""
     app_id = dml_input.app_id
     uid = dml_input.uid
@@ -194,8 +197,8 @@ async def _validate_and_prepare_dml(
 
 
 async def _process_dml_statements(
-    dmls, app_id, uid, env, span_context
-):
+    dmls: List[str], app_id: str, uid: str, env: str, span_context: Any
+) -> Any:
     """Process and rewrite DML statements."""
     rewrite_dmls = []
     for statement in dmls:
@@ -218,7 +221,9 @@ async def _process_dml_statements(
 
 
 @exec_dml_router.post("/exec_dml", response_class=JSONResponse)
-async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_session)):
+async def exec_dml(
+    dml_input: ExecDMLInput, db: AsyncSession = Depends(get_session)
+) -> JSONResponse:
     """
     Execute DML statements on specified database.
 
@@ -246,7 +251,7 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
                 db, dml_input, span_context, m
             )
             if error:
-                return error
+                return error  # type: ignore[no-any-return]
 
             app_id, uid, database_id, dml, env, schema_list = validated_data
 
@@ -254,11 +259,11 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
                 db, schema_list, env, uid, span_context, m
             )
             if error_search:
-                return error_search
+                return error_search  # type: ignore[no-any-return]
 
             dmls, error_split = await _dml_split(dml, db, schema, uid, span_context, m)
             if error_split:
-                return error_split
+                return error_split  # type: ignore[no-any-return]
 
             rewrite_dmls = await _process_dml_statements(
                 dmls, app_id, uid, env, span_context
@@ -268,9 +273,9 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
                 db, rewrite_dmls, uid, span_context, m
             )
             if error_exec:
-                return error_exec
+                return error_exec  # type: ignore[no-any-return]
 
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 CodeEnum.Successes.code,
                 message=CodeEnum.Successes.msg,
                 sid=span_context.sid,
@@ -283,7 +288,7 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
         except CustomException as custom_error:
             span_context.record_exception(custom_error)
             m.in_error_count(custom_error.code, lables={"uid": uid}, span=span_context)
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 code=custom_error.code,
                 message="Database execution failed",
                 sid=span_context.sid,
@@ -293,14 +298,16 @@ async def exec_dml(dml_input: ExecDMLInput, db: AsyncSession = Depends(get_sessi
                 CodeEnum.DMLExecutionError.code, lables={"uid": uid}, span=span_context
             )
             span_context.record_exception(unexpected_error)
-            return format_response(
+            return format_response(  # type: ignore[no-any-return]
                 code=CodeEnum.DMLExecutionError.code,
                 message="Database execution failed",
                 sid=span_context.sid,
             )
 
 
-async def _exec_dml_sql(db, rewrite_dmls, uid, span_context, m):
+async def _exec_dml_sql(
+    db: Any, rewrite_dmls: List[Any], uid: str, span_context: Any, m: Any
+) -> Any:
     """Execute rewritten DML SQL statements."""
     final_exec_success_res = []
     start_time = time.time()
@@ -349,7 +356,9 @@ async def _exec_dml_sql(db, rewrite_dmls, uid, span_context, m):
         )
 
 
-async def _set_search_path(db, schema_list, env, uid, span_context, m):
+async def _set_search_path(
+    db: Any, schema_list: List[Any], env: str, uid: str, span_context: Any, m: Any
+) -> Any:
     """Set search path for database operations."""
     schema = next((one[0] for one in schema_list if env in one[0]), "")
     if not schema:
@@ -379,7 +388,9 @@ async def _set_search_path(db, schema_list, env, uid, span_context, m):
         )
 
 
-async def _dml_split(dml, db, schema, uid, span_context, m):
+async def _dml_split(
+    dml: str, db: Any, schema: str, uid: str, span_context: Any, m: Any
+) -> Any:
     """Split and validate DML statements."""
     dml = dml.strip()
     dmls = sqlparse.split(dml)
@@ -422,7 +433,7 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
             return None, format_response(
                 code=CodeEnum.NoAuthorityError.code,
                 message=f"Table does not exist or no permission: "
-                        f"{', '.join(not_found)}",
+                f"{', '.join(not_found)}",
                 sid=span_context.sid,
             )
 
@@ -437,7 +448,7 @@ async def _dml_split(dml, db, schema, uid, span_context, m):
             return None, format_response(
                 code=CodeEnum.DMLNotAllowed.code,
                 message="Unsupported SQL type, only "
-                        "SELECT/INSERT/UPDATE/DELETE allowed",
+                "SELECT/INSERT/UPDATE/DELETE allowed",
                 sid=span_context.sid,
             )
 

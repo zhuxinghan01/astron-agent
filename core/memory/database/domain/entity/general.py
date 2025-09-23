@@ -4,6 +4,7 @@ for async database operations.
 """
 
 import re
+from typing import Any, Dict, Optional
 
 from memory.database.exceptions.e import CustomException
 from memory.database.exceptions.error_code import CodeEnum
@@ -26,7 +27,9 @@ def extract_sql_params(sql: str) -> set:
 
 
 @retry_on_invalid_cached_statement(max_retries=3)
-async def parse_and_exec_sql(session: AsyncSession, sql: str, params: dict = None):
+async def parse_and_exec_sql(
+    session: AsyncSession, sql: str, params: Optional[Dict[str, Any]] = None
+) -> Any:
     """
     Safely parse and execute SQL with automatic parameter binding.
 
@@ -53,7 +56,7 @@ async def parse_and_exec_sql(session: AsyncSession, sql: str, params: dict = Non
 
 
 @retry_on_invalid_cached_statement(max_retries=3)
-async def exec_sql_statement(session: AsyncSession, statement: str):
+async def exec_sql_statement(session: AsyncSession, statement: str) -> Any:
     """Execute raw SQL statement
 
     Args:

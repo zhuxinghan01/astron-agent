@@ -20,7 +20,7 @@ class UidCommon(BaseModel):  # pylint: disable=too-few-public-methods
         max_length=64,
         pattern=r"^[^！@#￥%……&*()\u4e00-\u9fa5]+$",
         description="Required, length 1-64, cannot contain Chinese "
-                    "and special symbols！@#￥%……&*()",
+        "and special symbols！@#￥%……&*()",
     )
 
 

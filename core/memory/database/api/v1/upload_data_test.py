@@ -14,7 +14,7 @@ from starlette.responses import JSONResponse
 
 
 @pytest.mark.asyncio
-async def test_parse_upload_file_success_csv():
+async def test_parse_upload_file_success_csv() -> None:
     """Test parse_upload_file function (success scenario: CSV file)."""
     csv_content = "name,age,city\nAlice,25,Beijing\nBob,30,Shanghai"
     mock_file = MagicMock()
@@ -40,7 +40,7 @@ async def test_parse_upload_file_success_csv():
 
 
 @pytest.mark.asyncio
-async def test_insert_in_batches_success():
+async def test_insert_in_batches_success() -> None:
     """Test insert_in_batches function (success scenario)."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_db.execute = AsyncMock(return_value=None)
@@ -96,7 +96,7 @@ async def test_insert_in_batches_success():
 
 
 @pytest.mark.asyncio
-async def test_upload_data_success():
+async def test_upload_data_success() -> None:
     """Test upload_data endpoint (success scenario)."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_db.commit = AsyncMock(return_value=None)

@@ -13,7 +13,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_uid_success():
+async def test_check_database_exists_by_did_uid_success() -> None:
     """Test check_database_exists_by_did_uid function success scenario."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 123
@@ -56,7 +56,7 @@ async def test_check_database_exists_by_did_uid_success():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_uid_database_not_exist():
+async def test_check_database_exists_by_did_uid_database_not_exist() -> None:
     """Test check_database_exists_by_did_uid when database doesn't exist."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 999
@@ -105,7 +105,7 @@ async def test_check_database_exists_by_did_uid_database_not_exist():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_uid_schema_not_exist():
+async def test_check_database_exists_by_did_uid_schema_not_exist() -> None:
     """Test check_database_exists_by_did_uid when schemas don't exist."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 123
@@ -145,7 +145,7 @@ async def test_check_database_exists_by_did_uid_schema_not_exist():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_uid_dbapi_error():
+async def test_check_database_exists_by_did_uid_dbapi_error() -> None:
     """Test check_database_exists_by_did_uid with SQLAlchemy DBAPI error."""
     mock_db = AsyncMock(spec=AsyncSession)
     mock_db.rollback = AsyncMock()
@@ -195,7 +195,7 @@ async def test_check_database_exists_by_did_uid_dbapi_error():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_uid_general_exception():
+async def test_check_database_exists_by_did_uid_general_exception() -> None:
     """Test check_database_exists_by_did_uid with general exception."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 123
@@ -242,7 +242,7 @@ async def test_check_database_exists_by_did_uid_general_exception():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_success():
+async def test_check_database_exists_by_did_success() -> None:
     """Test check_database_exists_by_did function success scenario."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 456
@@ -278,7 +278,7 @@ async def test_check_database_exists_by_did_success():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_not_found():
+async def test_check_database_exists_by_did_not_found() -> None:
     """Test check_database_exists_by_did when database is not found."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 999
@@ -326,7 +326,7 @@ async def test_check_database_exists_by_did_not_found():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_schema_not_found():
+async def test_check_database_exists_by_did_schema_not_found() -> None:
     """Test check_database_exists_by_did when schemas are not found."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 456
@@ -373,7 +373,7 @@ async def test_check_database_exists_by_did_schema_not_found():
 
 
 @pytest.mark.asyncio
-async def test_check_database_exists_by_did_general_exception():
+async def test_check_database_exists_by_did_general_exception() -> None:
     """Test check_database_exists_by_did with general exception."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 456
@@ -418,7 +418,7 @@ async def test_check_database_exists_by_did_general_exception():
 
 
 @pytest.mark.asyncio
-async def test_check_space_id_and_get_uid_success():
+async def test_check_space_id_and_get_uid_success() -> None:
     """Test check_space_id_and_get_uid function success scenario."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 789
@@ -454,7 +454,7 @@ async def test_check_space_id_and_get_uid_success():
 
 
 @pytest.mark.asyncio
-async def test_check_space_id_and_get_uid_not_found():
+async def test_check_space_id_and_get_uid_not_found() -> None:
     """Test check_space_id_and_get_uid when space ID is not found."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 789
@@ -506,7 +506,7 @@ async def test_check_space_id_and_get_uid_not_found():
 
 
 @pytest.mark.asyncio
-async def test_check_space_id_and_get_uid_edge_cases():
+async def test_check_space_id_and_get_uid_edge_cases() -> None:
     """Test check_space_id_and_get_uid with edge cases."""
     mock_db = AsyncMock(spec=AsyncSession)
     database_id = 0  # Edge case: zero database_id

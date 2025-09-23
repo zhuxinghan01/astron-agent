@@ -2,7 +2,7 @@
 Database service manager module for handling async database connections and sessions.
 """
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from loguru import logger
 from memory.database.repository.middleware.base import Service
@@ -52,8 +52,8 @@ class DatabaseService(Service):
         self.pool_size = pool_size
         self.max_overflow = max_overflow
         self.pool_recycle = pool_recycle
-        self.engine: AsyncEngine = None
-        self._async_session = None
+        self.engine: Optional[AsyncEngine] = None
+        self._async_session: Optional[sessionmaker] = None
 
     @classmethod
     async def create(
@@ -63,7 +63,7 @@ class DatabaseService(Service):
         pool_size: int = 200,
         max_overflow: int = 800,
         pool_recycle: int = 3600,
-    ):
+    ) -> "DatabaseService":
         """Create and initialize database service instance.
 
         Args:
@@ -78,13 +78,13 @@ class DatabaseService(Service):
         """
         self = cls(database_url, connect_timeout, pool_size, max_overflow, pool_recycle)
         self.engine = await self._create_engine()
-        self._async_session = sessionmaker(
+        self._async_session = sessionmaker(  # type: ignore[call-overload]
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
         logger.debug("database init success")
         return self
 
-    async def _create_engine(self):
+    async def _create_engine(self) -> AsyncEngine:
         """Create async SQLAlchemy engine with configured parameters.
 
         Returns:
@@ -100,8 +100,10 @@ class DatabaseService(Service):
             connect_args={"statement_cache_size": 0},  # Disable asyncpg statement cache
         )
 
-    async def init_db(self):
+    async def init_db(self) -> None:
         """Initialize database by creating all tables."""
+        if self.engine is None:
+            raise RuntimeError("Database engine not initialized")
         async with self.engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
 
@@ -115,6 +117,8 @@ class DatabaseService(Service):
             InterfaceError: On database interface errors
             Exception: On other errors with rollback
         """
+        if self._async_session is None:
+            raise RuntimeError("Database service not properly initialized")
         async with self._async_session() as session:
             try:
                 yield session
