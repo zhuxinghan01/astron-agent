@@ -30,7 +30,7 @@ from plugin.aitools.service.speech_synthesis.smart_tts.smart_tts_client import S
 
 # 超拟人
 def smarttts_main(text: str, vcn: str, speed: int, request):
-    app_id = os.getenv("TTS_APP_ID")
+    app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
@@ -79,9 +79,9 @@ def smarttts_main(text: str, vcn: str, speed: int, request):
             )
 
             messages, audio_data = SmartTTSClient(
-                app_id=os.getenv("TTS_APP_ID"),
-                api_key=os.getenv("TTS_API_KEY"),
-                api_secret=os.getenv("TTS_API_SECRET"),
+                app_id=os.getenv("AI_APP_ID"),
+                api_key=os.getenv("AI_API_KEY"),
+                api_secret=os.getenv("AI_API_SECRET"),
                 text=text,
                 vcn=vcn,
                 speed=speed,

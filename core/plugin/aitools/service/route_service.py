@@ -33,7 +33,7 @@ from plugin.aitools.service.image_understanding.image_understanding_client impor
 
 # 图片理解 - 开放平台
 def image_understanding_main(question: str, image_url: str, request):
-    app_id = os.getenv("IMAGE_UNDERSTANDING_APP_ID")
+    app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
@@ -72,9 +72,9 @@ def image_understanding_main(question: str, image_url: str, request):
 
             imageunderstanding_url = os.getenv("IMAGE_UNDERSTANDING_URL")
             answer, sid, error_message = ImageUnderstandingClient(
-                app_id=os.getenv("IMAGE_UNDERSTANDING_APP_ID"),
-                api_key=os.getenv("IMAGE_UNDERSTANDING_API_KEY"),
-                api_secret=os.getenv("IMAGE_UNDERSTANDING_API_SECRET"),
+                app_id=os.getenv("AI_APP_ID"),
+                api_key=os.getenv("AI_API_KEY"),
+                api_secret=os.getenv("AI_API_SECRET"),
                 imageunderstanding_url=imageunderstanding_url,
             ).get_answer(question=question, image_url=image_url)
             span_context.add_info_events(
@@ -128,7 +128,7 @@ async def ise_evaluate_main(
 ):
     sid = new_sid()
     logging.info(f"ise_evaluate_main sid: {sid}")
-    app_id = os.getenv("ISE_APP_ID")
+    app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
@@ -175,9 +175,9 @@ async def ise_evaluate_main(
 
             # 创建ISE客户端
             ise_client = ISEClient(
-                            os.getenv("ISE_APP_ID"),
-                            os.getenv("ISE_API_KEY"),
-                            os.getenv("ISE_API_SECRET"))
+                            os.getenv("AI_APP_ID"),
+                            os.getenv("AI_API_KEY"),
+                            os.getenv("AI_API_SECRET"))
 
             # 执行语音评测
             success, message, result = await ise_client.evaluate_audio(

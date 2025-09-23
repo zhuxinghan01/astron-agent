@@ -85,7 +85,7 @@ def image_understanding(params: ImageUnderstandingInput, request: Request):
 
 @app.post("/ocr")
 def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
-    app_id = os.getenv("OCR_LLM_APP_ID")
+    app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
@@ -125,7 +125,7 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
                 requests.get(ase_ocr_llm_vo.file_url, timeout=30).content
             )
             client = OcrLLMClientMultithreading(
-                url="wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75ocrbm"
+                url=os.getenv("OCR_LLM_WS_URL")
             )
             asyncio.run(
                 client.invoke(
@@ -138,9 +138,9 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
                             )
                         ),
                         credentials=Credentials(
-                            app_id=os.getenv("OCR_LLM_APP_ID"),
-                            api_key=os.getenv("OCR_LLM_API_KEY"),
-                            api_secret=os.getenv("OCR_LLM_API_SECRET"),
+                            app_id=os.getenv("AI_APP_ID"),
+                            api_key=os.getenv("AI_API_KEY"),
+                            api_secret=os.getenv("AI_API_SECRET"),
                         ),
                     )
                 )
@@ -179,7 +179,7 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
 
 @app.post("/image_generate")
 def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
-    app_id = os.getenv("IMAGE_GENERATE_APP_ID")
+    app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
@@ -218,7 +218,7 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
             )
 
             client = CommonClient(
-                url="http://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti",
+                url=os.getenv("IMAGE_GENERATE_URL"),
                 method="POST",
                 stream=False,
             )
@@ -227,15 +227,15 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
             client.invoke(
                 req_source_data=CommonReqSourceData(
                     credentials=Credentials(
-                        app_id=os.getenv("IMAGE_GENERATE_APP_ID"),
-                        api_key=os.getenv("IMAGE_GENERATE_API_KEY"),
-                        api_secret=os.getenv("IMAGE_GENERATE_API_SECRET"),
+                        app_id=os.getenv("AI_APP_ID"),
+                        api_key=os.getenv("AI_API_KEY"),
+                        api_secret=os.getenv("AI_API_SECRET"),
                         auth_in_params=True,
                     ),
                     req_data=ReqData(
                         body={
                             "header": {
-                                "app_id": os.getenv("IMAGE_GENERATE_APP_ID"),
+                                "app_id": os.getenv("AI_APP_ID"),
                             },
                             "parameter": {
                                 "chat": {
