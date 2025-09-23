@@ -277,7 +277,7 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
 
             oss_service = get_oss_service()
             image_url = oss_service.upload_file(
-                str(uuid.uuid4()) + ".jpg", 
+                str(uuid.uuid4()) + ".jpg",
                 base64.b64decode(text))
             response = SuccessDataResponse(
                 data={"image_url": image_url, "image_url_md": f"![]({image_url})"},
