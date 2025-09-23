@@ -8,6 +8,7 @@ including query, document splitting, knowledge chunk operations and other functi
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
+
 class RAGStrategy(ABC):
     """Abstract base class for all RAG strategy classes."""
 
