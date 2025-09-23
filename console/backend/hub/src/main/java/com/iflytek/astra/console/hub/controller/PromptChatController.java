@@ -1,7 +1,7 @@
 package com.iflytek.astra.console.hub.controller;
 
 import com.iflytek.astra.console.hub.dto.DeepSeekChatRequest;
-import com.iflytek.astra.console.hub.service.DeepSeekChatService;
+import com.iflytek.astra.console.hub.service.PromptChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,18 +17,18 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/deepseek")
+@RequestMapping("/api/prompt")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "DeepSeek LLM", description = "DeepSeek Large Language Model Chat Interface")
-public class DeepSeekChatController {
+@Tag(name = "Prompt LLM", description = "Universal Prompt-based Large Language Model Chat Interface")
+public class PromptChatController {
 
-    private final DeepSeekChatService deepSeekChatService;
+    private final PromptChatService promptChatService;
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(
-                    summary = "DeepSeek LLM Streaming Chat",
-                    description = "Streaming conversation with DeepSeek LLM, supporting real-time response",
+                    summary = "Prompt LLM Streaming Chat",
+                    description = "Streaming conversation with Prompt-based LLM, supporting real-time response",
                     responses = {
                                     @ApiResponse(responseCode = "200", description = "Streaming connection established successfully"),
                                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
@@ -37,19 +37,19 @@ public class DeepSeekChatController {
                                     @ApiResponse(responseCode = "500", description = "Internal server error")
                     })
     public SseEmitter chatStream(
-                    @Parameter(description = "DeepSeek chat request parameters")
+                    @Parameter(description = "Prompt chat request parameters")
                     @Valid @RequestBody DeepSeekChatRequest request) {
-        log.info("Starting DeepSeek LLM streaming chat, chatId: {}, userId: {}, model: {}",
+        log.info("Starting Prompt LLM streaming chat, chatId: {}, userId: {}, model: {}",
                         request.getChatId(), request.getUserId(), request.getModel());
 
-        return deepSeekChatService.chatStream(request);
+        return promptChatService.chatStream(request);
     }
 
 
     @GetMapping("/models")
     @Operation(
-                    summary = "Get DeepSeek supported model list",
-                    description = "Returns all model information supported by DeepSeek API")
+                    summary = "Get Prompt supported model list",
+                    description = "Returns all model information supported by Prompt API")
     public ResponseEntity<String[]> getSupportedModels() {
         String[] models = {
                         "deepseek-chat",
@@ -61,11 +61,11 @@ public class DeepSeekChatController {
     @PostMapping("/chat/validate")
     @Operation(
                     summary = "Validate chat request parameters",
-                    description = "Validates whether DeepSeek chat request parameters are valid")
+                    description = "Validates whether Prompt chat request parameters are valid")
     public ResponseEntity<String> validateRequest(
-                    @Parameter(description = "DeepSeek chat request parameters")
+                    @Parameter(description = "Prompt chat request parameters")
                     @Valid @RequestBody DeepSeekChatRequest request) {
-        log.info("Validating DeepSeek chat request parameters, chatId: {}, userId: {}",
+        log.info("Validating Prompt chat request parameters, chatId: {}, userId: {}",
                         request.getChatId(), request.getUserId());
 
         String validationError = validateRequestParameters(request);
