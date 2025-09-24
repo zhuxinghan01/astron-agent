@@ -20,7 +20,7 @@ class KnowledgeConfig:
         self,
         top_n: str,
         rag_type: str,
-        repo_id: list,
+        repo_id: list[str],
         url: str,
         query: str,
         flow_id: str = "",
@@ -104,7 +104,7 @@ class KnowledgeClient:
                         )
                         request_span.add_error_event(msg)
                         raise CustomException(
-                            err_code=CodeEnum.KnowledgeRequestError,
+                            err_code=CodeEnum.KNOWLEDGE_REQUEST_ERROR,
                             err_msg=f"{msg}",
                             cause_error=f"{msg}",
                         )
@@ -118,7 +118,7 @@ class KnowledgeClient:
             err = str(e)
             request_span.add_error_event(err)
             raise CustomException(
-                err_code=CodeEnum.KnowledgeRequestError,
+                err_code=CodeEnum.KNOWLEDGE_REQUEST_ERROR,
                 err_msg=f"Knowledge base POST request error: {err}",
                 cause_error=f"Knowledge base POST request error: {err}",
             ) from e

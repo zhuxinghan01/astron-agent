@@ -10,7 +10,6 @@ from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.util import types
 
-# 使用TYPE_CHECKING避免循环导入
 if TYPE_CHECKING:
     from common.service.oss.base_oss import BaseOSSService
 
@@ -43,7 +42,7 @@ class Span:
         if sid_module.sid_generator2 is None:
             raise Exception("sid_generator2 is not initialized")
         self.sid = sid_module.sid_generator2.gen()
-        self.tracer = trace.get_tracer(os.getenv("OTLP_TRACE_NAME", "service_trace"))
+        self.tracer = trace.get_tracer(os.getenv("SERVICE_NAME", "service_trace"))
         self.oss_service = oss_service
 
     @contextmanager
@@ -100,8 +99,6 @@ class Span:
                         if f_code:
                             return f_code.co_name
         return "unknown"
-
-        # frame = inspect.currentframe().f_back.f_back
 
     def set_attribute(self, key: str, value, node_log: Optional[NodeLog] = None):
         """

@@ -112,7 +112,6 @@ class ProjectSettings(BaseSettings):
 
         self._running = True
 
-        # 启动守护线程
         self._monitor_thread = threading.Thread(
             target=self._monitor_loop, daemon=True, name="SettingsMonitorThread"
         )

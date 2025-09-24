@@ -15,22 +15,13 @@ from loguru import logger
 
 
 
+
 from common.initialize.initialize import initialize_services
 from plugin.aitools.api.route import app
-from plugin.aitools.const import const
-
-
-# uvicorn keys
-from plugin.aitools.const.polaris_keys.uvicorn_keys import (
-    UVICORN_APP_KEY,
-    UVICORN_HOST_KEY,
-    UVICORN_PORT_KEY,
-    UVICORN_WORKERS_KEY,
-    UVICORN_RELOAD_KEY,
-    UVICORN_WS_PING_INTERVAL_KEY,
-    UVICORN_WS_PING_TIMEOUT_KEY,
+from plugin.aitools.const.const import (
+    SERVICE_PORT_KEY,
+    SERVICE_APP_KEY
 )
-
 
 class AIToolsServer:
 
@@ -66,13 +57,13 @@ class AIToolsServer:
     @staticmethod
     def start_uvicorn():
         uvicorn_config = uvicorn.Config(
-            app=os.getenv(UVICORN_APP_KEY),
-            host=os.getenv(UVICORN_HOST_KEY),
-            port=int(os.getenv(UVICORN_PORT_KEY)),
-            workers=int(os.getenv(UVICORN_WORKERS_KEY)),
-            reload=json.loads(os.getenv(UVICORN_RELOAD_KEY)),
-            ws_ping_interval=json.loads(os.getenv(UVICORN_WS_PING_INTERVAL_KEY)),
-            ws_ping_timeout=json.loads(os.getenv(UVICORN_WS_PING_TIMEOUT_KEY)),
+            app=os.getenv(SERVICE_APP_KEY),
+            host="0.0.0.0",
+            port=int(os.getenv( SERVICE_PORT_KEY)),
+            workers=20,
+            reload=False,
+            ws_ping_interval=None,
+            ws_ping_timeout=NotImplemented,
             # log_config=None
         )
         uvicorn_server = uvicorn.Server(uvicorn_config)

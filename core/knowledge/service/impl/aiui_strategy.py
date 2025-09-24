@@ -122,7 +122,7 @@ class AIUIRAGStrategy(RAGStrategy):
         )
 
         # Process split results
-        data = []
+        data: List[Dict[str, Any]] = []
         if check_not_empty(doc_split_response_data):
             for chunk in doc_split_response_data:
                 if isinstance(chunk, dict):
@@ -227,7 +227,7 @@ class AIUIRAGStrategy(RAGStrategy):
                                     )
                                 elif value.get("format") == "image":
                                     content_text = content_text.replace(
-                                        "<" + key + ">", "![Image name](" + value["link"] + ")")
+                                        "<" + key + ">", "")
 
                     result.append(
                         ChunkInfo(

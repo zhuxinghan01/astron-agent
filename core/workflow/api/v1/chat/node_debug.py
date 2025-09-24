@@ -6,11 +6,9 @@ including code execution and node-specific debugging functionality.
 """
 
 import json
-import traceback
 
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
-
 from workflow.domain.entities.node_debug_vo import CodeRunVo, NodeDebugVo
 from workflow.domain.entities.response import response_error, response_success
 from workflow.engine.nodes.code.code_node import CodeNode
@@ -60,9 +58,9 @@ async def run_code(code_run_vo: CodeRunVo) -> JSONResponse:
             return response_error(code=err.code, message=err.message, sid=span.sid)
         except Exception as err:
             span_context.record_exception(err)
-            m.in_error_count(CodeEnum.CodeExecutionError.code, span=span_context)
+            m.in_error_count(CodeEnum.CODE_EXECUTION_ERROR.code, span=span_context)
             return response_error(
-                code=CodeEnum.CodeExecutionError.code, message=str(err), sid=span.sid
+                code=CodeEnum.CODE_EXECUTION_ERROR.code, message=str(err), sid=span.sid
             )
 
         m.in_success_count()
@@ -90,11 +88,17 @@ async def node_debug(node_debug_vo: NodeDebugVo) -> JSONResponse:
             span.record_exception(err)
             return response_error(code=err.code, message=err.message, sid=span.sid)
         except Exception as err:
-            traceback.print_exc()
-            m.in_error_count(CodeEnum.NodeDebugError.code, span=span_context)
+            m.in_error_count(CodeEnum.NODE_DEBUG_ERROR.code, span=span_context)
             span.record_exception(err)
             return response_error(
-                code=CodeEnum.NodeDebugError.code, message=str(err), sid=span.sid
+                code=CodeEnum.NODE_DEBUG_ERROR.code, message=str(err), sid=span.sid
             )
         m.in_success_count()
+        span_context.add_info_events(
+            {
+                "node_debug_resp": json.dumps(
+                    node_debug_resp_vo.dict(), ensure_ascii=False
+                )
+            }
+        )
         return response_success(node_debug_resp_vo.dict(), span.sid)

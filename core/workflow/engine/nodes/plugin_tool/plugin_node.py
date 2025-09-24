@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict
 
+from pydantic import Field
 from workflow.engine.entities.variable_pool import (
     VariablePool,
     schema_type_default_value,
@@ -28,13 +29,13 @@ class PluginNode(BaseNode):
     """
 
     # Plugin tool identifier
-    pluginId: str
+    pluginId: str = Field(..., min_length=1)
     # Operation identifier for the specific tool operation
-    operationId: str
+    operationId: str = Field(..., min_length=1)
     # Application identifier
-    appId: str
+    appId: str = Field(..., min_length=1)
     # Business input configuration for tool parameters
-    businessInput: list = []
+    businessInput: list = Field(default_factory=list)
     # Version of the plugin tool
     version: str = "V1.0"
 
@@ -206,7 +207,7 @@ class PluginNode(BaseNode):
             return NodeRunResult(
                 status=status,
                 error=CustomException(
-                    CodeEnum.PluginNodeExecutionError,
+                    CodeEnum.PLUGIN_NODE_EXECUTION_ERROR,
                     cause_error=e,
                 ),
                 node_id=self.node_id,
