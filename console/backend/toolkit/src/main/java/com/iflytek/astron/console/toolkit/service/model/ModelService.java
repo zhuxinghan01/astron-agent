@@ -695,6 +695,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
             vo.setDomain(model.getDomain());
             vo.setModelId(model.getId());
             vo.setDesc(model.getDesc());
+            vo.setStatus(model.getStatus());
             vo.setLlmId(LLMService.generate9DigitRandomFromId(model.getId()));
             vo.setAddress(s3UtilClient.getS3Prefix());
             vo.setCreateTime(model.getCreateTime());
