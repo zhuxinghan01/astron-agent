@@ -1,5 +1,6 @@
 package com.iflytek.astron.console.hub.util;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -10,10 +11,10 @@ public class Md5Util {
      * MD5 encryption
      */
     public static String encryption(String plainText) {
-        String re_md5 = new String();
+        String re_md5 = "";
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(plainText.getBytes());
+            md.update(plainText.getBytes(StandardCharsets.UTF_8));
             byte b[] = md.digest();
 
             int i;

@@ -35,9 +35,9 @@ async def initialize_extensions() -> None:
     ]
     initialize_services(services=need_init_services)
 
-    from repository.middleware.initialize import \
-        initialize_services as \
-        rep_initialize_services  # pylint: disable=import-outside-toplevel
+    from repository.middleware.initialize import (
+        initialize_services as rep_initialize_services,  # pylint: disable=import-outside-toplevel
+    )
 
     await rep_initialize_services()
 
@@ -139,8 +139,7 @@ def create_app() -> FastAPI:
             )
 
         # Register custom exception handler
-        from api import \
-            CustomException  # pylint: disable=import-outside-toplevel
+        from api import CustomException  # pylint: disable=import-outside-toplevel
 
         @app.exception_handler(CustomException)
         async def custom_exception_handler(_request: Request, exc: Any) -> JSONResponse:
@@ -175,7 +174,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app="main:create_app",
         host="0.0.0.0",
-        port=7990,
+        port=int(os.getenv("SERVICE_PORT", "7990")),
         workers=(
             None
             if sys.platform in ["win", "win32", "darwin"]

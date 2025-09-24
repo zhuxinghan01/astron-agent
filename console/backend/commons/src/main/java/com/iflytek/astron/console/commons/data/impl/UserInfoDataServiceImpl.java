@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class UserInfoDataServiceImpl implements UserInfoDataService {
 
+    private static final Random RANDOM = new Random();
+
     private static final String[] CHINESE_ADJECTIVES = {
             "快乐的", "聪明的", "勇敢的", "温柔的", "活泼的", "阳光的", "可爱的", "优雅的",
             "神秘的", "幸运的", "开朗的", "善良的", "机智的", "热情的", "淡定的", "灵动的"
@@ -204,17 +206,16 @@ public class UserInfoDataServiceImpl implements UserInfoDataService {
 
     private String generateRandomNickname() {
         String language = I18nUtil.getLanguage();
-        Random random = new Random();
 
         if ("zh".equals(language)) {
-            String adjective = CHINESE_ADJECTIVES[random.nextInt(CHINESE_ADJECTIVES.length)];
-            String noun = CHINESE_NOUNS[random.nextInt(CHINESE_NOUNS.length)];
-            int number = random.nextInt(1000);
+            String adjective = CHINESE_ADJECTIVES[RANDOM.nextInt(CHINESE_ADJECTIVES.length)];
+            String noun = CHINESE_NOUNS[RANDOM.nextInt(CHINESE_NOUNS.length)];
+            int number = RANDOM.nextInt(1000);
             return adjective + noun + number;
         } else {
-            String adjective = ENGLISH_ADJECTIVES[random.nextInt(ENGLISH_ADJECTIVES.length)];
-            String noun = ENGLISH_NOUNS[random.nextInt(ENGLISH_NOUNS.length)];
-            int number = random.nextInt(1000);
+            String adjective = ENGLISH_ADJECTIVES[RANDOM.nextInt(ENGLISH_ADJECTIVES.length)];
+            String noun = ENGLISH_NOUNS[RANDOM.nextInt(ENGLISH_NOUNS.length)];
+            int number = RANDOM.nextInt(1000);
             return adjective + noun + number;
         }
     }

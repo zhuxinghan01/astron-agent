@@ -21,7 +21,9 @@ from starlette.responses import JSONResponse
 export_data_router = APIRouter(tags=["EXPORT_DATA"])
 
 
-@export_data_router.post("/export_data", response_class=JSONResponse, response_model=None)
+@export_data_router.post(
+    "/export_data", response_class=JSONResponse, response_model=None
+)
 async def export_data(
     export_input: ExportDataInput, db: AsyncSession = Depends(get_session)
 ) -> Union[JSONResponse, StreamingResponse]:
