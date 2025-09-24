@@ -149,8 +149,18 @@ services:
   core-tenant:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-tenant:latest
     container_name: astron-agent-core-tenant
+    environment:
+      SERVICE_PORT: "${CORE_TENANT_PORT:-5052}"
+      SERVICE_LOCATION: "${SERVICE_LOCATION:-localhost}"
+      DATABASE_DB_TYPE: "${DATABASE_DB_TYPE:-mysql}"
+      DATABASE_USERNAME: "${DATABASE_USERNAME:-root}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD:-root123}"
+      DATABASE_URL: "${DATABASE_URL:-(localhost:3306)/tenant}"
+      DATABASE_MAX_OPEN_CONNS: "${DATABASE_MAX_OPEN_CONNS:-5}"
+      DATABASE_MAX_IDLE_CONNS: "${DATABASE_MAX_IDLE_CONNS:-5}"
+      LOG_PATH: "${LOG_PATH:-log.txt}"
     ports:
-      - "${CORE_TENANT_PORT:-5052}:5052"
+      - "${CORE_TENANT_PORT:-5052}:${CORE_TENANT_PORT:-5052}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -177,8 +187,16 @@ services:
   core-memory:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-memory:latest
     container_name: astron-agent-core-memory
+    environment:
+      SERVICE_PORT: "${CORE_MEMORY_PORT:-7990}"
+      PGSQL_HOST: "${POSTGRES_HOST:-127.0.0.1}"
+      PGSQL_PORT: "${POSTGRES_PORT:-5432}"
+      PGSQL_USER: "${POSTGRES_USER:-spark}"
+      PGSQL_PASSWORD: "${POSTGRES_PASSWORD:-spark123}"
+      PGSQL_DATABASE: "${MEMORY_POSTGRES_DATABASE:-sparkdb_manager}"
+      OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:1234}"
     ports:
-      - "${CORE_MEMORY_PORT:-7990}:7990"
+      - "${CORE_MEMORY_PORT:-7990}:${CORE_MEMORY_PORT:-7990}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -226,6 +244,17 @@ services:
   core-link:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-link:latest
     container_name: astron-agent-core-link
+    environment:
+      MYSQL_HOST: "${MYSQL_HOST:-127.0.0.1}"
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
+      MYSQL_USER: "${MYSQL_USER:-root}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-root123}"
+      MYSQL_DB: "${LINK_MYSQL_DB:-spark-link}"
+      REDIS_IS_CLUSTER: "${REDIS_IS_CLUSTER:-false}"
+      REDIS_CLUSTER_ADDR: "${REDIS_CLUSTER_ADDR}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:1234}"
+      KAFKA_SERVERS: "${KAFKA_SERVERS}"
     ports:
       - "${CORE_LINK_PORT:-18888}:18888"
 #    depends_on:
@@ -252,8 +281,19 @@ services:
   core-aitools:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-aitools:latest
     container_name: astron-agent-core-aitools
+    environment:
+      SERVICE_PORT: "${CORE_AITOOLS_PORT:-18668}"
+      OSS_ENDPOINT: "${OSS_ENDPOINT}"
+      OSS_ACCESS_KEY_ID: "${OSS_ACCESS_KEY_ID:-minioadmin}"
+      OSS_ACCESS_KEY_SECRET: "${OSS_ACCESS_KEY_SECRET:-minioadmin123}"
+      OSS_BUCKET_NAME: "${OSS_BUCKET_NAME}"
+      OSS_TTL: "${OSS_TTL:-157788000}"
+      KAFKA_SERVERS: "${KAFKA_SERVERS}"
+      AI_APP_ID: "${AI_APP_ID}"
+      AI_API_KEY: "${AI_API_KEY}"
+      AI_API_SECRET: "${AI_API_SECRET}"
     ports:
-      - "${CORE_AITOOLS_PORT:-18668}:18668"
+      - "${CORE_AITOOLS_PORT:-18668}:${CORE_AITOOLS_PORT:-18668}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -278,8 +318,72 @@ services:
   core-agent:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-agent:latest
     container_name: astron-agent-core-agent
+    environment:
+      # Python 环境配置
+      PYTHONUNBUFFERED: "${PYTHONUNBUFFERED:-1}"
+      # 运行环境配置
+      RUN_ENVIRON: "${RUN_ENVIRON:-dev}"
+      USE_POLARIS: "${USE_POLARIS:-false}"
+      # 服务配置
+      SERVICE_NAME: "${SERVICE_NAME:-Agent}"
+      SERVICE_SUB: "${SERVICE_SUB:-sag}"
+      SERVICE_LOCATION: "${SERVICE_LOCATION:-hf}"
+      SERVICE_APP: "${SERVICE_APP:-app:app}"
+      SERVICE_HOST: "${SERVICE_HOST:-0.0.0.0}"
+      SERVICE_PORT: "${CORE_AGENT_PORT:-17870}"
+      SERVICE_WORKERS: "${SERVICE_WORKERS:-1}"
+      SERVICE_RELOAD: "${SERVICE_RELOAD:-false}"
+      SERVICE_WS_PING_INTERVAL: "${SERVICE_WS_PING_INTERVAL:-false}"
+      SERVICE_WS_PING_TIMEOUT: "${SERVICE_WS_PING_TIMEOUT:-false}"
+      # Redis 缓存设置 (当 USE_POLARIS 为 false 时生效)
+      REDIS_CLUSTER_ADDR: "${REDIS_CLUSTER_ADDR}"
+      REDIS_ADDR: "${REDIS_ADDR:-127.0.0.1:6379}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      REDIS_EXPIRE: "${REDIS_EXPIRE:-3600}"
+      # MySQL 配置
+      MYSQL_HOST: "${MYSQL_HOST}"
+      MYSQL_PORT: "${MYSQL_PORT}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_DB: "${AGENT_MYSQL_DB:-agent}"
+      # 指标配置
+      OTLP_ENDPOINT: "${OTLP_ENDPOINT:-YOUR_METRIC_ENDPOINT:4317}"
+      OTLP_METRIC_TIMEOUT: "${OTLP_METRIC_TIMEOUT:-3000}"
+      OTLP_METRIC_EXPORT_INTERVAL_MILLIS: "${OTLP_METRIC_EXPORT_INTERVAL_MILLIS:-3000}"
+      OTLP_METRIC_EXPORT_TIMEOUT_MILLIS: "${OTLP_METRIC_EXPORT_TIMEOUT_MILLIS:-3000}"
+      # ELK 上传配置
+      UPLOAD_NODE_TRACE: "${UPLOAD_NODE_TRACE:-true}"
+      UPLOAD_METRICS: "${UPLOAD_METRICS:-true}"
+      # 链路追踪配置
+      OTLP_TRACE_TIMEOUT: "${OTLP_TRACE_TIMEOUT:-3000}"
+      OTLP_TRACE_MAX_QUEUE_SIZE: "${OTLP_TRACE_MAX_QUEUE_SIZE:-2048}"
+      OTLP_TRACE_SCHEDULE_DELAY_MILLIS: "${OTLP_TRACE_SCHEDULE_DELAY_MILLIS:-3000}"
+      OTLP_TRACE_MAX_EXPORT_BATCH_SIZE: "${OTLP_TRACE_MAX_EXPORT_BATCH_SIZE:-2048}"
+      OTLP_TRACE_EXPORT_TIMEOUT_MILLIS: "${OTLP_TRACE_EXPORT_TIMEOUT_MILLIS:-3000}"
+      # Kafka 节点追踪配置
+      KAFKA_SERVERS: "${KAFKA_SERVERS:-YOUR_KAFKA_SERVERS}"
+      KAFKA_TIMEOUT: "${KAFKA_TIMEOUT:-10}"
+      KAFKA_TOPIC: "${AGENT_KAFKA_TOPIC:-spark-agent-builder}"
+      # Link 服务 URLs
+      GET_LINK_URL: "${GET_LINK_URL:-http://YOUR_LINK_HOST:18888/api/v1/tools}"
+      VERSIONS_LINK_URL: "${VERSIONS_LINK_URL:-http://YOUR_LINK_HOST:18888/api/v1/tools/versions}"
+      RUN_LINK_URL: "${RUN_LINK_URL:-http://YOUR_LINK_HOST:18888/api/v1/tools/http_run}"
+      # Workflow 服务 URLs
+      GET_WORKFLOWS_URL: "${GET_WORKFLOWS_URL:-http://YOUR_WORKFLOW_HOST:7880/sparkflow/v1/protocol/get}"
+      WORKFLOW_SSE_BASE_URL: "${WORKFLOW_SSE_BASE_URL:-http://YOUR_WORKFLOW_HOST:7880/workflow/v1}"
+      # Knowledge 服务 URLs
+      CHUNK_QUERY_URL: "${CHUNK_QUERY_URL:-http://YOUR_KNOWLEDGE_HOST:10007/knowledge/v1/chunk/query}"
+      # MCP 插件 URLs
+      LIST_MCP_PLUGIN_URL: "${LIST_MCP_PLUGIN_URL:-http://YOUR_MCP_HOST:18888/api/v1/mcp/tool_list}"
+      RUN_MCP_PLUGIN_URL: "${RUN_MCP_PLUGIN_URL:-http://YOUR_MCP_HOST:18888/api/v1/mcp/call_tool}"
+      # 应用认证配置
+      APP_AUTH_HOST: "${APP_AUTH_HOST:-YOUR_APP_AUTH_HOST}"
+      APP_AUTH_ROUTER: "${APP_AUTH_ROUTER:-/api-services/v2/app/details}"
+      APP_AUTH_PROT: "${APP_AUTH_PROT:-http}"
+      APP_AUTH_API_KEY: "${APP_AUTH_API_KEY:-YOUR_APP_AUTH_API_KEY}"
+      APP_AUTH_SECRET: "${APP_AUTH_SECRET:-YOUR_APP_AUTH_SECRET}"
     ports:
-      - "${CORE_AGENT_PORT:-17870}:17870"
+      - "${CORE_AGENT_PORT:-17870}:${CORE_AGENT_PORT:-17870}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -303,8 +407,14 @@ services:
   core-knowledge:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-knowledge:latest
     container_name: astron-agent-core-knowledge
+    environment:
+      SERVICE_PORT: "${CORE_KNOWLEDGE_PORT:-20010}"
+      RAGFLOW_BASE_URL: "${RAGFLOW_BASE_URL}"
+      RAGFLOW_API_TOKEN: "${RAGFLOW_API_TOKEN}"
+      RAGFLOW_TIMEOUT: "${RAGFLOW_TIMEOUT:-60}"
+      RAGFLOW_DEFAULT_GROUP: "${RAGFLOW_DEFAULT_GROUP}"
     ports:
-      - "${CORE_KNOWLEDGE_PORT:-20010}:20010"
+      - "${CORE_KNOWLEDGE_PORT:-20010}:${CORE_KNOWLEDGE_PORT:-20010}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -329,8 +439,47 @@ services:
   core-workflow:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-workflow:latest
     container_name: astron-agent-core-workflow
+    environment:
+      # 服务信息
+      SERVICE_PORT: "${CORE_WORKFLOW_PORT:-7880}"
+      # 数据库配置
+      MYSQL_HOST: "${MYSQL_HOST:-127.0.0.1}"
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
+      MYSQL_USER: "${MYSQL_USER:-admin}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-admin}"
+      MYSQL_DB: "${WORKFLOW_MYSQL_DB:-workflow}"
+      REDIS_CLUSTER_ADDR: "${REDIS_CLUSTER_ADDR}"
+      REDIS_ADDR: "${REDIS_ADDR:-127.0.0.1:6379}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      REDIS_EXPIRE: "${REDIS_EXPIRE:-3600}"
+      OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
+      OTLP_ENABLE: "${OTLP_ENABLE:-1}"
+      OTLP_METRIC_EXPORT_INTERVAL_MILLIS: "${OTLP_METRIC_EXPORT_INTERVAL_MILLIS:-3000}"
+      OTLP_METRIC_EXPORT_TIMEOUT_MILLIS: "${OTLP_METRIC_EXPORT_TIMEOUT_MILLIS:-3000}"
+      OTLP_METRIC_TIMEOUT: "${OTLP_METRIC_TIMEOUT:-3000}"
+      OTLP_TRACE_TIMEOUT: "${OTLP_TRACE_TIMEOUT:-3000}"
+      OTLP_TRACE_MAX_QUEUE_SIZE: "${OTLP_TRACE_MAX_QUEUE_SIZE:-2048}"
+      OTLP_TRACE_SCHEDULE_DELAY_MILLIS: "${OTLP_TRACE_SCHEDULE_DELAY_MILLIS:-3000}"
+      OTLP_TRACE_MAX_EXPORT_BATCH_SIZE: "${OTLP_TRACE_MAX_EXPORT_BATCH_SIZE:-500}"
+      OTLP_TRACE_EXPORT_TIMEOUT_MILLIS: "${OTLP_TRACE_EXPORT_TIMEOUT_MILLIS:-3000}"
+      # 对象存储配置
+      OSS_TYPE: "${OSS_TYPE:-s3}"
+      OSS_ENDPOINT: "${OSS_ENDPOINT:-http://127.0.0.1:9000}"
+      OSS_ACCESS_KEY_ID: "${OSS_ACCESS_KEY_ID:-admin}"
+      OSS_ACCESS_KEY_SECRET: "${OSS_ACCESS_KEY_SECRET:-admin}"
+      OSS_BUCKET_NAME: "${OSS_BUCKET_NAME}"
+      # S3 下载域名，使用 S3 存储类型时必需
+      OSS_DOWNLOAD_HOST: "${OSS_DOWNLOAD_HOST:-http://127.0.0.1:9000}"
+      # 讯飞对象存储的文件有效期（秒）
+      OSS_TTL: "${OSS_TTL:-157788000}"
+
+      # Apache Kafka 配置
+      # 异步处理和事件流的消息队列设置
+      KAFKA_SERVERS: "${KAFKA_SERVERS:-127.0.0.1:9092}"
+      KAFKA_TIMEOUT: "${KAFKA_TIMEOUT:-10}"
+      KAFKA_TOPIC: "${WORKFLOW_KAFKA_TOPIC:-spark-agent-builder}"
     ports:
-      - "${CORE_WORKFLOW_PORT:-7880}:7880"
+      - "${CORE_WORKFLOW_PORT:-7880}:${CORE_WORKFLOW_PORT:-7880}"
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
@@ -344,8 +493,6 @@ services:
 #        condition: service_healthy
 #      minio:
 #        condition: service_healthy
-    environment:
-      - RUNTIME_ENV=dev
     volumes:
       - /home/xingchen-opensource-config/workflow/config.env:/opt/openstellar/workflow/config.env
     networks:
