@@ -28,15 +28,15 @@ class BotConfigClient(BaseModel):
 
     redis_client: RedisClusterClient = Field(
         default=RedisClusterClient(
-            nodes=agent_config.redis_nodes, password=agent_config.redis_password
+            nodes=agent_config.REDIS_NODES, password=agent_config.REDIS_PASSWORD
         )
     )
     mysql_client: MysqlClient = Field(
         default=MysqlClient(
             database_url=(
-                f"mysql+pymysql://{agent_config.mysql_user}:"
-                f"{agent_config.mysql_password}@{agent_config.mysql_host}:"
-                f"{agent_config.mysql_port}/{agent_config.mysql_db}?charset=utf8mb4"
+                f"mysql+pymysql://{agent_config.MYSQL_USER}:"
+                f"{agent_config.MYSQL_PASSWORD}@{agent_config.MYSQL_HOST}:"
+                f"{agent_config.MYSQL_PORT}/{agent_config.MYSQL_DB}?charset=utf8mb4"
             )
         )
     )
