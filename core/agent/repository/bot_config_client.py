@@ -30,7 +30,7 @@ class BotConfigClient(BaseModel):
         default=create_redis_client(
             cluster_addr=agent_config.REDIS_CLUSTER_ADDR,
             standalone_addr=agent_config.REDIS_ADDR,
-            password=agent_config.REDIS_PASSWORD
+            password=agent_config.REDIS_PASSWORD,
         )
     )
     mysql_client: MysqlClient = Field(
@@ -257,14 +257,20 @@ class BotConfigClient(BaseModel):
                 )
                 if record:
                     # Update record attributes properly
-                    record.knowledge_config = (  # type: ignore
-                        bot_config.knowledge_config.model_dump_json()
+                    setattr(
+                        record,
+                        "knowledge_config",
+                        bot_config.knowledge_config.model_dump_json(),
                     )
-                    record.model_config = (  # type: ignore
-                        bot_config.model_config_.model_dump_json()
+                    setattr(
+                        record,
+                        "model_config",
+                        bot_config.model_config_.model_dump_json(),
                     )
-                    record.regular_config = (  # type: ignore
-                        bot_config.regular_config.model_dump_json()
+                    setattr(
+                        record,
+                        "regular_config",
+                        bot_config.regular_config.model_dump_json(),
                     )
                     record.tool_ids = json.dumps(  # type: ignore
                         bot_config.tool_ids, ensure_ascii=False
