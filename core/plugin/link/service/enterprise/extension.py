@@ -89,7 +89,7 @@ def register_mcp(mcp_info: MCPManagerRequest):
                     )
                     kafka_service = get_kafka_producer_service()
                     node_trace.start_time = int(round(time.time() * 1000))
-                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
+                    kafka_service.send(os.getenv(const.KAFKA_TOPIC_KEY), node_trace.to_json())
                 return MCPManagerResponse(
                     code=ErrCode.JSON_PROTOCOL_PARSER_ERR.code,
                     message=validate_err,
@@ -133,7 +133,7 @@ def register_mcp(mcp_info: MCPManagerRequest):
                 )
                 kafka_service = get_kafka_producer_service()
                 node_trace.start_time = int(round(time.time() * 1000))
-                kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
+                kafka_service.send(os.getenv(const.KAFKA_TOPIC_KEY), node_trace.to_json())
             return ToolManagerResponse(
                 code=ErrCode.SUCCESSES.code,
                 message=ErrCode.SUCCESSES.msg,
@@ -151,7 +151,7 @@ def register_mcp(mcp_info: MCPManagerRequest):
             )
             kafka_service = get_kafka_producer_service()
             node_trace.start_time = int(round(time.time() * 1000))
-            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
+            kafka_service.send(os.getenv(const.KAFKA_TOPIC_KEY), node_trace.to_json())
         return ToolManagerResponse(
             code=ErrCode.COMMON_ERR.code,
             message=str(err),

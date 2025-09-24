@@ -57,11 +57,11 @@ if __name__ == "__main__":
 
     uvicorn_server = uvicorn.Server(
         uvicorn.Config(
-            app=agent_config.UVICORN_APP,
-            host=agent_config.UVICORN_HOST,
-            port=agent_config.UVICORN_PORT,
-            workers=agent_config.UVICORN_WORKERS,
-            reload=agent_config.UVICORN_RELOAD,
+            app=agent_config.SERVICE_APP,
+            host=agent_config.SERVICE_HOST,
+            port=agent_config.SERVICE_PORT,
+            workers=agent_config.SERVICE_WORKERS,
+            reload=agent_config.SERVICE_RELOAD,
             ws_ping_interval=None,
             ws_ping_timeout=None,
         )
