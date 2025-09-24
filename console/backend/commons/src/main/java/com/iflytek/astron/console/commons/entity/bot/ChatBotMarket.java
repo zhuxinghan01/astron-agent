@@ -103,6 +103,9 @@ public class ChatBotMarket {
     @Schema(description = "Used tools")
     private String openedTool;
 
+    @Schema(description = "Model ID")
+    private Long modelId;
+
     @Schema(description = "Publish channels: MARKET,API,WECHAT,MCP (comma separated)")
     private String publishChannels;
 }

@@ -150,4 +150,7 @@ public class ChatBotBase {
 
     @Schema(description = "Space ID")
     private Long spaceId;
+
+    @Schema(description = "Model ID")
+    private Long modelId;
 }

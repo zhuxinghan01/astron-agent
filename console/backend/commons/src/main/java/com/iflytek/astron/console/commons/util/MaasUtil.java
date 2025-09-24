@@ -432,14 +432,19 @@ public class MaasUtil {
 
     public JSONObject copyWorkFlow(Long maasId, String uid) {
         log.info("----- Copying maas workflow id: {}", maasId);
-        HttpUrl httpUrl = HttpUrl.parse(cloneWorkFlowUrl + "/workflow/internal-clone")
-                .newBuilder()
-                .addQueryParameter("id", String.valueOf(maasId)) // 使用您的 massId
-                .addQueryParameter("password", "xfyun") // Set password according to target method logic
+        HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl + "/workflow/internal-clone");
+        if (baseUrl == null) {
+            log.error("Failed to parse clone workflow URL: {}", cloneWorkFlowUrl);
+            throw new BusinessException(ResponseEnum.CLONE_BOT_FAILED);
+        }
+
+        HttpUrl httpUrl = baseUrl.newBuilder()
+                .addQueryParameter("id", String.valueOf(maasId))
+                .addQueryParameter("password", "xfyun")
                 .build();
         Request httpRequest = new Request.Builder()
                 .url(httpUrl)
-                .get() // 指定 GET 方法
+                .get()
                 .build();
         String responseBody = "";
         try (Response response = client.newCall(httpRequest).execute()) {
@@ -447,7 +452,12 @@ public class MaasUtil {
                 // Handle request failure
                 throw new IOException("Unexpected code " + response);
             }
-            responseBody = response.body().string();
+            ResponseBody body = response.body();
+            if (body != null) {
+                responseBody = body.string();
+            } else {
+                throw new IOException("Response body is null");
+            }
         } catch (IOException e) {
             // Handle exception
             log.error("Failed to call internal-clone endpoint", e);
@@ -456,7 +466,7 @@ public class MaasUtil {
         JSONObject resClone = JSON.parseObject(responseBody);
 
         if (resClone == null) {
-            log.info("------ Failed to copy maas workflow, maasId: {}, reason: {}", maasId, resClone);
+            log.info("------ Failed to copy maas workflow, maasId: {}, reason: response is null", maasId);
             return null;
         }
         return resClone;

@@ -1,6 +1,6 @@
 package com.iflytek.astron.console.hub.controller.bot;
 
-import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
@@ -102,9 +102,6 @@ public class BotController {
         botPermissionUtil.checkBot(Integer.parseInt(botId));
         maasUtil.setBotTag(botJson);
         log.info("***** uid: {}, botId: {} 提交MASS助手", uid, botId);
-        BotCreateForm form = new BotCreateForm();
-        form.setName(botJson.getString("name"));
-        form.setBotDesc(botJson.getString("description"));
         String flowId = botJson.getString("flowId");
         JSONObject result = maasUtil.createApi(flowId, tenantId);
         if (Objects.isNull(result)) {
@@ -137,7 +134,7 @@ public class BotController {
     @PostMapping("/updateSynchronize")
     @Transactional(rollbackFor = Exception.class)
     public ApiResult<Long> updateSynchronize(@RequestBody MaasDuplicate update) {
-        log.info("----- 星辰画布更新: {}", JSONUtil.toJsonStr(update));
+        log.info("----- 星辰画布更新: {}", JSON.toJSONString(update));
         Long maasId = update.getMaasId();
         List<UserLangChainInfo> list = userLangChainDataService.findByMaasId(maasId);
         if (Objects.isNull(list) || list.isEmpty()) {
@@ -146,7 +143,7 @@ public class BotController {
         }
         Integer botId = list.getFirst().getBotId();
         if (redissonClient.getBucket(MaasUtil.generatePrefix(maasId.toString(), botId)).isExists()) {
-            log.info("----- 星火内部服务,无需处理: {}", JSONUtil.toJsonStr(update));
+            log.info("----- 星火内部服务,无需处理: {}", JSON.toJSONString(update));
             redissonClient.getBucket(MaasUtil.generatePrefix(maasId.toString(), botId)).delete();
             return ApiResult.success(botId.longValue());
         }

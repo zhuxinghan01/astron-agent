@@ -71,7 +71,7 @@ async def upload(
 
 async def split(
         file_id: Optional[str] = None,
-        cut_off: Optional[str] = None,
+        cut_off: Optional[List[str]] = None,
         length_range: Optional[List[int]] = None,
         **kwargs: Any
 ) -> Dict[str, Any]:
@@ -80,7 +80,7 @@ async def split(
 
     Args:
         file_id: File ID
-        cut_off: Cutoff character
+        cut_off: Cutoff character list
         length_range: Chunk length range
 
     Returns:
@@ -89,6 +89,9 @@ async def split(
     Raises:
         ThirdPartyException: Raised when chunking fails
     """
+    if not file_id:
+        raise ThirdPartyException("File ID is required for split operation")
+
     post_body = {
         "fileIds": [file_id],
         "isSplitDefault": False,
@@ -97,20 +100,21 @@ async def split(
     }
 
     split_chars = []
-    for s in cut_off:
-        split_chars.append(
-            base64.b64encode(s.encode("utf-8")).decode(encoding="utf-8")
-        )
+    if cut_off:
+        for s in cut_off:
+            split_chars.append(
+                base64.b64encode(s.encode("utf-8")).decode(encoding="utf-8")
+            )
 
     post_body["wikiSplitExtends"] = {
         "chunkSeparators": split_chars,
-        "minChunkSize": length_range[0],
-        "chunkSize": length_range[1],
+        "minChunkSize": length_range[0] if length_range and len(length_range) > 0 else 256,
+        "chunkSize": length_range[1] if length_range and len(length_range) > 1 else 2000,
     }
 
     max_retries = 3
     retry_count = 0
-    data = None
+    data: Optional[Dict[str, Any]] = None
 
     while retry_count < max_retries:
         try:
@@ -121,15 +125,14 @@ async def split(
             )
             data = response
             break
-        except Exception as e:
+        except Exception:
             print(f"Retry {retry_count + 1}, document splitting not successful, continuing to retry...")
             retry_count += 1
-            data = e
             if retry_count < max_retries:
                 await asyncio.sleep(1)
 
-    if isinstance(data, Exception):
-        raise ThirdPartyException(data.message) from data
+    if data is None:
+        raise ThirdPartyException("Document splitting failed after retries")
 
     return data
 
@@ -140,7 +143,6 @@ async def get_chunks(file_id: Optional[str] = None, **kwargs: Any) -> List[Dict[
 
     Args:
         file_id: File ID
-        span: Optional distributed tracing Span object
 
     Returns:
         List of document chunk content
@@ -149,16 +151,19 @@ async def get_chunks(file_id: Optional[str] = None, **kwargs: Any) -> List[Dict[
         ThirdPartyException: Raised when document splitting fails
         CustomException: Raised when unable to get chunk content
     """
+    if not file_id:
+        raise CustomException(CodeEnum.ParameterCheckException, "File ID is required")
+
     max_retries = 70
     retry_count = 0
-    data = None
+    data: Optional[List[Dict[str, Any]]] = None
 
     while retry_count < max_retries:
         file_status = await get_file_status(file_id=file_id, **kwargs)
-        if file_status[0]["fileStatus"] == "failed":
+        if file_status and file_status[0]["fileStatus"] == "failed":
             raise ThirdPartyException("Document splitting failed")
 
-        if file_status[0]["fileStatus"] in ["spliting", "ocring"]:
+        if file_status and file_status[0]["fileStatus"] in ["spliting", "ocring"]:
             logger.info(
                 f"File: {file_id} - Retry {retry_count + 1}, document is being chunked, continuing to retry..."
             )
@@ -179,7 +184,12 @@ async def get_chunks(file_id: Optional[str] = None, **kwargs: Any) -> List[Dict[
         )
 
         if response:
-            data = response
+            # Response could be a dict or list, handle both cases
+            if isinstance(response, list):
+                data = response
+            else:
+                # If response is a dict, wrap it in a list to match expected type
+                data = [response] if response else []
             break
 
         logger.info(
@@ -195,7 +205,8 @@ async def get_chunks(file_id: Optional[str] = None, **kwargs: Any) -> List[Dict[
             "Xinghuo knowledge base failed to get document chunk content data"
         )
 
-    return data
+    # Ensure data is properly typed as List[Dict[str, Any]]
+    return data if isinstance(data, list) else []
 
 
 async def new_topk_search(
@@ -211,14 +222,13 @@ async def new_topk_search(
         query: Query string
         doc_ids: Document ID list
         top_n: Number of results to return
-        span: Optional distributed tracing Span object
 
     Returns:
         Search result data
     """
     post_body = {
         "datasetId": os.getenv("XINGHUO_DATASET_ID", ""),
-        "fileIds": doc_ids,
+        "fileIds": doc_ids or [],
         "topK": top_n,
         "overlap": os.getenv("XINGHUO_SEARCH_OVERLAP", ""),
         "query": query,
@@ -233,17 +243,19 @@ async def new_topk_search(
     return data
 
 
-async def get_file_status(file_id: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
+async def get_file_status(file_id: Optional[str] = None, **kwargs: Any) -> List[Dict[str, Any]]:
     """
     Get file status information.
 
     Args:
         file_id: File ID
-        span: Optional distributed tracing Span object
 
     Returns:
         File status data
     """
+    if not file_id:
+        return []
+
     get_body = {"fileIds": file_id}
     data = await async_form_request(
         get_body,
@@ -251,7 +263,13 @@ async def get_file_status(file_id: Optional[str] = None, **kwargs: Any) -> Dict[
         "POST",
         **kwargs
     )
-    return data
+    # Handle response type - could be dict or list
+    if isinstance(data, list):
+        return data
+    elif isinstance(data, dict):
+        return [data]  # Wrap single dict in list
+    else:
+        return []
 
 
 async def get_file_info(file_id: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
@@ -260,11 +278,13 @@ async def get_file_info(file_id: Optional[str] = None, **kwargs: Any) -> Dict[st
 
     Args:
         file_id: File ID
-        span: Optional distributed tracing Span object
 
     Returns:
         File information data
     """
+    if not file_id:
+        return {}
+
     get_body = {"fileId": file_id}
     data = await async_form_request(
         get_body,
@@ -272,7 +292,7 @@ async def get_file_info(file_id: Optional[str] = None, **kwargs: Any) -> Dict[st
         "POST",
         **kwargs
     )
-    return data
+    return data or {}
 
 
 async def dataset_addchunk(
@@ -283,13 +303,12 @@ async def dataset_addchunk(
 
     Args:
         chunks: List of chunk objects
-        span: Optional distributed tracing Span object
 
     Returns:
         Result data of add operation
     """
     data = await async_request(
-        chunks,
+        chunks or [],
         os.getenv("XINGHUO_RAG_URL", "") + "openapi/v1/dataset/add-chunk?datasetId="
         + os.getenv("XINGHUO_DATASET_ID", ""),
         **kwargs
@@ -305,11 +324,13 @@ async def dataset_delchunk(
 
     Args:
         chunk_ids: List of chunk IDs
-        span: Optional distributed tracing Span object
 
     Returns:
         Result data of delete operation
     """
+    if not chunk_ids:
+        return {}
+
     chunk_ids_str = ",".join(chunk_ids)
     delete_body = {
         "datasetId": os.getenv("XINGHUO_DATASET_ID", ""),
@@ -331,7 +352,6 @@ async def dataset_updchunk(chunk: Dict[str, Any], **kwargs: Any) -> Dict[str, An
 
     Args:
         chunk: Chunk data dictionary
-        span: Distributed tracing Span object
 
     Returns:
         Result data of update operation
@@ -375,7 +395,6 @@ async def async_request(
     Raises:
         ThirdPartyException: Raised when network error, timeout, or API returns error
     """
-
     span = kwargs.get("span")
     if span:
         with span.start(
@@ -399,7 +418,7 @@ async def async_request(
                             url=url,
                             data=json.dumps(body),
                             headers=headers,
-                            timeout=60.0,
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))),
                     ) as response:
                         background_json = await response.text()
                         span_context.add_info_events({"RAG_OUTPUT": background_json})
@@ -426,6 +445,42 @@ async def async_request(
                     e=CodeEnum.CBG_RAGError,
                     msg=f"CBG Request timeout: {url}"
                 ) from e
+    else:
+        # Fallback without span
+        headers = await assemble_spark_auth_headers_async()
+        headers["Content-Type"] = "application/json"
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.request(
+                        method=method,
+                        url=url,
+                        data=json.dumps(body),
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))),
+                ) as response:
+                    background_json = await response.text()
+                    msg_js = json.loads(background_json)
+
+                    if msg_js["code"] == 0 and msg_js["flag"]:
+                        return msg_js["data"]
+                    logger.error(
+                        url + "Failed to 【XINGHUO-RAG】,err reason %s",
+                        msg_js["desc"],
+                    )
+                    raise ThirdPartyException(msg_js["desc"])
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error: {e}")
+            raise ThirdPartyException(
+                e=CodeEnum.CBG_RAGError,
+                msg=f"CBG Network error: {e}"
+            ) from e
+        except asyncio.TimeoutError as e:
+            logger.error(f"Request timeout: {url}")
+            raise ThirdPartyException(
+                e=CodeEnum.CBG_RAGError,
+                msg=f"CBG Request timeout: {url}"
+            ) from e
 
 
 def _prepare_form_data(body: Any) -> aiohttp.FormData:
@@ -575,12 +630,31 @@ async def async_form_request(
                             url=url,
                             data=form_data,
                             headers=headers,
-                            timeout=aiohttp.ClientTimeout(total=60.0)
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0")))
                     ) as resp:
                         return await _process_form_response(resp, url, span_context)
 
             except Exception as e:
                 _handle_form_request_error(e, url, span_context)
+    else:
+        # Fallback without span
+        form_data = _prepare_form_data(body)
+        headers = await assemble_spark_auth_headers_async()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.request(
+                        method=method,
+                        url=url,
+                        data=form_data,
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0")))
+                ) as resp:
+                    return await _process_form_response(resp, url, None)
+        except Exception as e:
+            _handle_form_request_error(e, url, None)
+
+    return {}
 
 
 async def assemble_spark_auth_headers_async() -> Dict[str, str]:

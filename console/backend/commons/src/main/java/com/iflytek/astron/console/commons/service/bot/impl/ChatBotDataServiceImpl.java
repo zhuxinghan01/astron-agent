@@ -608,7 +608,7 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         }
         // MCP channel processing
         McpData mcp = mcpDataService.getMcp(botId.longValue());
-        if (Objects.nonNull(mcp) && "1".equals(mcp.getReleased())) {
+        if (Objects.nonNull(mcp) && "1".equals(String.valueOf(mcp.getReleased()))) {
             releaseList.add(ReleaseTypeEnum.MCP.getCode());
         }
         return releaseList;

@@ -4,6 +4,7 @@ Defines standard API response formats, including success responses and error res
 """
 from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict
+from knowledge.consts.error_code import CodeEnum
 
 
 class BaseResponse(BaseModel):
@@ -25,6 +26,10 @@ class BaseResponse(BaseModel):
         """Check if response is successful"""
         return self.code == 0
 
+    def to_dict(self) -> dict:
+        """Convert response to dictionary, excluding None fields"""
+        return self.model_dump(exclude_none=True)
+
 
 class SuccessDataResponse(BaseResponse):
     """Success response (with data)"""
@@ -40,8 +45,8 @@ class ErrorResponse(BaseResponse):
     """Error response"""
 
     def __init__(
-            self, code_enum, sid: Optional[str] = None, message: Optional[str] = None
-    ):
+            self, code_enum: CodeEnum, sid: Optional[str] = None, message: Optional[str] = None
+    ) -> None:
         # If message parameter is provided, use it; otherwise use code_enum's msg
         msg = message if message is not None else code_enum.msg
         super().__init__(code=code_enum.code, message=msg, sid=sid)

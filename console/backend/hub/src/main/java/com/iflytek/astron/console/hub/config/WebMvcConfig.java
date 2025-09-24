@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    protected static final String[] NO_AUTH_REQUIRED_APIS = {
+    static final String[] NO_AUTH_REQUIRED_APIS = {
             "/health",
             "/actuator/**",
             "/swagger-ui/**",

@@ -17,8 +17,6 @@ from knowledge.consts.error_code import CodeEnum
 from knowledge.exceptions.exception import ThirdPartyException
 from knowledge.utils.spark_signature import get_signature
 
-desk_url = os.getenv("DESK_RAG_URL", "")
-
 
 async def sparkdesk_query_async(
     query: str,
@@ -69,7 +67,7 @@ async def async_request(
         ThirdPartyException: Raised when request fails or API returns error
     """
     span = kwargs.get("span")
-
+    desk_url = os.getenv("DESK_RAG_URL", "")
     if span:
         with span.start(
                 func_name="ASYNC_REQUEST_SPARKDESK",
@@ -89,7 +87,7 @@ async def async_request(
                             url=desk_url,
                             json=body,
                             headers=await assemble_auth_headers_async(),
-                            timeout=aiohttp.ClientTimeout(total=30.0)  # Set timeout
+                            timeout=aiohttp.ClientTimeout(total=float(os.getenv("DESK_CLIENT_TIMEOUT", "30")))  # Set timeout
                     ) as resp:
 
                         response_text = await resp.text()
@@ -149,6 +147,8 @@ async def async_request(
                     e=CodeEnum.DESK_RAGError,
                     msg=error_msg
                 ) from e
+
+    return {}
 
 
 async def assemble_auth_headers_async() -> Dict[str, str]:

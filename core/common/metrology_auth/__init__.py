@@ -61,7 +61,6 @@ class MetrologyAuthorization:
         self.sname = sname
         self.channel_list = channel_list
 
-        # 初始化 Check
         _ = self.authorization.check_init(
             self.url,
             self.pro,
@@ -74,7 +73,6 @@ class MetrologyAuthorization:
         )
         # print(f"Check_Init result: {check_init_result}")
 
-        # 初始化 Calc
         _ = self.metrology.calc_init(
             self.url,
             self.pro,
@@ -87,7 +85,6 @@ class MetrologyAuthorization:
         # print(f"Calc_Init result: {result}")
 
     def excute(self, masdk_request: MASDKRequest):
-        # 调用 Check
         now = datetime.now()
         tag = now.strftime("%Y-%m-%d %H:%M:%S.%f")
         r0, r1, r2 = self.authorization.check(
@@ -97,9 +94,7 @@ class MetrologyAuthorization:
             [masdk_request.function],
             tag,
         )
-        # print(f"Check result r0: {r0}")
-        # print(f"Check result r1: {r1}")
-        # print(f"Check result r2: {r2}")
+
         if r0 != "null":
             logInfo = {
                 "request": masdk_request.to_dict(),
@@ -115,15 +110,13 @@ class MetrologyAuthorization:
                 log=json.dumps(logInfo, ensure_ascii=False),
             )
 
-        # 调用 Calc
         r0, r1 = self.metrology.calc(
             masdk_request.appid,
             masdk_request.channel,
             masdk_request.function,
             masdk_request.cnt,
         )
-        # print(f"Calc result r0: {r0}")
-        # print(f"Calc result r1: {r1}")
+
         return MASDKResponse(
             code=MASDKErrors.get_error(ErrorCode.Successes).c,
             msg=MASDKErrors.get_error(ErrorCode.Successes).m,
@@ -146,7 +139,6 @@ class ConcurrentAuthorization:
         self.sname = sname
         self.channel_list = channel_list
 
-        # 初始化 Check
         _ = self.authorization.check_init(
             self.url,
             self.pro,
@@ -157,9 +149,7 @@ class ConcurrentAuthorization:
             self.channel_list,
             self.sname,
         )
-        # print(f"Check_Init result: {check_init_result}")
 
-        # 初始化 Conc
         _ = self.concurrent.conc_init(
             self.url,
             self.pro,
@@ -170,10 +160,8 @@ class ConcurrentAuthorization:
             get_local_ip(),
             self.sname,
         )
-        # print(f"Conc_Init result: {result}")
 
     def acquire(self, masdk_request: MASDKRequest):
-        # 调用 CheckV2
         now = datetime.now()
         tag = now.strftime("%Y-%m-%d %H:%M:%S.%f")
         r0, r1, r2 = self.authorization.checkV2(
@@ -183,9 +171,7 @@ class ConcurrentAuthorization:
             [masdk_request.function],
             tag,
         )
-        # print(f"CheckV2 result r0: {r0}")
-        # print(f"CheckV2 result r1: {r1}")
-        # print(f"CheckV2 result r2: {r2}")
+
         if r0 != "null":
             logInfo = {
                 "request": masdk_request.to_dict(),
@@ -200,7 +186,6 @@ class ConcurrentAuthorization:
                 msg=MASDKErrors.get_error(ErrorCode.AuthorizationCheckV2Error).m,
                 log=json.dumps(logInfo, ensure_ascii=False),
             )
-        # 调用 Conc
         for i in range(masdk_request.cnt):
             r0, r1, r2, r3 = self.concurrent.acquire_conc(
                 masdk_request.sid,
@@ -208,10 +193,7 @@ class ConcurrentAuthorization:
                 masdk_request.channel,
                 masdk_request.function,
             )
-            # print(f"AcquireConc result{i} pass: {r0}")
-            # print(f"AcquireConc result{i} addr: {r1}")
-            # print(f"AcquireConc result{i} currentUsed: {r2}")
-            # print(f"AcquireConc result{i} err: {r3}")
+
             if r0 != 1:
                 logInfo = {
                     "request": masdk_request.to_dict(),
@@ -241,7 +223,6 @@ class ConcurrentAuthorization:
                 masdk_request.channel,
                 masdk_request.function,
             )
-            # print(f"ReleaseConc result{i}: {result}")
             if result != "":
                 logInfo = {
                     "request": masdk_request.to_dict(),
@@ -279,7 +260,6 @@ class ConcurrentAuthorization:
             msg=MASDKErrors.get_error(ErrorCode.Successes).m,
             log="",
         )
-        # 调用 CheckV2
         now = datetime.now()
         tag = now.strftime("%Y-%m-%d %H:%M:%S.%f")
         r0, r1, r2 = self.authorization.checkV2(
@@ -289,9 +269,6 @@ class ConcurrentAuthorization:
             [masdk_request.function],
             tag,
         )
-        # print(f"CheckV2 result r0: {r0}")
-        # print(f"CheckV2 result r1: {r1}")
-        # print(f"CheckV2 result r2: {r2}")
         if r0 != "null":
             logInfo = {
                 "request": masdk_request.to_dict(),
@@ -307,7 +284,6 @@ class ConcurrentAuthorization:
                 log=json.dumps(logInfo, ensure_ascii=False),
             )
         else:
-            # 调用 Conc
             for i in range(masdk_request.cnt):
                 r0, r1, r2, r3 = self.concurrent.acquire_conc(
                     masdk_request.sid,
@@ -315,10 +291,6 @@ class ConcurrentAuthorization:
                     masdk_request.channel,
                     masdk_request.function,
                 )
-                # print(f"AcquireConc result{i} pass: {r0}")
-                # print(f"AcquireConc result{i} addr: {r1}")
-                # print(f"AcquireConc result{i} currentUsed: {r2}")
-                # print(f"AcquireConc result{i} err: {r3}")
                 if r0 != 1:
                     logInfo = {
                         "request": masdk_request.to_dict(),
@@ -348,7 +320,6 @@ class ConcurrentAuthorization:
                     masdk_request.channel,
                     masdk_request.function,
                 )
-                # print(f"ReleaseConc result{i}: {result}")
                 if result != "":
                     logInfo = {
                         "request": masdk_request.to_dict(),
@@ -568,32 +539,3 @@ class MASDK:
                 log=json.dumps(logInfo, ensure_ascii=False),
             )
         return self.concurrent_method.release(masdk_request)
-
-
-if __name__ == "__main__":
-    sdk = MASDK(
-        polaris_url="http://companion-test.iflyaicloud.com:9080",
-        polaris_project="AIaaS",
-        polaris_group="madx",
-        polaris_service="janus-client",
-        polaris_version="3.1.2",
-        rpc_config_file="ma-sdk.cfg.toml",
-        metrics_service_name="demo",
-        channel_list=["xingchen"],
-        strategy_type=["cnt", "conc"],
-    )
-    masdk_request = MASDKRequest(
-        sid="sid-1", appid="27f5ee9c", uid="", channel="xingchen", function="api", cnt=2
-    )
-    masdk_response = sdk.metrology_authorization(masdk_request)
-    print(masdk_response)
-
-    try:
-        with sdk.concurrent_authorization(masdk_request) as context_method:
-            print(context_method.masdk_response)
-            pass
-    except Exception:
-        pass
-
-    print(sdk.acquire_concurrent(masdk_request))
-    print(sdk.release_concurrent(masdk_request))
