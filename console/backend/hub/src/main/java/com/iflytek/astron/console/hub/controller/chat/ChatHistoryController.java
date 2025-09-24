@@ -1,5 +1,6 @@
 package com.iflytek.astron.console.hub.controller.chat;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
@@ -84,14 +85,6 @@ public class ChatHistoryController {
     }
 
     /**
-     * Merge history
-     *
-     * @param uid
-     * @param chatId
-     * @param chatList
-     * @return
-     */
-    /**
      * Function to get message history
      *
      * @param uid User ID
@@ -103,12 +96,12 @@ public class ChatHistoryController {
         // Get multi-modal question history
         List<ChatReqModelDto> reqList = chatDataService.getReqModelBotHistoryByChatId(uid, chatId);
         if (reqList.isEmpty()) {
-            return new ChatHistoryResponseDto();
+            reqList = new ArrayList<>();
         }
         // Get multi-modal answer history
         List<ChatRespModelDto> respList = chatDataService.getChatRespModelBotHistoryByChatId(uid, chatId, new ArrayList<>());
         if (respList == null) {
-            return new ChatHistoryResponseDto();
+            respList = new ArrayList<>();
         }
         // Get trace history in chat
         List<ChatTraceSource> traceList = chatDataService.findTraceSourcesByChatId(chatId);
@@ -127,8 +120,17 @@ public class ChatHistoryController {
         ChatHistoryResponseDto responseDto = new ChatHistoryResponseDto();
         responseDto.setChatId(chatId);
         responseDto.setChatFileListNoReq((List<ChatEnhanceChatHistoryListFileVo>) chatFileList.get("chatFileListNoReq"));
-        responseDto.setHistoryList((com.alibaba.fastjson2.JSONArray) chatFileList.get("historyList"));
-        responseDto.setBusinessType((String) chatFileList.get("businessType"));
+        Object historyListObj = chatFileList.get("historyList");
+        if (historyListObj instanceof JSONArray) {
+            responseDto.setHistoryList((JSONArray) historyListObj);
+        } else if (historyListObj instanceof List) {
+            responseDto.setHistoryList(new JSONArray((List<?>) historyListObj));
+        } else if (historyListObj != null) {
+            responseDto.setHistoryList(JSONArray.parseArray(historyListObj.toString()));
+        } else {
+            responseDto.setHistoryList(new JSONArray());
+        }
+        responseDto.setBusinessType(chatFileList.get("businessType").toString());
         responseDto.setExistChatFileSize((Integer) chatFileList.get("existChatFileSize"));
         responseDto.setExistChatImage((Boolean) chatFileList.get("existChatImage"));
         responseDto.setEnabledPluginIds(chatList.getEnabledPluginIds());

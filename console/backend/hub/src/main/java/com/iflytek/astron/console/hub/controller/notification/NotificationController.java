@@ -30,11 +30,11 @@ public class NotificationController {
 
         String currentUserUid = RequestContextUtil.getUID();
         log.debug("查询用户通知列表: uid={}, pageIndex={}, pageSize={}",
-            currentUserUid, queryRequest.getPageIndex(), queryRequest.getPageSize());
+                currentUserUid, queryRequest.getPageIndex(), queryRequest.getPageSize());
 
         NotificationPageResponse response = notificationService.getUserNotifications(currentUserUid, queryRequest);
         log.debug("查询成功，返回 {} 条通知，未读数量: {}",
-            response.getNotifications().size(), response.getUnreadCount());
+                response.getNotifications().size(), response.getUnreadCount());
 
         return ApiResult.success(response);
     }
@@ -56,7 +56,7 @@ public class NotificationController {
     public ApiResult<Boolean> markNotificationsAsRead(@Valid @RequestBody MarkReadRequest request) {
         String currentUserUid = RequestContextUtil.getUID();
         log.info("标记通知为已读: uid={}, markAll={}, notificationIds={}",
-            currentUserUid, request.getMarkAll(), request.getNotificationIds());
+                currentUserUid, request.getMarkAll(), request.getNotificationIds());
 
         boolean success = notificationService.markNotificationsAsRead(currentUserUid, request);
         log.info("标记通知为已读操作完成: success={}", success);

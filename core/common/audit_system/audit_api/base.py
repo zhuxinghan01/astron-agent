@@ -24,13 +24,9 @@ class ResourceList(BaseModel):
     跟问答关联的资源信息，作用于降低上下文结合风险。
     """
 
-    # 资源唯一标识。
     data_id: str
-    # 送审资源类型，可选值：image、text、audio、video。
     content_type: ContentType
-    # 资源描述信息。
     res_desc: str
-    # 图片中的OCR文字。
     ocr_text: str
 
 
@@ -39,11 +35,8 @@ class ContextList(BaseModel):
     多轮对话场景下历史对话信息，作用于降低上下文结合风险，按照交互对话顺序传递。
     """
 
-    # 角色，用于区分历史对话。可选值：user(用户提问)、assistant（大模型回答） 、system（设定的大模型角色）
     role: str
-    # 历史送审文本信息。
     content: str
-    # 跟问答关联的资源信息，作用于降低上下文结合风险。
     resource_list: List[ResourceList] = Field(default_factory=list)
 
 

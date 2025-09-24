@@ -1,6 +1,9 @@
 package com.iflytek.astron.console.hub.service.chat.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotMarket;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
@@ -17,11 +20,14 @@ import com.iflytek.astron.console.commons.enums.bot.BotTypeEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import com.iflytek.astron.console.hub.service.PromptChatService;
 import com.iflytek.astron.console.hub.service.SparkChatService;
 import com.iflytek.astron.console.hub.service.chat.BotChatService;
 import com.iflytek.astron.console.commons.service.data.ChatHistoryService;
 import com.iflytek.astron.console.commons.service.workflow.WorkflowBotChatService;
 import com.iflytek.astron.console.hub.service.chat.ChatListService;
+import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
+import com.iflytek.astron.console.toolkit.service.model.ModelService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +80,12 @@ public class BotChatServiceImpl implements BotChatService {
     @Autowired
     private BotService botService;
 
+    @Autowired
+    private ModelService modelService;
+
+    @Autowired
+    private PromptChatService promptChatService;
+
     @Override
     public void chatMessageBot(ChatBotReqDto chatBotReqDto, SseEmitter sseEmitter, String sseId, String workflowOperation, String workflowVersion) {
         try {
@@ -85,8 +97,13 @@ public class BotChatServiceImpl implements BotChatService {
             } else {
                 List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt);
                 ChatReqRecords chatReqRecords = createChatRequest(chatBotReqDto);
-                SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
-                sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                if (botConfig.modelId == null) {
+                    SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
+                    sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                } else {
+                    JSONObject jsonObject = buildPromptChatRequest(botConfig, messages);
+                    promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
+                }
             }
         } catch (Exception e) {
             log.error("Bot chat error for sseId: {}, chatId: {}, uid: {}", sseId, chatBotReqDto.getChatId(), chatBotReqDto.getUid(), e);
@@ -108,9 +125,14 @@ public class BotChatServiceImpl implements BotChatService {
             chatBotReqDto.setAsk(chatReqRecords.getMessage());
             chatBotReqDto.setEdit(true);
             List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt);
-            SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
 
-            sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, chatBotReqDto.getEdit(), false);
+            if (botConfig.modelId == null) {
+                SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
+                sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+            } else {
+                JSONObject jsonObject = buildPromptChatRequest(botConfig, messages);
+                promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
+            }
         } catch (Exception e) {
             log.error("Bot reAnswer error for sseId: {}, requestId: {}", sseId, requestId, e);
             SseEmitterUtil.completeWithError(sseEmitter, "Failed to process re-answer request: " + e.getMessage());
@@ -118,7 +140,7 @@ public class BotChatServiceImpl implements BotChatService {
     }
 
     @Override
-    public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, SseEmitter sseEmitter, String sseId) {
+    public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, SseEmitter sseEmitter, String sseId) {
         // 1. Create system message (must be kept)
         SparkChatRequest.MessageDto systemMessage = new SparkChatRequest.MessageDto();
         systemMessage.setRole("system");
@@ -143,13 +165,25 @@ public class BotChatServiceImpl implements BotChatService {
         messageList.addAll(historyMessages);
         messageList.add(queryMessage);
         // 4. Build request object
-        SparkChatRequest sparkChatRequest = new SparkChatRequest();
-        sparkChatRequest.setModel(model);
-        sparkChatRequest.setMessages(messageList);
-        sparkChatRequest.setChatId(null);
-        sparkChatRequest.setUserId(uid);
-        sparkChatRequest.setEnableWebSearch(enableWebSearch(openedTool));
-        sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, null, false, true);
+        if (modelId == null) {
+            SparkChatRequest sparkChatRequest = new SparkChatRequest();
+            sparkChatRequest.setModel(model);
+            sparkChatRequest.setMessages(messageList);
+            sparkChatRequest.setChatId(null);
+            sparkChatRequest.setUserId(uid);
+            sparkChatRequest.setEnableWebSearch(enableWebSearch(openedTool));
+            sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, null, false, true);
+        } else {
+            BotConfiguration botConfig = new BotConfiguration(
+                    prompt,
+                    false,
+                    model,
+                    openedTool,
+                    BotTypeEnum.SYSTEM_BOT.getType(),
+                    modelId);
+            JSONObject jsonObject = buildPromptChatRequest(botConfig, messageList);
+            promptChatService.chatStream(jsonObject, sseEmitter, sseId, null, false, false);
+        }
     }
 
     @Override
@@ -196,7 +230,8 @@ public class BotChatServiceImpl implements BotChatService {
                     chatBotMarket.getSupportContext() == 1,
                     chatBotMarket.getModel(),
                     chatBotMarket.getOpenedTool(),
-                    chatBotMarket.getVersion());
+                    chatBotMarket.getVersion(),
+                    chatBotMarket.getModelId());
         } else {
             ChatBotBase chatBotBase = chatBotDataService.findById(botId)
                     .orElseThrow(() -> new BusinessException(ResponseEnum.BOT_NOT_EXISTS));
@@ -205,7 +240,8 @@ public class BotChatServiceImpl implements BotChatService {
                     chatBotBase.getSupportContext() == 1,
                     chatBotBase.getModel(),
                     chatBotBase.getOpenedTool(),
-                    chatBotBase.getVersion());
+                    chatBotBase.getVersion(),
+                    chatBotBase.getModelId());
         }
     }
 
@@ -375,7 +411,49 @@ public class BotChatServiceImpl implements BotChatService {
         return sparkChatRequest;
     }
 
-    private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool, Integer version) {}
+    private JSONObject buildPromptChatRequest(BotConfiguration botConfig, List<SparkChatRequest.MessageDto> messages) {
+        JSONObject jsonObject = new JSONObject();
+        LLMInfoVo llmInfoVo = (LLMInfoVo) modelService.getDetail(0, botConfig.modelId, null).data();
+        jsonObject.put("url", llmInfoVo.getUrl());
+        jsonObject.put("apiKey", llmInfoVo.getApiKey());
+        jsonObject.put("model", llmInfoVo.getDomain());
+        jsonObject.put("messages", messages);
+        // 将Object转为JSONArray类型
+        Object configObj = llmInfoVo.getConfig();
+        JSONArray config = null;
+        if (configObj instanceof JSONArray) {
+            config = (JSONArray) configObj;
+        } else if (configObj instanceof String) {
+            try {
+                config = JSON.parseArray((String) configObj);
+            } catch (Exception e) {
+                log.warn("Failed to parse config string to JSONArray: {}", configObj, e);
+                config = new JSONArray();
+            }
+        } else if (configObj != null) {
+            try {
+                config = (JSONArray) JSON.toJSON(configObj);
+            } catch (Exception e) {
+                log.warn("Failed to convert config object to JSONArray: {}", configObj, e);
+                config = new JSONArray();
+            }
+        } else {
+            config = new JSONArray();
+        }
+        for (Object o : config) {
+            if (o instanceof JSONObject configItem) {
+                String key = configItem.getString("key");
+                Object defaultValue = configItem.get("default");
+                if (key != null) {
+                    jsonObject.put(key, defaultValue);
+                }
+            }
+        }
+        jsonObject.put("config", config);
+        return jsonObject;
+    }
+
+    private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool, Integer version, Long modelId) {}
 
     /**
      * Determine whether to enable web search
