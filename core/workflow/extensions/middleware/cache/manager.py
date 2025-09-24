@@ -3,7 +3,6 @@ import re
 from typing import Any, Dict, Tuple
 
 from loguru import logger
-
 from workflow.extensions.middleware.base import Service
 from workflow.extensions.middleware.cache.base import BaseCacheService, RedisModel
 

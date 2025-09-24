@@ -21,12 +21,6 @@ class ChatAIFactory:
     and their corresponding implementation classes.
     """
 
-    # Registry mapping model provider values to their corresponding chat AI classes
-    _chat_ais = {
-        ModelProviderEnum.XINGHUO.value: SparkChatAi,
-        ModelProviderEnum.OPENAI.value: OpenAIChatAI,
-    }
-
     @staticmethod
     def get_chat_ai(model_source: str, **kwargs: Any) -> OpenAIChatAI | SparkChatAi:
         """
@@ -37,11 +31,11 @@ class ChatAIFactory:
         :return: An instance of the appropriate chat AI class
         :raises ValueError: If the specified model source is not supported
         """
-        # Retrieve the chat AI class from the registry
-        chat_ai = ChatAIFactory._chat_ais.get(model_source)
-        if not chat_ai:
-            raise ValueError(f"Unsupported model source: {model_source}")
 
-        # Instantiate the chat AI with provided parameters
-        chat_ai_instance = chat_ai(**kwargs)
-        return chat_ai_instance
+        # Retrieve the chat AI class from the registry
+        if model_source == ModelProviderEnum.XINGHUO.value:
+            return SparkChatAi(**kwargs)
+        elif model_source == ModelProviderEnum.OPENAI.value:
+            return OpenAIChatAI(**kwargs)
+        else:
+            raise ValueError(f"Unsupported model source: {model_source}")

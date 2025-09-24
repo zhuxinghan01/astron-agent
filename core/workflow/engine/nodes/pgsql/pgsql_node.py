@@ -177,7 +177,7 @@ class PGSqlNode(BaseNode):
             return f"UPDATE {self.tableName} SET {set_clause} WHERE {where_clause};"
         else:
             raise CustomException(
-                err_code=CodeEnum.PGSqlNodeExecutionError,
+                err_code=CodeEnum.PG_SQL_NODE_EXECUTION_ERROR,
                 err_msg="Database DML statement generation failed: WHERE condition is empty",
                 cause_error="Database DML statement generation failed: WHERE condition is empty",
             )
@@ -232,7 +232,7 @@ class PGSqlNode(BaseNode):
             return f"DELETE FROM {self.tableName} WHERE {where_clause};"
         else:
             raise CustomException(
-                err_code=CodeEnum.PGSqlNodeExecutionError,
+                err_code=CodeEnum.PG_SQL_NODE_EXECUTION_ERROR,
                 err_msg="Database DML statement generation failed: WHERE condition is empty",
                 cause_error="Database DML statement generation failed: WHERE condition is empty",
             )
@@ -424,7 +424,7 @@ class PGSqlNode(BaseNode):
                     self.mode,
                     lambda: (_ for _ in ()).throw(  # Throw exception for invalid mode
                         CustomException(
-                            err_code=CodeEnum.PGSqlParamError,
+                            err_code=CodeEnum.PG_SQL_PARAM_ERROR,
                             err_msg="Mode is out of range",
                             cause_error="Mode is out of range",
                         )
@@ -438,7 +438,7 @@ class PGSqlNode(BaseNode):
                 err = str(e)
                 request_span.add_error_event(err)
                 raise CustomException(
-                    err_code=CodeEnum.PGSqlNodeExecutionError,
+                    err_code=CodeEnum.PG_SQL_NODE_EXECUTION_ERROR,
                     err_msg=f"Database DML statement generation failed: {err}",
                     cause_error=f"Database DML statement generation failed: {err}",
                 ) from e
@@ -460,12 +460,12 @@ class PGSqlNode(BaseNode):
         # Validate required parameters based on operation mode
         if self.mode == DBMode.CUSTOM.value and not self.sql:
             raise CustomException(
-                err_code=CodeEnum.PGSqlParamError,
+                err_code=CodeEnum.PG_SQL_PARAM_ERROR,
                 err_msg="Database input SQL is empty",
             )
         if self.mode != DBMode.CUSTOM.value and not self.tableName:
             raise CustomException(
-                err_code=CodeEnum.PGSqlParamError,
+                err_code=CodeEnum.PG_SQL_PARAM_ERROR,
                 err_msg="Database input tableName is empty",
             )
         # Create PostgreSQL configuration object
@@ -584,9 +584,9 @@ class PGSqlNode(BaseNode):
                 )
                 schema: dict[str, Any] = next(
                     (
-                        k.get("schema", {})
+                        k.output_schema
                         for k in node_protocol.outputs
-                        if k.get("name") == "outputList"
+                        if k.name == "outputList"
                     ),
                     {},
                 )
@@ -638,7 +638,7 @@ class PGSqlNode(BaseNode):
             return NodeRunResult(
                 status=status,
                 error=CustomException(
-                    CodeEnum.PGSqlNodeExecutionError,
+                    CodeEnum.PG_SQL_NODE_EXECUTION_ERROR,
                     cause_error=e,
                 ),
                 node_id=self.node_id,

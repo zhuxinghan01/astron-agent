@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, cast
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.entities.history import History
 from workflow.engine.entities.node_entities import NodeType
-from workflow.engine.entities.workflow_dsl import Node, NodeData
+from workflow.engine.entities.workflow_dsl import InputSchema, Node, NodeData, NodeRef
 from workflow.engine.nodes.entities.node_run_result import NodeRunResult
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -243,7 +243,7 @@ class VariablePool:
         self.output_variable_mapping: Dict[str, Any] = {}
         if not protocol:
             raise CustomException(
-                err_code=CodeEnum.EngProtocolValidateErr,
+                err_code=CodeEnum.ENG_PROTOCOL_VALIDATE_ERROR,
                 err_msg="Node configuration information not found",
             )
         self.nodes = protocol
@@ -316,7 +316,7 @@ class VariablePool:
                 return node.data
 
         raise CustomException(
-            err_code=CodeEnum.EngProtocolValidateErr,
+            err_code=CodeEnum.ENG_PROTOCOL_VALIDATE_ERROR,
             err_msg=f"Node configuration information not found, node id = {node_id}",
         )
 
@@ -328,21 +328,21 @@ class VariablePool:
             node_id = node.id
             if not node_id:
                 raise CustomException(
-                    err_code=CodeEnum.EngProtocolValidateErr,
+                    err_code=CodeEnum.ENG_PROTOCOL_VALIDATE_ERROR,
                     err_msg="Node ID is empty",
                     cause_error="Node ID is empty",
                 )
             node_inputs = node.data.inputs
 
             for node_input in node_inputs:
-                input_key = node_input.get("name", "")
-                input_schema = node_input.get("schema", {})
-                input_value = input_schema.get("value", {})
-                json_input_type = input_schema.get("type", "string")
+                input_key = node_input.name
+                input_schema = node_input.input_schema
+                input_value = input_schema.value
+                json_input_type = input_schema.type
                 python_input_type_list = schema_type_map_python.get(json_input_type, [])
                 input_content: Any = ""
-                if input_value.get("type", "literal") == "literal":
-                    input_content = input_value.get("content")
+                if input_value.type == "literal":
+                    input_content = input_value.content
                     input_content_org = input_content
                     type_match = any(
                         isinstance(input_content, t) for t in python_input_type_list
@@ -372,11 +372,11 @@ class VariablePool:
         for node in self.nodes:
             output_nodes = node.data.outputs
             for output_node in output_nodes:
-                output_key = output_node.get("name", "")
-                output_schema = output_node.get("schema", {})
-                output_required = output_node.get("required", False)
+                output_key = output_node.name
+                output_schema = output_node.output_schema
+                output_required = output_node.required
                 output_content = schema_type_default_value.get(
-                    output_schema.get("type")
+                    output_schema.get("type", "")
                 )
                 if "default" in output_schema:
                     output_content = output_schema.get("default")
@@ -485,7 +485,7 @@ class VariablePool:
                 span.add_error_event(f"input key {mapping_key} not exist")
                 # raise Exception(f"Node {node_id} does not have value {key}")
                 raise CustomException(
-                    err_code=CodeEnum.VariablePoolSetParameterError,
+                    err_code=CodeEnum.VARIABLE_POOL_SET_PARAMETER_ERROR,
                     err_msg=f"Node {node_id} input parameter {mapping_key} does not exist",
                 )
             mapping_value = self.output_variable_mapping[mapping_key]
@@ -563,7 +563,7 @@ class VariablePool:
                         cause_error = f"key {key} not in {mapping_schema_orig}"
                         msg = f"Node {node_id} does not have value {key}"
                         raise CustomException(
-                            err_code=CodeEnum.VariablePoolGetParameterError,
+                            err_code=CodeEnum.VARIABLE_POOL_GET_PARAMETER_ERROR,
                             err_msg=msg,
                             cause_error=cause_error,
                         )
@@ -592,7 +592,7 @@ class VariablePool:
                     cause_error = f"key {key} not in {mapping_schema_orig}"
                     msg = f"Node {node_id} does not have value {key}"
                     raise CustomException(
-                        err_code=CodeEnum.VariablePoolGetParameterError,
+                        err_code=CodeEnum.VARIABLE_POOL_GET_PARAMETER_ERROR,
                         err_msg=msg,
                         cause_error=cause_error,
                     )
@@ -627,26 +627,20 @@ class VariablePool:
         # Handle complex types
         key_name_ = extract_variable_name(key_name)
         if not key_name_:
-            raise CustomException(err_code=CodeEnum.VariableParseError)
+            raise CustomException(err_code=CodeEnum.VARIABLE_PARSE_ERROR)
         mapping_key = assemble_mapping_key(node_id, key_name_)
         if mapping_key in self.input_variable_mapping:
             input_value = self.input_variable_mapping[mapping_key]
-            ref_var_type = (
-                input_value.get("schema", {}).get("value", {}).get("type", "")
-            )
+            input_schema: InputSchema = input_value.get("schema")
+            ref_var_type = input_schema.value.type
+            ref_content = input_schema.value.content
             if ref_var_type == "literal":
                 ref_node_id = node_id
                 ref_var_name = input_value.get("name")
-                literal_var_value = (
-                    input_value.get("schema").get("value").get("content")
-                )
-            elif ref_var_type == "ref":
-                ref_node_id = (
-                    input_value.get("schema").get("value").get("content").get("nodeId")
-                )
-                ref_var_name = (
-                    input_value.get("schema").get("value").get("content").get("name")
-                )
+                literal_var_value = str(ref_content)
+            elif ref_var_type == "ref" and isinstance(ref_content, NodeRef):
+                ref_node_id = ref_content.nodeId
+                ref_var_name = ref_content.name
                 if ref_node_id.split(":")[0] == NodeType.LLM.value:
                     for one in self.nodes:
                         one_node_id = one.id
@@ -654,7 +648,7 @@ class VariablePool:
                             llm_resp_format = one.data.nodeParam.get("respFormat", 0)
             else:
                 # Error: protocol issue
-                raise CustomException(err_code=CodeEnum.VariableParseError)
+                raise CustomException(err_code=CodeEnum.VARIABLE_PARSE_ERROR)
         return RefNodeInfo(
             ref_node_id=ref_node_id,
             ref_var_name=ref_var_name,
@@ -677,15 +671,16 @@ class VariablePool:
             mapping_key = assemble_mapping_key(node_id, key_name_)
             if mapping_key in self.input_variable_mapping:
                 input_value = self.input_variable_mapping[mapping_key]
-                input_schema = input_value.get("schema")
-                if input_schema.get("value", {}).get("type") == "literal":
+                input_schema: InputSchema = input_value.get("schema")
+                if input_schema.value.type == "literal":
                     return input_value.get("value")
                 else:
+                    ref_content = input_schema.value.content
                     node_id = (
-                        input_schema.get("value", {}).get("content", {}).get("nodeId")
+                        ref_content.nodeId if isinstance(ref_content, NodeRef) else ""
                     )
                     node_value = (
-                        input_schema.get("value", {}).get("content", {}).get("name")
+                        ref_content.name if isinstance(ref_content, NodeRef) else ""
                     )
                     # msg = f"node id {node_id}, node value {node_value}"
                     return self.get_output_variable(

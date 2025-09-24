@@ -1,12 +1,13 @@
 import copy
 import json
 import re
-import traceback
 from typing import Any, Dict
 
+from pydantic import Field
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.variable_pool import VariablePool
+from workflow.engine.entities.workflow_dsl import OutputItem
 from workflow.engine.nodes.base_node import BaseLLMNode
 from workflow.engine.nodes.entities.node_run_result import (
     NodeRunResult,
@@ -32,10 +33,18 @@ class ParamsExtractorNode(BaseLLMNode):
     """
 
     # Configuration parameters for the parameter extractor
-    question_type: str = "not_knowledge"  # Type of question for LLM processing
-    extractor_params: list = []  # List of parameters to extract
-    reasonMode: int = 0  # Mode for reasoning (0: function calling, 1: prompt-based)
-    instruction: str = ""  # Additional instructions for parameter extraction
+    question_type: str = Field(
+        default="not_knowledge"
+    )  # Type of question for LLM processing
+    extractor_params: list[OutputItem] = Field(
+        default_factory=list
+    )  # List of parameters to extract
+    reasonMode: int = Field(
+        default=0
+    )  # Mode for reasoning (0: function calling, 1: prompt-based)
+    instruction: str = Field(
+        default=""
+    )  # Additional instructions for parameter extraction
     fc_schema_params: dict = {
         "type": "object",
         "properties": {},
@@ -99,16 +108,14 @@ class ParamsExtractorNode(BaseLLMNode):
         for extra_params in self.extractor_params:
             schema_content["properties"].update(
                 {
-                    extra_params["name"]: {
-                        "type": extra_params.get("schema", {}).get("type"),
-                        "description": extra_params.get("schema", {}).get(
-                            "description"
-                        ),
+                    extra_params.name: {
+                        "type": extra_params.output_schema.get("type"),
+                        "description": extra_params.output_schema.get("description"),
                     }
                 }
             )
-            if extra_params["required"]:
-                schema_content["required"].append(extra_params["name"])
+            if extra_params.required:
+                schema_content["required"].append(extra_params.name)
         return schema_content
 
     async def async_execute_prompt(
@@ -213,7 +220,7 @@ class ParamsExtractorNode(BaseLLMNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.ExtractExecutionError,
+                    CodeEnum.EXTRACT_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )
@@ -243,7 +250,7 @@ class ParamsExtractorNode(BaseLLMNode):
                 variable_pool=variable_pool,
                 span=span,
                 event_log_node_trace=event_log_node_trace,
-                flow_id=callbacks.flow_id,
+                flow_id=callbacks.flow_id if callbacks else "",
             )
         try:
             schema_content = self.assemble_schema_info()
@@ -323,7 +330,6 @@ class ParamsExtractorNode(BaseLLMNode):
                 ),
             )
         except CustomException as err:
-            traceback.print_exc()
             span.add_error_event(f"{err}")
             span.record_exception(err)
             return NodeRunResult(
@@ -334,7 +340,6 @@ class ParamsExtractorNode(BaseLLMNode):
                 error=err,
             )
         except Exception as err:
-            traceback.print_exc()
             span.add_error_event(f"{err}")
             return NodeRunResult(
                 node_id=self.node_id,
@@ -342,7 +347,7 @@ class ParamsExtractorNode(BaseLLMNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.ExtractExecutionError,
+                    CodeEnum.EXTRACT_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )

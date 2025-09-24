@@ -1,6 +1,6 @@
-import traceback
 from typing import Any, Dict
 
+from pydantic import Field
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_running_status import NodeRunningStatus
@@ -31,8 +31,8 @@ class EndNode(BaseOutputNode):
     :param outputMode: Mode for output generation (prompt mode or direct mode)
     """
 
-    template: str = ""
-    reasoningTemplate: str = ""
+    template: str = Field(default="")
+    reasoningTemplate: str = Field(default="")
     outputMode: int
 
     def get_node_config(self) -> Dict[str, Any]:
@@ -134,7 +134,7 @@ class EndNode(BaseOutputNode):
             for dep_msg_node in msg_or_end_node_deps[self.node_id].data_dep:
                 if dep_msg_node not in node_run_status:
                     raise CustomException(
-                        err_code=CodeEnum.EndNodeSchemaError,
+                        err_code=CodeEnum.END_NODE_SCHEMA_ERROR,
                         cause_error=f"Node {dep_msg_node} not found in node_run_status",
                     )
                 await node_run_status[dep_msg_node].complete.wait()
@@ -193,7 +193,6 @@ class EndNode(BaseOutputNode):
             return node_run_result
         except CustomException as err:
             # Handle custom exceptions with proper error tracking
-            traceback.print_exc()
             span.record_exception(err)
             run_result = NodeRunResult(
                 node_id=self.node_id,
@@ -205,7 +204,6 @@ class EndNode(BaseOutputNode):
             return run_result
         except Exception as err:
             # Handle unexpected exceptions with generic error handling
-            traceback.print_exc()
             span.record_exception(err)
             run_result = NodeRunResult(
                 node_id=self.node_id,
@@ -213,7 +211,7 @@ class EndNode(BaseOutputNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.EndNodeExecutionError,
+                    CodeEnum.END_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )

@@ -1,7 +1,9 @@
 # Standard library imports
 import json
 from enum import Enum
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Literal, Union
+
+from pydantic import Field
 
 # Workflow engine imports
 from workflow.engine.entities.variable_pool import VariablePool
@@ -51,9 +53,9 @@ class TextJoinerNode(BaseNode):
         separator: Delimiter used for text splitting in SEPARATE_MODE
     """
 
-    mode: int = 0  # Text processing mode (0=JOIN, 1=SEPARATE)
-    prompt: str = ""  # Template for text concatenation
-    separator: str = ""  # Delimiter for text separation
+    mode: Literal[0, 1] = Field(default=0)  # Text processing mode (0=JOIN, 1=SEPARATE)
+    prompt: str = Field(default="")  # Template for text concatenation
+    separator: str = Field(default="")  # Delimiter for text separation
 
     def get_node_config(self) -> Dict[str, Any]:
         """
@@ -175,7 +177,7 @@ class TextJoinerNode(BaseNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.TextJoinerNodeExecutionError,
+                    CodeEnum.TEXT_JOINER_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )

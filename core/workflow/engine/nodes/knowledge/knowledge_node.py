@@ -2,6 +2,7 @@ import json
 import os
 from typing import Any, Dict
 
+from pydantic import Field
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
 from workflow.engine.nodes.entities.node_run_result import (
@@ -26,12 +27,16 @@ class KnowledgeNode(BaseNode):
     and returns the most relevant results based on the input query.
     """
 
-    topN: str = "5"  # Number of top results to retrieve
-    ragType: str = "AIUI-RAG2"  # Type of RAG (Retrieval-Augmented Generation) to use
-    repoId: list  # List of repository IDs to search in
-    docIds: list = []  # Optional list of specific document IDs to search
-    flowId: str = ""  # Optional flow ID for context
-    score: float = 0.1  # Minimum similarity threshold for results
+    topN: str = Field(default="5", min_length=1)  # Number of top results to retrieve
+    ragType: str = Field(
+        default="AIUI-RAG2"
+    )  # Type of RAG (Retrieval-Augmented Generation) to use
+    repoId: list[str] = Field(...)  # List of repository IDs to search in
+    docIds: list = Field(
+        default_factory=list
+    )  # Optional list of specific document IDs to search
+    flowId: str = Field(default="")  # Optional flow ID for context
+    score: float = Field(default=0.1)  # Minimum similarity threshold for results
 
     def get_node_config(self) -> Dict[str, Any]:
         """
@@ -135,7 +140,7 @@ class KnowledgeNode(BaseNode):
             return NodeRunResult(
                 status=status,
                 error=CustomException(
-                    CodeEnum.KnowledgeNodeExecutionError,
+                    CodeEnum.KNOWLEDGE_NODE_EXECUTION_ERROR,
                     cause_error=e,
                 ),
                 node_id=self.node_id,
