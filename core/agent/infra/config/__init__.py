@@ -158,5 +158,5 @@ if __name__ == "__main__":
     agent_config = AgentConfig()
     print(agent_config.SERVICE_NAME)
     print(agent_config.RUN_ENVIRON)
-    print(agent_config.METRIC_ENDPOINT)
-    print(type(agent_config.METRIC_TIMEOUT))
+    print(agent_config.OTLP_ENDPOINT)
+    print(type(agent_config.OTLP_METRIC_TIMEOUT))
