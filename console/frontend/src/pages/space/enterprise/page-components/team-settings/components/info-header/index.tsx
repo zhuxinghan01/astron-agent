@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input, Button, message, Tooltip } from 'antd';
 import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import SpaceButton from '@/components/button-group/space-button';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import styles from './index.module.scss';
 
 import creator from '@/assets/imgs/space/creator.png';

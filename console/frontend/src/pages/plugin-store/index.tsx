@@ -1,31 +1,23 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  memo,
-  ReactElement,
-} from 'react';
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:08:36
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:08:47
+ * @Description: 插件广场
+ */
+import React, { useEffect, useState, useRef, memo, ReactElement } from 'react';
 import { message, Select, Spin } from 'antd';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { listToolSquare, enableToolFavorite } from '@/services/tool';
+import { listToolSquare } from '@/services/tool';
 import { getTags } from '@/services/square';
-import { throttle } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useDebounceFn } from 'ahooks';
 import RetractableInput from '@/components/ui/global/retract-table-input';
-import {
-  Tool,
-  ListToolSquareParams,
-  EnableToolFavoriteParams,
-  Classify,
-} from '@/types/plugin-store';
+import { Tool, ListToolSquareParams, Classify } from '@/types/plugin-store';
 import type { ResponseBusinessError, ResponseResultPage } from '@/types/global';
 
 import formSelect from '@/assets/svgs/icon-nav-dropdown.svg';
 import defaultPng from '@/assets/imgs/tool-square/default.png';
-import collect from '@/assets/imgs/bot-square/icon-bot-tag.png';
-import checkCollect from '@/assets/imgs/bot-square/favorite.png';
 // todo-newImg
 import toolAuthor from '@/assets/imgs/bot-square/tool-store-author-logo.png';
 import headLogo from '@/assets/imgs/bot-square/tool-store-head-logo.png';
@@ -60,56 +52,6 @@ function PluginStore(): ReactElement {
   const [hoverClassify, setHoverClassify] = useState<string | number>('');
   const [tagFlag, setTagFlag] = useState<string | number>(tab ? '' : 0);
 
-  useEffect(() => {
-    //专业版接口tool_v2
-    getTags('tool_v2')
-      .then((data: Classify[]) => {
-        setClassifyList(data);
-      })
-      .catch((error: ResponseBusinessError) => {
-        message.error(error?.message);
-      });
-  }, []);
-
-  useEffect(() => {
-    getTools();
-  }, [classify, tagFlag]);
-
-  function getTools(value?: string, orderFlag?: number): void {
-    setLoading(true);
-    setTools(() => []);
-    loadingRef.current = true;
-    if (toolRef.current) {
-      toolRef.current.scrollTop = 0;
-    }
-    const params: ListToolSquareParams = {
-      ...searchValue,
-      page: 1,
-      orderFlag: orderFlag !== undefined ? orderFlag : searchValue.orderFlag,
-      content: value !== undefined ? value?.trim() : content,
-      tags: classify,
-      tagFlag,
-    };
-    listToolSquare(params)
-      .then((data: ResponseResultPage<Tool>) => {
-        setTools(data?.pageData || []);
-        setSearchValue(searchValue => ({ ...searchValue, page: 2 }));
-        if (30 < data.totalCount) {
-          setHasMore(true);
-        } else {
-          setHasMore(false);
-        }
-      })
-      .catch((error: ResponseBusinessError) => {
-        message.error(error?.message || '获取插件列表失败');
-        setTools([]);
-      })
-      .finally(() => {
-        setLoading(false);
-        loadingRef.current = false;
-      });
-  }
-
   const { run } = useDebounceFn(
     inputValue => {
       getTools(inputValue);
@@ -123,7 +65,7 @@ function PluginStore(): ReactElement {
     run(value);
   };
 
-  function handleScroll(): void {
+  const handleScroll = (): void => {
     const element = toolRef.current;
     if (!element) return;
 
@@ -136,9 +78,9 @@ function PluginStore(): ReactElement {
     ) {
       moreTools();
     }
-  }
+  };
 
-  function moreTools(): void {
+  const moreTools = (): void => {
     loadingRef.current = true;
     setLoading(true);
 
@@ -172,41 +114,56 @@ function PluginStore(): ReactElement {
         setLoading(false);
         loadingRef.current = false;
       });
-  }
+  };
 
-  // const handleToolFavorite = useCallback(
-  //   throttle((tool: Tool) => {
-  //     const params: EnableToolFavoriteParams = {
-  //       toolId: tool?.isMcp ? tool?.mcpTooId : tool?.toolId,
-  //       favoriteFlag: tool?.isFavorite ? 1 : 0,
-  //       ...(tool?.isMcp !== undefined && { isMcp: tool.isMcp }),
-  //     };
+  const getTools = (value?: string, orderFlag?: number): void => {
+    setLoading(true);
+    setTools(() => []);
+    loadingRef.current = true;
+    if (toolRef.current) {
+      toolRef.current.scrollTop = 0;
+    }
+    const params: ListToolSquareParams = {
+      ...searchValue,
+      page: 1,
+      orderFlag: orderFlag !== undefined ? orderFlag : searchValue.orderFlag,
+      content: value !== undefined ? value?.trim() : content,
+      tags: classify,
+      tagFlag,
+    };
+    listToolSquare(params)
+      .then((data: ResponseResultPage<Tool>) => {
+        setTools(data?.pageData || []);
+        setSearchValue(searchValue => ({ ...searchValue, page: 2 }));
+        if (30 < data.totalCount) {
+          setHasMore(true);
+        } else {
+          setHasMore(false);
+        }
+      })
+      .catch((error: ResponseBusinessError) => {
+        message.error(error?.message || '获取插件列表失败');
+        setTools([]);
+      })
+      .finally(() => {
+        setLoading(false);
+        loadingRef.current = false;
+      });
+  };
 
-  //     enableToolFavorite(params)
-  //       .then((data: number) => {
-  //         setTools((tools: Tool[]) => {
-  //           const currentTool: Tool | undefined =
-  //             tools.find((item: Tool) =>
-  //               item.isMcp
-  //                 ? item.mcpTooId === tool.mcpTooId
-  //                 : item.id === tool.id
-  //             ) || ({} as Tool);
-  //           currentTool.isFavorite = !currentTool.isFavorite;
-  //           currentTool.favoriteCount = data;
-  //           if (params.favoriteFlag === 0) {
-  //             message.success('收藏成功');
-  //           } else {
-  //             message.success('取消收藏成功');
-  //           }
-  //           return [...tools];
-  //         });
-  //       })
-  //       .catch((error: ResponseBusinessError) => {
-  //         message.error(error?.message);
-  //       });
-  //   }, 1000),
-  //   []
-  // );
+  useEffect(() => {
+    getTags('tool_v2')
+      .then((data: Classify[]) => {
+        setClassifyList(data);
+      })
+      .catch((error: ResponseBusinessError) => {
+        message.error(error?.message);
+      });
+  }, []);
+
+  useEffect(() => {
+    getTools();
+  }, [classify, tagFlag]);
 
   return (
     <div className="flex flex-col items-center justify-start w-full h-full overflow-scroll">

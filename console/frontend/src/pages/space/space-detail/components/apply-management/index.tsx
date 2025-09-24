@@ -8,7 +8,7 @@ import SpaceTable, {
   SpaceTableRef,
 } from '@/components/space/space-table';
 import { ButtonConfig } from '@/components/button-group';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import SpaceTag from '@/components/space/space-tag';
 
 import styles from './index.module.scss';

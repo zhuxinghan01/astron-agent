@@ -10,7 +10,7 @@ import useChat from '@/hooks/use-chat';
 import { useEnterprise } from '@/hooks/use-enterprise';
 import useSpaceStore from '@/store/space-store';
 import { useTranslation } from 'react-i18next';
-import { getCookie } from '@/utils/sparkutils';
+import { getCookie } from '@/utils';
 import classNames from 'classnames';
 import { PersonSpace } from '@/components/space/person-space';
 import SpaceModal from '@/components/space/space-modal';
@@ -551,34 +551,6 @@ const MenuList: FC = () => {
               }`}
               onClick={() => {
                 setMenuActiveKey(tab.activeTab);
-                if (tab.subTitle === '智能体广场') {
-                  if (
-                    typeof window !== 'undefined' &&
-                    (window as any).IFlyCollector
-                  ) {
-                    (window as any).IFlyCollector?.onEvent(
-                      'agents_stores',
-                      {
-                        uid: `${getCookie('account_id')}`,
-                      },
-                      'new25_agent_center'
-                    );
-                  }
-                }
-                if (tab.subTitle === '插件广场') {
-                  if (
-                    typeof window !== 'undefined' &&
-                    (window as any).IFlyCollector
-                  ) {
-                    (window as any).IFlyCollector?.onEvent(
-                      'plugins_stores',
-                      {
-                        uid: `${getCookie('account_id')}`,
-                      },
-                      'new25_agent_center'
-                    );
-                  }
-                }
                 navigate(tab.path);
               }}
               onMouseEnter={() => setHoverTab(tab.activeTab)}

@@ -31,7 +31,7 @@ function NodeDetail({
 
   const currentTemplateNode = useMemo(() => {
     return nodeTemplate?.find(
-      (item: NodeTemplateItem) => item?.idType === currentNodeId
+      (item: NodeTemplateItem) => item?.idType === currentNodeId,
     );
   }, [nodeTemplate, currentNodeId]);
 

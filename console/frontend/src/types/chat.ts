@@ -71,7 +71,7 @@ export interface MessageListType {
   reasoning?: string;
   traceSource?: string;
   sourceType?: 'search' | 'web_search' | string;
-  chatFileList?: unknown[] | null;
+  chatFileList?: UploadFileInfo[] | null;
   reqId?: number | string;
   sid?: string;
   tools?: string[];
@@ -136,10 +136,9 @@ export interface ChatApiResponse {
 
 //对话历史接口返回
 export interface ChatHistoryResponse {
-  chatFileListNoReq: unknown[];
+  chatFileListNoReq: UploadFileInfo[];
   historyList: MessageListType[];
 }
-
 
 //语音转写
 export interface RtasrTokenResponse {
@@ -152,6 +151,7 @@ export interface RtasrTokenResponse {
 // 聊天Store状态接口
 export interface ChatState {
   messageList: MessageListType[];
+  chatFileListNoReq: UploadFileInfo[];
   streamingMessage: MessageListType | null; //正在流式输出的消息
   streamId: string; //对话流id
   answerPercent: number; //回答进度
@@ -173,6 +173,7 @@ export interface ChatState {
 export interface ChatActions {
   initChatStore: () => void; //初始化聊天store
   setMessageList: (messageList: MessageListType[]) => void; //设置消息列表
+  setChatFileListNoReq: (chatFileListNoReq: UploadFileInfo[]) => void; //设置聊天文件列表
   addMessage: (message: MessageListType) => void; //添加消息
   startStreamingMessage: (message: MessageListType) => void; //开始流式消息
   updateStreamingMessage: (content: string) => void; //更新流式消息内容
@@ -192,4 +193,42 @@ export interface ChatActions {
     option: Option[];
     content?: string;
   }) => void; //设置工作流选项
+}
+
+// 文件上传相关类型定义
+
+/** S3预签名响应接口 */
+export interface S3PresignResponse {
+  /** 上传URL */
+  url: string;
+  /** 存储桶名称 */
+  bucket: string;
+  /** 对象Key */
+  objectKey: string;
+}
+
+/** 上传文件信息接口 */
+export interface UploadFileInfo {
+  /** 文件唯一标识 */
+  uid: string;
+  /** 文件ID（上传完成后生成） */
+  fileId?: string;
+  /** 文件对象 */
+  file: File;
+  /** 文件类型 */
+  type: string;
+  /** 文件名 */
+  fileName: string;
+  /** 文件大小（字节） */
+  fileSize: number;
+  /** 文件业务Key */
+  fileBusinessKey: string;
+  /** 文件URL（上传完成后生成） */
+  fileUrl?: string;
+  /** 上传进度（0-100） */
+  progress: number;
+  /** 上传状态 */
+  status: 'uploading' | 'completed' | 'error' | 'pending';
+  /** 错误信息 */
+  error?: string;
 }

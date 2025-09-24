@@ -291,7 +291,7 @@ function index({ setCreateModal }: CreateBotProps): React.ReactElement {
     const values = form.getFieldsValue();
     delete values.modelType;
     delete values.zhanwei;
-    for (let key in values) {
+    for (const key in values) {
       if (!values[key]) {
         flag = true;
       }

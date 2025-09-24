@@ -5,15 +5,16 @@ import { getLanguageCode } from '@/utils/http';
 import { v4 as uuid } from 'uuid';
 import clsx, { ClassValue } from 'clsx';
 import {
-  BotInfoType,
   ChatHistoryResponse,
   MessageListType,
   SourceInfoItem,
   ToolItemUnion,
   WebSearchOutput,
+  UploadFileInfo,
 } from '@/types/chat';
 import Compressor from 'compressorjs';
 import { getShareAgentKey } from '@/services/chat';
+import { fileIconConfig } from '@/config/file-icon-config';
 // 将对象转换为URL参数字符串
 const objectToQueryString = (params: Record<string, any>): string => {
   if (!params || Object.keys(params).length === 0) {
@@ -649,6 +650,55 @@ export const handleShare = async (
   }
 };
 
+/**
+ * 根据文件类型设置文件图标
+ */
+const getFileIcon = (file: UploadFileInfo, isLoading?: boolean) => {
+  const extension = file?.fileName?.split('.')?.pop()?.toLowerCase();
+  if (isLoading) {
+    return fileIconConfig.loading;
+  }
+  // 遍历所有分类查找文件扩展名
+  for (const category of Object.values(fileIconConfig)) {
+    if (category[extension as keyof typeof category]) {
+      return category[extension as keyof typeof category];
+    }
+  }
+  return fileIconConfig.default;
+};
+
+/**
+ * 格式化文件大小显示
+ */
+const formatFileSize = (bytes: number | string): string => {
+  if (typeof bytes === 'string') {
+    return bytes;
+  }
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+/**
+ * 获取状态显示文本
+ */
+const getStatusText = (file: UploadFileInfo): string => {
+  switch (file.status) {
+    case 'pending':
+      return '等待中...';
+    case 'uploading':
+      return `上传中 ${file.progress || 0}%`;
+    case 'completed':
+      return formatFileSize(file.fileSize);
+    case 'error':
+      return `${file.error || '未知错误'}`;
+    default:
+      return file.fileSize.toString();
+  }
+};
+
 export {
   objectToQueryString,
   imageToBase64,
@@ -667,4 +717,7 @@ export {
   formatHistoryToMessages,
   getTraceList,
   compressImage,
+  getFileIcon,
+  formatFileSize,
+  getStatusText,
 };
