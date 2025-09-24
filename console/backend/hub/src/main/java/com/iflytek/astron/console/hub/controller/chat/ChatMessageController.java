@@ -371,7 +371,7 @@ public class ChatMessageController {
         try {
             sendStartSignal(sseEmitter, sseId, new ChatContext(uid, 0L, 0));
             botChatService.debugChatMessageBot(debugRequest.getText(), debugRequest.getPrompt(), debugRequest.getArr(),
-                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), sseEmitter, sseId);
+                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), debugRequest.getModelId(), sseEmitter, sseId);
             return sseEmitter;
         } catch (Exception e) {
             log.error("Bot debug error, sseId: {}", sseId, e);

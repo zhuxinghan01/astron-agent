@@ -14,12 +14,12 @@ def init_otlp_sid():
         return
 
     global_otlp_sid_args.otlp_endpoint = os.getenv("OTLP_ENDPOINT", "")
-    global_otlp_sid_args.otlp_service_name = os.getenv("OTLP_SERVICE_NAME", "")
-    global_otlp_sid_args.otlp_dc = os.getenv("OTLP_DC", "")
+    global_otlp_sid_args.otlp_service_name = os.getenv("SERVICE_NAME", "")
+    global_otlp_sid_args.otlp_dc = os.getenv("SERVICE_LOCATION", "")
 
-    global_otlp_sid_args.sid_sub = os.getenv("OTLP_SID_SUB", "svc")
-    global_otlp_sid_args.sid_location = os.getenv("OTLP_SID_LOCATION", "src")
-    global_otlp_sid_args.sid_local_port = os.getenv("OTLP_SID_LOCAL_PORT", "5000")
+    global_otlp_sid_args.sid_sub = os.getenv("SERVICE_SUB", "svc")
+    global_otlp_sid_args.sid_location = os.getenv("SERVICE_LOCATION", "src")
+    global_otlp_sid_args.sid_local_port = os.getenv("SERVICE_PORT")
     init_sid(
         SidInfo(
             sub=global_otlp_sid_args.sid_sub,

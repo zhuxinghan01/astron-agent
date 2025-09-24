@@ -105,12 +105,10 @@ def init_trace(
 
         provider.add_span_processor(processor)
 
-    # 添加文件 exporter（本地持久化）
     file_exporter = FileSpanExporter()
     file_processor = BatchSpanProcessor(file_exporter)
     provider.add_span_processor(file_processor)
 
-    # 设置全局默认的跟踪器提供者
     trace.set_tracer_provider(provider)
     logger.debug("trace init success")
 

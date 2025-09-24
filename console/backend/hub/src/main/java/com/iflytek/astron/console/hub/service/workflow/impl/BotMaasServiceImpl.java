@@ -107,7 +107,7 @@ public class BotMaasServiceImpl implements BotMaasService {
                 .uid(uid)
                 .updateTime(LocalDateTime.now())
                 .build();
-        userLangChainDataService.insertUserLangChainInfo(userLangChainInfo);
+        userLangChainDataService.insertUserLangChainInfo(userLangChainInfoNew);
         log.info("----- Astron workflow synchronization successful, original massId: {}, flowId: {}, new assistant: {}", originId, flowId, currentBotId);
         return base.getId();
     }

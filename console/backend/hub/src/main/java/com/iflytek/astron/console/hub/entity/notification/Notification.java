@@ -17,7 +17,7 @@ public class Notification {
     @Schema(description = "Message ID")
     private Long id;
 
-    @Schema(description = "Message type (personal, broadcast, system, promotion)")
+    @Schema(description = "Message type (PERSONAL, BROADCAST, SYSTEM, PROMOTION)")
     private String type;
 
     @Schema(description = "Message title")
