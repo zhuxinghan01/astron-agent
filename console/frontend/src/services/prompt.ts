@@ -21,20 +21,6 @@ export async function createPromptGroup(
   return http.post('/prompt/manage/create-group', params);
 }
 
-// 获取 Prompt 详情
-export async function getPromptDetail(params: FormData): Promise<unknown> {
-  return http.post('/prompt/manage/detail', params, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-}
-
-// 获取 Prompt 列表
-export async function getPromptList(
-  params: Record<string, unknown>
-): Promise<unknown[]> {
-  return http.post('/prompt/manage/list', params);
-}
-
 // 获取官方 Prompt 列表
 export async function getOfficialPromptList(): Promise<unknown[]> {
   return http.get('/prompt/manage/official-prompt');

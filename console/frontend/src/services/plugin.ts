@@ -80,7 +80,7 @@ export async function listToolSquare(params: {
 }
 
 export async function getMcpServerList(): Promise<unknown> {
-  return await http.get('/workflow/get-mcp-server-list');
+  return await http.get('/workflow/get-mcp-server-list-locally');
 }
 
 export async function getServerToolDetailAPI(
@@ -109,37 +109,6 @@ export async function debugServerToolAPI(params: {
   }
 }
 
-export async function workflowGetEnvKey(
-  serverId: string,
-  recordId: string
-): Promise<unknown> {
-  return await http.get(
-    `/workflow/get-env-key?serverId=${serverId}&recordId=${recordId}`
-  );
-}
-
-export async function workflowPushEnvKey(
-  params: {
-    recordId: string;
-    mcpId: string;
-    serverName: string;
-    serverDesc: string;
-    env: null;
-    customize: boolean;
-  },
-  showMessage = true
-): Promise<unknown> {
-  try {
-    const response = await http.post('/workflow/push-env-key', params);
-    message.success('操作成功');
-    return response as unknown;
-  } catch (error: unknown) {
-    const errorMessage = (error as Error)?.message;
-    message.error(errorMessage);
-    throw error;
-  }
-}
-
 //获取插件版本列表
 export async function getToolVersionList(toolId: string): Promise<
   {
@@ -156,11 +125,6 @@ export async function getToolLatestVersion(
   toolIds: string[]
 ): Promise<unknown> {
   return await http.get(`/tool/get-tool-latest-version?toolIds=${toolIds}`);
-}
-
-//后端用来记录插件新增数量
-export async function addToolOperateHistory(toolId: string): Promise<unknown> {
-  return await http.get(`/tool/add-tool-operate-history?toolId=${toolId}`);
 }
 
 export async function toolFeedback(params: {
