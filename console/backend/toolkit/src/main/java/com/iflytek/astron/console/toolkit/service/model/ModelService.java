@@ -1291,6 +1291,8 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setModelPath(dto.getModelPath());
         model.setAcceleratorCount(dto.getAcceleratorCount());
         model.setReplicaCount(dto.getReplicaCount());
+        model.setConfig(
+                Optional.ofNullable(dto.getConfig()).map(JSON::toJSONString).orElse(null));
     }
 
     private void persistModel(Model model, boolean isCreate) {
