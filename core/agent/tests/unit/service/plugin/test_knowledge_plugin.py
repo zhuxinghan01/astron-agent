@@ -161,7 +161,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act
                 result = await knowledge_factory.retrieve(mock_span)
@@ -219,7 +219,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act
                 result = await factory.retrieve(mock_span)
@@ -285,7 +285,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act & Assert
                 with pytest.raises(type(KnowledgeQueryExc)) as exc_info:
@@ -324,7 +324,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act & Assert
                 with pytest.raises(aiohttp.ClientError):
@@ -354,7 +354,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act & Assert
                 with pytest.raises(type(KnowledgeQueryExc)) as exc_info:
@@ -406,7 +406,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act
                 result = await factory.retrieve(mock_span)
@@ -453,7 +453,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act
                 await knowledge_factory.retrieve(mock_span)
@@ -534,7 +534,7 @@ class TestKnowledgePluginFactory:
 
         with patch("aiohttp.ClientSession", return_value=session_context):
             with patch("service.plugin.knowledge.agent_config") as mock_config:
-                mock_config.chunk_query_url = "http://test-url"
+                mock_config.CHUNK_QUERY_URL = "http://test-url"
 
                 # Act
                 await knowledge_factory.retrieve(mock_span)

@@ -102,7 +102,7 @@ class StartNode(BaseNode):
             # Return a failed result with error details
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.FAILED,
-                error=CustomException(CodeEnum.StartNodeSchemaError, cause_error=e),
+                error=CustomException(CodeEnum.START_NODE_SCHEMA_ERROR, cause_error=e),
                 inputs=outputs,  # Include any successfully gathered inputs
                 outputs={},  # No outputs on failure
                 node_id=self.node_id,

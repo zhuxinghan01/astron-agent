@@ -2,13 +2,11 @@ import asyncio
 import copy
 import json
 import time
-import traceback
 from asyncio import Queue
 from datetime import datetime
 from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Tuple, cast
 
 from loguru import logger
-
 from workflow.cache.engine import get_engine, set_engine
 from workflow.cache.event_registry import Event, EventRegistry
 from workflow.consts.app_audit import AppAuditPolicy
@@ -300,7 +298,7 @@ async def _validate_file_inputs(
         if file_var_name not in chat_vo.parameters:
             if is_required:
                 raise CustomException(
-                    err_code=CodeEnum.FileVariableProtocolError,
+                    err_code=CodeEnum.FILE_VARIABLE_PROTOCOL_ERROR,
                     err_msg=f"Error: {file_var_name} is a required parameter",
                 )
             continue
@@ -325,7 +323,7 @@ async def _validate_file_inputs(
             span_context.add_error_event(
                 f"File variable protocol error, invalid type: {file_var_type}"
             )
-            raise CustomException(err_code=CodeEnum.FileVariableProtocolError)
+            raise CustomException(err_code=CodeEnum.FILE_VARIABLE_PROTOCOL_ERROR)
 
 
 async def _get_chat_history(
@@ -557,7 +555,6 @@ async def _run(
             await callbacks.on_sparkflow_end(message=result)
             m.in_success_count()
         except CustomException as err:
-            traceback.print_exc()
             llm_resp = LLMGenerate.workflow_end_error(
                 sid=span.sid, code=err.code, message=err.message
             )
@@ -567,15 +564,16 @@ async def _run(
             code = err.code
             error_message = err.message
         except Exception as err:
-            traceback.print_exc()
             llm_resp = LLMGenerate.workflow_end_error(
-                sid=span.sid, code=CodeEnum.ProtocolValidationErr.code, message=str(err)
+                sid=span.sid,
+                code=CodeEnum.PROTOCOL_VALIDATION_ERROR.code,
+                message=str(err),
             )
             await response_queue.put(llm_resp)
             span_context.record_exception(err)
-            m.in_error_count(CodeEnum.FlowHChatFailed.code, span=span_context)
-            code = CodeEnum.FlowHChatFailed.code
-            error_message = CodeEnum.FlowHChatFailed.msg
+            m.in_error_count(CodeEnum.OPEN_API_ERROR.code, span=span_context)
+            code = CodeEnum.OPEN_API_ERROR.code
+            error_message = CodeEnum.OPEN_API_ERROR.msg
         finally:
             kafka_report(
                 span=span_context,
@@ -890,7 +888,7 @@ async def _chat_response_stream(
                     continue
 
                 if not response:
-                    raise CustomException(CodeEnum.OpenApiError)
+                    raise CustomException(CodeEnum.OPEN_API_ERROR)
 
                 if response.event_data:
                     yield await _del_response_resume_data(
@@ -917,8 +915,8 @@ async def _chat_response_stream(
 
         except asyncio.TimeoutError:
             llm_resp = LLMGenerate.workflow_end_open_error(
-                code=CodeEnum.OpenApiStreamQueueTimeoutError.code,
-                message=CodeEnum.OpenApiStreamQueueTimeoutError.msg,
+                code=CodeEnum.OPEN_API_STREAM_QUEUE_TIMEOUT_ERROR.code,
+                message=CodeEnum.OPEN_API_STREAM_QUEUE_TIMEOUT_ERROR.msg,
                 sid=span_context.sid,
             )
             span_context.add_info_events(
@@ -947,8 +945,8 @@ async def _chat_response_stream(
             return
         except Exception:
             llm_resp = LLMGenerate.workflow_end_open_error(
-                code=CodeEnum.OpenApiError.code,
-                message=CodeEnum.OpenApiError.msg,
+                code=CodeEnum.OPEN_API_ERROR.code,
+                message=CodeEnum.OPEN_API_ERROR.msg,
                 sid=span_context.sid,
             )
             span_context.add_info_events(
@@ -994,7 +992,7 @@ async def _del_response_resume_data(
     """
     # Question-answer nodes currently don't support audit
     if app_audit_policy == AppAuditPolicy.AGENT_PLATFORM:
-        raise CustomException(CodeEnum.AuditQAError)
+        raise CustomException(CodeEnum.AUDIT_QA_ERROR)
     EventRegistry().on_interrupt(event_id=event_id)
     return Streaming.generate_data(response.model_dump(exclude_none=True))
 
@@ -1056,7 +1054,7 @@ async def chat_resume_response_stream(
         try:
             # Question-answer supports audit
             if audit_policy == AppAuditPolicy.AGENT_PLATFORM.value and event_id:
-                raise CustomException(CodeEnum.AuditQAError)
+                raise CustomException(CodeEnum.AUDIT_QA_ERROR)
 
             src_response: LLMGenerate = await _get_resume_response(event, None)
 
@@ -1080,7 +1078,7 @@ async def chat_resume_response_stream(
                 continue
 
             if not response:
-                raise CustomException(CodeEnum.OpenApiError)
+                raise CustomException(CodeEnum.OPEN_API_ERROR)
 
             if response and response.event_data:
                 EventRegistry().on_interrupt(event_id=event_id)
@@ -1112,8 +1110,8 @@ async def chat_resume_response_stream(
                 return
 
         except (Exception, asyncio.TimeoutError, CustomException) as e:
-            code = CodeEnum.OpenApiStreamQueueTimeoutError.code
-            message = CodeEnum.OpenApiStreamQueueTimeoutError.msg
+            code = CodeEnum.OPEN_API_STREAM_QUEUE_TIMEOUT_ERROR.code
+            message = CodeEnum.OPEN_API_STREAM_QUEUE_TIMEOUT_ERROR.msg
 
             if isinstance(e, CustomException):
                 code = e.code

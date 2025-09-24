@@ -10,7 +10,6 @@ import json
 from typing import Any, AsyncIterator, Dict, Tuple
 
 from openai import AsyncOpenAI  # type: ignore
-
 from workflow.engine.nodes.entities.llm_response import LLMResponse
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -60,7 +59,7 @@ class OpenAIChatAI(ChatAI):
         self.model_url = self.model_url.rsplit("/", 2)[0]
         if not self.model_url:
             raise CustomException(
-                err_code=CodeEnum.OpenAIRequestError,
+                err_code=CodeEnum.OPEN_AI_REQUEST_ERROR,
                 err_msg="Request URL is empty",
                 cause_error="Request URL is empty",
             )
@@ -161,7 +160,7 @@ class OpenAIChatAI(ChatAI):
             except asyncio.TimeoutError as e:
                 # Handle timeout error
                 raise CustomException(
-                    err_code=CodeEnum.OpenAIRequestError,
+                    err_code=CodeEnum.OPEN_AI_REQUEST_ERROR,
                     err_msg=f"LLM response timeout ({timeout}s)",
                     cause_error=f"LLM response timeout ({timeout}s)",
                 ) from e
@@ -226,7 +225,7 @@ class OpenAIChatAI(ChatAI):
             # Record exception in span and wrap in custom exception
             span.record_exception(e)
             raise CustomException(
-                err_code=CodeEnum.OpenAIRequestError,
+                err_code=CodeEnum.OPEN_AI_REQUEST_ERROR,
                 err_msg=str(e),
                 cause_error=str(e),
             )
