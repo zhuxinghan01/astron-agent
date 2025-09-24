@@ -57,6 +57,5 @@ uvicorn==0.34.0
 websocket-client==1.8.0
 websockets==12.0
 wrapt==1.17.2
-xingchen-utils @ https://depend.iflytek.com/artifactory/pypi-private/xingchen_utils/1.0.8/xingchen_utils-1.0.8-py3-none-any.whl
 yarl==1.18.3
 zipp==3.21.0
