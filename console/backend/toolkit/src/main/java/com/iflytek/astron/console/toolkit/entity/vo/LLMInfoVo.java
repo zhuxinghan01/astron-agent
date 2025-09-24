@@ -45,4 +45,11 @@ public class LLMInfoVo extends LLMServerInfo {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date shelfOffTime;
+    private Integer acceleratorCount;
+    /**
+     * Replica configuration
+     */
+    private Integer replicaCount;
+
+    private String modelPath;
 }

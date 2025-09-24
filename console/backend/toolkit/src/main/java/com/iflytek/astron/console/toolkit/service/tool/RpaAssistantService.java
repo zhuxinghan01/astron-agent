@@ -56,7 +56,7 @@ public class RpaAssistantService {
                         .eq(RpaUserAssistant::getUserId, currentUserId)
                         .eq(RpaUserAssistant::getAssistantName, req.assistantName()));
         if (exists > 0) {
-            throw new IllegalArgumentException("Assistant name already exists: " + req.assistantName());
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Assistant name already exists: " + req.assistantName());
         }
 
         // 1. Read rpa_info platform definition and parse field specs
@@ -75,6 +75,7 @@ public class RpaAssistantService {
         assistant.setStatus(1);
         assistant.setSpaceId(SpaceInfoUtil.getSpaceId());
         assistant.setIcon(req.icon());
+        assistant.setRemarks(req.remarks());
         assistant.setCreateTime(LocalDateTime.now());
         assistant.setUpdateTime(LocalDateTime.now());
         assistantMapper.insert(assistant);
@@ -100,6 +101,7 @@ public class RpaAssistantService {
                 assistant.getId(),
                 assistant.getPlatformId(),
                 assistant.getAssistantName(),
+                assistant.getRemarks(),
                 assistant.getStatus(),
                 req.fields(),
                 new JSONArray(),
@@ -224,6 +226,7 @@ public class RpaAssistantService {
                 a.getId(),
                 a.getPlatformId(),
                 a.getAssistantName(),
+                a.getRemarks(),
                 a.getStatus(),
                 fields,
                 records,

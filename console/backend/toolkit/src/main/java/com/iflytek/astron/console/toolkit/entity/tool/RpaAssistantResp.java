@@ -24,6 +24,7 @@ public record RpaAssistantResp(
         Long id,
         Long platformId,
         String assistantName,
+        String remarks,
         Integer status,
         Map<String, String> fields,
         JSONArray robots,

@@ -1283,6 +1283,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setColor(dto.getColor());
         model.setUpdateTime(new Date());
         model.setRemark(serviceId);
+        model.setModelPath(dto.getModelPath());
+        model.setAcceleratorCount(dto.getAcceleratorCount());
+        model.setReplicaCount(dto.getReplicaCount());
     }
 
     private void persistModel(Model model, boolean isCreate) {
