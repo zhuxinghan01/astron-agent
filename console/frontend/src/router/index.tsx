@@ -48,7 +48,7 @@ const routes = [
           </Suspense>
         ),
       },
-            {
+      {
         path: '/management/release/*',
         element: (
           <Suspense fallback={<Loading />}>
