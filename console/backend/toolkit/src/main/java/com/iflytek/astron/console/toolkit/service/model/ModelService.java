@@ -778,6 +778,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
             // First 4 digits + asterisks + last 4 digits
             apiKey = apiKey.substring(0, 4) + "********" + apiKey.substring(apiKey.length() - 4);
         }
+        if(model.getType() == 2 && !Objects.equals(model.getStatus(), ModelStatusEnum.RUNNING.getCode())){
+            this.flushStatus(model);
+        }
         vo.setName(model.getName());
         vo.setServiceId(model.getDomain());
         vo.setConfig(JSONArray.parseArray(model.getConfig()));
