@@ -1,19 +1,31 @@
-import { PageData, ToolItem } from "@/types/resource";
+import { RpaDetailInfo, RpaFormInfo, RpaInfo } from "@/types/rpa";
 import http from "@/utils/http";
 
-export async function listRpas(params: {
-  content?: string;
-  status?: number;
-  pageNo: number;
-  pageSize: number;
-}): Promise<PageData<ToolItem>> {
-  return await http.get(`/tool/list-tools`, { params, responseType: "json" });
+export async function getRpaSourceList(): Promise<RpaInfo[]> {
+  return await http.get(`/api/rpa/source/list`);
 }
 
-export async function createRpa(params: {
-  sdk: string;
-  sd1k: string;
-  sdk22: string;
-}): Promise<unknown> {
-  return await http.post(`/rpa/create`, params);
+export async function createRpa(params: RpaFormInfo): Promise<unknown> {
+  return await http.post(`/api/rpa`, params);
+}
+
+export async function getRpaDetail(id: number): Promise<RpaDetailInfo> {
+  return await http.get(`/api/rpa/${id}`);
+}
+
+export async function updateRpa(
+  id: number,
+  params: RpaFormInfo
+): Promise<unknown> {
+  return await http.put(`/api/rpa/${id}`, params);
+}
+
+export async function deleteRpa(id: number): Promise<unknown> {
+  return await http.delete(`/api/rpa/${id}`);
+}
+
+export async function getRpaList(params: {
+  name?: string;
+}): Promise<RpaInfo[]> {
+  return await http.get(`/api/rpa/list`, { params });
 }

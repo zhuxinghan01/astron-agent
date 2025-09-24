@@ -1,22 +1,27 @@
-import React, { memo, FC } from "react";
+import React, { memo, FC, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useNavigate } from "react-router-dom";
 import RetractableInput from "@/components/ui/global/retract-table-input";
 import { jumpTologin } from "@/utils/http";
 import { useRpaPage } from "./hooks/use-rpa-page";
-import { Button, Divider, Dropdown, Space } from "antd";
+import { Button, Divider, Dropdown, Modal, Space } from "antd";
 import { EllipsisOutlined } from "@ant-design/icons";
-import { ToolItem } from "@/types/resource";
+
 import useUserStore, { User } from "@/store/user-store";
 import { ModalForm } from "./components/modal-form";
-import useAntModal from "@/hooks/use-ant-modal";
+import { RpaDetailFormInfo, RpaInfo } from "@/types/rpa";
+import { deleteRpa, getRpaDetail } from "@/services/rpa";
 const RpaPage: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { rpas, isHovered, setIsHovered, handleSearchRpas } = useRpaPage();
+  const modalFormRef = useRef<{
+    showModal: (values?: RpaDetailFormInfo) => void;
+  }>(null);
+  const { rpas, isHovered, setIsHovered, handleSearchRpas, refresh } =
+    useRpaPage();
   const user = useUserStore((state) => state.user);
-  const { commonAntModalProps, showModal } = useAntModal();
+
   return (
     <div className="w-full h-full flex flex-col overflow-hidden py-8">
       <div
@@ -57,7 +62,7 @@ const RpaPage: FC = () => {
                 if (!user?.login && !user?.uid) {
                   return jumpTologin();
                 }
-                showModal?.();
+                modalFormRef.current?.showModal();
               }}
             >
               <div className="color-mask"></div>
@@ -75,29 +80,61 @@ const RpaPage: FC = () => {
               </div>
             </div>
             {rpas.map((rpa) => (
-              <RpaCard rpa={rpa} key={rpa.id} user={user} />
+              <RpaCard
+                rpa={rpa}
+                key={rpa.id}
+                user={user}
+                refresh={refresh}
+                showModal={(values) => modalFormRef.current?.showModal(values)}
+              />
             ))}
           </div>
         </div>
       </div>
-      <ModalForm commonAntModalProps={commonAntModalProps} />
+      <ModalForm ref={modalFormRef} refresh={refresh} />
     </div>
   );
 };
 
-export const RpaCard = ({ rpa, user }: { rpa: ToolItem; user: User }) => {
+export const RpaCard = ({
+  rpa,
+  user,
+  refresh,
+  showModal,
+}: {
+  rpa: RpaInfo;
+  user: User;
+  refresh: () => void;
+  showModal: (values?: RpaDetailFormInfo) => void;
+}) => {
   const navigate = useNavigate();
   const actions = new Map([
     [
       "edit",
-      (record: any) => {
-        // navigate(`/resource/rpa/create?id=${k.id}`);
+      async (record: RpaInfo) => {
+        const result = await getRpaDetail(record.id);
+        const formData = {
+          id: result.id,
+          platformId: result.platformId,
+          assistantName: result.assistantName,
+          icon: result.icon,
+          ...(result.fields || {}),
+        } as RpaDetailFormInfo;
+        showModal(formData);
       },
     ],
     [
       "delete",
-      (record: any) => {
-        // navigate(`/resource/rpa/create?id=${k.id}`);
+      (record: RpaInfo) => {
+        Modal.confirm({
+          title: "删除",
+          content: "确定删除吗？",
+          onOk: () => {
+            deleteRpa(record.id).then(() => {
+              refresh?.();
+            });
+          },
+        });
       },
     ],
   ]);
@@ -110,7 +147,7 @@ export const RpaCard = ({ rpa, user }: { rpa: ToolItem; user: User }) => {
           if (!user?.login && !user?.uid) {
             return jumpTologin();
           }
-          navigate(`/resource/rpa/create?id=${rpa.id}`);
+          showModal?.();
         } else {
           navigate(`/resource/rpa/detail/${rpa.id}`);
         }
@@ -118,36 +155,25 @@ export const RpaCard = ({ rpa, user }: { rpa: ToolItem; user: User }) => {
     >
       <div className="px-6">
         <div className="flex items-start gap-4">
-          <span
-            className="w-12 h-12 flex items-center justify-center rounded-lg"
-            style={{
-              background: rpa.avatarColor
-                ? rpa.avatarColor
-                : `url(${rpa.address + rpa.icon}) no-repeat center / cover`,
-            }}
-          >
-            {rpa.avatarColor && (
-              <img
-                src={rpa.address + rpa.icon}
-                className="w-[28px] h-[28px]"
-                alt=""
-              />
+          <span className="w-12 h-12 flex items-center justify-center rounded-lg">
+            {rpa.icon && (
+              <img src={rpa?.icon} className="w-[28px] h-[28px]" alt="" />
             )}
           </span>
           <div className="flex flex-col gap-2 flex-1 overflow-hidden">
             <div className="flex-1 flex items-center justify-between overflow-hidden">
               <span
                 className="flex-1 text-overflow font-medium text-xl title-color title-size"
-                title={rpa.name}
+                title={rpa.assistantName}
               >
-                {rpa.name}
+                {rpa.assistantName}
               </span>
             </div>
             <div
               className="text-desc text-overflow h-5 text-sm"
-              title={rpa.description}
+              title={rpa.userName || ""}
             >
-              {rpa.description}11121
+              {rpa.userName}
             </div>
           </div>
         </div>
@@ -156,17 +182,14 @@ export const RpaCard = ({ rpa, user }: { rpa: ToolItem; user: User }) => {
         啊啊手机大叔啊啊手机大叔大婶都是啊啊手机大叔大婶都是啊啊手机大叔大婶都是大婶都是
       </div>
       <div
-        className="flex justify-between items-center  overflow-hidden overflow-x-auto overflow-y-hidden py-[6px] px-6"
+        className="flex justify-between items-center  overflow-hidden overflow-x-auto overflow-y-hidden py-[8px] px-6"
         style={{
           borderTop: "1px dashed #e2e8ff",
           scrollbarWidth: "none", // 隐藏滚动条
           msOverflowStyle: "none", // IE/Edge隐藏滚动条
         }}
       >
-        <Space size={0} split={<Divider type="vertical" />}>
-          <div className="text-desc">科大讯飞</div>
-          <div className="text-desc">机器人资源：12个</div>
-        </Space>
+        <div className="text-desc">机器人资源：{rpa.robotCount || 0}个</div>
         <Dropdown
           menu={{
             onClick: ({ key, domEvent }) => {
@@ -185,7 +208,10 @@ export const RpaCard = ({ rpa, user }: { rpa: ToolItem; user: User }) => {
             ],
           }}
         >
-          <EllipsisOutlined style={{ color: "#7F7F7F" }} />
+          <EllipsisOutlined
+            style={{ color: "#7F7F7F" }}
+            onClick={(e) => e.stopPropagation()}
+          />
         </Dropdown>
       </div>
     </div>

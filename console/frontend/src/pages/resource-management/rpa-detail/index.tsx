@@ -1,38 +1,38 @@
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import back from "@/assets/imgs/common/back.png";
 import { useNavigate } from "react-router-dom";
 import { Table } from "antd";
 import { ColumnsType } from "antd/es/table";
-import { Item, useRpaDetail } from "./hooks/use-rpa-detail";
+import { useRpaDetail } from "./hooks/use-rpa-detail";
 import { ModalDetail } from "./components/modal-detail";
 import useAntModal from "@/hooks/use-ant-modal";
+import { RpaInfo, RpaRobot } from "@/types/rpa";
+import dayjs from "dayjs";
 
 export const RpaDetail = () => {
-  const { tableProps } = useRpaDetail();
-  const { commonAntModalProps, showModal } = useAntModal();
-  const [currentRecord, setCurrentRecord] = useState<Item | null>(null);
-  const columns: ColumnsType<Item> = [
+  const { rpaDetail } = useRpaDetail();
+  const modalDetailRef = useRef<{ showModal: (values?: RpaRobot) => void }>(
+    null
+  );
+  const columns: ColumnsType<RpaRobot> = [
     {
       title: "机器人名称",
       dataIndex: "name",
     },
     {
       title: "描述",
-      dataIndex: "email",
+      dataIndex: "description",
     },
     {
       title: "参数",
-      dataIndex: "phone",
+      dataIndex: "parameters",
       width: 100,
       render: (_, record) => {
         return (
           <div
             className="text-[#275EFF] cursor-pointer"
-            onClick={() => {
-              setCurrentRecord(record);
-              showModal();
-            }}
+            onClick={() => modalDetailRef.current?.showModal(record)}
           >
             详情
           </div>
@@ -48,14 +48,16 @@ export const RpaDetail = () => {
           <div className="flex">
             <img className="w-[62px] h-[62px]" src="" alt="rpa" />
             <div className="pl-[24px]">
-              <div className="text-2xl font-medium">DeepSeek RPA</div>
+              <div className="text-2xl font-medium">
+                {rpaDetail?.assistantName}
+              </div>
               <div className="text-sm text-[#7F7F7F] pt-[12px]">
-                用户名1122334
+                {rpaDetail?.userName}
               </div>
             </div>
           </div>
           <div className="text-sm text-[#7F7F7F] pb-[16px]">
-            更新于2025-02-09 18:08:52
+            更新于{dayjs(rpaDetail?.createTime).format("YYYY-MM-DD HH:mm:ss")}
           </div>
         </div>
         <div className="w-full text-[#7F7F7F]  pt-[12px] pb-[24px]">
@@ -63,22 +65,19 @@ export const RpaDetail = () => {
           在后训练阶段大规模使用了强化学习技术，在仅有极少标注数据的情况下，极大提升了模型推理能力。在致学、代码、自然语言推理等任务上，性能比肩
           OpenAl o1 正式版。
         </div>
-        <div className="text-[#7F7F7F]">科大讯飞</div>
         <div className="w-full pt-[32px] pb-[12px]">机器人资源列表</div>
         <div className="h-[400px]">
           <Table
+            dataSource={rpaDetail?.robots}
             className="document-table"
-            {...tableProps}
             columns={columns}
-            rowKey="id"
+            rowKey="project_id"
             style={{ overflow: "auto" }}
+            pagination={false}
           ></Table>
         </div>
       </div>
-      <ModalDetail
-        commonAntModalProps={commonAntModalProps}
-        title={currentRecord?.email}
-      />
+      <ModalDetail ref={modalDetailRef} />
     </div>
   );
 };

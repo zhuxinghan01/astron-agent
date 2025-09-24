@@ -1,7 +1,5 @@
-import { listRpas } from "@/services/rpa";
-import globalStore from "@/store/global-store";
-import useUserStore, { User } from "@/store/user-store";
-import { ToolItem } from "@/types/resource";
+import { getRpaList } from "@/services/rpa";
+import { RpaInfo } from "@/types/rpa";
 import { useRequest, useDebounceFn } from "ahooks";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -9,17 +7,16 @@ export const useRpaPage = (): {
   handleSearchRpas: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isHovered: boolean | null;
   setIsHovered: React.Dispatch<React.SetStateAction<boolean | null>>;
-  rpas: ToolItem[];
+  rpas: RpaInfo[];
+  refresh: () => void;
 } => {
   const [isHovered, setIsHovered] = useState<boolean | null>(null);
   const [searchValue, setSearchValue] = useState("");
 
-  const { data } = useRequest(
+  const { data, refresh } = useRequest(
     () =>
-      listRpas({
-        content: searchValue?.trim(),
-        pageNo: 1,
-        pageSize: 20,
+      getRpaList({
+        name: searchValue?.trim(),
       }),
     {
       refreshDeps: [searchValue],
@@ -38,6 +35,7 @@ export const useRpaPage = (): {
     handleSearchRpas,
     isHovered,
     setIsHovered,
-    rpas: data?.pageData || [],
+    rpas: data || [],
+    refresh,
   };
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import AddFlow from '@/components/workflow/modal/add-flow';
+import AddRpa from '@/components/workflow/modal/add-rpa';
 import AddKnowledge from '@/components/workflow/modal/add-knowledge';
 import AddPlugin from '@/components/workflow/modal/add-plugin';
 import IterativeAmplificationModal from '@/components/workflow/modal/iterative-amplification';
@@ -16,6 +17,7 @@ function index(): React.ReactElement {
   return (
     <>
       <AddFlow />
+      <AddRpa />
       <AddKnowledge />
       <AddPlugin />
       <IterativeAmplificationModal />

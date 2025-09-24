@@ -1,36 +1,13 @@
-import { useAntdTable } from "ahooks";
-export interface Item {
-  name: string;
-  email: string;
-  phone: string;
-  gender: "male" | "female";
-}
+import { getRpaDetail } from "@/services/rpa";
+import { useRequest } from "ahooks";
+import { useParams } from "react-router-dom";
 
-interface Result {
-  total: number;
-  list: Item[];
-}
-
-const getTableData = ({
-  current,
-  pageSize,
-}: {
-  current: number;
-  pageSize: number;
-}): Promise<Result> => {
-  const query = `page=${current}&size=${pageSize}`;
-
-  return fetch(`https://randomuser.me/api?results=55&${query}`)
-    .then((res) => res.json())
-    .then((res) => ({
-      total: res.info.results,
-      list: res.results,
-    }));
-};
 export const useRpaDetail = () => {
-  const { tableProps } = useAntdTable(getTableData);
+  const { rpa_id } = useParams();
+  const { data } = useRequest(() => getRpaDetail(Number(rpa_id)), {
+    refreshDeps: [rpa_id],
+  });
   return {
-    rpaDetail: {},
-    tableProps,
+    rpaDetail: data,
   };
 };

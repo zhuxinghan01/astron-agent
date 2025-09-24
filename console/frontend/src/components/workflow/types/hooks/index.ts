@@ -4,8 +4,8 @@ import {
   FlowType,
   PositionType,
   NewNodeType,
-} from '../drawer/chat-debugger';
-import React from 'react';
+} from "../drawer/chat-debugger";
+import React from "react";
 
 // Hook 相关类型定义
 
@@ -76,7 +76,7 @@ export interface UseNodeFuncReturn {
     value: unknown
   ) => void;
   handleIteratorEndChange: (
-    type: 'add' | 'remove' | 'replace',
+    type: "add" | "remove" | "replace",
     outputId: string,
     value?: unknown,
     currentNode?: NodeDataType
@@ -241,6 +241,7 @@ export interface UseNodeCommonReturn {
   isIteratorChildNode: boolean;
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
+  isRpaNode: boolean;
   isCodeNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;
@@ -277,6 +278,7 @@ export interface UseFlowCommonReturn {
   ) => NewNodeType[] | null;
   handleAddToolNode: (tool: ToolType) => void;
   handleAddFlowNode: (flow: FlowType) => void;
+  handleAddRpaNode: (rpa: unknown) => void;
   handleEdgeAddNode: (
     addNode: AddNodeType,
     position: PositionType,
@@ -324,4 +326,4 @@ export type {
   FlowType,
   PositionType,
   NewNodeType,
-} from '../drawer/chat-debugger';
+} from "../drawer/chat-debugger";
