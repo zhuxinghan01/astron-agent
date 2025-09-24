@@ -25,6 +25,7 @@ const EnterpriseSpace = lazy(() => import('@/pages/space/enterprise'));
 const SpacePage = lazy(() => import('@/pages/space-page'));
 const TeamCreate = lazy(() => import('@/pages/space/team-create'));
 // const SmartRedirect = lazy(() => import('@/pages/smart-redirect'));
+const ReleaseManagement = lazy(() => import('@/pages/release-management'));
 
 const routes = [
   {
@@ -44,6 +45,14 @@ const routes = [
         element: (
           <Suspense fallback={<Loading />}>
             <HomePage />
+          </Suspense>
+        ),
+      },
+            {
+        path: '/management/release/*',
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ReleaseManagement />
           </Suspense>
         ),
       },
