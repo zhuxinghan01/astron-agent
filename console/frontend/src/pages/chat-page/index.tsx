@@ -30,6 +30,9 @@ const ChatPage = (): ReactElement => {
   const setMessageList = useChatStore(state => state.setMessageList); //  设置消息列表
   const setCurrentChatId = useChatStore(state => state.setCurrentChatId); //  设置当前聊天id
   const initChatStore = useChatStore(state => state.initChatStore); //  初始化聊天store
+  const setChatFileListNoReq = useChatStore(
+    state => state.setChatFileListNoReq
+  ); //  设置聊天文件列表
   const [isDataLoading, setIsDataLoading] = useState<boolean>(false); //  数据加载状态
   const [searchParams] = useSearchParams();
   const { botId: botIdParam, version } = useParams<{
@@ -54,14 +57,12 @@ const ChatPage = (): ReactElement => {
       // 1. 判断是否有对话
       const chatList = await postChatList();
       const hasChat = chatList.find(item => item.botId === botId);
-      let chatId = 0;
 
       // 2. 判断是否有分享key
       if (!hasChat) {
-        const newChatRes = sharekey
+        sharekey
           ? await createChatByShareKey({ shareAgentKey: sharekey })
           : await postCreateChat(botId);
-        chatId = newChatRes.id;
       }
 
       // 3. 获取智能体信息
@@ -76,10 +77,9 @@ const ChatPage = (): ReactElement => {
         openedTool: workflowBotInfo.openedTool,
         config: workflowBotInfo.config,
       });
-      chatId = botInfo.chatId;
-      setCurrentChatId(chatId);
+      setCurrentChatId(botInfo.chatId);
       // 4. 获取对话历史
-      await getChatHistoryData(chatId);
+      await getChatHistoryData(botInfo.chatId);
       setIsDataLoading(false);
     } catch (error) {
       console.error('初始化聊天页面失败:', error);
@@ -92,19 +92,25 @@ const ChatPage = (): ReactElement => {
   // 获取对话历史
   const getChatHistoryData = async (chatId: number): Promise<void> => {
     const res = await getChatHistory(chatId);
+    setChatFileListNoReq(res?.[0]?.chatFileListNoReq || []);
     const formattedMessages = formatHistoryToMessages(res);
     setMessageList(formattedMessages);
   };
 
   //发送消息
-  const handleRecomendClick = (item: string, callback?: () => void) => {
+  const handleRecomendClick = (params: {
+    item: string;
+    fileUrl?: string;
+    callback?: () => void;
+  }) => {
     if (streamId || isDataLoading || isLoading) {
       message.warning(t('chatPage.chatWindow.answeringInProgress'));
       return;
     }
     onSendMsg({
-      msg: item,
-      onSendCallback: callback,
+      msg: params.item,
+      fileUrl: params.fileUrl,
+      onSendCallback: params.callback,
     });
   };
 

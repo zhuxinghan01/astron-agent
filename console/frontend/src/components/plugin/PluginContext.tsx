@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { createContext, useReducer, FC, ReactNode } from 'react';
 
 interface IState {

@@ -78,5 +78,4 @@ export type {
   ToolType,
   PositionType,
   NewNodeType,
-  IFlyCollectorType,
 } from './chat-debugger';

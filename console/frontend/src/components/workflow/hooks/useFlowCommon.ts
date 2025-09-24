@@ -30,8 +30,6 @@ import {
 import { UseFlowCommonReturn } from '@/components/workflow/types/hooks';
 
 // 全局类型声明 - 移除重复声明
-// IFlyCollector已在全局声明
-
 export const useFlowCommon = (): UseFlowCommonReturn => {
   const { spaceId } = useSpaceStore();
   const user = useUserStore(state => state.user);
@@ -355,14 +353,6 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
   );
 
   const handleDebugger = useMemoizedFn((): void => {
-    IFlyCollector?.onEvent(
-      'testing_agents',
-      {
-        uid: `${getCookie('account_id')}`,
-        botid: `${currentFlow?.id}`,
-      },
-      'new25_agent_center'
-    );
     setOpenOperationResult(openOperationResult => !openOperationResult);
     setVersionManagement(false);
     setNodeInfoEditDrawerlInfo({

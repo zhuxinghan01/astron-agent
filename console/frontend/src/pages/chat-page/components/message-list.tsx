@@ -5,7 +5,12 @@ import {
   MutableRefObject,
   useState,
 } from 'react';
-import type { MessageListType, BotInfoType, Option } from '@/types/chat';
+import type {
+  MessageListType,
+  BotInfoType,
+  Option,
+  UploadFileInfo,
+} from '@/types/chat';
 import recommendIcon from '@/assets/imgs/chat/recommend.svg';
 import rightArrowIcon from '@/assets/imgs/chat/right-arrow.svg';
 import LoadingAnimate from '@/constants/lottie-react/chat-loading.json';
@@ -20,6 +25,8 @@ import useBindEvents from '@/hooks/search-event-bind';
 import SourceInfoBox from './source-info-box';
 import UseToolsInfo from './use-tools-info';
 import WorkflowNodeOptions from './workflow-node-options';
+import { formatFileSize, getFileIcon } from '@/utils';
+import FilePreview from './file-preview';
 
 //渲染全新开始
 const renderRestart = (): ReactElement => {
@@ -37,7 +44,11 @@ const MessageList = (props: {
   botInfo: BotInfoType;
   isDataLoading: boolean;
   botNameColor: string;
-  handleSendMessage: (item: string, callback?: () => void) => void;
+  handleSendMessage: (params: {
+    item: string;
+    fileUrl?: string;
+    callback?: () => void;
+  }) => void;
 }): ReactElement => {
   const {
     messageList,
@@ -56,6 +67,7 @@ const MessageList = (props: {
   const lastClickedQA: MutableRefObject<MessageListType | null> =
     useRef<MessageListType | null>(null);
   const { bindTagClickEvent } = useBindEvents(lastClickedQA);
+  const [previewFile, setPreviewFile] = useState<UploadFileInfo>(); //预览文件
 
   // 选中的选项状态
   const [selectedOptionId, setSelectedOptionId] = useState<{
@@ -66,7 +78,9 @@ const MessageList = (props: {
   // 处理节点选项点击
   const handleNodeClick = (option: Option, messageId: number) => {
     setSelectedOptionId({ id: messageId, option });
-    handleSendMessage(JSON.stringify(option));
+    handleSendMessage({
+      item: JSON.stringify(option),
+    });
   };
 
   useEffect((): void => {
@@ -93,7 +107,11 @@ const MessageList = (props: {
               <div
                 className="h-12 flex items-center mb-2 bg-white border border-[#e4eaff] rounded-xl px-4 cursor-pointer text-sm font-normal transition-all duration-200 ease-in-out hover:border-[#275eff]"
                 key={index}
-                onClick={() => handleSendMessage(item)}
+                onClick={() =>
+                  handleSendMessage({
+                    item: item,
+                  })
+                }
               >
                 <img src={recommendIcon} alt="" className="w-[18px] h-[18px]" />
                 <span className="flex-1 mx-3 truncate">{item}</span>
@@ -148,30 +166,40 @@ const MessageList = (props: {
           <div className="text-base font-normal text-white leading-[25px] whitespace-pre-wrap w-auto break-words">
             {item.message}
           </div>
-          {/* {item?.chatFileList?.length > 0 && (
-            <div className={styles.req_content_url}>
+          {item?.chatFileList && item?.chatFileList?.length > 0 && (
+            <div className={'w-48 h-auto mt-2.5 rounded-xl'}>
               {item?.chatFileList?.map((file: any, index: number) => (
                 <div
                   key={index}
-                  className={styles.pdf_wrap}
+                  className={
+                    'flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer'
+                  }
                   onClick={() => {
-                    handleFileClick(file);
+                    setPreviewFile(file);
                   }}
                 >
-                  <img src={getFileIcon(file)} alt="" />
-                  <div className={styles.pdf_right}>
-                    <div title={file?.fileName} className={styles.title}>
+                  <img src={getFileIcon(file)} alt="" className="w-6 h-8" />
+                  <div className={'flex-1 ml-2 min-w-0'}>
+                    <div
+                      title={file?.fileName}
+                      className={
+                        'text-xs text-[#939393] truncate block max-w-[120px]'
+                      }
+                    >
                       {file?.fileName}
                     </div>
-                    <div className={styles.pdf_size}>
-                      <span>{file?.fileName?.split('.')?.pop()}</span>
-                      <span>{file?.fileSize}</span>
+                    <div
+                      className={
+                        'text-xs text-[#939393] truncate block max-w-full'
+                      }
+                    >
+                      <span>{formatFileSize(file.fileSize)}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          )} */}
+          )}
         </div>
       </div>
     );
@@ -271,6 +299,10 @@ const MessageList = (props: {
           {renderHeaderAndRecommend()}
         </div>
       </div>
+      <FilePreview
+        file={previewFile || ({} as UploadFileInfo)}
+        onClose={() => setPreviewFile({} as UploadFileInfo)}
+      />
     </div>
   );
 };

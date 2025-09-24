@@ -12,6 +12,13 @@ interface TableActionsReturn {
     key: string,
     value: string | number | boolean | string[] | null | undefined
   ) => void;
+  handleBatchInputParamsChange: (
+    id: number | null,
+    updates: Record<
+      string,
+      string | number | boolean | string[] | null | undefined
+    >
+  ) => void;
   handleUpdateSheet: (data?: DatabaseItem[]) => void;
   handleDeleteField: (record: TableField) => void;
 

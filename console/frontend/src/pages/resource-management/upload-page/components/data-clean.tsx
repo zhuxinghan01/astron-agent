@@ -317,7 +317,7 @@ const SegmentationSettings: React.FC<{
             <div className="text-sm font-medium text-second">
               {t('knowledge.segmentIdentifier')}
             </div>
-            <div ref={knowledgeSelectRef} className="relative mt-1.5">
+            <div ref={knowledgeSelectRef} className="relative mt-1.5 h-[40px]">
               <Input
                 value={configDetail.seperator}
                 onChange={event => {

@@ -120,7 +120,7 @@ export const AddFolder: FC<{
 
   return (
     <div className="mask">
-      <div className="p-6 absolute bg-[#fff] rounded-2xl top  -1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 text-second font-medium text-md w-[448px]">
+      <div className="p-6 absolute bg-[#fff] rounded-2xl top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 text-second font-medium text-md w-[448px]">
         <div className="flex items-center">
           <img src={folder} className="w-10 h-10" alt="" />
           <h3 className="ml-2.5 text-lg font-medium text-second">

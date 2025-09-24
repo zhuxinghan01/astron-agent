@@ -1,3 +1,10 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:07:18
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:07:29
+ * @Description: http请求工具
+ */
 import axios from 'axios';
 import { Base64 } from 'js-base64';
 import { casdoorSdk } from '@/config';
@@ -268,7 +275,10 @@ const addPendingRequest = (config: InternalAxiosRequestConfig): void => {
  * @param config 请求配置
  */
 const removePendingRequest = (config?: AxiosRequestConfig): void => {
-  const requestKey = generateReqKey(config as AxiosRequestConfig);
+  if (!config) {
+    return;
+  }
+  const requestKey = generateReqKey(config);
   if (pendingRequest.has(requestKey)) {
     const cancelToken = pendingRequest.get(requestKey);
     cancelToken(requestKey);

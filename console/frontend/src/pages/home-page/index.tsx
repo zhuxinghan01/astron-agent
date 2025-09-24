@@ -1,5 +1,11 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:14:36
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:14:45
+ * @Description: 首页：智能体广场
+ */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCommonConfig } from '@/services/common';
 import {
@@ -25,13 +31,12 @@ const PAGE_SIZE = 10;
 
 const PAGE_INFO_ORIGIN: SearchBotParam = {
   search: '',
-  pageIndex: 1,
+  page: 1,
   pageSize: PAGE_SIZE,
   type: 0,
 };
 
 const HomePage: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const currentLang = getLanguageCode();
 
@@ -144,7 +149,7 @@ const HomePage: React.FC = () => {
     setPageInfo({
       ...pageInfo,
       search: value,
-      pageIndex: 1,
+      page: 1,
     });
   };
   //切换助手类型
@@ -155,7 +160,7 @@ const HomePage: React.FC = () => {
       ...pageInfo,
       type,
       search: '',
-      pageIndex: 1,
+      page: 1,
     });
     setHasMore(true);
     setSearchLoading(true);
@@ -196,10 +201,10 @@ const HomePage: React.FC = () => {
   const loadMore = (customPageIndex?: number): Promise<void> => {
     return new Promise(resolve => {
       setLoading(true);
-      const currentPageIndex = customPageIndex || pageInfo.pageIndex + 1;
+      const currentPageIndex = customPageIndex || pageInfo.page + 1;
       const newPageInfo = {
         ...pageInfo,
-        pageIndex: currentPageIndex,
+        page: currentPageIndex,
       };
       setPageInfo(newPageInfo);
       resolve(void 0);

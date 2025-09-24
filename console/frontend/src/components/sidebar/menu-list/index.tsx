@@ -551,34 +551,6 @@ const MenuList: FC = () => {
               }`}
               onClick={() => {
                 setMenuActiveKey(tab.activeTab);
-                if (tab.subTitle === '智能体广场') {
-                  if (
-                    typeof window !== 'undefined' &&
-                    (window as any).IFlyCollector
-                  ) {
-                    (window as any).IFlyCollector?.onEvent(
-                      'agents_stores',
-                      {
-                        uid: `${getCookie('account_id')}`,
-                      },
-                      'new25_agent_center'
-                    );
-                  }
-                }
-                if (tab.subTitle === '插件广场') {
-                  if (
-                    typeof window !== 'undefined' &&
-                    (window as any).IFlyCollector
-                  ) {
-                    (window as any).IFlyCollector?.onEvent(
-                      'plugins_stores',
-                      {
-                        uid: `${getCookie('account_id')}`,
-                      },
-                      'new25_agent_center'
-                    );
-                  }
-                }
                 navigate(tab.path);
               }}
               onMouseEnter={() => setHoverTab(tab.activeTab)}

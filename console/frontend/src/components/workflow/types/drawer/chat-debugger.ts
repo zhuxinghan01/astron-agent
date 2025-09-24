@@ -633,11 +633,3 @@ export interface NewNodeType {
   zIndex?: number;
   draggable?: boolean;
 }
-
-export interface IFlyCollectorType {
-  onEvent: (
-    eventName: string,
-    params: Record<string, unknown>,
-    category: string
-  ) => void;
-}

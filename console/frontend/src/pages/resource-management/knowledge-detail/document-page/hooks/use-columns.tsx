@@ -212,52 +212,69 @@ export const Operations: FC<{
   const navigate = useNavigate();
   const status = record.fileInfoV2 && record.fileInfoV2.status;
   const msg = statusMap[status as unknown as keyof typeof statusMap];
+
+  const actions = new Map([
+    [
+      '1',
+      (): void => {
+        setAddFolderModal(true);
+        setCurrentFile(record);
+        setModalType('edit');
+      },
+    ],
+    [
+      '2',
+      (): void => {
+        navigate(
+          `/resource/knowledge/detail/${repoId}/segmentation?parentId=${pid}&fileId=${record.fileId}&tag=${tag}`
+        );
+      },
+    ],
+    [
+      '3',
+      (): void => {
+        retrySegmentation(record);
+      },
+    ],
+    [
+      '4',
+      (): void => {
+        setCurrentFile(record);
+        setDeleteModal(true);
+      },
+    ],
+  ]);
   const items = [
     {
       key: '1',
       label: t('common.edit'),
       hidden: record.type !== 'folder',
-      onClick: (e: React.MouseEvent<HTMLDivElement>): void => {
-        e.stopPropagation();
-        setAddFolderModal(true);
-        setCurrentFile(record);
-        setModalType('edit');
-      },
     },
     {
       key: '2',
       label: t('knowledge.segmentSettings'),
       hidden: record.type === 'folder' || tag === 'SparkDesk-RAG',
-      onClick: (e: React.MouseEvent<HTMLDivElement>): void => {
-        e.stopPropagation();
-        navigate(
-          `/resource/knowledge/detail/${repoId}/segmentation?parentId=${pid}&fileId=${record.fileId}&tag=${tag}`
-        );
-      },
     },
     {
       key: '3',
       label: t('knowledge.retry'),
       hidden: record.type === 'folder' || msg !== 'error',
-      onClick: (e: React.MouseEvent<HTMLDivElement>): void => {
-        e.stopPropagation();
-        retrySegmentation(record);
-      },
     },
     {
       key: '4',
       label: t('common.delete'),
-      onClick: (e: React.MouseEvent<HTMLDivElement>): void => {
-        e.stopPropagation();
-        setCurrentFile(record);
-        setDeleteModal(true);
-      },
     },
   ];
   return (
     <>
       <Dropdown
-        menu={{ items: items as unknown as ItemType[] }}
+        menu={{
+          items: items as unknown as ItemType[],
+          onClick: ({ key, domEvent }) => {
+            domEvent.stopPropagation();
+            actions.get(key)?.();
+          },
+        }}
         overlayClassName="document-more-dropdown"
       >
         <img

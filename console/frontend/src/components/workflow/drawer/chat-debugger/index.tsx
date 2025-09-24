@@ -602,7 +602,7 @@ export function ChatDebuggerContent({
           description: currentFlow?.description,
           data: {
             nodes: nodes?.map(({ nodeType, ...reset }) => {
-              let node = {
+              const node = {
                 ...reset,
                 data: {
                   ...reset?.data,

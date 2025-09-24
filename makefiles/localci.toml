@@ -9,7 +9,7 @@ enabled = false
 [[typescript.apps]]
 name = "console-frontend"
 dir = "console/frontend"
-enabled = false
+enabled = true
 
 [[go.apps]]
 name = "core-tenant"
