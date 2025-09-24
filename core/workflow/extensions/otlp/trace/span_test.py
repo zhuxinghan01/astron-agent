@@ -9,7 +9,6 @@ event logging, and nested span operations.
 import time
 
 from opentelemetry.trace import Status, StatusCode
-
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.sid.sid_generator2 import init_sid
 from workflow.extensions.otlp.trace.span import Span

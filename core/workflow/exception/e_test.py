@@ -37,5 +37,5 @@ def test_zero_division_error() -> None:
     try:
         1 / 0
     except ZeroDivisionError as e:
-        ce = CustomException(CodeEnum.FlowHChatFailed, cause_error=e)
+        ce = CustomException(CodeEnum.OPEN_API_ERROR, cause_error=e)
         print(ce)

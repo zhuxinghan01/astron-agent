@@ -1,30 +1,32 @@
 import asyncio
 import json
 import os
-import traceback
 from abc import abstractmethod
 from asyncio import Event
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, List, Literal, Optional, Tuple
 
 from pydantic import BaseModel, Field
-
-from workflow.consts.flow import ErrorHandler, XFLLMStatus
+from workflow.consts.flow import XFLLMStatus
 from workflow.consts.model_provider import ModelProviderEnum
 from workflow.consts.template import TemplateSplitType, TemplateType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
-from workflow.engine.entities.history import History, ProcessArrayMethod
+from workflow.engine.entities.history import (
+    EnableChatHistoryV2,
+    History,
+    ProcessArrayMethod,
+)
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_entities import NodeType
 from workflow.engine.entities.node_running_status import NodeRunningStatus
 from workflow.engine.entities.output_mode import EndNodeOutputModeEnum
+from workflow.engine.entities.retry_config import RetryConfig
 from workflow.engine.entities.variable_pool import ParamKey, VariablePool
 from workflow.engine.nodes.entities.node_run_result import (
     NodeRunResult,
     WorkflowNodeExecutionStatus,
 )
-from workflow.engine.nodes.node_schemas import node_schema
 from workflow.engine.nodes.util.frame_processor import (
     AIPaaSFrameProcessor,
     FrameProcessor,
@@ -53,25 +55,6 @@ from workflow.infra.providers.llm.openai.const import (
 )
 from workflow.infra.providers.llm.types import SystemUserMsg
 from workflow.utils.file_util import url_to_base64
-from workflow.utils.json_schema.json_schema_cn import CNValidator
-
-
-class RetryConfig(BaseModel):
-    """
-    Configuration for node retry mechanism.
-
-    :param timeout: Maximum timeout in seconds for node execution
-    :param should_retry: Whether to enable retry mechanism
-    :param max_retries: Maximum number of retry attempts
-    :param error_strategy: Error handling strategy when retry fails
-    :param custom_output: Custom output to return when retry fails
-    """
-
-    timeout: float = 60
-    should_retry: bool = False
-    max_retries: int = 0
-    error_strategy: int = ErrorHandler.Interrupted.value
-    custom_output: dict = {}
 
 
 class BaseNode(BaseModel):
@@ -118,30 +101,6 @@ class BaseNode(BaseModel):
         :return: Dictionary containing node configuration parameters
         """
         raise NotImplementedError
-
-    @staticmethod
-    def schema_validate(node_body: dict, node_type: str) -> str:
-        """
-        Validate node input parameters against the schema.
-
-        This method validates the input parameters for a node against its
-        defined schema and returns any validation errors.
-
-        :param node_body: Dictionary containing node input parameters
-        :param node_type: Type of the node to validate
-        :return: Empty string if validation passes, error message if validation fails
-        """
-        schemas = node_schema.get(node_type, None)
-        if not schemas:
-            return f"{node_type} schema does not exist"
-        er_msgs = [
-            f"Field: {er['schema_path']}, Error: {er['message']}"
-            for er in CNValidator(schemas).validate(node_body)
-        ]
-        errs = ";".join(er_msgs)
-        if errs:
-            return errs
-        return ""
 
     @abstractmethod
     def sync_execute(
@@ -357,7 +316,7 @@ class BaseOutputNode(BaseNode):
     :param streamOutput: Whether this node supports streaming output
     """
 
-    streamOutput: bool = False
+    streamOutput: bool = Field(default=False)
 
     @abstractmethod
     def get_node_config(self) -> Dict[str, Any]:
@@ -1204,27 +1163,29 @@ class BaseLLMNode(BaseNode):
     :param chat_ai: Chat AI instance
     """
 
-    model: str
-    url: str = ""
-    domain: str
-    temperature: float = 1.0
-    appId: str
-    apiKey: str = ""
-    apiSecret: str = ""
-    maxTokens: int = 2048
-    uid: str = ""
-    template: str = ""
-    systemTemplate: str = ""
-    topK: int = 3
-    patch_id: list = []
-    respFormat: int = 0
-    enableChatHistory: bool = False
-    enableChatHistoryV2: dict = {}
-    re_match_pattern: str = r"```(json)?(.*)```"
-    source: str = ModelProviderEnum.XINGHUO.value
-    searchDisable: bool = True
-    extraParams: dict = {}
-    chat_ai: Any = None
+    model: str = Field(...)
+    domain: str = Field(...)
+    appId: str = Field(...)
+    apiKey: str = Field(...)
+    apiSecret: str = Field(...)
+
+    url: str = Field(default="")
+    temperature: float = Field(gt=0, le=1, default=1.0)
+    maxTokens: int = Field(gt=0, default=2048)
+    uid: str = Field(default="")
+    template: str = Field(default="")
+    systemTemplate: str = Field(default="")
+    topK: int = Field(default=3)
+    patch_id: list = Field(default_factory=list)
+    respFormat: Literal[0, 1, 2] = 0
+    enableChatHistory: bool = Field(default=False)
+    enableChatHistoryV2: EnableChatHistoryV2 = Field(
+        default_factory=EnableChatHistoryV2
+    )
+    re_match_pattern: str = Field(default=r"```(json)?(.*)```")
+    source: str = Field(default=ModelProviderEnum.XINGHUO.value)
+    searchDisable: bool = Field(default=True)
+    extraParams: dict = Field(default_factory=dict)
 
     def _get_chat_ai(self) -> ChatAI:
         """
@@ -1235,27 +1196,26 @@ class BaseLLMNode(BaseNode):
 
         :return: ChatAI instance configured for this node
         """
-        if not self.chat_ai:
-            self.chat_ai = ChatAIFactory.get_chat_ai(
-                model_source=(
-                    ModelProviderEnum.XINGHUO.value
-                    if not hasattr(self, "source")
-                    else self.source
-                ),
-                model_url=self.url,
-                model_name=self.domain,
-                spark_version="",
-                temperature=self.temperature if hasattr(self, "temperature") else None,
-                app_id=self.appId,
-                api_key=self.apiKey,
-                api_secret=self.apiSecret,
-                max_tokens=self.maxTokens if hasattr(self, "maxTokens") else None,
-                top_k=self.topK if hasattr(self, "topK") else None,
-                patch_id=self.patch_id,
-                uid=self.uid,
-                stream_node_first_token=self.stream_node_first_token,
-            )
-        return self.chat_ai
+
+        return ChatAIFactory.get_chat_ai(
+            model_source=(
+                ModelProviderEnum.XINGHUO.value
+                if not hasattr(self, "source")
+                else self.source
+            ),
+            model_url=self.url,
+            model_name=self.domain,
+            spark_version="",
+            temperature=self.temperature if hasattr(self, "temperature") else None,
+            app_id=self.appId,
+            api_key=self.apiKey,
+            api_secret=self.apiSecret,
+            max_tokens=self.maxTokens if hasattr(self, "maxTokens") else None,
+            top_k=self.topK if hasattr(self, "topK") else None,
+            patch_id=self.patch_id,
+            uid=self.uid,
+            stream_node_first_token=self.stream_node_first_token,
+        )
 
     def _process_history(
         self,
@@ -1470,7 +1430,7 @@ class BaseLLMNode(BaseNode):
                     ):
                         # Exception case: finish_reason has value but not "stop", report the issue
                         # For example, openai-gpt-4o gives "length" when max_token is very small
-                        raise CustomException(err_code=CodeEnum.OpenAIRequestError)
+                        raise CustomException(err_code=CodeEnum.OPEN_AI_REQUEST_ERROR)
                 else:
                     raise CustomException(
                         err_code=CodeConvert.sparkCode(code),
@@ -1487,12 +1447,11 @@ class BaseLLMNode(BaseNode):
             else:
                 span.add_error_event("result is null")
                 raise CustomException(
-                    err_code=CodeEnum.SparkRequestError,
+                    err_code=CodeEnum.SPARK_REQUEST_ERROR,
                     err_msg="LLM returned empty result",
                     cause_error="LLM returned empty result",
                 )
         except Exception as e:
-            traceback.print_exc()
             raise e
 
     async def put_llm_content(

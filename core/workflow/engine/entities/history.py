@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field
 from workflow.domain.entities.chat import HistoryItem
 from workflow.infra.providers.llm.iflytek_spark.schemas import SparkAiMessage
 
@@ -193,3 +192,15 @@ class ProcessArrayMethod:
             else:
                 others.append(item)
         return images, others
+
+
+class EnableChatHistoryV2(BaseModel):
+    """
+    Enable chat history v2.
+
+    :param is_enabled: Whether to enable chat history v2
+    :param rounds: Maximum number of conversation rounds
+    """
+
+    is_enabled: bool = Field(default=False, alias="isEnabled")
+    rounds: int = Field(default=1, gt=0, alias="rounds")

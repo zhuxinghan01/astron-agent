@@ -13,7 +13,6 @@ from typing import Any, AsyncIterator, Dict, Tuple
 
 import websockets
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
-
 from workflow.engine.nodes.entities.llm_response import LLMResponse
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -87,7 +86,7 @@ class SparkChatAi(ChatAI):
             spark_path = spark_mapping.get(self.model_name, None)
             if not spark_path:
                 raise CustomException(
-                    err_code=CodeEnum.SparkRequestError,
+                    err_code=CodeEnum.SPARK_REQUEST_ERROR,
                     err_msg="Request URL is empty",
                     cause_error="Request URL is empty",
                 )
@@ -183,7 +182,7 @@ class SparkChatAi(ChatAI):
                 yield msg_json
             except asyncio.TimeoutError as e:
                 raise CustomException(
-                    err_code=CodeEnum.SparkRequestError,
+                    err_code=CodeEnum.SPARK_REQUEST_ERROR,
                     err_msg=f"LLM response timeout ({timeout}s)",
                     cause_error=f"LLM response timeout ({timeout}s)",
                 ) from e
@@ -194,7 +193,7 @@ class SparkChatAi(ChatAI):
                 raise err
             except Exception as err:
                 raise CustomException(
-                    err_code=CodeEnum.SparkRequestError,
+                    err_code=CodeEnum.SPARK_REQUEST_ERROR,
                     err_msg=f"{str(err)}",
                     cause_error=f"{str(err)}",
                 ) from err
@@ -264,7 +263,7 @@ class SparkChatAi(ChatAI):
             span.add_error_event(f"WebSocket connection error: {conn_err}")
             span.record_exception(conn_err)
             raise CustomException(
-                err_code=CodeEnum.SparkRequestError,
+                err_code=CodeEnum.SPARK_REQUEST_ERROR,
                 err_msg="WebSocket connection closed abnormally",
                 cause_error=f"WebSocket connection closed abnormally, {conn_err}",
             ) from conn_err
@@ -272,7 +271,7 @@ class SparkChatAi(ChatAI):
             span.add_error_event(f"WebSocket exception: {err}")
             span.record_exception(err)
             raise CustomException(
-                err_code=CodeEnum.SparkRequestError,
+                err_code=CodeEnum.SPARK_REQUEST_ERROR,
                 err_msg="WebSocket connection exception",
                 cause_error=f"WebSocket connection exception, {err}",
             )

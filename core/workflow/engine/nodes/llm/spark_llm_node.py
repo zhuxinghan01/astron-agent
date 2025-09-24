@@ -93,7 +93,7 @@ class SparkLLMNode(BaseLLMNode):
             "patch_id": self.patch_id,
             "respFormat": self.respFormat,
             "enableChatHistory": self.enableChatHistory,
-            "enableChatHistoryV2": self.enableChatHistoryV2,
+            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
             "re_match_pattern": self.re_match_pattern,
             "systemTemplate": self.systemTemplate,
             "source": (
@@ -236,11 +236,11 @@ class SparkLLMNode(BaseLLMNode):
                 image_url = inputs.get("SYSTEM_IMAGE", "")
 
             # End-to-end history management
-            if self.enableChatHistoryV2 and self.enableChatHistoryV2.get("isEnabled"):
+            if self.enableChatHistoryV2.is_enabled:
                 # Disable old history mechanism
                 history_chat = None
                 # History parameters configuration: max_token, rounds
-                rounds = self.enableChatHistoryV2.get("rounds", 1)
+                rounds = self.enableChatHistoryV2.rounds
                 max_token = self.maxTokens
                 history_v2 = (
                     History(
@@ -341,7 +341,7 @@ class SparkLLMNode(BaseLLMNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.LLMNodeExecutionError,
+                    CodeEnum.LLM_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )

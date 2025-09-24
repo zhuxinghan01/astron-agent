@@ -189,8 +189,8 @@ class ChatCallBacks:
         resp = LLMGenerate.workflow_end(
             sid=self.sid,
             workflow_usage=self.generate_usage,
-            code=message.error.code if message.error else CodeEnum.Successes.code,
-            message=message.error.message if message.error else CodeEnum.Successes.msg,
+            code=message.error.code if message.error else CodeEnum.Success.code,
+            message=message.error.message if message.error else CodeEnum.Success.msg,
         )
         await self.stream_queue.put(resp)
         await self._interrupt_event_stream(resp)
@@ -376,7 +376,7 @@ class ChatCallBacks:
                 node_id,
                 alias_name,
                 CustomException(
-                    CodeEnum.NodeRunErr,
+                    CodeEnum.NODE_RUN_ERROR,
                     "Node run error, please check the node configuration",
                 ),
             )

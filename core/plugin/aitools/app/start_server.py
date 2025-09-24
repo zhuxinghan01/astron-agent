@@ -49,7 +49,7 @@ class AIToolsServer:
         """初始化服务套件"""
 
         os.environ["CONFIG_ENV_PATH"] = (
-            "./config.env"
+            "./plugin/aitools/config.env"
         )
         need_init_services = ["settings_service", "oss_service", "kafka_producer_service",  "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
         initialize_services(services=need_init_services)
