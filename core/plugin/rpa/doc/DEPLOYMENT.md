@@ -86,14 +86,14 @@ XIAOWU_RPA_TASK_QUERY_URL=https://your-rpa-api.com/query
 python main.py
 
 # Method 2: Using uvicorn (recommended for development)
-uvicorn api.app:xingchen_rap_server_app --reload --host 127.0.0.1 --port 19999
+uvicorn api.app:rpa_server_app --reload --host 127.0.0.1 --port 19999
 
 # Method 3: Using custom startup script
 python -c "
 import uvicorn
-from plugin.rpa.api.app import xingchen_rap_server_app
+from plugin.rpa.api.app import rpa_server_app
 uvicorn.run(
-    xingchen_rap_server_app,
+    rpa_server_app,
     host='127.0.0.1',
     port=19999,
     reload=True,
@@ -241,7 +241,7 @@ docker logs rpa-server
 pip install gunicorn
 
 # Start production server
-gunicorn api.app:xingchen_rap_server_app \
+gunicorn api.app:rpa_server_app \
   -w 4 \
   -k uvicorn.workers.UvicornWorker \
   --bind 0.0.0.0:19999 \
@@ -282,7 +282,7 @@ limit_request_field_size = 8190
 
 Start using configuration file:
 ```bash
-gunicorn -c gunicorn.conf.py api.app:xingchen_rap_server_app
+gunicorn -c gunicorn.conf.py api.app:rpa_server_app
 ```
 
 ### 3. Systemd Service Configuration
@@ -299,7 +299,7 @@ User=rpa
 Group=rpa
 WorkingDirectory=/opt/rpa-server
 Environment=PATH=/opt/rpa-server/venv/bin
-ExecStart=/opt/rpa-server/venv/bin/gunicorn -c gunicorn.conf.py api.app:xingchen_rap_server_app
+ExecStart=/opt/rpa-server/venv/bin/gunicorn -c gunicorn.conf.py api.app:rpa_server_app
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
 RestartSec=10
@@ -342,7 +342,7 @@ module.exports = {
   apps: [{
     name: 'rpa-server',
     script: '/opt/rpa-server/venv/bin/gunicorn',
-    args: '-c gunicorn.conf.py api.app:xingchen_rap_server_app',
+    args: '-c gunicorn.conf.py api.app:rpa_server_app',
     cwd: '/opt/rpa-server',
     instances: 1,
     autorestart: true,
@@ -675,7 +675,7 @@ export PYTHONOPTIMIZE=1
 export PYTHONDONTWRITEBYTECODE=1
 
 # Gunicorn tuning
-gunicorn api.app:xingchen_rap_server_app \
+gunicorn api.app:rpa_server_app \
   -w $(nproc) \
   --worker-tmp-dir /dev/shm \
   --worker-class uvicorn.workers.UvicornWorker \

@@ -1,14 +1,9 @@
 """Test RPA execution API routes."""
 
-import json
 from typing import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
-
-from plugin.rpa.api.schemas.execution_schema import RPAExecutionRequest, RPAExecutionResponse
 
 
 class TestExecutionAPI:
@@ -43,7 +38,7 @@ class TestExecutionAPI:
             "sid": "test_session",
         }
 
-        response = client.post(
+        _ = client.post(
             "/rpa/v1/exec",
             headers={"Authorization": "Bearer test_token_123"},
             json=request_data,
@@ -72,7 +67,7 @@ class TestExecutionAPI:
         request_data = {"project_id": "test_project_123"}
 
         # Test token with Bearer prefix
-        response = client.post(
+        _ = client.post(
             "/rpa/v1/exec",
             headers={"Authorization": "Bearer my_secret_token"},
             json=request_data,
@@ -95,7 +90,7 @@ class TestExecutionAPI:
         request_data = {"project_id": "test_project_123"}
 
         # Test token without Bearer prefix
-        response = client.post(
+        _ = client.post(
             "/rpa/v1/exec", headers={"Authorization": "plain_token"}, json=request_data
         )
 
@@ -132,7 +127,7 @@ class TestExecutionAPI:
 
         request_data = {"project_id": "test_project_123"}
 
-        response = client.post(
+        _ = client.post(
             "/rpa/v1/exec",
             headers={"Authorization": "Bearer test_token"},
             json=request_data,
@@ -163,7 +158,7 @@ class TestExecutionAPI:
         request_data = {"project_id": "test_project_123"}
 
         with patch("api.v1.execution.EventSourceResponse") as mock_sse:
-            response = client.post(
+            _ = client.post(
                 "/rpa/v1/exec",
                 headers={"Authorization": "Bearer test_token"},
                 json=request_data,
