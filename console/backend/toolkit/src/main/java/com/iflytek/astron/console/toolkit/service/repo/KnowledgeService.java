@@ -1274,7 +1274,7 @@ public class KnowledgeService {
         }
         if (!cbgKnowledgeDataList.isEmpty()) {
             for (CbgKnowledgeData cbgKnowledgeData : cbgKnowledgeDataList) {
-                resultMap.put(String.format("%.0f", cbgKnowledgeData.getDataIndex()), cbgKnowledgeData.getId());
+                resultMap.put(cbgKnowledgeData.getDataIndex(), cbgKnowledgeData.getId());
             }
         }
 
