@@ -13,7 +13,7 @@ import {
   generateRandomPosition,
 } from "@/components/workflow/utils/reactflowUtils";
 import { isJSON } from "@/utils";
-import { getCookie } from "@/utils/sparkutils";
+import { getCookie } from "@/utils";
 import useSpaceStore from "@/store/space-store";
 import { v4 as uuid } from "uuid";
 import { cloneDeep } from "lodash";
