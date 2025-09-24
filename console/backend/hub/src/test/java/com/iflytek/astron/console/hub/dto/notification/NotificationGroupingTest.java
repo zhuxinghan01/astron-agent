@@ -22,8 +22,7 @@ class NotificationGroupingTest {
 
         // 模拟 NotificationPageResponse 的分组逻辑
         Map<NotificationType, List<NotificationDto>> groupedByType = notifications.stream()
-                .collect(Collectors.groupingBy(notification ->
-                    notification.getType() != null ? notification.getType() : NotificationType.SYSTEM));
+                .collect(Collectors.groupingBy(notification -> notification.getType() != null ? notification.getType() : NotificationType.SYSTEM));
 
         // 验证分组结果
         assertNotNull(groupedByType);

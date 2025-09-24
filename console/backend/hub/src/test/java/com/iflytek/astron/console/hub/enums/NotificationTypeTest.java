@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * NotificationType 枚举单元测试
- * 测试枚举的基本功能和代码映射
+ * NotificationType 枚举单元测试 测试枚举的基本功能和代码映射
  */
 class NotificationTypeTest {
 

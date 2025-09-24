@@ -41,7 +41,6 @@ public class NotificationPageResponse {
         this.totalPages = pageSize > 0 ? (int) Math.ceil((double) totalCount / pageSize) : 0;
         this.unreadCount = unreadCount;
         this.notificationsByType = notifications.stream()
-                .collect(Collectors.groupingBy(notification ->
-                    notification.getType() != null ? notification.getType() : NotificationType.SYSTEM));
+                .collect(Collectors.groupingBy(notification -> notification.getType() != null ? notification.getType() : NotificationType.SYSTEM));
     }
 }

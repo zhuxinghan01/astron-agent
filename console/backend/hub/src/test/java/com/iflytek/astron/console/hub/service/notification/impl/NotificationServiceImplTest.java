@@ -21,8 +21,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * NotificationServiceImpl 单元测试
- * 测试通知服务的核心业务逻辑
+ * NotificationServiceImpl 单元测试 测试通知服务的核心业务逻辑
  */
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {

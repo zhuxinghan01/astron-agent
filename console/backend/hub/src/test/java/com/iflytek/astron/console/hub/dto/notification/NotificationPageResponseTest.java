@@ -12,8 +12,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * NotificationPageResponse 单元测试
- * 测试分页响应和按类型分组功能
+ * NotificationPageResponse 单元测试 测试分页响应和按类型分组功能
  */
 class NotificationPageResponseTest {
 

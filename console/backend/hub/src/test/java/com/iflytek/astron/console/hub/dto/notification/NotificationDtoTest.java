@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * NotificationDto 单元测试
- * 测试枚举类型映射和基本功能
+ * NotificationDto 单元测试 测试枚举类型映射和基本功能
  */
 class NotificationDtoTest {
 

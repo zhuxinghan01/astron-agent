@@ -160,7 +160,7 @@ public class BotMarketDataServiceImpl implements BotMarketDataService {
                             UserLangChainInfo::getBotId,
                             chain -> {
                                 // Process extraInputs
-                                if ( chain.getExtraInputs() != null) {
+                                if (chain.getExtraInputs() != null) {
                                     JSONObject extraInputs = JSONObject.parseObject(chain.getExtraInputs());
                                     int size = extraInputs.size();
                                     if (extraInputs.containsValue("image")) {

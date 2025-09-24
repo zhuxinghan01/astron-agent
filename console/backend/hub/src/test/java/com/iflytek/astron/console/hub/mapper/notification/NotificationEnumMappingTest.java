@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 专门测试 NotificationType 枚举映射兼容性的单元测试
- * 验证 MyBatis 枚举映射的正确性，无需实际数据库连接
+ * 专门测试 NotificationType 枚举映射兼容性的单元测试 验证 MyBatis 枚举映射的正确性，无需实际数据库连接
  */
 class NotificationEnumMappingTest {
 
@@ -23,7 +22,7 @@ class NotificationEnumMappingTest {
     void testEnumNameAndCodeConsistency() {
         for (NotificationType type : NotificationType.values()) {
             assertEquals(type.name(), type.getCode(),
-                String.format("枚举 %s 的 name() 和 getCode() 必须一致，以确保 MyBatis 正确映射", type.name()));
+                    String.format("枚举 %s 的 name() 和 getCode() 必须一致，以确保 MyBatis 正确映射", type.name()));
         }
     }
 
@@ -64,7 +63,7 @@ class NotificationEnumMappingTest {
     void testFromCodeDatabaseCompatibility() {
         // 模拟从数据库查询到的字符串值
         String[] potentialDbValues = {"PERSONAL", "BROADCAST", "SYSTEM", "PROMOTION",
-                                     "personal", "broadcast", "invalid", null, ""};
+                "personal", "broadcast", "invalid", null, ""};
 
         for (String dbValue : potentialDbValues) {
             NotificationType result = NotificationType.fromCode(dbValue);
@@ -93,14 +92,13 @@ class NotificationEnumMappingTest {
 
         for (NotificationType type : NotificationType.values()) {
             assertTrue(groupedByType.containsKey(type),
-                "分组结果应该包含" + type.name() + "类型");
+                    "分组结果应该包含" + type.name() + "类型");
 
             List<NotificationDto> typeNotifications = groupedByType.get(type);
             assertFalse(typeNotifications.isEmpty());
 
             // 验证该组中的所有通知都是相同类型
-            typeNotifications.forEach(dto ->
-                assertEquals(type, dto.getType(), "分组中的通知类型应该一致"));
+            typeNotifications.forEach(dto -> assertEquals(type, dto.getType(), "分组中的通知类型应该一致"));
         }
     }
 
@@ -118,8 +116,7 @@ class NotificationEnumMappingTest {
 
         // 测试分组时对 null 类型的处理（使用与 NotificationPageResponse 相同的逻辑）
         Map<NotificationType, List<NotificationDto>> groupedByType = notifications.stream()
-                .collect(Collectors.groupingBy(dto ->
-                    dto.getType() != null ? dto.getType() : NotificationType.SYSTEM));
+                .collect(Collectors.groupingBy(dto -> dto.getType() != null ? dto.getType() : NotificationType.SYSTEM));
 
         // 验证 null 类型被映射为 SYSTEM 类型
         assertTrue(groupedByType.containsKey(NotificationType.SYSTEM), "应该包含 SYSTEM 类型的分组");
