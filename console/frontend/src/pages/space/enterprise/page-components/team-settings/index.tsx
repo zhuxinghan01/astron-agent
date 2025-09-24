@@ -5,7 +5,7 @@ import LeaveTeamModal from './components/leave-team-modal';
 import SpaceButton from '@/components/button-group/space-button';
 import type { ButtonConfig } from '@/components/button-group/types';
 import { PermissionFailureBehavior } from '@/components/button-group';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import useEnterpriseStore from '@/store/enterprise-store';
 import styles from './index.module.scss';
 

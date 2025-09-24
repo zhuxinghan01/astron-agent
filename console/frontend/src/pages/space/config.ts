@@ -3,7 +3,7 @@ import {
   ModuleType,
   OperationType,
   RoleType,
-} from '@/permissions/permission-type';
+} from '@/types/permission';
 
 // 获取国际化文案的工具函数
 export const getI18nText = (locale: string, key: string) => {

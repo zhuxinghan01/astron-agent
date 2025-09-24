@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import useUserStore from '@/store/user-store';
-import { RoleType } from '@/permissions/permission-type';
+import { RoleType } from '@/types/permission';
 
 export const useUserStoreHook = () => {
   const { user } = useUserStore();

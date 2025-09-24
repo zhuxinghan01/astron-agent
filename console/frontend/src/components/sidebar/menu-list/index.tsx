@@ -10,7 +10,7 @@ import useChat from '@/hooks/use-chat';
 import { useEnterprise } from '@/hooks/use-enterprise';
 import useSpaceStore from '@/store/space-store';
 import { useTranslation } from 'react-i18next';
-import { getCookie } from '@/utils/sparkutils';
+import { getCookie } from '@/utils';
 import classNames from 'classnames';
 import { PersonSpace } from '@/components/space/person-space';
 import SpaceModal from '@/components/space/space-modal';

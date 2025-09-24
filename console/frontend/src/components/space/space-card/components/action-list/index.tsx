@@ -6,7 +6,7 @@ import {
   LockOutlined,
 } from '@ant-design/icons';
 import styles from './index.module.scss';
-import { SpaceType } from '@/permissions/permission-type';
+import { SpaceType } from '@/types/permission';
 import { useUserStoreHook } from '@/hooks/use-user-store';
 
 // 按钮配置接口
