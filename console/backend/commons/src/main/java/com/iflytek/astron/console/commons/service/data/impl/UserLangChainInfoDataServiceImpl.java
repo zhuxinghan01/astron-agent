@@ -28,21 +28,16 @@ public class UserLangChainInfoDataServiceImpl implements UserLangChainDataServic
     private final UserLangChainInfoMapper userLangChainInfoMapper;
 
     @Override
-    public List<JSONObject> findByBotIdSet(Set<Integer> idSet) {
+    public List<UserLangChainInfo> findByBotIdSet(Set<Integer> idSet) {
         // Check if input parameters are null or invalid
         if (idSet == null || idSet.isEmpty()) {
             return Collections.emptyList();
         }
 
         // Execute database query to get UserLangChainInfo list
-        List<UserLangChainInfo> records = userLangChainInfoMapper.selectList(
+        return userLangChainInfoMapper.selectList(
                 Wrappers.<UserLangChainInfo>lambdaQuery()
                         .in(UserLangChainInfo::getBotId, idSet));
-
-        // Transform using Stream API
-        return records.stream()
-                .map(record -> JSON.parseObject(JSON.toJSONString(record)))
-                .collect(Collectors.toList());
     }
 
     @Override

@@ -13,7 +13,7 @@ import java.util.Set;
 
 public interface UserLangChainDataService {
 
-    List<JSONObject> findByBotIdSet(Set<Integer> idSet);
+    List<UserLangChainInfo> findByBotIdSet(Set<Integer> idSet);
 
     UserLangChainInfo insertUserLangChainInfo(UserLangChainInfo userLangChainInfo);
 
