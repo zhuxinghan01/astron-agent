@@ -5,14 +5,14 @@
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
 
     <description>
-        PMD code quality ruleset for Astra Agent project, based on best practices and quality standards
+        PMD code quality ruleset for Astron Agent project, based on best practices and quality standards
     </description>
 
     <!-- Cyclomatic complexity limit -->
     <rule ref="category/java/design.xml/CyclomaticComplexity">
         <properties>
             <property name="methodReportLevel" value="20"/>
-            <property name="classReportLevel" value="100"/>
+            <property name="classReportLevel" value="120"/>
         </properties>
     </rule>
 

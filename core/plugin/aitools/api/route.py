@@ -36,9 +36,7 @@ from plugin.aitools.api.schema.types import (
     SuccessDataResponse,
 )
 from plugin.aitools.common.logger import log
-from plugin.aitools.const.polaris_keys.common_keys import (
-   OFFICIAL_TOOL_KEY
-)
+
 from plugin.aitools.const.const import IMAGE_GENERATE_MAX_PROMPT_LEN
 from plugin.aitools.const.err_code.code import CodeEnum
 from plugin.aitools.const.err_code.code_convert import CodeConvert
@@ -89,7 +87,6 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
-    tool_type = os.getenv(OFFICIAL_TOOL_KEY)
     span = Span(
         app_id=app_id,
         uid=uid,
@@ -183,7 +180,6 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
     uid = str(uuid.uuid1())
     caller = ""
     tool_id = ""
-    tool_type = os.getenv(OFFICIAL_TOOL_KEY)
     span = Span(
         app_id=app_id,
         uid=uid,
