@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * 智能体与微信公众号bind服务接口
  *
- * @author stellar
+ * @author Omuigix
  */
 public interface BotOffiaccountService {
 
@@ -16,7 +16,7 @@ public interface BotOffiaccountService {
      *
      * @param botId botID
      * @param appid 微信official accountAppID
-     * @param uid   userID
+     * @param uid userID
      */
     void bind(Integer botId, String appid, String uid);
 

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Bot WeChat Official Account Binding Information
  *
- * @author stellar
+ * @author Omuigix
  */
 @Data
 @Builder

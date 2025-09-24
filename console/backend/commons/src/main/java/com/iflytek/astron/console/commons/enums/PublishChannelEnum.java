@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * Publishing Channel Enumeration
  *
- * @author stellar
+ * @author Omuigix
  */
 @Getter
 public enum PublishChannelEnum {

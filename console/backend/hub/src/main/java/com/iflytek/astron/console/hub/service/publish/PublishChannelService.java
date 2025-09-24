@@ -4,16 +4,16 @@ import java.util.List;
 
 /**
  * Publish Channel Service Interface
- * 
+ *
  * Responsible for calculating and managing bot publish channel status
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 public interface PublishChannelService {
 
     /**
-     * Parse bot publish channels list from database
-     * Directly retrieves from publish_channels field in chat_bot_market table
+     * Parse bot publish channels list from database Directly retrieves from publish_channels field in
+     * chat_bot_market table
      *
      * @param publishChannels Comma-separated publish channels string from database
      * @return List of publish channels (MARKET, API, WECHAT, MCP)

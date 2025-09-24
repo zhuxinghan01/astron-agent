@@ -1,6 +1,5 @@
 package com.iflytek.astron.console.hub.event;
 
-import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Bot publishing related event listener
- * 
+ *
  * Handles various events in the publishing management module
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Component
@@ -23,19 +22,19 @@ public class BotPublishEventListener {
     private final BotPublishService botPublishService;
 
     /**
-     * Handle bot publish status changed event
-     * Used for sending notifications, updating cache, logging, etc.
+     * Handle bot publish status changed event Used for sending notifications, updating cache, logging,
+     * etc.
      */
     @Async
     @EventListener
     public void handleBotPublishStatusChanged(BotPublishStatusChangedEvent event) {
-        log.info("Handle bot publish status change: botId={}, action={}, {} -> {}", 
+        log.info("Handle bot publish status change: botId={}, action={}, {} -> {}",
                 event.getBotId(), event.getAction(), event.getOldStatus(), event.getNewStatus());
 
         try {
             // 1. Record publish status change log
             if (event.isFirstPublish()) {
-                log.info("Bot first publish: botId={}, uid={}, channels={}", 
+                log.info("Bot first publish: botId={}, uid={}, channels={}",
                         event.getBotId(), event.getUid(), event.getPublishChannels());
             } else if (event.isOnline()) {
                 log.info("Bot republished: botId={}, uid={}", event.getBotId(), event.getUid());

@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * Publish Status Update Request DTO
  *
- * @author xinxiong2
+ * @author Omuigix
  * @since 2024-12-16
  */
 @Data

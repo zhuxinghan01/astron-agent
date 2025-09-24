@@ -12,15 +12,15 @@ import java.util.List;
 
 /**
  * Workflow Version Information Converter
- * 
+ *
  * Uses MapStruct for efficient object mapping
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Mapper(
-                componentModel = "spring",
-                unmappedTargetPolicy = ReportingPolicy.WARN,
-                nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.WARN,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface WorkflowVersionConverter {
 
     /**

@@ -11,19 +11,17 @@ import java.util.List;
 /**
  * Bot Publish Information Converter
  *
- * Uses MapStruct for high-quality object mapping:
- * 1. Compile-time code generation with excellent performance
- * 2. Type-safe with compile-time checking
- * 3. Customizable mapping rules
- * 4. Easy to test and debug
+ * Uses MapStruct for high-quality object mapping: 1. Compile-time code generation with excellent
+ * performance 2. Type-safe with compile-time checking 3. Customizable mapping rules 4. Easy to test
+ * and debug
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Mapper(
-                componentModel = "spring",
-                unmappedTargetPolicy = ReportingPolicy.WARN,
-                nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-                imports = {ArrayList.class})
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.WARN,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        imports = {ArrayList.class})
 public interface BotPublishConverter {
 
     /**

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * Bot WeChat Official Account Binding Mapper
  *
- * @author stellar
+ * @author Omuigix
  */
 @Mapper
 public interface BotOffiaccountMapper extends BaseMapper<BotOffiaccount> {

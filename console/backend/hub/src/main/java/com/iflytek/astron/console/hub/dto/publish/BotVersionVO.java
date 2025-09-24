@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * Workflow Version Information VO
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(description = "Workflow version information")

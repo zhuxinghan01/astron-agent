@@ -35,14 +35,12 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Bot Publishing Management Controller
  *
- * Provides comprehensive bot publishing management capabilities including:
- * - Bot list querying with filtering and pagination
- * - Publishing status management (publish/unpublish)
- * - Multi-channel publishing (Market, API, WeChat, MCP)
- * - Publishing analytics and statistics
- * - Version management for workflow bots
+ * Provides comprehensive bot publishing management capabilities including: - Bot list querying with
+ * filtering and pagination - Publishing status management (publish/unpublish) - Multi-channel
+ * publishing (Market, API, WeChat, MCP) - Publishing analytics and statistics - Version management
+ * for workflow bots
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Tag(name = "Bot Publishing Management", description = "Comprehensive bot publishing management and analytics APIs")
@@ -60,9 +58,8 @@ public class BotPublishController {
      * Retrieve paginated bot list with advanced filtering
      */
     @Operation(
-        summary = "Get bot list", 
-        description = "Retrieve paginated bot list with support for filtering by status, type, and search terms"
-    )
+            summary = "Get bot list",
+            description = "Retrieve paginated bot list with support for filtering by status, type, and search terms")
     @RateLimit(limit = 30, window = 60, dimension = "USER")
     @GetMapping("/bots")
     public ApiResult<PageResponse<BotPublishInfoDto>> getBotList(
@@ -82,9 +79,8 @@ public class BotPublishController {
      * Get detailed information for a specific bot
      */
     @Operation(
-        summary = "Get bot details", 
-        description = "Retrieve comprehensive bot information including publishing status, channels, and metadata"
-    )
+            summary = "Get bot details",
+            description = "Retrieve comprehensive bot information including publishing status, channels, and metadata")
     @RateLimit(limit = 100, window = 60, dimension = "USER")
     @GetMapping("/bots/{botId}")
     public ApiResult<BotDetailResponseDto> getBotDetail(
@@ -107,16 +103,15 @@ public class BotPublishController {
      * Update bot publishing status (publish to market or unpublish)
      */
     @Operation(
-        summary = "Update bot publishing status", 
-        description = "Publish bot to marketplace or remove from marketplace with status management"
-    )
+            summary = "Update bot publishing status",
+            description = "Publish bot to marketplace or remove from marketplace with status management")
     @RateLimit(limit = 10, window = 60, dimension = "USER")
     @PostMapping("/bots/{botId}/status")
     public ApiResult<Void> updatePublishStatus(
             @Parameter(description = "Unique bot identifier", required = true)
             @PathVariable Integer botId,
             @Valid @RequestBody PublishStatusUpdateDto updateDto) {
-        
+
         String currentUid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
 
@@ -133,9 +128,8 @@ public class BotPublishController {
      * Get comprehensive usage statistics for a bot
      */
     @Operation(
-        summary = "Get bot summary statistics", 
-        description = "Retrieve overall bot usage metrics including total conversations, users, and tokens"
-    )
+            summary = "Get bot summary statistics",
+            description = "Retrieve overall bot usage metrics including total conversations, users, and tokens")
     @RateLimit(limit = 20, window = 60, dimension = "USER")
     @GetMapping("/bots/{botId}/summary")
     public ApiResult<BotSummaryStatsVO> getBotSummaryStats(
@@ -159,9 +153,8 @@ public class BotPublishController {
      * Get time-series usage statistics for a bot
      */
     @Operation(
-        summary = "Get bot time series statistics", 
-        description = "Retrieve daily usage metrics over a specified time period for trend analysis"
-    )
+            summary = "Get bot time series statistics",
+            description = "Retrieve daily usage metrics over a specified time period for trend analysis")
     @RateLimit(limit = 20, window = 60, dimension = "USER")
     @GetMapping("/bots/{botId}/timeseries")
     public ApiResult<BotTimeSeriesResponseDto> getBotTimeSeriesStats(
@@ -190,9 +183,8 @@ public class BotPublishController {
      * Get version history for workflow-based bots
      */
     @Operation(
-        summary = "Get bot version history", 
-        description = "Retrieve paginated list of workflow bot versions with metadata and deployment history"
-    )
+            summary = "Get bot version history",
+            description = "Retrieve paginated list of workflow bot versions with metadata and deployment history")
     @RateLimit(limit = 50, window = 60, dimension = "USER")
     @GetMapping("/bots/{botId}/versions")
     public ApiResult<PageResponse<BotVersionVO>> getBotVersions(
@@ -225,23 +217,22 @@ public class BotPublishController {
      * Generate WeChat Official Account authorization URL
      */
     @Operation(
-        summary = "Get WeChat authorization URL", 
-        description = "Generate authorization URL for binding bot to WeChat Official Account for publishing"
-    )
+            summary = "Get WeChat authorization URL",
+            description = "Generate authorization URL for binding bot to WeChat Official Account for publishing")
     @RateLimit(limit = 10, window = 60, dimension = "USER")
     @PostMapping("/wechat/auth-url")
     public ApiResult<WechatAuthUrlResponseDto> getWechatAuthUrl(
             @Valid @RequestBody WechatAuthUrlRequestDto request) {
-        
+
         String uid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
-        
-        log.info("Generating WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}", 
+
+        log.info("Generating WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}",
                 request.getBotId(), request.getAppid(), request.getRedirectUrl(), uid, spaceId);
-        
+
         WechatAuthUrlResponseDto result = botPublishService.getWechatAuthUrl(
                 request.getBotId(), request.getAppid(), request.getRedirectUrl(), uid, spaceId);
-        
+
         log.info("WeChat authorization URL generated successfully: botId={}", request.getBotId());
         return ApiResult.success(result);
     }
@@ -252,9 +243,8 @@ public class BotPublishController {
      * Get MCP service configuration for a bot
      */
     @Operation(
-        summary = "Get MCP service details",
-        description = "Retrieve MCP service configuration including server details, parameters, and publishing status"
-    )
+            summary = "Get MCP service details",
+            description = "Retrieve MCP service configuration including server details, parameters, and publishing status")
     @RateLimit(limit = 50, window = 60, dimension = "USER")
     @GetMapping("/mcp/{botId}")
     public ApiResult<McpContentResponseDto> getMcpContent(
@@ -276,9 +266,8 @@ public class BotPublishController {
      * Publish bot as MCP service
      */
     @Operation(
-        summary = "Publish bot to MCP",
-        description = "Publish workflow bot as MCP (Model Context Protocol) service with custom server configuration"
-    )
+            summary = "Publish bot to MCP",
+            description = "Publish workflow bot as MCP (Model Context Protocol) service with custom server configuration")
     @RateLimit(limit = 10, window = 60, dimension = "USER")
     @PostMapping("/mcp/publish")
     public ApiResult<Void> publishMcp(@Valid @RequestBody McpPublishRequestDto request) {
@@ -291,7 +280,7 @@ public class BotPublishController {
 
         mcpService.publishMcp(request, currentUid, spaceId);
 
-        log.info("Bot published to MCP successfully: botId={}, serverName={}", 
+        log.info("Bot published to MCP successfully: botId={}, serverName={}",
                 request.getBotId(), request.getServerName());
         return ApiResult.success();
     }
@@ -300,9 +289,8 @@ public class BotPublishController {
      * Get workflow input parameters for MCP publishing
      */
     @Operation(
-        summary = "Get bot input parameters",
-        description = "Retrieve dynamic input parameter definitions for workflow bot, used for MCP service configuration"
-    )
+            summary = "Get bot input parameters",
+            description = "Retrieve dynamic input parameter definitions for workflow bot, used for MCP service configuration")
     @RateLimit(limit = 50, window = 60, dimension = "USER")
     @GetMapping("/mcp/{botId}/inputs")
     public ApiResult<WorkflowInputsResponseDto> getInputsType(

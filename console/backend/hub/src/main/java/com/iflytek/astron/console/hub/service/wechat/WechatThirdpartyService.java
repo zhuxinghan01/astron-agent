@@ -5,7 +5,7 @@ import com.iflytek.astron.console.hub.dto.wechat.WechatAuthCallbackDto;
 /**
  * WeChat第三方平台服务接口
  *
- * @author stellar
+ * @author Omuigix
  */
 public interface WechatThirdpartyService {
 
@@ -23,7 +23,7 @@ public interface WechatThirdpartyService {
      * 构建微信authorization链接
      *
      * @param preAuthCode 预authorization码
-     * @param appid       微信official accountAppID
+     * @param appid 微信official accountAppID
      * @param redirectUrl callback地址
      * @return authorization链接
      */

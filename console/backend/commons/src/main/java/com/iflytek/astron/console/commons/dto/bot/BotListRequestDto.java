@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * 智能体列表查询请求DTO 对应老代码中的 BotMarketForm
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Builder

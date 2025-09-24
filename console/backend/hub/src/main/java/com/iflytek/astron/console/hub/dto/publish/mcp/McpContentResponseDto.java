@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 /**
  * MCP Content Response DTO
- * 
+ *
  * Corresponds to the return result of original interface: getMcpContent
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(name = "McpContentResponseDto", description = "MCP content response")

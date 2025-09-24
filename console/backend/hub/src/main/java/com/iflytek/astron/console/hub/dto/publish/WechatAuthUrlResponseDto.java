@@ -5,10 +5,10 @@ import lombok.Data;
 
 /**
  * WeChat Authorization URL Response DTO
- * 
+ *
  * Corresponds to the return result of original interface: getAuthUrl
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(name = "WechatAuthUrlResponseDto", description = "WeChat authorization URL response")

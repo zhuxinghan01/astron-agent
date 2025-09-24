@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * 通用分页响应DTO 对应老代码中的分页返回结构
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @NoArgsConstructor

@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 工作流输入类型响应DTO 对应原接口：getInputsType的返回结果
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(name = "WorkflowInputsResponseDto", description = "工作流输入类型响应")

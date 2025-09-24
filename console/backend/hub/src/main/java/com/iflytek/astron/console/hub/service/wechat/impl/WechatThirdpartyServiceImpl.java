@@ -20,15 +20,10 @@ import java.time.Duration;
 
 /**
  * WeChat第三方平台服务实现
- * 
- * 优化点：
- * 1. 使用Redisson替代RedisUtil
- * 2. 统一exception处理
- * 3. 优化缓存键management
- * 4. 增强日志记录
- * 5. 提取常量配置
  *
- * @author stellar
+ * 优化点： 1. 使用Redisson替代RedisUtil 2. 统一exception处理 3. 优化缓存键management 4. 增强日志记录 5. 提取常量配置
+ *
+ * @author Omuigix
  */
 @Slf4j
 @Service
@@ -73,10 +68,10 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
         } else {
             // get第三方平台访问令牌
             String componentAccessToken = getComponentAccessToken();
-            
+
             // 调用WeChatAPIget预authorization码
             preAuthCode = requestPreAuthCodeFromWechat(componentAccessToken);
-            
+
             // 缓存预authorization码（短时间缓存，防止重复request）
             bucket.set(preAuthCode, Duration.ofSeconds(5));
             log.info("获取新的预授权码: botId={}, appid={}", botId, appid);
@@ -144,7 +139,7 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
     @Transactional(rollbackFor = Exception.class)
     public void handleUpdateAuthorizedCallback(WechatAuthCallbackDto callbackData) {
         log.info("处理微信授权更新回调: authorizerAppid={}", callbackData.getAuthorizerAppid());
-        
+
         // authorizationupdate的处理逻辑与authorizationsuccess类似
         handleAuthorizedCallback(callbackData);
     }
@@ -172,14 +167,14 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
 
         RBucket<String> bucket = redissonClient.getBucket(COMPONENT_VERIFY_TICKET_KEY);
         bucket.set(componentVerifyTicket, VERIFY_TICKET_EXPIRE);
-        
+
         log.info("验证票据刷新成功");
     }
 
     @Override
     public String getComponentAccessToken() {
         RBucket<String> bucket = redissonClient.getBucket(COMPONENT_ACCESS_TOKEN_KEY);
-        
+
         if (bucket.isExists()) {
             return bucket.get();
         }
@@ -187,17 +182,17 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
         // getvalidation票据
         RBucket<String> ticketBucket = redissonClient.getBucket(COMPONENT_VERIFY_TICKET_KEY);
         String componentVerifyTicket = ticketBucket.get();
-        
+
         if (!StringUtils.hasText(componentVerifyTicket)) {
             throw new BusinessException(ResponseEnum.WECHAT_VERIFY_TICKET_MISSING);
         }
 
         // 调用WeChatAPIget访问令牌
         String accessToken = requestComponentAccessTokenFromWechat(componentVerifyTicket);
-        
+
         // 缓存访问令牌
         bucket.set(accessToken, ACCESS_TOKEN_EXPIRE);
-        
+
         log.info("第三方平台访问令牌获取成功");
         return accessToken;
     }
@@ -208,11 +203,11 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
     private void setPreBindStatus(String appid, Integer botId, String uid) {
         String preBindKey = PRE_BIND_KEY + appid;
         RBucket<String> bucket = redissonClient.getBucket(preBindKey);
-        
+
         // 存储 botId:uid 格式的信息
         String preBindInfo = botId + ":" + uid;
         bucket.set(preBindInfo, PRE_BIND_EXPIRE);
-        
+
         log.debug("设置预绑定状态: appid={}, botId={}, uid={}", appid, botId, uid);
     }
 
@@ -222,7 +217,7 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
     private Integer getPreBindBotId(String appid) {
         String preBindKey = PRE_BIND_KEY + appid;
         RBucket<String> bucket = redissonClient.getBucket(preBindKey);
-        
+
         if (bucket.isExists()) {
             String preBindInfo = bucket.get();
             try {
@@ -235,7 +230,7 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
                 log.warn("预绑定信息格式错误: appid={}, preBindInfo={}", appid, preBindInfo);
             }
         }
-        
+
         return null;
     }
 
@@ -245,7 +240,7 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
     private String getUidFromPreBindInfo(String appid, Integer botId) {
         String preBindKey = PRE_BIND_KEY + appid;
         RBucket<String> bucket = redissonClient.getBucket(preBindKey);
-        
+
         if (bucket.isExists()) {
             String preBindInfo = bucket.get();
             try {
@@ -258,7 +253,7 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
                 log.warn("解析预绑定用户ID失败: appid={}, preBindInfo={}", appid, preBindInfo, e);
             }
         }
-        
+
         log.warn("未找到预绑定用户ID: appid={}, botId={}", appid, botId);
         return null;
     }
@@ -270,11 +265,11 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
         // 清理预bindstatus
         String preBindKey = PRE_BIND_KEY + appid;
         redissonClient.getBucket(preBindKey).delete();
-        
+
         // 清理预authorization码
         String preAuthCodeKey = PRE_AUTH_CODE_KEY + botId;
         redissonClient.getBucket(preAuthCodeKey).delete();
-        
+
         log.debug("清理预绑定缓存: appid={}, botId={}", appid, botId);
     }
 
@@ -283,18 +278,18 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
      */
     private String requestPreAuthCodeFromWechat(String componentAccessToken) {
         String url = "https://api.weixin.qq.com/cgi-bin/component/api_create_preauthcode?component_access_token=" + componentAccessToken;
-        
+
         JSONObject requestBody = new JSONObject();
         requestBody.put("component_appid", componentAppid);
-        
+
         try {
             log.info("调用微信API获取预授权码: url={}", url);
             String response = OkHttpUtil.post(url, requestBody.toJSONString());
             log.info("微信API返回预授权码响应: {}", response);
-            
+
             JSONObject responseJson = JSONObject.parseObject(response);
             String preAuthCode = responseJson.getString("pre_auth_code");
-            
+
             if (StringUtils.hasText(preAuthCode)) {
                 return preAuthCode;
             } else {
@@ -312,20 +307,20 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
      */
     private String requestComponentAccessTokenFromWechat(String componentVerifyTicket) {
         String url = "https://api.weixin.qq.com/cgi-bin/component/api_component_token";
-        
+
         JSONObject requestBody = new JSONObject();
         requestBody.put("component_appid", componentAppid);
         requestBody.put("component_appsecret", componentSecret);
         requestBody.put("component_verify_ticket", componentVerifyTicket);
-        
+
         try {
             log.info("调用微信API获取第三方平台访问令牌: componentVerifyTicket={}", componentVerifyTicket);
             String response = OkHttpUtil.post(url, requestBody.toJSONString());
             log.info("微信API返回访问令牌响应: {}", response);
-            
+
             JSONObject responseJson = JSONObject.parseObject(response);
             String componentAccessToken = responseJson.getString("component_access_token");
-            
+
             if (StringUtils.hasText(componentAccessToken)) {
                 return componentAccessToken;
             } else {
@@ -344,42 +339,42 @@ public class WechatThirdpartyServiceImpl implements WechatThirdpartyService {
     private void initAuthorizationToken(String authorizerAppid, String authorizationCode) {
         String componentAccessToken = getComponentAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/component/api_query_auth?component_access_token=" + componentAccessToken;
-        
+
         JSONObject requestBody = new JSONObject();
         requestBody.put("component_appid", componentAppid);
         requestBody.put("authorization_code", authorizationCode);
-        
+
         try {
             log.info("初始化授权令牌: authorizerAppid={}, authorizationCode={}", authorizerAppid, authorizationCode);
             String response = OkHttpUtil.post(url, requestBody.toJSONString());
             log.info("微信API返回授权信息: {}", response);
-            
+
             JSONObject responseJson = JSONObject.parseObject(response);
             if (responseJson.containsKey("errcode")) {
                 log.error("初始化授权令牌失败: {}", response);
                 throw new BusinessException(ResponseEnum.WECHAT_AUTH_FAILED);
             }
-            
+
             JSONObject authorizationInfo = responseJson.getJSONObject("authorization_info");
             if (authorizationInfo == null) {
                 log.error("授权信息为空: {}", response);
                 throw new BusinessException(ResponseEnum.WECHAT_AUTH_FAILED);
             }
-            
+
             String authorizationAccessToken = authorizationInfo.getString("authorizer_access_token");
             String authorizationRefreshToken = authorizationInfo.getString("authorizer_refresh_token");
-            
+
             if (StringUtils.hasText(authorizationAccessToken) && StringUtils.hasText(authorizationRefreshToken)) {
                 String accessTokenKey = AUTHORIZATION_ACCESS_TOKEN_KEY + authorizerAppid;
                 String refreshTokenKey = AUTHORIZATION_REFRESH_TOKEN_KEY + authorizerAppid;
-                
+
                 redissonClient.getBucket(accessTokenKey).set(authorizationAccessToken, ACCESS_TOKEN_EXPIRE);
                 redissonClient.getBucket(refreshTokenKey).set(authorizationRefreshToken);
-                
+
                 log.info("授权令牌初始化成功: authorizerAppid={}", authorizerAppid);
             } else {
-                log.error("授权令牌信息不完整: accessToken={}, refreshToken={}", 
-                         authorizationAccessToken, authorizationRefreshToken);
+                log.error("授权令牌信息不完整: accessToken={}, refreshToken={}",
+                        authorizationAccessToken, authorizationRefreshToken);
                 throw new BusinessException(ResponseEnum.WECHAT_AUTH_FAILED);
             }
         } catch (Exception e) {

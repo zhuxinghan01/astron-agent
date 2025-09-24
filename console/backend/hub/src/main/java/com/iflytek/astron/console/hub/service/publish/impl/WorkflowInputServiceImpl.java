@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * Workflow Input Service Implementation
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Service
@@ -44,10 +44,10 @@ public class WorkflowInputServiceImpl implements WorkflowInputService {
 
         // 2. Query workflow configuration information
         UserLangChainInfo chainInfo = userLangChainInfoMapper.selectOne(
-                        new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserLangChainInfo>()
-                                        .eq("bot_id", botId)
-                                        .orderByDesc("create_time")
-                                        .last("LIMIT 1"));
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserLangChainInfo>()
+                        .eq("bot_id", botId)
+                        .orderByDesc("create_time")
+                        .last("LIMIT 1"));
         if (chainInfo == null) {
             log.warn("Bot workflow configuration not found: botId={}", botId);
             throw new BusinessException(ResponseEnum.BOT_CHAIN_SUBMIT_ERROR);

@@ -14,14 +14,11 @@ import java.util.Map;
 
 /**
  * WeChat Message Parser Utility
- * 
- * Optimization features:
- * 1. Unified exception handling
- * 2. Extract common parsing methods
- * 3. Enhanced type safety
- * 4. Simplified API design
  *
- * @author xinxiong2
+ * Optimization features: 1. Unified exception handling 2. Extract common parsing methods 3.
+ * Enhanced type safety 4. Simplified API design
+ *
+ * @author Omuigix
  */
 @Slf4j
 public class WechatMessageParser {
@@ -31,7 +28,7 @@ public class WechatMessageParser {
      */
     public static WechatAuthCallbackDto parseAuthorizedMessage(String xmlContent) {
         Map<String, String> dataMap = parseXmlToMap(xmlContent);
-        
+
         return WechatAuthCallbackDto.builder()
                 .appId(dataMap.get("AppId"))
                 .infoType(dataMap.get("InfoType"))
@@ -56,7 +53,7 @@ public class WechatMessageParser {
      */
     public static WechatAuthCallbackDto parseUnauthorizedMessage(String xmlContent) {
         Map<String, String> dataMap = parseXmlToMap(xmlContent);
-        
+
         return WechatAuthCallbackDto.builder()
                 .appId(dataMap.get("AppId"))
                 .infoType(dataMap.get("InfoType"))
@@ -100,14 +97,14 @@ public class WechatMessageParser {
      */
     private static Map<String, String> parseXmlToMap(String xmlContent, String... targetFields) {
         Map<String, String> result = new HashMap<>();
-        
+
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(new ByteArrayInputStream(xmlContent.getBytes("UTF-8")));
-            
+
             Element root = document.getDocumentElement();
-            
+
             if (targetFields.length == 0) {
                 // If no fields specified, parse all fields
                 NodeList childNodes = root.getChildNodes();
@@ -126,12 +123,12 @@ public class WechatMessageParser {
                     }
                 }
             }
-            
+
         } catch (Exception e) {
             log.error("Failed to parse WeChat XML message: {}", xmlContent, e);
             throw new RuntimeException("WeChat message parsing failed", e);
         }
-        
+
         return result;
     }
 }

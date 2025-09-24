@@ -17,7 +17,7 @@ import java.util.Set;
  *
  * 最佳实践： 1. 使用强类型对象替代Map<String, Object> 2. 集中参数验证和业务逻辑 3. 提供类型安全和IDE支持 4. 便于单元测试和维护
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Builder

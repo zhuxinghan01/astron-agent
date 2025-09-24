@@ -14,9 +14,10 @@ import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 /**
  * Bot Publishing Management Service Interface
  *
- * Unified bot publishing management service, including: - Bot list query and detail retrieval - Publishing status management (publish/take offline) - Version management - Statistics data query
+ * Unified bot publishing management service, including: - Bot list query and detail retrieval -
+ * Publishing status management (publish/take offline) - Version management - Statistics data query
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 public interface BotPublishService {
 
@@ -31,9 +32,9 @@ public interface BotPublishService {
      * @return Pagination result
      */
     PageResponse<BotPublishInfoDto> getBotList(
-                    BotListRequestDto requestDto,
-                    String currentUid,
-                    Long spaceId);
+            BotListRequestDto requestDto,
+            String currentUid,
+            Long spaceId);
 
     /**
      * Get bot details
@@ -46,7 +47,8 @@ public interface BotPublishService {
     BotDetailResponseDto getBotDetail(Integer botId, String currentUid, Long spaceId);
 
     /**
-     * Update bot publish status - unified handling of publish and offline logic, using ShelfStatusEnum (0=offline, 1=published)
+     * Update bot publish status - unified handling of publish and offline logic, using ShelfStatusEnum
+     * (0=offline, 1=published)
      *
      * @param botId Bot ID
      * @param updateDto Status update request
@@ -91,7 +93,7 @@ public interface BotPublishService {
      * @return Time series statistics data
      */
     BotTimeSeriesResponseDto getBotTimeSeriesStats(Integer botId, Integer overviewDays,
-                    String currentUid, Long currentSpaceId);
+            String currentUid, Long currentSpaceId);
 
     /**
      * Record conversation statistics data
@@ -105,26 +107,25 @@ public interface BotPublishService {
      * @param messageRounds Message rounds
      */
     void recordConversationStats(String uid, Long spaceId, Integer botId, Long chatId,
-                    String sid, Integer tokenConsumed, Integer messageRounds);
+            String sid, Integer tokenConsumed, Integer messageRounds);
 
     // ==================== Publish Channel Management ====================
 
     /**
      * Update bot publish channel
      *
-     * @param botId     Bot ID
-     * @param uid       User ID
-     * @param spaceId   Space ID (can be null)
-     * @param channel   Publish channel enum
-     * @param isAdd     Whether to add channel (true=add, false=remove)
+     * @param botId Bot ID
+     * @param uid User ID
+     * @param spaceId Space ID (can be null)
+     * @param channel Publish channel enum
+     * @param isAdd Whether to add channel (true=add, false=remove)
      */
     void updatePublishChannel(Integer botId, String uid, Long spaceId, PublishChannelEnum channel, boolean isAdd);
 
     // ==================== WeChat Publish Management ====================
 
     /**
-     * Get WeChat official account authorization URL
-     * Corresponding to original interface: getAuthUrl
+     * Get WeChat official account authorization URL Corresponding to original interface: getAuthUrl
      *
      * @param botId Bot ID
      * @param appid WeChat official account AppID
@@ -133,6 +134,6 @@ public interface BotPublishService {
      * @param spaceId Space ID
      * @return WeChat authorization URL
      */
-    WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl, 
-                                            String uid, Long spaceId);
+    WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl,
+            String uid, Long spaceId);
 }

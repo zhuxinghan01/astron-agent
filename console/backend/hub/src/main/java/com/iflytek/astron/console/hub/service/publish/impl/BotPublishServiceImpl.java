@@ -45,9 +45,11 @@ import java.util.stream.Collectors;
 /**
  * Bot Publishing Management Service Implementation
  *
- * Unified bot publishing management service implementation, including: - Bot list query and detail retrieval - Publishing status management (publish/take offline) - Version management - Statistics data query
+ * Unified bot publishing management service implementation, including: - Bot list query and detail
+ * retrieval - Publishing status management (publish/take offline) - Version management - Statistics
+ * data query
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Service
@@ -70,9 +72,9 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     @Override
     public PageResponse<BotPublishInfoDto> getBotList(
-                    BotListRequestDto requestDto,
-                    String currentUid,
-                    Long spaceId) {
+            BotListRequestDto requestDto,
+            String currentUid,
+            Long spaceId) {
 
         log.info("Query bot list: uid={}, spaceId={}, request={}", currentUid, spaceId, requestDto);
 
@@ -89,10 +91,10 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // 4. Build response result
         return PageResponse.of(
-                        requestDto.getPage(),
-                        requestDto.getSize(),
-                        queryResult.getTotal(),
-                        botList);
+                requestDto.getPage(),
+                requestDto.getSize(),
+                queryResult.getTotal(),
+                botList);
     }
 
 
@@ -126,7 +128,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     @Override
     public void updatePublishStatus(Integer botId, PublishStatusUpdateDto updateDto, String currentUid, Long spaceId) {
         log.info("Update bot publish status: botId={}, action={}, uid={}, spaceId={}",
-                        botId, updateDto.getAction(), currentUid, spaceId);
+                botId, updateDto.getAction(), currentUid, spaceId);
 
         // 1. First validate bot permission
         int hasPermission = chatBotBaseMapper.checkBotPermission(botId, currentUid, spaceId);
@@ -147,7 +149,7 @@ public class BotPublishServiceImpl implements BotPublishService {
             // Publish to market
             // null status means never published, treat as off-shelf, can be published
             Integer effectiveStatus = currentStatus != null ? currentStatus : ShelfStatusEnum.OFF_SHELF.getCode();
-            
+
             if (effectiveStatus.equals(ShelfStatusEnum.ON_SHELF.getCode())) {
                 log.warn("Bot already published, no need to repeat operation: botId={}", botId);
                 return;
@@ -187,11 +189,11 @@ public class BotPublishServiceImpl implements BotPublishService {
         }
 
         log.info("Bot publish status updated successfully: botId={}, {} -> {}, channels: {} -> {}",
-                        botId, currentStatus, newStatus, currentChannels, newChannels);
+                botId, currentStatus, newStatus, currentChannels, newChannels);
 
         // Publish status change event
         eventPublisher.publishEvent(new BotPublishStatusChangedEvent(
-                this, botId, currentUid, spaceId, updateDto.getAction(), 
+                this, botId, currentUid, spaceId, updateDto.getAction(),
                 currentStatus, newStatus, newChannels));
     }
 
@@ -200,7 +202,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     @Override
     public PageResponse<BotVersionVO> getBotVersions(Integer botId, Integer page, Integer size, String uid, Long spaceId) {
         log.info("Query workflow version list: botId={}, page={}, size={}, uid={}, spaceId={}",
-                        botId, page, size, uid, spaceId);
+                botId, page, size, uid, spaceId);
 
         // 1. Permission validation - ensure user has permission to access the bot
         validateBotPermission(botId, uid, spaceId);
@@ -222,7 +224,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     @Override
     public BotSummaryStatsVO getBotSummaryStats(Integer botId, String currentUid, Long currentSpaceId) {
         log.info("Get bot summary statistics: botId={}, uid={}, spaceId={}",
-                        botId, currentUid, currentSpaceId);
+                botId, currentUid, currentSpaceId);
 
         // 1. Permission validation
         int hasPermission = chatBotBaseMapper.checkBotPermission(botId, currentUid, currentSpaceId);
@@ -238,16 +240,16 @@ public class BotPublishServiceImpl implements BotPublishService {
         }
 
         log.info("Bot summary statistics query completed: botId={}, totalChats={}, totalUsers={}",
-                        botId, summaryStats.getTotalChats(), summaryStats.getTotalUsers());
+                botId, summaryStats.getTotalChats(), summaryStats.getTotalUsers());
 
         return summaryStats;
     }
 
     @Override
     public BotTimeSeriesResponseDto getBotTimeSeriesStats(Integer botId, Integer overviewDays,
-                    String currentUid, Long currentSpaceId) {
+            String currentUid, Long currentSpaceId) {
         log.info("Get bot time series statistics: botId={}, overviewDays={}, uid={}, spaceId={}",
-                        botId, overviewDays, currentUid, currentSpaceId);
+                botId, overviewDays, currentUid, currentSpaceId);
 
         // 1. Permission validation
         int hasPermission = chatBotBaseMapper.checkBotPermission(botId, currentUid, currentSpaceId);
@@ -258,7 +260,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         // 2. Query time series statistics data
         LocalDate startDate = LocalDate.now().minusDays(overviewDays);
         List<BotTimeSeriesStatsVO> timeSeriesStats = botConversationStatsMapper.selectTimeSeriesStats(
-                        botId, startDate, null, null);
+                botId, startDate, null, null);
 
         // 3. Build time series data response
         BotTimeSeriesResponseDto timeSeries = new BotTimeSeriesResponseDto();
@@ -268,32 +270,32 @@ public class BotPublishServiceImpl implements BotPublishService {
         timeSeries.setAvgChatMessages(calculateAvgMessages(timeSeriesStats));
 
         log.info("Bot time series statistics query completed: botId={}, data points count={}",
-                        botId, timeSeriesStats.size());
+                botId, timeSeriesStats.size());
 
         return timeSeries;
     }
 
     @Override
     public void recordConversationStats(String uid, Long spaceId, Integer botId, Long chatId,
-                    String sid, Integer tokenConsumed, Integer messageRounds) {
+            String sid, Integer tokenConsumed, Integer messageRounds) {
         log.info("Record conversation statistics: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}, messageRounds={}",
-                        uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
+                uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
 
         try {
             BotConversationStats stats = BotConversationStats.createBuilder()
-                            .uid(uid)
-                            .spaceId(spaceId)
-                            .botId(botId)
-                            .chatId(chatId)
-                            .sid(sid)
-                            .tokenConsumed(tokenConsumed)
-                            .messageRounds(messageRounds)
-                            .build();
+                    .uid(uid)
+                    .spaceId(spaceId)
+                    .botId(botId)
+                    .chatId(chatId)
+                    .sid(sid)
+                    .tokenConsumed(tokenConsumed)
+                    .messageRounds(messageRounds)
+                    .build();
             int result = botConversationStatsMapper.insert(stats);
 
             if (result > 0) {
                 log.info("Conversation statistics recorded successfully: chatId={}, statsId={}", chatId, stats.getId());
-                
+
             } else {
                 log.warn("Conversation statistics record failed: chatId={}", chatId);
             }
@@ -367,7 +369,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     private void createMarketRecordForChannel(Integer botId, String uid, Long spaceId, String channels) {
         // Call existing create market record method
         insertChatBotMarketRecord(botId, uid, spaceId, ShelfStatusEnum.OFF_SHELF.getCode(), channels);
-        log.info("Create market record for publish channel: botId={}, uid={}, spaceId={}, channels={}", 
+        log.info("Create market record for publish channel: botId={}, uid={}, spaceId={}, channels={}",
                 botId, uid, spaceId, channels);
     }
 
@@ -380,11 +382,11 @@ public class BotPublishServiceImpl implements BotPublishService {
             if (updateCount > 0) {
                 log.info("Update market record publish channel successfully: botId={}, channels={}", botId, channels);
             } else {
-                log.warn("Update market record publish channel failed, record not found: botId={}, uid={}, spaceId={}", 
+                log.warn("Update market record publish channel failed, record not found: botId={}, uid={}, spaceId={}",
                         botId, uid, spaceId);
             }
         } catch (Exception e) {
-            log.error("Update market record publish channel exception: botId={}, uid={}, spaceId={}, channels={}", 
+            log.error("Update market record publish channel exception: botId={}, uid={}, spaceId={}, channels={}",
                     botId, uid, spaceId, channels, e);
         }
     }
@@ -393,43 +395,43 @@ public class BotPublishServiceImpl implements BotPublishService {
      * Convert time series data items
      */
     private List<BotTimeSeriesResponseDto.TimeSeriesItem> convertToTimeSeriesItems(
-                    List<BotTimeSeriesStatsVO> timeSeriesStats, String type) {
+            List<BotTimeSeriesStatsVO> timeSeriesStats, String type) {
         return timeSeriesStats.stream()
-                        .map(stats -> {
-                            Integer count = switch (type) {
-                                case "user" -> stats.getUserCount();
-                                case "token" -> stats.getTokenCount();
-                                case "message" -> stats.getMessageCount();
-                                case "chat" -> stats.getChatCount();
-                                default -> 0;
-                            };
-                            return new BotTimeSeriesResponseDto.TimeSeriesItem(
-                                            stats.getDate().toString(), count);
-                        })
-                        .collect(Collectors.toList());
+                .map(stats -> {
+                    Integer count = switch (type) {
+                        case "user" -> stats.getUserCount();
+                        case "token" -> stats.getTokenCount();
+                        case "message" -> stats.getMessageCount();
+                        case "chat" -> stats.getChatCount();
+                        default -> 0;
+                    };
+                    return new BotTimeSeriesResponseDto.TimeSeriesItem(
+                            stats.getDate().toString(), count);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
      * Calculate average messages per conversation
      */
     private List<BotTimeSeriesResponseDto.TimeSeriesItem> calculateAvgMessages(
-                    List<BotTimeSeriesStatsVO> timeSeriesStats) {
+            List<BotTimeSeriesStatsVO> timeSeriesStats) {
         return timeSeriesStats.stream()
-                        .map(stats -> {
-                            Integer avgCount = stats.getChatCount() > 0
-                                            ? stats.getMessageCount() / stats.getChatCount()
-                                            : 0;
-                            return new BotTimeSeriesResponseDto.TimeSeriesItem(
-                                            stats.getDate().toString(), avgCount);
-                        })
-                        .collect(Collectors.toList());
+                .map(stats -> {
+                    Integer avgCount = stats.getChatCount() > 0
+                            ? stats.getMessageCount() / stats.getChatCount()
+                            : 0;
+                    return new BotTimeSeriesResponseDto.TimeSeriesItem(
+                            stats.getDate().toString(), avgCount);
+                })
+                .collect(Collectors.toList());
     }
 
     // ==================== publishchannelmanagement ====================
 
     @Override
     public void updatePublishChannel(Integer botId, String uid, Long spaceId, PublishChannelEnum channel, boolean isAdd) {
-        log.info("Update bot publish channel: botId={}, uid={}, spaceId={}, channel={}, isAdd={}", 
+        log.info("Update bot publish channel: botId={}, uid={}, spaceId={}, channel={}, isAdd={}",
                 botId, uid, spaceId, channel.getCode(), isAdd);
 
         try {
@@ -442,10 +444,10 @@ public class BotPublishServiceImpl implements BotPublishService {
 
             // 2. Query current publish channel
             String currentChannels = getCurrentPublishChannels(botId, uid, spaceId);
-            
+
             // 3. Update publish channel
             String newChannels = publishChannelService.updatePublishChannels(currentChannels, channel.getCode(), isAdd);
-            
+
             // 4. Update database
             if (!Objects.equals(currentChannels, newChannels)) {
                 if (currentChannels == null) {
@@ -455,14 +457,14 @@ public class BotPublishServiceImpl implements BotPublishService {
                     // Update existing record
                     updateMarketRecordChannels(botId, uid, spaceId, newChannels);
                 }
-                
+
                 log.info("Bot publish channel updated successfully: botId={}, {} -> {}", botId, currentChannels, newChannels);
             } else {
                 log.debug("Bot publish channel unchanged: botId={}, channels={}", botId, currentChannels);
             }
         } catch (Exception e) {
-            log.error("Update bot publish channel failed: botId={}, uid={}, spaceId={}, channel={}, isAdd={}", 
-                     botId, uid, spaceId, channel.getCode(), isAdd, e);
+            log.error("Update bot publish channel failed: botId={}, uid={}, spaceId={}, channel={}, isAdd={}",
+                    botId, uid, spaceId, channel.getCode(), isAdd, e);
             // Do not throw exception to avoid affecting main business flow
         }
     }
@@ -470,9 +472,9 @@ public class BotPublishServiceImpl implements BotPublishService {
     // ==================== WeChat Publish Management ====================
 
     @Override
-    public WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl, 
-                                                   String uid, Long spaceId) {
-        log.info("Get WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}", 
+    public WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl,
+            String uid, Long spaceId) {
+        log.info("Get WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}",
                 botId, appid, redirectUrl, uid, spaceId);
 
         // 1. Permission validation
@@ -486,11 +488,11 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // 3. Generate authorization URL
         String authUrl = wechatThirdpartyService.buildAuthUrl(preAuthCode, appid, redirectUrl);
-        
+
         // 4. Build response
         WechatAuthUrlResponseDto response = WechatAuthUrlResponseDto.of(authUrl);
         response.setPreAuthCode(preAuthCode);
-        
+
         log.info("WeChat authorization URL generated successfully: botId={}, authUrl={}", botId, authUrl);
         return response;
     }

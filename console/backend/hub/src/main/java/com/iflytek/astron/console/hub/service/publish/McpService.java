@@ -6,7 +6,7 @@ import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
 /**
  * MCP Service Interface
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 public interface McpService {
 

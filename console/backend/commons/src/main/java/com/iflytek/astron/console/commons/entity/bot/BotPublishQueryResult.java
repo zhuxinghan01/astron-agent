@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * classes instead of Map to receive query results - Automatic camelCase conversion, field names
  * correspond to AS aliases in SQL
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 public class BotPublishQueryResult {

@@ -26,8 +26,8 @@ public interface BotConversationStatsMapper extends BaseMapper<BotConversationSt
      * @return 总体统计数据
      */
     BotSummaryStatsVO selectSummaryStats(@Param("botId") Integer botId,
-                    @Param("uid") Long uid,
-                    @Param("spaceId") Long spaceId);
+            @Param("uid") Long uid,
+            @Param("spaceId") Long spaceId);
 
     /**
      * 查询智能体时间序列统计数据
@@ -39,8 +39,8 @@ public interface BotConversationStatsMapper extends BaseMapper<BotConversationSt
      * @return 时间序列统计数据
      */
     List<BotTimeSeriesStatsVO> selectTimeSeriesStats(@Param("botId") Integer botId,
-                    @Param("startDate") LocalDate startDate,
-                    @Param("uid") Long uid,
-                    @Param("spaceId") Long spaceId);
+            @Param("startDate") LocalDate startDate,
+            @Param("uid") Long uid,
+            @Param("spaceId") Long spaceId);
 
 }

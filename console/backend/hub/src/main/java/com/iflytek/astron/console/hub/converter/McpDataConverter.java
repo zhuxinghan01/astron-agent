@@ -9,15 +9,15 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * MCP Data Converter
- * 
+ *
  * Uses MapStruct for efficient object mapping
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Mapper(
-                componentModel = "spring",
-                unmappedTargetPolicy = ReportingPolicy.WARN,
-                nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.WARN,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface McpDataConverter {
 
     /**

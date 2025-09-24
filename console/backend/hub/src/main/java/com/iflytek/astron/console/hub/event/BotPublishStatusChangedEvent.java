@@ -7,14 +7,16 @@ import org.springframework.context.ApplicationEvent;
 
 /**
  * Bot Publish Status Changed Event
- * 
+ *
  * Triggered when bot is published/taken offline, used for handling related follow-up operations
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Getter
 @EqualsAndHashCode(callSuper = false)
 public class BotPublishStatusChangedEvent extends ApplicationEvent {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * Bot ID
@@ -54,17 +56,17 @@ public class BotPublishStatusChangedEvent extends ApplicationEvent {
     /**
      * Construct bot publish status changed event
      *
-     * @param source          Event source
-     * @param botId           Bot ID
-     * @param uid             User ID
-     * @param spaceId         Space ID
-     * @param action          Action type
-     * @param oldStatus       Status before change
-     * @param newStatus       Status after change
+     * @param source Event source
+     * @param botId Bot ID
+     * @param uid User ID
+     * @param spaceId Space ID
+     * @param action Action type
+     * @param oldStatus Status before change
+     * @param newStatus Status after change
      * @param publishChannels Publish channels
      */
     public BotPublishStatusChangedEvent(Object source, Integer botId, String uid, Long spaceId,
-                                      String action, Integer oldStatus, Integer newStatus, String publishChannels) {
+            String action, Integer oldStatus, Integer newStatus, String publishChannels) {
         super(source);
         this.botId = botId;
         this.uid = uid;

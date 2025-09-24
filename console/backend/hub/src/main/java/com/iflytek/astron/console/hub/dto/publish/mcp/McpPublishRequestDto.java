@@ -5,14 +5,13 @@ import lombok.Data;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * MCP Publish Request DTO
- * 
+ *
  * Corresponds to original interface: publishMCP
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(name = "McpPublishRequestDto", description = "MCP publish request")

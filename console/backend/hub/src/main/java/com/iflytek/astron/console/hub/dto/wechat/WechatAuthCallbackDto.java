@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * 微信授权callback数据DTO
  *
- * @author stellar
+ * @author Omuigix
  */
 @Data
 @Builder

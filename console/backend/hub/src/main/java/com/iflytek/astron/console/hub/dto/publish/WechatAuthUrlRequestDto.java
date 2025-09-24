@@ -8,10 +8,10 @@ import jakarta.validation.constraints.NotNull;
 
 /**
  * WeChat Authorization URL Request DTO
- * 
+ *
  * Corresponds to original interface: getAuthUrl
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(name = "WechatAuthUrlRequestDto", description = "WeChat authorization URL request")

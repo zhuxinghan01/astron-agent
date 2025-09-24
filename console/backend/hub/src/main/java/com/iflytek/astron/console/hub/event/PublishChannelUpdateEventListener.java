@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Publish Channel Update Event Listener
- * 
+ *
  * Handles publish channel update events, decoupling circular dependencies between services
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Component
@@ -29,24 +29,23 @@ public class PublishChannelUpdateEventListener {
     @Async
     @EventListener
     public void handlePublishChannelUpdate(PublishChannelUpdateEvent event) {
-        log.info("Handle publish channel update event: botId={}, uid={}, spaceId={}, channel={}, isAdd={}", 
-                event.getBotId(), event.getUid(), event.getSpaceId(), 
+        log.info("Handle publish channel update event: botId={}, uid={}, spaceId={}, channel={}, isAdd={}",
+                event.getBotId(), event.getUid(), event.getSpaceId(),
                 event.getChannel().getCode(), event.isAdd());
 
         try {
             botPublishService.updatePublishChannel(
-                    event.getBotId(), 
-                    event.getUid(), 
-                    event.getSpaceId(), 
-                    event.getChannel(), 
-                    event.isAdd()
-            );
-            
-            log.info("Publish channel update event processed successfully: botId={}, channel={}", 
+                    event.getBotId(),
+                    event.getUid(),
+                    event.getSpaceId(),
+                    event.getChannel(),
+                    event.isAdd());
+
+            log.info("Publish channel update event processed successfully: botId={}, channel={}",
                     event.getBotId(), event.getChannel().getCode());
         } catch (Exception e) {
-            log.error("Publish channel update event processing failed: botId={}, channel={}", 
-                     event.getBotId(), event.getChannel().getCode(), e);
+            log.error("Publish channel update event processing failed: botId={}, channel={}",
+                    event.getBotId(), event.getChannel().getCode(), e);
             // Retry mechanism or error handling logic can be added here
         }
     }

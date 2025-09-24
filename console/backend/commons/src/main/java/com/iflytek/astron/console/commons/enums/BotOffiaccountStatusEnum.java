@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * 智能体与微信公众号的绑定状态枚举
  *
- * @author stellar
+ * @author Omuigix
  */
 @Getter
 public enum BotOffiaccountStatusEnum {

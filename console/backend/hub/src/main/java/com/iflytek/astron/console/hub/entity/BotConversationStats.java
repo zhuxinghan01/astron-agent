@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Bot Conversation Statistics Entity
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Builder
@@ -81,9 +81,9 @@ public class BotConversationStats {
      */
     public static BotConversationStatsBuilder createBuilder() {
         return BotConversationStats.builder()
-                        .conversationDate(LocalDate.now())
-                        .createTime(LocalDateTime.now())
-                        .isDelete(0);
+                .conversationDate(LocalDate.now())
+                .createTime(LocalDateTime.now())
+                .isDelete(0);
     }
 
 }

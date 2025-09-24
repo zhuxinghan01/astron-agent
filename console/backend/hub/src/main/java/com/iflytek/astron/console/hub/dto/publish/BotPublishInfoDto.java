@@ -10,10 +10,10 @@ import java.util.List;
 
 /**
  * Bot Publish Information DTO
- * 
+ *
  * Used for data transfer in API responses
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 public class BotPublishInfoDto {

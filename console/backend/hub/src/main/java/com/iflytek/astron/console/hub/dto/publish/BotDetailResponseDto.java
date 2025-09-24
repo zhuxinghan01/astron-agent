@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Bot Detail Response DTO
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Data
 @Schema(description = "Bot detail response")

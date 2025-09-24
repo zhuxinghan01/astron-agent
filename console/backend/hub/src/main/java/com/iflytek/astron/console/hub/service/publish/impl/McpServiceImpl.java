@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 /**
  * MCP Service Implementation
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 @Slf4j
 @Service
@@ -69,7 +69,7 @@ public class McpServiceImpl implements McpService {
     @Transactional(rollbackFor = Exception.class)
     public void publishMcp(McpPublishRequestDto request, String currentUid, Long spaceId) {
         log.info("Publish MCP: botId={}, serverName={}, uid={}, spaceId={}",
-                        request.getBotId(), request.getServerName(), currentUid, spaceId);
+                request.getBotId(), request.getServerName(), currentUid, spaceId);
 
         Integer botId = request.getBotId();
 
@@ -81,18 +81,18 @@ public class McpServiceImpl implements McpService {
 
         // 2. Check if workflow protocol exists
         UserLangChainInfo chainInfo = userLangChainInfoMapper.selectOne(
-                        new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserLangChainInfo>()
-                                        .eq("bot_id", botId)
-                                        .orderByDesc("create_time")
-                                        .last("LIMIT 1"));
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserLangChainInfo>()
+                        .eq("bot_id", botId)
+                        .orderByDesc("create_time")
+                        .last("LIMIT 1"));
         if (chainInfo == null) {
             log.info("Bot workflow protocol not found: uid={}, botId={}", currentUid, botId);
             throw new BusinessException(ResponseEnum.BOT_CHAIN_SUBMIT_ERROR);
         }
 
         // 3. Content moderation (simplified here, should call moderation service in production)
-        String allText = request.getServerName() + request.getDescription() + request.getContent();
         // TODO: Call moderation service to check text and images
+        // String allText = request.getServerName() + request.getDescription() + request.getContent();
 
         // 4. Get version name (using default version for now)
         String versionName = "v1.0"; // TODO: Get from version management service
@@ -105,21 +105,21 @@ public class McpServiceImpl implements McpService {
 
         // 6. Build MCP data
         McpData mcpData = McpData.builder()
-                        .botId(botId)
-                        .uid(currentUid)
-                        .spaceId(spaceId)
-                        .serverName(request.getServerName())
-                        .description(request.getDescription())
-                        .content(request.getContent())
-                        .icon(request.getIcon())
-                        .serverUrl(request.getServerUrl())
-                        .args(request.getArgs())
-                        .versionName(versionName)
-                        .released(1)
-                        .isDelete(0)
-                        .createTime(LocalDateTime.now())
-                        .updateTime(LocalDateTime.now())
-                        .build();
+                .botId(botId)
+                .uid(currentUid)
+                .spaceId(spaceId)
+                .serverName(request.getServerName())
+                .description(request.getDescription())
+                .content(request.getContent())
+                .icon(request.getIcon())
+                .serverUrl(request.getServerUrl())
+                .args(request.getArgs())
+                .versionName(versionName)
+                .released(1)
+                .isDelete(0)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
 
         // 7. Save MCP data
         int result = mcpDataMapper.insert(mcpData);

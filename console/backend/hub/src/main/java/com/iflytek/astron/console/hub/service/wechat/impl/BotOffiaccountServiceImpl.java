@@ -24,7 +24,7 @@ import java.util.Objects;
 /**
  * 智能体与微信公众号bind服务实现
  *
- * @author stellar
+ * @author Omuigix
  */
 @Slf4j
 @Service
@@ -45,7 +45,7 @@ public class BotOffiaccountServiceImpl implements BotOffiaccountService {
         if (botBase == null) {
             throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
         }
-        
+
         int hasPermission = chatBotBaseMapper.checkBotPermission(botId, uid, botBase.getSpaceId());
         if (hasPermission == 0) {
             throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
@@ -61,7 +61,7 @@ public class BotOffiaccountServiceImpl implements BotOffiaccountService {
             existingAppidBind.setStatus(BotOffiaccountStatusEnum.UNBOUND.getStatus());
             existingAppidBind.setUpdateTime(LocalDateTime.now());
             botOffiaccountMapper.updateById(existingAppidBind);
-            log.info("微信公众号AppID已被其他智能体绑定，解绑旧智能体: appid={}, oldBotId={}", 
+            log.info("微信公众号AppID已被其他智能体绑定，解绑旧智能体: appid={}, oldBotId={}",
                     appid, existingAppidBind.getBotId());
         }
 
@@ -110,16 +110,16 @@ public class BotOffiaccountServiceImpl implements BotOffiaccountService {
                         .eq(BotOffiaccount::getAppid, appid)
                         .eq(BotOffiaccount::getStatus, BotOffiaccountStatusEnum.BOUND.getStatus()));
         if (botOffiaccount != null) {
-            ChatBotBase botBase = chatBotBaseMapper.selectById(botOffiaccount.getBotId().intValue());
-            
+            ChatBotBase botBase = chatBotBaseMapper.selectById(botOffiaccount.getBotId());
+
             botOffiaccount.setStatus(BotOffiaccountStatusEnum.UNBOUND.getStatus());
             botOffiaccount.setUpdateTime(LocalDateTime.now());
             botOffiaccountMapper.updateById(botOffiaccount);
-            
+
             eventPublisher.publishEvent(new PublishChannelUpdateEvent(
-                    this, botOffiaccount.getBotId().intValue(), botOffiaccount.getUid(), 
+                    this, botOffiaccount.getBotId(), botOffiaccount.getUid(),
                     botBase != null ? botBase.getSpaceId() : null, PublishChannelEnum.WECHAT, false));
-            
+
             log.info("微信公众号解绑成功: botId={}, appid={}", botOffiaccount.getBotId(), appid);
         } else {
             log.warn("未找到需要解绑的微信公众号记录: appid={}", appid);

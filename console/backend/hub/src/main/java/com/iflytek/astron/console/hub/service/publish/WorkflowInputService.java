@@ -5,7 +5,7 @@ import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto
 /**
  * Workflow Input Service Interface
  *
- * @author xinxiong2
+ * @author Omuigix
  */
 public interface WorkflowInputService {
 
