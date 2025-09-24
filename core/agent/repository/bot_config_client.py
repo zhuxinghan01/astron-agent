@@ -10,7 +10,7 @@ from api.schemas.bot_config import (
     BotRegularConfig,
 )
 from api.utils.snowfake import get_snowflake_id
-from cache.redis_client import RedisClusterClient
+from cache.redis_client import BaseRedisClient, create_redis_client
 
 # pylint: disable=no-member
 from common_imports import Span
@@ -26,9 +26,11 @@ class BotConfigClient(BaseModel):
     bot_id: str
     span: Span
 
-    redis_client: RedisClusterClient = Field(
-        default=RedisClusterClient(
-            nodes=agent_config.REDIS_NODES, password=agent_config.REDIS_PASSWORD
+    redis_client: BaseRedisClient = Field(
+        default=create_redis_client(
+            cluster_addr=agent_config.REDIS_CLUSTER_ADDR,
+            standalone_addr=agent_config.REDIS_ADDR,
+            password=agent_config.REDIS_PASSWORD
         )
     )
     mysql_client: MysqlClient = Field(
@@ -53,8 +55,8 @@ class BotConfigClient(BaseModel):
                 sp.add_info_events({"redis-value": ""})
                 return None
 
-            # For keys with expiration time, reset to 20 minutes
-            ex_seconds = 20 * 60  # Set 20 minutes expiration
+            # For keys with expiration time, reset to configured expiration
+            ex_seconds = agent_config.REDIS_EXPIRE
             await self.refresh_redis_ttl(
                 ex_seconds,
                 (
@@ -82,7 +84,9 @@ class BotConfigClient(BaseModel):
 
             return result
 
-    async def set_to_redis(self, value: str, ex: int | None = 20 * 60) -> None:
+    async def set_to_redis(self, value: str, ex: int | None = None) -> None:
+        if ex is None:
+            ex = agent_config.REDIS_EXPIRE
         redis_set_value = await self.redis_client.set(self.redis_key(), value, ex=ex)
         if not redis_set_value:
             raise AgentExc(
@@ -133,8 +137,8 @@ class BotConfigClient(BaseModel):
                 sp.add_info_events(
                     {"mysql-value": bot_config.model_dump_json(by_alias=True)}
                 )
-                # MySQL has value, write to Redis cache with 20 minutes expiration
-                ex_seconds = 20 * 60  # Set 20 minutes expiration
+                # MySQL has value, write to Redis cache with configured expiration
+                ex_seconds = agent_config.REDIS_EXPIRE
                 await self.set_to_redis(
                     bot_config.model_dump_json(by_alias=True), ex_seconds
                 )

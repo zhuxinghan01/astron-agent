@@ -3,8 +3,10 @@ from pydantic_settings import BaseSettings
 
 
 class RedisClusterConfig(BaseSettings):
-    REDIS_NODES: str = Field(default="")
+    REDIS_CLUSTER_ADDR: str = Field(default="")
+    REDIS_ADDR: str = Field(default="")
     REDIS_PASSWORD: str = Field(default="")
+    REDIS_EXPIRE: int = Field(default=3600)
 
 
 class MysqlClusterConfig(BaseSettings):
