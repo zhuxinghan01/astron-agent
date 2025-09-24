@@ -32,18 +32,20 @@ class BotConfigClient(BaseModel):
 
     def model_post_init(self, __context: Any) -> None:
         """Initialize Redis and MySQL clients after instance creation."""
-        self.redis_client = create_redis_client(
-            cluster_addr=agent_config.REDIS_CLUSTER_ADDR,
-            standalone_addr=agent_config.REDIS_ADDR,
-            password=agent_config.REDIS_PASSWORD,
-        )
-        self.mysql_client = MysqlClient(
-            database_url=(
-                f"mysql+pymysql://{agent_config.MYSQL_USER}:"
-                f"{agent_config.MYSQL_PASSWORD}@{agent_config.MYSQL_HOST}:"
-                f"{agent_config.MYSQL_PORT}/{agent_config.MYSQL_DB}?charset=utf8mb4"
+        if self.redis_client is None:
+            self.redis_client = create_redis_client(
+                cluster_addr=agent_config.REDIS_CLUSTER_ADDR,
+                standalone_addr=agent_config.REDIS_ADDR,
+                password=agent_config.REDIS_PASSWORD,
             )
-        )
+        if self.mysql_client is None:
+            self.mysql_client = MysqlClient(
+                database_url=(
+                    f"mysql+pymysql://{agent_config.MYSQL_USER}:"
+                    f"{agent_config.MYSQL_PASSWORD}@{agent_config.MYSQL_HOST}:"
+                    f"{agent_config.MYSQL_PORT}/{agent_config.MYSQL_DB}?charset=utf8mb4"
+                )
+            )
 
     def redis_key(self) -> str:
         return f"spark_bot:bot_config:{self.bot_id}"
