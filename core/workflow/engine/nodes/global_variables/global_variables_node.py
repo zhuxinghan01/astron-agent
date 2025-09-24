@@ -7,8 +7,9 @@ that extends BaseNode to handle global variable operations (set/get) in workflow
 """
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
+from pydantic import Field
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
 from workflow.engine.nodes.entities.node_run_result import (
@@ -123,8 +124,8 @@ class GlobalVariablesNode(BaseNode):
     Supports both 'set' and 'get' operations for variable management.
     """
 
-    method: str = "set"  # Operation method: "set" or "get"
-    flowId: str = ""  # Flow identifier for variable scope
+    method: Literal["set", "get"] = Field(...)  # Operation method: "set" or "get"
+    flowId: str = Field(...)  # Flow identifier for variable scope
 
     def get_node_config(self) -> Dict[str, Any]:
         """
@@ -257,7 +258,7 @@ class GlobalVariablesNode(BaseNode):
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.VariableNodeExecutionError,
+                    CodeEnum.VARIABLE_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
                 node_id=self.node_id,

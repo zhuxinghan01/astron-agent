@@ -4,7 +4,6 @@ import re
 from typing import Any, Dict, Literal
 
 from pydantic import Field
-
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
 from workflow.engine.nodes.code.executor.base_executor import CodeExecutorFactory
@@ -143,7 +142,7 @@ class CodeNode(BaseNode):
                 ),
             )
         except Exception as err:
-            return self.fail(err, CodeEnum.CodeExecutionError, span)
+            return self.fail(err, CodeEnum.CODE_EXECUTION_ERROR, span)
 
     async def execute_code(self, parameters: dict, span_context: Span) -> dict:
         """
@@ -211,41 +210,41 @@ class CodeNode(BaseNode):
                 case "string":
                     if isinstance(code_result_dict[var_name], str) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not str, please check the type!",
                         )
                 case "integer":
                     if isinstance(code_result_dict[var_name], int) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not integer, please check the type!",
                         )
 
                 case "number":
                     if isinstance(code_result_dict[var_name], (int, float)) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not integer or float, please check the type!",
                         )
 
                 case "boolean":
                     if isinstance(code_result_dict[var_name], bool) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not bool, please check the type!",
                         )
 
                 case "array":
                     if isinstance(code_result_dict[var_name], list) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not array, please check the type!",
                         )
 
                 case "object":
                     if isinstance(code_result_dict[var_name], dict) is False:
                         raise CustomException(
-                            CodeEnum.CodeNodeResultTypeError,
+                            CodeEnum.CODE_NODE_RESULT_TYPE_ERROR,
                             "Code return type is not object, please check the type!",
                         )
 
@@ -278,7 +277,7 @@ def _parser_code_parameter(python_code: str) -> list[str]:
             break
     if not re_parameter:
         raise CustomException(
-            CodeEnum.CodeBuildError,
+            CodeEnum.CODE_BUILD_ERROR,
             err_msg="can not find main function",
             cause_error="can not find main function",
         )

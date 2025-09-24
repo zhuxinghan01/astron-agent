@@ -10,7 +10,6 @@ import os
 from typing import Annotated, Optional, Union
 
 from fastapi import APIRouter, Depends, Header
-
 from workflow.consts.runtime_env import RuntimeEnv
 
 try:
@@ -19,7 +18,6 @@ except ImportError:
     from sqlalchemy.orm import Session  # type: ignore[assignment]
 
 from starlette.responses import JSONResponse, StreamingResponse
-
 from workflow.cache.event_registry import Event, EventRegistry, Status
 from workflow.consts.app_audit import AppAuditPolicy
 from workflow.consts.tenant_publish_matrix import Platform, TenantPublishMatrix
@@ -89,8 +87,8 @@ async def chat_open(
                 return await Streaming.send_error(
                     LLMGenerate.workflow_end_error(
                         span_context.sid,
-                        CodeEnum.FlowNotPublish.code,
-                        CodeEnum.FlowNotPublish.msg,
+                        CodeEnum.FLOW_NOT_PUBLISH_ERROR.code,
+                        CodeEnum.FLOW_NOT_PUBLISH_ERROR.msg,
                     ).dict(),
                     JSONResponse,
                 )
@@ -141,13 +139,13 @@ async def chat_open(
             )
 
         except Exception as err:
-            m.in_error_count(CodeEnum.FlowHChatFailed.code)
+            m.in_error_count(CodeEnum.OPEN_API_ERROR.code)
             span_context.record_exception(err)
             return await Streaming.send_error(
                 LLMGenerate.workflow_end_error(
                     span_context.sid,
-                    CodeEnum.FlowHChatFailed.code,
-                    CodeEnum.FlowHChatFailed.msg,
+                    CodeEnum.OPEN_API_ERROR.code,
+                    CodeEnum.OPEN_API_ERROR.msg,
                 ).dict(),
                 JSONResponse,
             )
@@ -174,7 +172,7 @@ async def resume_open(request: ResumeVo) -> Union[StreamingResponse, JSONRespons
             event: Optional[Event] = EventRegistry().get_event(event_id=event_id)
             if event is None:
                 raise CustomException(
-                    CodeEnum.EventRegistryNotFoundError,
+                    CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                     "Event not found",
                 )
 
@@ -191,7 +189,7 @@ async def resume_open(request: ResumeVo) -> Union[StreamingResponse, JSONRespons
 
             if not event.status == Status.INTERRUPTED.value:
                 raise CustomException(
-                    CodeEnum.EventRegistryNotFoundError,
+                    CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                     "Current event is not paused",
                 )
 
@@ -229,12 +227,12 @@ async def resume_open(request: ResumeVo) -> Union[StreamingResponse, JSONRespons
             )
         except Exception as e:
             span_context.record_exception(e)
-            m.in_error_count(CodeEnum.FlowHChatFailed.code, span=span_context)
+            m.in_error_count(CodeEnum.OPEN_API_ERROR.code, span=span_context)
             return await Streaming.send_error(
                 LLMGenerate.workflow_end_error(
                     sid=span.sid,
-                    code=CodeEnum.EventRegistryNotFoundError.code,
-                    message=CodeEnum.EventRegistryNotFoundError.msg,
+                    code=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR.code,
+                    message=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR.msg,
                 ).dict(),
                 JSONResponse,
             )

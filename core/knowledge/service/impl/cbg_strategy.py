@@ -3,6 +3,7 @@ CBG-RAG strategy implementation module
 Implements RAG (Retrieval-Augmented Generation) functionality based on Spark LLM
 """
 import base64
+import json
 from typing import Any, Dict, List, Optional, TypedDict, Tuple
 from urllib.parse import unquote
 
@@ -65,10 +66,17 @@ class CBGRAGStrategy(RAGStrategy):
             query=query, doc_ids=doc_ids, top_n=top_k, **kwargs
         )
 
-        results = [dict]
+        results = []
         if check_not_empty(query_results):
             for result in query_results:
-                processed_result = self._process_query_result(result, threshold)
+                # Handle both string and dict results
+                if isinstance(result, str):
+                    try:
+                        result = json.loads(result)
+                    except json.JSONDecodeError:
+                        continue
+
+                processed_result = self._process_query_result(result, threshold or 0.0)
                 if processed_result:
                     results.append(processed_result)
 

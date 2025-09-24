@@ -11,7 +11,6 @@ from common.otlp.args import global_otlp_metric_args
 from common.otlp.ip import local_ip
 from common.otlp.metrics import metric
 
-# 使用TYPE_CHECKING避免循环导入
 if TYPE_CHECKING:
     from common.otlp.trace.span import Span
 
@@ -32,7 +31,6 @@ counter = AtomicCounter()
 class Meter:
     start_time: int
     app_id: str
-    # 上报耗时标识
     in_histogram_flag = False
     func: str
     labels: Dict[str, str] = {}
@@ -46,10 +44,8 @@ class Meter:
             return
         cf = inspect.currentframe()
         if cf is not None:
-            # 获取上层调用方法的栈帧
             frame = cf.f_back
             if frame is not None:
-                # 获取上层调用方法的方法名
                 self.func = frame.f_code.co_name
         self.labels = {}
 

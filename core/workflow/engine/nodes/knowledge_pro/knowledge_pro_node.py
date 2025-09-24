@@ -8,11 +8,11 @@ operations using various knowledge repositories and LLM providers.
 import asyncio
 import json
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List, Literal
 
 import aiohttp
 from aiohttp import ClientTimeout
-
+from pydantic import Field
 from workflow.engine.entities.node_entities import NodeType
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
@@ -37,25 +37,29 @@ class KnowledgeProNode(BaseNode):
     """
 
     # LLM configuration parameters
-    model: str  # LLM model identifier
-    url: str  # Base URL for LLM API endpoint
-    domain: str  # Domain specification for the model
-    appId: str  # Application ID for authentication
-    apiKey: str  # API key for authentication
-    apiSecret: str  # API secret for authentication
-    temperature: float  # Temperature parameter for response generation (0.0-1.0)
-    maxTokens: int  # Maximum number of tokens in response
-    topK: int  # Top-K parameter for response generation (1-6)
-    uid: str = ""  # User identifier (optional)
+    model: str = Field(..., min_length=1)  # LLM model identifier
+    url: str = Field(..., min_length=1)  # Base URL for LLM API endpoint
+    domain: str = Field(..., min_length=1)  # Domain specification for the model
+    appId: str = Field(..., min_length=1)  # Application ID for authentication
+    apiKey: str = Field(..., min_length=1)  # API key for authentication
+    apiSecret: str = Field(..., min_length=1)  # API secret for authentication
+    temperature: float = Field(
+        ..., gt=0.0, le=1.0
+    )  # Temperature parameter for response generation (0.0-1.0)
+    maxTokens: int = Field(..., ge=1)  # Maximum number of tokens in response
+    topK: int = Field(..., ge=1, le=6)  # Top-K parameter for response generation (1-6)
+    uid: str = Field(default="")  # User identifier (optional)
 
     # RAG configuration parameters
-    ragType: int  # RAG type (1: AGENTIC_RAG, 2: LONG_RAG)
-    repoIds: list  # List of repository IDs to query
-    docIds: list = []  # List of document IDs (required for CBG_RAG)
-    repoType: int  # Repository type (1: AIUI_RAG2, 2: CBG_RAG)
-    repoTopK: int  # Number of top documents to retrieve (1-5)
-    answerRole: str = ""  # Role specification for answer generation
-    score: float = 0.1  # Score threshold for document relevance
+    ragType: Literal[1, 2] = Field(...)  # RAG type (1: AGENTIC_RAG, 2: LONG_RAG)
+    repoIds: List[str] = Field(..., min_length=1)  # List of repository IDs to query
+    docIds: List[str] = Field(
+        ..., default_factory=list
+    )  # List of document IDs (required for CBG_RAG)
+    repoType: Literal[1, 2] = Field(...)  # Repository type (1: AIUI_RAG2, 2: CBG_RAG)
+    repoTopK: int = Field(..., ge=1, le=5)  # Number of top documents to retrieve (1-5)
+    answerRole: str = Field(default="")  # Role specification for answer generation
+    score: float = Field(default=0.1)  # Score threshold for document relevance
 
     def get_node_config(self) -> Dict[str, Any]:
         """
@@ -112,7 +116,7 @@ class KnowledgeProNode(BaseNode):
         """
         if self.repoType == RepoTypeEnum.CBG_RAG.value and self.docIds == []:
             raise CustomException(
-                err_code=CodeEnum.KnowledgeParamError, err_msg="docIds is empty"
+                err_code=CodeEnum.KNOWLEDGE_PARAM_ERROR, err_msg="docIds is empty"
             )
 
     async def execute(
@@ -201,7 +205,7 @@ class KnowledgeProNode(BaseNode):
                                 self.get_stream_done_content(),
                             )
                             raise CustomException(
-                                err_code=CodeEnum.KnowledgeRequestError,
+                                err_code=CodeEnum.KNOWLEDGE_REQUEST_ERROR,
                                 err_msg=msg.get("message", ""),
                                 cause_error=json.dumps(msg, ensure_ascii=False),
                             )
@@ -231,7 +235,7 @@ class KnowledgeProNode(BaseNode):
         except asyncio.TimeoutError:
             # Handle timeout errors during API request
             log_err = CustomException(
-                err_code=CodeEnum.KnowledgeNodeExecutionError,
+                err_code=CodeEnum.KNOWLEDGE_NODE_EXECUTION_ERROR,
                 err_msg=f"Knowledge Pro node response timeout ({interval_timeout}s)",
                 cause_error=f"Knowledge Pro node response timeout ({interval_timeout}s)",
             )
@@ -264,7 +268,7 @@ class KnowledgeProNode(BaseNode):
             return NodeRunResult(
                 status=status,
                 error=CustomException(
-                    CodeEnum.KnowledgeNodeExecutionError,
+                    CodeEnum.KNOWLEDGE_NODE_EXECUTION_ERROR,
                     cause_error=e,
                 ),
                 node_id=self.node_id,

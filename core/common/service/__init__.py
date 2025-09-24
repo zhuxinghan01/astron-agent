@@ -10,7 +10,6 @@ from sqlmodel import Session
 
 from common.service.base import Service, ServiceFactory, ServiceType
 
-# 使用TYPE_CHECKING避免循环导入
 if TYPE_CHECKING:
     from common.service.cache.base_cache import BaseCacheService
     from common.service.db.db_service import DatabaseService

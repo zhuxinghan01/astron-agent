@@ -18,7 +18,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
-
 from workflow.api.v1.flow.publish_auth import publish_auth_router
 from workflow.api.v1.router import sparkflow_router, workflow_router
 from workflow.cache.event_registry import EventRegistry
@@ -43,7 +42,7 @@ def initialize_extensions() -> None:
     # Initialize metrics collection with OTLP configuration
     init_metric(
         endpoint=os.getenv("OTLP_ENDPOINT") or "",
-        service_name=os.getenv("OTLP_SERVICE_NAME") or "",
+        service_name=os.getenv("SERVICE_NAME") or "",
         timeout=int(os.getenv("OTLP_METRIC_TIMEOUT", "5000")),
         export_interval_millis=int(
             os.getenv("OTLP_METRIC_EXPORT_INTERVAL_MILLIS", "3000")
@@ -64,7 +63,7 @@ def initialize_extensions() -> None:
     # Initialize distributed tracing with OTLP configuration
     init_trace(
         endpoint=os.getenv("OTLP_ENDPOINT") or "",
-        service_name=os.getenv("OTLP_SERVICE_NAME") or "",
+        service_name=os.getenv("SERVICE_NAME") or "",
         timeout=int(os.getenv("OTLP_TRACE_TIMEOUT", "5000")),
         max_queue_size=int(os.getenv("OTLP_TRACE_MAX_QUEUE_SIZE", "2048")),
         schedule_delay_millis=int(
@@ -205,7 +204,7 @@ def set_env() -> None:
 
         # Load environment variables from the configuration file
         if os.path.exists(env_file):
-            load_dotenv(env_file, override=True)
+            load_dotenv(env_file, override=False)
             logger.debug("Using config.env file.")
         else:
             raise ValueError("No config.env file found.")
@@ -232,14 +231,10 @@ if __name__ == "__main__":
         app="main:create_app",  # Reference to the FastAPI app factory function
         host="0.0.0.0",  # Bind to all available network interfaces
         port=int(os.getenv("SERVICE_PORT", "7880")),  # Default port 7880
-        workers=(
-            None  # Single worker for Windows and macOS (development platforms)
-            if sys.platform in ["win", "win32", "darwin"]
-            else int(
-                os.getenv("WORKERS", "20")
-            )  # Multiple workers for Linux (production)
-        ),
-        reload=True,  # Enable auto-reload for development
+        workers=(int(os.getenv("WORKERS", "1"))),
+        reload=(
+            bool(os.getenv("RELOAD", "False"))
+        ),  # Enable auto-reload for development
         log_level="error",  # Set log level to error to reduce noise
         ws_ping_interval=None,  # Disable WebSocket ping interval
         ws_ping_timeout=None,  # Disable WebSocket ping timeout

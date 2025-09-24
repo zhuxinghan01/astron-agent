@@ -1,6 +1,5 @@
 import asyncio
 import copy
-import traceback
 from typing import Any, Dict
 
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
@@ -100,6 +99,7 @@ class IterationNode(BaseNode):
                         self.node_id
                     ]
                 )
+                built_nodes = copy.deepcopy(iteration_one_engine.engine_ctx.built_nodes)
 
                 batch_datas = variable_pool.get_variable(
                     node_id=self.node_id,
@@ -112,6 +112,7 @@ class IterationNode(BaseNode):
                 batch_result_dict: dict[str, list] = {}
                 temp_variable_pool = copy.deepcopy(variable_pool)
                 for batch_data in batch_datas:
+                    iteration_one_engine.engine_ctx.built_nodes = built_nodes
                     res = await self._process_single_batch(
                         batch_data,
                         temp_variable_pool,
@@ -145,13 +146,12 @@ class IterationNode(BaseNode):
                     node_type=self.node_type,
                 )
             except Exception as err:
-                traceback.print_exc()
                 span_context.record_exception(err)
                 return NodeRunResult(
                     status=WorkflowNodeExecutionStatus.FAILED,
                     inputs=inputs,
                     error=CustomException(
-                        CodeEnum.IterationExecutionError,
+                        CodeEnum.ITERATION_EXECUTION_ERROR,
                         cause_error=err,
                     ),
                     node_id=self.node_id,
@@ -343,7 +343,7 @@ class IterationStartNode(BaseNode):
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.IterationExecutionError,
+                    CodeEnum.ITERATION_EXECUTION_ERROR,
                     cause_error=e,
                 ),
                 inputs=outputs,
@@ -455,7 +455,7 @@ class IterationEndNode(BaseNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.EndNodeExecutionError,
+                    CodeEnum.END_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )

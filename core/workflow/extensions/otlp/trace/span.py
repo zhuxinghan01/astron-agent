@@ -7,15 +7,15 @@ import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, Optional
 
+import workflow.extensions.otlp.sid.sid_generator2 as sid_gen
 from loguru import logger
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.util import types
-
-import workflow.extensions.otlp.sid.sid_generator2 as sid_gen
 from workflow.extensions.middleware.getters import get_oss_service
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.trace import SpanLevel
+
 from .trace import Trace
 
 # Maximum size limit for span content before uploading to OSS
