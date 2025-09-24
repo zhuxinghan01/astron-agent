@@ -99,7 +99,7 @@ def setup_span_and_trace_mgmt(run_params_list, app_id, uid, caller, tool_type, s
 
 def send_telemetry_mgmt(node_trace):
     """Send telemetry data to Kafka."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
@@ -128,7 +128,7 @@ def handle_validation_error_mgmt(validate_err, span_context, node_trace, m, erro
     if error_code is None:
         error_code = ErrCode.JSON_SCHEMA_VALIDATE_ERR
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(error_code.code)
         node_trace.answer = validate_err
         node_trace.status = Status(
@@ -147,7 +147,7 @@ def handle_validation_error_mgmt(validate_err, span_context, node_trace, m, erro
 
 def handle_success_response_mgmt(span_context, node_trace, m, data, tool_ids=None):
     """Handle successful response with telemetry."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_success_count()
         node_trace.answer = json.dumps(data, ensure_ascii=False) if isinstance(data, (dict, list)) else str(data)
         if tool_ids:
@@ -175,7 +175,7 @@ def handle_error_response_mgmt(err, span_context, node_trace, m, error_code=None
     span_context.add_error_event(message)
     span_context.set_status(OTelStatus(StatusCode.ERROR))
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(error_code.code)
         node_trace.answer = message
         node_trace.status = Status(
@@ -289,7 +289,7 @@ def create_version(tools_info: ToolCreateRequest) -> ToolManagerResponse:
             m = setup_logging_and_metrics_mgmt(span_context, run_params_list, "create_tools")
 
             span_context.set_attributes(
-                attributes={"tools": run_params_list.get("payload", {}).get("tools")}
+                attributes={"tools": str(run_params_list.get("payload", {}).get("tools"))}
             )
 
             # Validate API
@@ -406,7 +406,7 @@ def update_version(tools_info: ToolUpdateRequest) -> ToolManagerResponse:
         m = setup_logging_and_metrics_mgmt(span_context, run_params_list, "update_tools")
 
         span_context.set_attributes(
-            attributes={"tools": run_params_list.get("payload", {}).get("tools")}
+            attributes={"tools": str(run_params_list.get("payload", {}).get("tools"))}
         )
 
         # Validate API

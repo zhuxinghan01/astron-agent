@@ -15,6 +15,7 @@ from opentelemetry import trace
 from opentelemetry.trace import Status
 
 from opentelemetry.util import types
+from plugin.link.consts import const
 
 
 class Span:
@@ -38,7 +39,7 @@ class Span:
         self.app_id = app_id
         self.uid = uid
         self.sid = sid
-        self.tracer = trace.get_tracer(os.getenv("TRACE_SERVICE_NAME"))
+        self.tracer = trace.get_tracer(os.getenv(const.OTLP_SERVICE_NAME_KEY))
 
     @contextmanager
     def start(

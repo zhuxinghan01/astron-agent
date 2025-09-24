@@ -4,18 +4,15 @@ import traceback
 import warnings
 from typing import Any, Dict
 
-from RestrictedPython import (  # type: ignore
-    PrintCollector,
+from RestrictedPython import PrintCollector  # type: ignore
+from RestrictedPython import (
     compile_restricted,
     limited_builtins,
     safe_builtins,
     utility_builtins,
 )
-from RestrictedPython.Eval import (  # type: ignore
-    default_guarded_getattr,
-    default_guarded_getitem,
-)
-
+from RestrictedPython.Eval import default_guarded_getattr  # type: ignore
+from RestrictedPython.Eval import default_guarded_getitem
 from workflow.engine.nodes.code.executor.base_executor import BaseExecutor
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -72,7 +69,7 @@ class LocalExecutor(BaseExecutor):
             proc.join(timeout)
             if proc.is_alive():
                 proc.terminate()
-                raise CustomException(err_code=CodeEnum.CodeExecutionTimeoutError)
+                raise CustomException(err_code=CodeEnum.CODE_EXECUTION_TIMEOUT_ERROR)
             if "error" in result_dict:
                 raise Exception(result_dict["error"])
             return result_dict.get("output", "")

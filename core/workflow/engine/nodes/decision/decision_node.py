@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from jsonschema import ValidationError, validate  # type: ignore
 from loguru import logger
-
+from pydantic import BaseModel, Field
 from workflow.consts.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
@@ -69,6 +69,21 @@ def _custom_parser(multiline_string: str) -> str:
     return multiline_string
 
 
+class IntentChain(BaseModel):
+    """
+    Intent chain.
+    :param id: ID of the intent chain
+    :param name: Human-readable name for the intent chain
+    :param description: Description of the intent chain
+    :param intent_type: Type of the intent chain
+    """
+
+    id: str = Field(..., pattern=r"^intent-one-of::[0-9a-zA-Z-]+")
+    name: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
+    intent_type: int = Field(..., alias="intentType", ge=1, le=2)
+
+
 class DecisionNode(BaseLLMNode):
     """
     Decision node for workflow routing based on user input and intent classification.
@@ -77,8 +92,10 @@ class DecisionNode(BaseLLMNode):
     and normal classification to determine the next workflow path based on user intent.
     """
 
-    promptPrefix: str = ""  # Custom prompt prefix for decision making
-    reasonMode: int = 0  # Mode for reasoning (0: normal, 1: prompt-based)
+    promptPrefix: str = Field(default="")  # Custom prompt prefix for decision making
+    reasonMode: int = Field(
+        default=0
+    )  # Mode for reasoning (0: normal, 1: prompt-based)
     fs_params: object = {
         "type": "object",
         "properties": {
@@ -86,9 +103,13 @@ class DecisionNode(BaseLLMNode):
         },
         "required": ["next_inputs"],
     }  # Function call parameters schema
-    useFunctionCall: bool = True  # Whether to use function call mode
-    question_type: str = "not_knowledge"  # Type of question for LLM processing
-    intentChains: list[dict] = []  # List of intent chain configurations
+    useFunctionCall: bool = Field(default=True)  # Whether to use function call mode
+    question_type: str = Field(
+        default="not_knowledge"
+    )  # Type of question for LLM processing
+    intentChains: list[IntentChain] = Field(
+        ..., default_factory=list
+    )  # List of intent chain configurations
 
     def get_node_config(self) -> Dict[str, Any]:
         """
@@ -112,8 +133,8 @@ class DecisionNode(BaseLLMNode):
             "patch_id": self.patch_id,
             "topK": self.topK,
             "enableChatHistory": self.enableChatHistory,
-            "enableChatHistoryV2": self.enableChatHistoryV2,
-            "intentChains": self.intentChains,
+            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
+            "intentChains": [item.dict() for item in self.intentChains],
             "source": (
                 ModelProviderEnum.XINGHUO.value
                 if not hasattr(self, "source")
@@ -167,17 +188,15 @@ class DecisionNode(BaseLLMNode):
         for intent_chain in self.intentChains:
             # Create function schema for each intent chain
             fs_instance = Function(
-                name=intent_chain.get("name", ""),
-                description=intent_chain.get("description", ""),
+                name=intent_chain.name,
+                description=intent_chain.description,
                 parameters=copy.deepcopy(self.fs_params),
             )
             # Map intent names to their IDs for routing
-            id_map.update({intent_chain.get("name"): intent_chain.get("id")})
+            id_map.update({intent_chain.name: intent_chain.id})
             # Set default ID for fallback intent (intentType == 1)
             default_id = (
-                intent_chain.get("id", "")
-                if intent_chain.get("intentType", 1) == 1
-                else default_id
+                intent_chain.id if intent_chain.intent_type == 1 else default_id
             )
             fs_instances.append(fs_instance)
         # Log function call schemas for debugging
@@ -339,27 +358,27 @@ class DecisionNode(BaseLLMNode):
             idMap: Dict[str, Any] = {}
             defalut_id = ""
             for p in self.intentChains:
-                if p["intentType"] != 1:
+                if p.intent_type != 1:
                     # Regular intent category
-                    idMap[p["name"]] = p["id"]
+                    idMap[p.name] = p.id
                     categories.append(
                         {
-                            "category_id": p["id"],
-                            "category_name": p["name"],
-                            "category_desc": p["description"],
+                            "category_id": p.id,
+                            "category_name": p.name,
+                            "category_desc": p.description,
                         }
                     )
                 else:
                     # Default fallback intent
-                    defalut_id = str(p["id"])
+                    defalut_id = str(p.id)
                     categories.append(
                         {
-                            "category_id": p["id"],
+                            "category_id": p.id,
                             "category_name": "DEFAULT",
                             "category_desc": "Default intent when no other intent matches",
                         }
                     )
-                    idMap["DEFAULT"] = p["id"]
+                    idMap["DEFAULT"] = p.id
             destinations_dict = {
                 "input_text": input,
                 "categories": categories,
@@ -382,11 +401,11 @@ class DecisionNode(BaseLLMNode):
             )
 
             # End-to-end chat history support
-            if self.enableChatHistoryV2 and self.enableChatHistoryV2.get("isEnabled"):
+            if self.enableChatHistoryV2 and self.enableChatHistoryV2.is_enabled:
                 # Disable legacy chat history when v2 is enabled
                 history_chat = None
                 # Configure history parameters: max_token and rounds
-                rounds = self.enableChatHistoryV2.get("rounds", 1)
+                rounds = self.enableChatHistoryV2.rounds
                 max_token = self.maxTokens
                 history_v2 = (
                     History(
@@ -515,19 +534,19 @@ class DecisionNode(BaseLLMNode):
             idMap = {}
             defalut_id = ""
             for p in self.intentChains:
-                if p["intentType"] != 1:
-                    idMap[p["name"]] = p["id"]
+                if p.intent_type != 1:
+                    idMap[p.name] = p.id
                 else:
-                    defalut_id = str(p["id"])
+                    defalut_id = str(p.id)
 
             # Construct the prompt using the predefined template
             # 0. Prepare intent descriptions and names
             destinations_list: list = []
             # Collect all non-default intents to send to the model
             destinations_list.extend(
-                f"{p['name']}: {p['description']}"
+                f"{p.name}: {p.description}"
                 for p in self.intentChains
-                if p["intentType"] != 1
+                if p.intent_type != 1
             )
 
             destinations_str = "\n".join(destinations_list)
@@ -554,11 +573,11 @@ class DecisionNode(BaseLLMNode):
             )
 
             # End-to-end chat history support
-            if self.enableChatHistoryV2 and self.enableChatHistoryV2.get("isEnabled"):
+            if self.enableChatHistoryV2 and self.enableChatHistoryV2.is_enabled:
                 # Disable legacy chat history when v2 is enabled
                 history_chat = None
                 # Configure history parameters: max_token and rounds
-                rounds = self.enableChatHistoryV2.get("rounds", 1)
+                rounds = self.enableChatHistoryV2.rounds
                 max_token = self.maxTokens
                 history_v2 = (
                     History(
@@ -675,7 +694,7 @@ class DecisionNode(BaseLLMNode):
             return await self.async_execute_prompt(
                 variable_pool=variable_pool,
                 span=span,
-                flow_id=callbacks.flow_id,
+                flow_id=callbacks.flow_id if callbacks else "",
                 event_log_node_trace=event_log_node_trace,
             )
 
@@ -688,6 +707,6 @@ class DecisionNode(BaseLLMNode):
         return await self.async_execute_normal(
             variable_pool=variable_pool,
             span=span,
-            flow_id=callbacks.flow_id,
+            flow_id=callbacks.flow_id if callbacks else "",
             event_log_node_trace=event_log_node_trace,
         )

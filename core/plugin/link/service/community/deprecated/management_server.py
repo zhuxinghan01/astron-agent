@@ -76,7 +76,7 @@ def _setup_observability(params, run_params_list, func_name):
 
 def _send_error_telemetry(meter, node_trace, error_code, error_msg):
     """Send error telemetry data."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         meter.in_error_count(error_code)
         node_trace.answer = error_msg
         node_trace.status = Status(code=error_code, message=error_msg)
@@ -90,7 +90,7 @@ def _send_error_telemetry(meter, node_trace, error_code, error_msg):
 
 def _send_success_telemetry(meter, node_trace, response_data, service_id=None):
     """Send success telemetry data."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         meter.in_success_count()
         node_trace.answer = json.dumps(response_data, ensure_ascii=False)
         if service_id:
@@ -157,7 +157,7 @@ def create_tools(tools_info: ToolManagerRequest):
 
         with span_context:
             span_context.set_attributes(
-                attributes={"tools": run_params_list.get("payload", {}).get("tools")}
+                attributes={"tools": str(run_params_list.get("payload", {}).get("tools"))}
             )
 
             # Validate API
@@ -437,7 +437,7 @@ def update_tools(tools_info: ToolManagerRequest):
 
         with span_context:
             span_context.set_attributes(
-                attributes={"tools": run_params_list.get("payload", {}).get("tools")}
+                attributes={"tools": str(run_params_list.get("payload", {}).get("tools"))}
             )
 
             # Validate API
