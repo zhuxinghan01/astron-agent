@@ -370,6 +370,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setDesc(request.getDescription());
         model.setTag(JSONArray.toJSONString(request.getTag()));
         model.setType(1);
+        model.setStatus(ModelStatusEnum.RUNNING.getCode());
         model.setApiKey(request.getApiKey());
         model.setColor(request.getColor());
         model.setConfig(
