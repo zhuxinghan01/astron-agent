@@ -20,9 +20,9 @@ import com.iflytek.astron.console.hub.dto.user.MyBotPageDTO;
 import com.iflytek.astron.console.hub.dto.user.MyBotParamDTO;
 import com.iflytek.astron.console.hub.dto.user.MyBotResponseDTO;
 import com.iflytek.astron.console.hub.entity.ApplicationForm;
-import com.iflytek.astron.console.hub.entity.BotOffiaccount;
+import com.iflytek.astron.console.commons.entity.wechat.BotOffiaccount;
 import com.iflytek.astron.console.hub.mapper.ApplicationFormMapper;
-import com.iflytek.astron.console.hub.service.bot.BotOffiaccountService;
+import com.iflytek.astron.console.hub.service.wechat.BotOffiaccountService;
 import com.iflytek.astron.console.hub.service.chat.ChatBotApiService;
 import com.iflytek.astron.console.hub.service.user.UserBotService;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
@@ -160,6 +160,7 @@ public class UserBotServiceImpl implements UserBotService {
         Set<Long> wechatBotId = botOffiaccountService.getAccountList(uid)
                 .stream()
                 .map(BotOffiaccount::getBotId)
+                .map(Integer::longValue)
                 .collect(Collectors.toSet());
 
         Set<Integer> apiBotId = chatBotApiService.getBotApiList(uid)

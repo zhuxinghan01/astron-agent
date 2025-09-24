@@ -102,4 +102,7 @@ public class ChatBotMarket {
 
     @Schema(description = "Used tools")
     private String openedTool;
+
+    @Schema(description = "Publish channels: MARKET,API,WECHAT,MCP (comma separated)")
+    private String publishChannels;
 }

@@ -1,22 +1,32 @@
-package com.iflytek.astron.console.hub.dto.bot;
+package com.iflytek.astron.console.commons.enums;
 
 import lombok.Getter;
 
 /**
- * Binding status of bot with WeChat Official Account
+ * 智能体与微信公众号的绑定状态枚举
+ *
+ * @author stellar
  */
 @Getter
 public enum BotOffiaccountStatusEnum {
 
-    BOUND(1, "Bound"),
-    UNBOUND(2, "Unbound");
+    /**
+     * 已绑定
+     */
+    BOUND(1, "已绑定"),
 
     /**
-     * Status type
+     * 已解绑
+     */
+    UNBOUND(2, "已解绑");
+
+    /**
+     * 状态码
      */
     private final Integer status;
+
     /**
-     * Description
+     * 状态描述
      */
     private final String desc;
 
@@ -24,5 +34,4 @@ public enum BotOffiaccountStatusEnum {
         this.status = status;
         this.desc = desc;
     }
-
 }
