@@ -6,7 +6,7 @@ type Config struct {
 	Server struct {
 		Port     int    `toml:"port"`
 		Location string `toml:"location"`
-	} `toml:"server"`
+	} `toml:"service"`
 
 	DataBase struct {
 		DBType       string `toml:"dbType"`
@@ -18,7 +18,7 @@ type Config struct {
 	} `toml:"database"`
 
 	Log struct {
-		LogFile string `toml:"logFile"`
+		LogFile string `toml:"path"`
 	} `toml:"log"`
 }
 
