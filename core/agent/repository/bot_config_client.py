@@ -25,31 +25,32 @@ class BotConfigClient(BaseModel):
     app_id: str
     bot_id: str
     span: Span
+    redis_client: Optional[BaseRedisClient] = Field(default=None)
+    mysql_client: Optional[MysqlClient] = Field(default=None)
 
-    redis_client: BaseRedisClient = Field(
-        default=create_redis_client(
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def model_post_init(self, __context: Any) -> None:
+        """Initialize Redis and MySQL clients after instance creation."""
+        self.redis_client = create_redis_client(
             cluster_addr=agent_config.REDIS_CLUSTER_ADDR,
             standalone_addr=agent_config.REDIS_ADDR,
             password=agent_config.REDIS_PASSWORD,
         )
-    )
-    mysql_client: MysqlClient = Field(
-        default=MysqlClient(
+        self.mysql_client = MysqlClient(
             database_url=(
                 f"mysql+pymysql://{agent_config.MYSQL_USER}:"
                 f"{agent_config.MYSQL_PASSWORD}@{agent_config.MYSQL_HOST}:"
                 f"{agent_config.MYSQL_PORT}/{agent_config.MYSQL_DB}?charset=utf8mb4"
             )
         )
-    )
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def redis_key(self) -> str:
         return f"spark_bot:bot_config:{self.bot_id}"
 
     async def pull_from_redis(self, span: Span) -> Optional[BotConfig]:
         with span.start("PullFromRedis") as sp:
+            assert self.redis_client is not None
             redis_value = await self.redis_client.get(self.redis_key())
             if not redis_value:
                 sp.add_info_events({"redis-value": ""})
@@ -87,6 +88,7 @@ class BotConfigClient(BaseModel):
     async def set_to_redis(self, value: str, ex: int | None = None) -> None:
         if ex is None:
             ex = agent_config.REDIS_EXPIRE
+        assert self.redis_client is not None
         redis_set_value = await self.redis_client.set(self.redis_key(), value, ex=ex)
         if not redis_set_value:
             raise AgentExc(
@@ -96,6 +98,7 @@ class BotConfigClient(BaseModel):
             )
 
     async def refresh_redis_ttl(self, ex: int, value: str) -> None:
+        assert self.redis_client is not None
         ttl_key = await self.redis_client.get_ttl(self.redis_key())
         if ttl_key is not None and ttl_key > 0:
             await self.set_to_redis(value, ex)
@@ -124,6 +127,7 @@ class BotConfigClient(BaseModel):
 
     async def pull_from_mysql(self, span: Span) -> Optional[BotConfig]:
         with span.start("PullFromMySQL") as sp:
+            assert self.mysql_client is not None
             with self.mysql_client.session_getter() as session:
                 record = (
                     session.query(TbBotConfig)
@@ -178,6 +182,7 @@ class BotConfigClient(BaseModel):
                     on=f"app_id:{self.app_id} bot_id:{self.bot_id}",
                 )
 
+            assert self.mysql_client is not None
             with self.mysql_client.session_getter() as session:
 
                 record = TbBotConfig(
@@ -203,6 +208,7 @@ class BotConfigClient(BaseModel):
 
     async def delete(self) -> None:
         with self.span.start("Delete") as sp:
+            assert self.mysql_client is not None
             with self.mysql_client.session_getter() as session:
                 value = await self.pull_from_redis(sp) or await self.pull_from_mysql(sp)
                 if not value:
@@ -227,6 +233,7 @@ class BotConfigClient(BaseModel):
 
                 if redis_value:
                     try:
+                        assert self.redis_client is not None
                         await self.redis_client.delete(self.redis_key())
                     except Exception as e:
                         raise BotConfigMgrExc(
@@ -235,6 +242,7 @@ class BotConfigClient(BaseModel):
 
     async def update(self, bot_config: BotConfig) -> BotConfig:
         with self.span.start("Update") as sp:
+            assert self.mysql_client is not None
             with self.mysql_client.session_getter() as session:
                 value = await self.pull_from_redis(sp) or await self.pull_from_mysql(sp)
                 if not value:
@@ -289,6 +297,7 @@ class BotConfigClient(BaseModel):
 
                 redis_value = await self.pull_from_redis(sp)
                 if redis_value:
+                    assert self.redis_client is not None
                     ttl_key = await self.redis_client.get_ttl(self.redis_key())
                     bot_config_value = bot_config.model_dump_json(by_alias=True)
                     if ttl_key == -1:
