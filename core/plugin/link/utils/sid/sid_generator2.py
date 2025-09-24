@@ -9,6 +9,8 @@ import os
 import socket
 import time
 
+from plugin.link.consts import const
+
 sid_generator2: SidGenerator2
 
 
@@ -34,9 +36,9 @@ def spark_link_init_sid():
     description: Initialize SID
     :return:
     """
-    sub = os.getenv("SERVICE_SUB")
-    location = os.getenv("SERVICE_LOCATION")
-    local_port = os.getenv("SERVICE_PORT")
+    sub = os.getenv(const.SERVICE_SUB_KEY)
+    location = os.getenv(const.SERVICE_LOCATION_KEY)
+    local_port = os.getenv(const.SERVICE_PORT_KEY)
     local_ip = get_host_ip()
     init_sid(sub, location, local_ip, local_port)
 
