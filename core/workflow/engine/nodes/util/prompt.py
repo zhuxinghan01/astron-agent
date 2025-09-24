@@ -140,7 +140,7 @@ def process_prompt(
         return last_part
     except Exception as e:
         raise CustomException(
-            err_code=CodeEnum.VariableParseError,
+            err_code=CodeEnum.VARIABLE_PARSE_ERROR,
             err_msg=f"Variable name: {key_name} parsing failed, reason: {str(e)}",
         ) from e
 

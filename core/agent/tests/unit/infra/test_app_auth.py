@@ -257,11 +257,11 @@ class TestAPPAuth:
         # pylint: disable=attribute-defined-outside-init
         # Mock agent_config values for testing
         with patch("infra.app_auth.agent_config") as mock_config:
-            mock_config.app_auth_host = "test.host.com"
-            mock_config.app_auth_router = "/auth"
-            mock_config.app_auth_prot = "https"
-            mock_config.app_auth_api_key = "test_api_key"
-            mock_config.app_auth_secret = "test_secret"
+            mock_config.APP_AUTH_HOST = "test.host.com"
+            mock_config.APP_AUTH_ROUTER = "/auth"
+            mock_config.APP_AUTH_PROT = "https"
+            mock_config.APP_AUTH_API_KEY = "test_api_key"
+            mock_config.APP_AUTH_SECRET = "test_secret"
 
             self.app_auth = APPAuth()
             self.config = self.app_auth.config

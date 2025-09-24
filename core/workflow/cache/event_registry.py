@@ -12,7 +12,6 @@ from enum import Enum
 from typing import Any, Dict
 
 from pydantic import BaseModel
-
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.graceful_shutdown.base_shutdown_event import BaseShutdownEvent
@@ -139,7 +138,7 @@ class EventRegistry(BaseShutdownEvent):
         """
         data = get_cache_service().hash_get(name=cls._event_key(), key=event_id)
         if not data:
-            raise CustomException(err_code=CodeEnum.EventRegistryNotFoundError)
+            raise CustomException(err_code=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR)
         return cls._decode(data)
 
     @classmethod
@@ -308,7 +307,7 @@ class EventRegistry(BaseShutdownEvent):
 
             err_msg = "Timeout while waiting for user response"
             raise CustomException(
-                err_code=CodeEnum.EventRegistryNotFoundError,
+                err_code=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                 err_msg=err_msg,
             )
         except Exception as e:

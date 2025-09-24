@@ -7,11 +7,11 @@ from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 from aiohttp import ClientTimeout
-
+from pydantic import Field
 from workflow.consts.flow import FLOW_FINISH_REASON
 from workflow.domain.models.ai_app import App
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
-from workflow.engine.entities.history import History
+from workflow.engine.entities.history import EnableChatHistoryV2, History
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_entities import NodeType
 from workflow.engine.entities.output_mode import EndNodeOutputModeEnum
@@ -38,12 +38,14 @@ class FlowNode(BaseNode):
     """
 
     # Flow configuration parameters
-    flowId: str  # Target flow ID to execute
-    appId: str  # Application ID for authentication
-    uid: str  # User ID for the flow execution
+    flowId: str = Field(..., min_length=1)  # Target flow ID to execute
+    appId: str = Field(..., min_length=1)  # Application ID for authentication
+    uid: str = Field(..., min_length=1)  # User ID for the flow execution
 
     # Chat history configuration for conversation context
-    enableChatHistoryV2: dict = {}
+    enableChatHistoryV2: EnableChatHistoryV2 = Field(
+        default_factory=EnableChatHistoryV2
+    )
 
     # Default chat body template for API requests
     chatBody: dict = {
@@ -67,7 +69,7 @@ class FlowNode(BaseNode):
             "flow_id": self.flowId,
             "app_id": self.appId,
             "uid": self.uid,
-            "enableChatHistoryV2": self.enableChatHistoryV2,
+            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
             "version": self.version,
         }
 
@@ -213,7 +215,7 @@ class FlowNode(BaseNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.WorkflowExecutionError,
+                    CodeEnum.WORKFLOW_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )
@@ -249,7 +251,7 @@ class FlowNode(BaseNode):
         )
         if output_mode is None:
             raise CustomException(
-                err_code=CodeEnum.WorkflowExecutionError,
+                err_code=CodeEnum.WORKFLOW_EXECUTION_ERROR,
                 cause_error=f"Flow output mode not configured for flow_id: {self.flowId}",
             )
 
@@ -296,7 +298,7 @@ class FlowNode(BaseNode):
                         # Check for API errors
                         if msg.get("code", 0) != 0:
                             raise CustomException(
-                                err_code=CodeEnum.WorkflowExecutionError,
+                                err_code=CodeEnum.WORKFLOW_EXECUTION_ERROR,
                                 err_msg=msg.get("message", ""),
                                 cause_error=json.dumps(msg, ensure_ascii=False),
                             )
@@ -333,7 +335,7 @@ class FlowNode(BaseNode):
         except asyncio.TimeoutError as e:
             # Handle timeout errors with detailed information
             raise CustomException(
-                err_code=CodeEnum.WorkflowExecutionError,
+                err_code=CodeEnum.WORKFLOW_EXECUTION_ERROR,
                 err_msg=f"Flow node response timeout ({interval_timeout}s)",
                 cause_error=f"Flow node response timeout ({interval_timeout}s)",
             ) from e
@@ -372,10 +374,8 @@ class FlowNode(BaseNode):
 
         # Process chat history if enabled
         history = []
-        if self.enableChatHistoryV2 and self.enableChatHistoryV2.get(
-            "isEnabled", False
-        ):
-            rounds = self.enableChatHistoryV2.get("rounds", 1)
+        if self.enableChatHistoryV2.is_enabled:
+            rounds = self.enableChatHistoryV2.rounds
             if variable_pool.history_v2:
                 history_v2 = History(
                     origin_history=variable_pool.history_v2.origin_history,
@@ -426,7 +426,7 @@ class FlowNode(BaseNode):
             # Validate app existence
             if not app or app.id == 0:
                 raise CustomException(
-                    err_code=CodeEnum.AppNotFound,
+                    err_code=CodeEnum.APP_NOT_FOUND_ERROR,
                     err_msg=f"App not found for nested workflow execution: {self.appId}",
                 )
 
@@ -468,7 +468,7 @@ class FlowNode(BaseNode):
                 outputs = json.loads(result_content)
             except Exception as e:
                 raise CustomException(
-                    err_code=CodeEnum.WorkflowExecRespFormatError,
+                    err_code=CodeEnum.WORKFLOW_EXEC_RESP_FORMAT_ERROR,
                     cause_error=f"Workflow response format error. Response: {result_content}, "
                     f"Expected deserialization keys: {self.output_identifier}",
                 ) from e
@@ -481,7 +481,7 @@ class FlowNode(BaseNode):
             outputs["reasoning_content"] = result_reasoning_content
         else:
             raise CustomException(
-                err_code=CodeEnum.WorkflowExecutionError,
+                err_code=CodeEnum.WORKFLOW_EXECUTION_ERROR,
                 cause_error=f"Invalid workflow output mode: {output_mode}",
             )
 

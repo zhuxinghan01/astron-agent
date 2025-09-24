@@ -108,7 +108,7 @@ class CompletionBase(BaseModel, ABC):
         yield await self.create_chunk(stop_chunk)
         yield await self.create_done()
 
-        if agent_config.upload_metrics:
+        if agent_config.UPLOAD_METRICS:
             context.meter.in_error_count(context.error.c)
             # context.meter.in_error_count(
             #     context.error.c, lables={"msg": context.error.m}
@@ -118,7 +118,7 @@ class CompletionBase(BaseModel, ABC):
         context.span.add_info_events({"message": context.error.m})
 
         context.node_trace.record_end()
-        if agent_config.upload_node_trace:
+        if agent_config.UPLOAD_NODE_TRACE:
             node_trace_log = context.node_trace.upload(
                 status=TraceStatus(code=context.error.c, message=context.error.m),
                 log_caller=self.log_caller,

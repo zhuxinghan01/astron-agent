@@ -252,11 +252,11 @@ def mock_agent_config() -> Generator[Mock, None, None]:
         mock_config.spark_x1_model_name = "x1"
         mock_config.spark_x1_model_sk = "x1_test_sk"
         mock_config.maas_sk_auth_url = "https://test.maas.url"
-        mock_config.app_auth_host = "test.auth.host"
-        mock_config.app_auth_router = "/auth"
-        mock_config.app_auth_prot = "https"
-        mock_config.app_auth_api_key = "test_api_key"
-        mock_config.app_auth_secret = "test_secret"
+        mock_config.APP_AUTH_HOST = "test.auth.host"
+        mock_config.APP_AUTH_ROUTER = "/auth"
+        mock_config.APP_AUTH_PROT = "https"
+        mock_config.APP_AUTH_API_KEY = "test_api_key"
+        mock_config.APP_AUTH_SECRET = "test_secret"
         yield mock_config
 
 

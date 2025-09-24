@@ -5,11 +5,11 @@ from typing import Any, Dict, List, Tuple
 
 import aiohttp
 from aiohttp import ClientResponse, ClientTimeout
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field, model_validator
 from workflow.consts.flow import FLOW_FINISH_REASON
 from workflow.consts.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
+from workflow.engine.entities.history import EnableChatHistoryV2
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
@@ -17,7 +17,6 @@ from workflow.engine.nodes.entities.node_run_result import (
     NodeRunResult,
     WorkflowNodeExecutionStatus,
 )
-from workflow.engine.nodes.knowledge_pro.consts import RepoTypeEnum
 from workflow.engine.nodes.util.dict_util import keys_to_snake_case
 from workflow.engine.nodes.util.frame_processor import extract_tool_calls_content
 from workflow.engine.nodes.util.prompt import prompt_template_replace
@@ -37,9 +36,9 @@ class Instruction(BaseModel):
     :param query: Query instruction template
     """
 
-    reasoning: str = ""
-    answer: str = ""
-    query: str = ""
+    reasoning: str = Field(...)
+    answer: str = Field(...)
+    query: str = Field(...)
 
 
 class AgentModelConfig(BaseModel):
@@ -50,9 +49,9 @@ class AgentModelConfig(BaseModel):
     :param agentStrategy: Agent strategy type (1 for default)
     """
 
-    domain: str = ""
-    api: str = ""
-    agentStrategy: int = 1
+    domain: str = Field(...)
+    api: str = Field(...)
+    agentStrategy: int = Field(...)
 
 
 class Match(BaseModel):
@@ -62,8 +61,8 @@ class Match(BaseModel):
     :param docIds: List of document IDs to match
     """
 
-    repoIds: list = []
-    docIds: list = []
+    repoIds: List[str] = Field(min_length=1)
+    docIds: List[str] | None = Field(default=None, min_length=1)
 
 
 class Knowledge(BaseModel):
@@ -76,11 +75,20 @@ class Knowledge(BaseModel):
     :param match: Matching configuration for repositories and documents
     """
 
-    name: str = ""
-    description: str = ""
-    topK: int = 1
-    repoType: int = RepoTypeEnum.CBG_RAG.value
-    match: Match = Match()
+    name: str = Field(min_length=1, max_length=128)
+    description: str = Field(min_length=0, max_length=1024)
+    topK: int = Field(ge=1, le=5)
+    repoType: int = Field(..., ge=1, le=2)
+    match: Match
+
+    @model_validator(mode="after")
+    def check_doc_ids_when_repo_type(self) -> "Knowledge":
+        if self.repoType == 2:
+            if self.match.docIds is None or len(self.match.docIds) == 0:
+                raise ValueError(
+                    "When repoType=2, match.docIds is required and must contain at least one item."
+                )
+        return self
 
 
 class AgentNodePlugin(BaseModel):
@@ -93,11 +101,11 @@ class AgentNodePlugin(BaseModel):
     :param knowledge: List of knowledge base configurations
     """
 
-    mcpServerIds: list = []
-    mcpServerUrls: list = []
-    tools: list = []
-    workflowIds: list = []
-    knowledge: List[Knowledge] = []
+    mcpServerIds: List[str] = Field(...)
+    mcpServerUrls: List[str] = Field(...)
+    tools: list = Field(...)
+    workflowIds: List[str] = Field(...)
+    knowledge: List[Knowledge] = Field(default_factory=list)
 
 
 class AgentNodeMessage:
@@ -134,8 +142,8 @@ class AgentMetaData(BaseModel):
     :param callerSid: Caller session ID
     """
 
-    caller: str = "workflow-agent-node"
-    callerSid: str = ""
+    caller: str = Field(default="workflow-agent-node")
+    callerSid: str = Field(default="")
 
 
 class AgentNode(BaseNode):
@@ -159,19 +167,21 @@ class AgentNode(BaseNode):
     :param source: Model provider source (default: XINGHUO)
     """
 
-    appId: str
-    apiKey: str
-    apiSecret: str
-    uid: str
+    appId: str = Field(...)
+    apiKey: str = Field(...)
+    apiSecret: str = Field(...)
+    uid: str = Field(default="")
     modelConfig: AgentModelConfig
     instruction: Instruction
     plugin: AgentNodePlugin
     metaData: AgentMetaData = AgentMetaData()
-    maxLoopCount: int = 10
-    stream: bool = True
-    maxTokens: int = 10240
-    enableChatHistoryV2: dict = {}
-    source: str = ModelProviderEnum.XINGHUO.value
+    maxLoopCount: int = Field(...)
+    stream: bool = Field(default=True)
+    maxTokens: int = Field(default=10240)
+    enableChatHistoryV2: EnableChatHistoryV2 = Field(
+        default_factory=EnableChatHistoryV2
+    )
+    source: str = Field(default=ModelProviderEnum.XINGHUO.value)
 
     def get_node_config(self) -> Dict[str, Any]:
         """Get node configuration as dictionary.
@@ -189,7 +199,7 @@ class AgentNode(BaseNode):
             "metaData": self.metaData.dict(),
             "max_loop_count": self.maxLoopCount,
             "maxTokens": self.maxTokens,
-            "enableChatHistoryV2": self.enableChatHistoryV2,
+            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
             "knowledge": [k.dict() for k in self.plugin.knowledge],
             "source": self.source,
         }
@@ -281,7 +291,7 @@ class AgentNode(BaseNode):
                     )
         except asyncio.TimeoutError as e:
             raise CustomException(
-                err_code=CodeEnum.AgentNodeExecutionError,
+                err_code=CodeEnum.AGENT_NODE_EXECUTION_ERROR,
                 err_msg=f"Agent node response timeout ({interval_timeout}s)",
             ) from e
 
@@ -362,7 +372,7 @@ class AgentNode(BaseNode):
 
             if msg.get("code", 0) != 0:
                 raise CustomException(
-                    err_code=CodeEnum.AgentNodeExecutionError,
+                    err_code=CodeEnum.AGENT_NODE_EXECUTION_ERROR,
                     err_msg=msg.get("message", ""),
                     cause_error=json.dumps(msg, ensure_ascii=False),
                 )
@@ -473,9 +483,9 @@ class AgentNode(BaseNode):
         :return: List of formatted message dictionaries
         """
         messages: List[Dict] = []
-        if not (self.enableChatHistoryV2 and self.enableChatHistoryV2.get("isEnabled")):
+        if not (self.enableChatHistoryV2 and self.enableChatHistoryV2.is_enabled):
             return messages
-        rounds = self.enableChatHistoryV2.get("rounds", 10)
+        rounds = self.enableChatHistoryV2.rounds
         history = []
         # variable_pool.history_v2 is None during single node debugging
         if variable_pool.history_v2:
@@ -603,7 +613,7 @@ class AgentNode(BaseNode):
                 node_type=self.node_type,
                 status=WorkflowNodeExecutionStatus.FAILED,
                 error=CustomException(
-                    CodeEnum.AgentNodeExecutionError,
+                    CodeEnum.AGENT_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
             )
