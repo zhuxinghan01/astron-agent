@@ -275,7 +275,10 @@ const addPendingRequest = (config: InternalAxiosRequestConfig): void => {
  * @param config 请求配置
  */
 const removePendingRequest = (config?: AxiosRequestConfig): void => {
-  const requestKey = generateReqKey(config as AxiosRequestConfig);
+  if (!config) {
+    return;
+  }
+  const requestKey = generateReqKey(config);
   if (pendingRequest.has(requestKey)) {
     const cancelToken = pendingRequest.get(requestKey);
     cancelToken(requestKey);
