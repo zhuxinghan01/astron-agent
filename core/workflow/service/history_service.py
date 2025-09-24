@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import desc
 from sqlmodel import Session, select  # type: ignore
-
 from workflow.domain.models.history import History
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -90,9 +89,9 @@ def add_history(
         session.refresh(db_history)
     except Exception as e:
         raise CustomException(
-            CodeEnum.EngRunErr,
+            CodeEnum.ENG_RUN_ERROR,
             err_msg=f"add_history method failed to add LLM history; {e}",
-            cause_error=f"err code : {CodeEnum.EngRunErr.code}. message: add_history method failed to add LLM history; {e}",
+            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. message: add_history method failed to add LLM history; {e}",
         ) from e
 
 
@@ -188,7 +187,7 @@ def get_history(
         return history
     except Exception as e:
         raise CustomException(
-            CodeEnum.EngRunErr,
+            CodeEnum.ENG_RUN_ERROR,
             err_msg=f"get_history method failed to retrieve LLM history; {e}",
-            cause_error=f"err code : {CodeEnum.EngRunErr.code}. message: get_history method failed to retrieve LLM history; {e}",
+            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. message: get_history method failed to retrieve LLM history; {e}",
         ) from e
