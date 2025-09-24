@@ -2100,9 +2100,9 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
 
             // Add back billing metrics after deletion
             FileInfoV2 fileInfoV2 = this.getById(fileDirectoryTree.getFileId());
-            removeById(fileInfoV2.getId());
             fileCostRollback(fileInfoV2.getUuid());
             knowledgeService.deleteDoc(ids);
+            removeById(fileInfoV2.getId());
         }
     }
 
