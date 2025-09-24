@@ -4,7 +4,7 @@ import {
   RoleType,
   ModuleType,
   OperationType,
-} from '@/permissions/permission-type';
+} from '@/types/permission';
 
 // 权限失败时的行为枚举
 export enum PermissionFailureBehavior {
@@ -101,4 +101,4 @@ export {
   RoleType,
   ModuleType,
   OperationType,
-} from '@/permissions/permission-type';
+} from '@/types/permission';

@@ -17,7 +17,7 @@ import BackIcon from '@/assets/imgs/sparkImg/back.svg';
 import styles from './index.module.scss';
 
 import { useSpaceI18n } from '@/pages/space/hooks/use-space-i18n';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import { useSpaceType } from '@/hooks/use-space-type';
 import { roleToRoleType } from '@/pages/space/config';
 

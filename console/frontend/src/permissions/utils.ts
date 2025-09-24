@@ -4,7 +4,7 @@ import {
   ModuleType,
   OperationType,
   RolePermissionConfig,
-} from './permission-type';
+} from '@/types/permission';
 import { PERMISSIONS } from './config';
 
 // ==================== 权限检查工具函数 ====================

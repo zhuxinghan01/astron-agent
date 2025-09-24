@@ -24,7 +24,7 @@ import { useSpaceType } from '@/hooks/use-space-type';
 
 import { defaultEnterpriseAvatar, roleToRoleType } from '@/pages/space/config';
 import { useSpaceI18n } from '@/pages/space/hooks/use-space-i18n';
-import { RoleType, SpaceType } from '@/permissions/permission-type';
+import { RoleType, SpaceType } from '@/types/permission';
 
 export default function Index() {
   const navigate = useNavigate();
