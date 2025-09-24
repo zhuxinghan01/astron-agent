@@ -64,7 +64,7 @@ public class RpaHandler {
                 "Authorization", "Bearer " + key,
                 "Accept", "application/json; charset=utf-8");
 
-        log.info("getRpaList -> url: {}, pageNo: {}, pageSize: {}", url, safePageNo, safePageSize);
+        log.info("getRpaList -> url: {}, headers: {}", url, headers);
 
         // 3) Call downstream API and parse response
         final String resp;
