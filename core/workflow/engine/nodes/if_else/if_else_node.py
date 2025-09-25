@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 from workflow.engine.entities.variable_pool import VariablePool
@@ -71,35 +71,6 @@ class IFElseNode(BaseNode):
     """
 
     cases: List[IfElseNodeData] = Field(min_length=2)
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration as a dictionary.
-
-        :return: Dictionary containing branch list configuration
-        """
-        branches = []
-        for branch in self.cases:
-            branches.append(branch.dict())
-        return {"cases": branches}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for this node).
-
-        :param variable_pool: Variable pool containing runtime variables
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional parameters including callback methods
-        :return: Node execution result
-        """
-        raise NotImplementedError
 
     async def do_one_branch(
         self,

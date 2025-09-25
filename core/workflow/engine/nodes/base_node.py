@@ -91,42 +91,6 @@ class BaseNode(BaseModel):
         arbitrary_types_allowed = True
 
     @abstractmethod
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration dictionary for this node.
-
-        This method should be implemented by all subclasses to return
-        the specific configuration parameters for the node type.
-
-        :return: Dictionary containing node configuration parameters
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Execute the node synchronously.
-
-        This method should be implemented by all subclasses to define
-        the synchronous execution logic for the specific node type.
-
-        :param variable_pool: Pool containing variables and their values
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments including:
-            - callback: Hook method for callbacks
-            - event_log_node_trace: Hook for logging
-        :return: NodeRunResult containing execution results
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     async def async_execute(
         self,
         variable_pool: VariablePool,
@@ -317,40 +281,6 @@ class BaseOutputNode(BaseNode):
     """
 
     streamOutput: bool = Field(default=False)
-
-    @abstractmethod
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration dictionary for this output node.
-
-        This method should be implemented by all subclasses to return
-        the specific configuration parameters for the output node type.
-
-        :return: Dictionary containing node configuration parameters
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Execute the output node synchronously.
-
-        This method should be implemented by all subclasses to define
-        the synchronous execution logic for the specific output node type.
-
-        :param variable_pool: Pool containing variables and their values
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        """
-        raise NotImplementedError
 
     @abstractmethod
     async def async_execute(
