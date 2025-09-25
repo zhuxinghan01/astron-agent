@@ -51,7 +51,7 @@ export const nodeTypeComponentMap: Record<
   'extractor-parameter': ExtractorParameterDetail,
   'text-joiner': TextHandleDetail,
   message: MessageDetail,
-  'rpa': RpaDetail,
+  rpa: RpaDetail,
 };
 
 export const originOutputTypeList: OriginOutputType[] = [

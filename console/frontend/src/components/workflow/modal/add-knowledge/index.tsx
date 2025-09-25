@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { useMemoizedFn } from "ahooks";
-import { cloneDeep } from "lodash";
-import { Button, Input, Select, Spin, Tooltip } from "antd";
-import { useTranslation } from "react-i18next";
-import { configListRepos } from "@/services/knowledge";
-import { debounce } from "lodash";
-import dayjs from "dayjs";
-import useFlowsManager from "@/components/workflow/store/useFlowsManager";
-import { generateKnowledgeOutput } from "@/components/workflow/utils/reactflowUtils";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { useMemoizedFn } from 'ahooks';
+import { cloneDeep } from 'lodash';
+import { Button, Input, Select, Spin, Tooltip } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { configListRepos } from '@/services/knowledge';
+import { debounce } from 'lodash';
+import dayjs from 'dayjs';
+import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import { generateKnowledgeOutput } from '@/components/workflow/utils/reactflowUtils';
 import {
   KnowledgeItem,
   KnowledgeListItem,
@@ -16,31 +16,29 @@ import {
   OrderByType,
   VersionType,
   useAddKnowledgeProps,
-} from "@/components/workflow/types";
-import { Icons } from "@/components/workflow/icons";
+} from '@/components/workflow/types';
+import { Icons } from '@/components/workflow/icons';
 
 const useAddKnowledge = (): useAddKnowledgeProps => {
   const { t } = useTranslation();
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow,
+    state => state.autoSaveCurrentFlow
   );
-  const knowledgeModalInfo = useFlowsManager(
-    (state) => state.knowledgeModalInfo,
-  );
-  const getCurrentStore = useFlowsManager((state) => state.getCurrentStore);
-  const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
+  const knowledgeModalInfo = useFlowsManager(state => state.knowledgeModalInfo);
+  const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const currentStore = getCurrentStore();
-  const nodes = currentStore((state) => state.nodes);
-  const setNode = currentStore((state) => state.setNode);
-  const checkNode = currentStore((state) => state.checkNode);
+  const nodes = currentStore(state => state.nodes);
+  const setNode = currentStore(state => state.setNode);
+  const checkNode = currentStore(state => state.checkNode);
   const [allData, setAllData] = useState<KnowledgeItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [orderBy, setOrderBy] = useState<OrderByType>("create_time");
+  const [orderBy, setOrderBy] = useState<OrderByType>('create_time');
   const [tag, setTag] = useState<VersionType | undefined>(undefined);
 
   const id = useMemo(
     (): string | undefined => knowledgeModalInfo?.nodeId,
-    [knowledgeModalInfo],
+    [knowledgeModalInfo]
   );
 
   const repoList = useMemo((): KnowledgeListItem[] => {
@@ -51,7 +49,7 @@ const useAddKnowledge = (): useAddKnowledgeProps => {
   }, [nodes, id]);
 
   const isPro = useMemo(() => {
-    return id?.startsWith("knowledge-pro-base");
+    return id?.startsWith('knowledge-pro-base');
   }, [id]);
 
   const getKnowledges = (value?: string): void => {
@@ -59,19 +57,19 @@ const useAddKnowledge = (): useAddKnowledgeProps => {
     const params = {
       pageNo: 1,
       pageSize: 999,
-      content: value !== undefined ? value?.trim() : "",
+      content: value !== undefined ? value?.trim() : '',
       orderBy,
       tag,
     };
 
     configListRepos(params)
-      .then((data) => {
+      .then(data => {
         setAllData(
           isPro
             ? data.pageData?.filter(
-                (item) => item?.tag === "CBG-RAG" || item?.tag === "AIUI-RAG2",
+                item => item?.tag === 'CBG-RAG' || item?.tag === 'AIUI-RAG2'
               )
-            : data.pageData,
+            : data.pageData
         );
       })
       .finally(() => setLoading(false));
@@ -86,35 +84,35 @@ const useAddKnowledge = (): useAddKnowledgeProps => {
       const value = e.target.value;
       getKnowledges(value);
     }, 500),
-    [orderBy, isPro, tag],
+    [orderBy, isPro, tag]
   );
 
   const checkedIds = useMemo(() => {
-    return repoList?.map((item) => item?.id) || [];
+    return repoList?.map(item => item?.id) || [];
   }, [repoList]);
 
   const ragType = useMemo(() => {
-    return repoList?.[0]?.tag || "";
+    return repoList?.[0]?.tag || '';
   }, [repoList]);
 
   const handleKnowledgesChange = useMemoizedFn(
     (knowledge: KnowledgeItem): void => {
       autoSaveCurrentFlow();
       if (isPro) {
-        setNode(id, (old) => {
+        setNode(id, old => {
           const findKnowledgeIndex = old.data.nodeParam.repoList?.findIndex(
-            (item) => item.id === knowledge.id,
+            item => item.id === knowledge.id
           );
           if (findKnowledgeIndex === -1) {
             old.data.nodeParam.repoIds.push(
-              knowledge.coreRepoId || knowledge.outerRepoId,
+              knowledge.coreRepoId || knowledge.outerRepoId
             );
             old.data.nodeParam.repoList.push(knowledge);
           } else {
             old.data.nodeParam.repoIds.splice(findKnowledgeIndex, 1);
             old.data.nodeParam.repoList.splice(findKnowledgeIndex, 1);
           }
-          if (knowledge?.tag === "AIUI-RAG2") {
+          if (knowledge?.tag === 'AIUI-RAG2') {
             old.data.nodeParam.repoType = 1;
           } else {
             old.data.nodeParam.repoType = 2;
@@ -124,13 +122,13 @@ const useAddKnowledge = (): useAddKnowledgeProps => {
           };
         });
       } else {
-        setNode(id, (old) => {
+        setNode(id, old => {
           const findKnowledgeIndex = old.data.nodeParam.repoList?.findIndex(
-            (item) => item.id === knowledge.id,
+            item => item.id === knowledge.id
           );
           if (findKnowledgeIndex === -1) {
             old.data.nodeParam.repoId.push(
-              knowledge.coreRepoId || knowledge.outerRepoId,
+              knowledge.coreRepoId || knowledge.outerRepoId
             );
             old.data.nodeParam.repoList.push(knowledge);
           } else {
@@ -146,26 +144,26 @@ const useAddKnowledge = (): useAddKnowledgeProps => {
       }
       checkNode(id);
       canPublishSetNot();
-    },
+    }
   );
 
   const versionList = useMemo(() => {
     const options = [
       {
-        label: t("workflow.nodes.relatedKnowledgeModal.xingchen"),
-        value: "AIUI-RAG2",
+        label: t('workflow.nodes.relatedKnowledgeModal.xingchen'),
+        value: 'AIUI-RAG2',
       },
       {
-        label: t("workflow.nodes.relatedKnowledgeModal.xingpu"),
-        value: "CBG-RAG",
+        label: t('workflow.nodes.relatedKnowledgeModal.xingpu'),
+        value: 'CBG-RAG',
       },
       {
-        label: t("workflow.nodes.relatedKnowledgeModal.personal"),
-        value: "SparkDesk-RAG",
+        label: t('workflow.nodes.relatedKnowledgeModal.personal'),
+        value: 'SparkDesk-RAG',
       },
     ];
     return isPro
-      ? options.filter((item) => item.value !== "SparkDesk-RAG")
+      ? options.filter(item => item.value !== 'SparkDesk-RAG')
       : options;
   }, [isPro, t]);
   return {
@@ -196,7 +194,7 @@ const KnowledgeList = ({
 }): React.ReactElement => {
   const { t } = useTranslation();
   const setKnowledgeDetailModalInfo = useFlowsManager(
-    (state) => state.setKnowledgeDetailModalInfo,
+    state => state.setKnowledgeDetailModalInfo
   );
   if (loading) return <Spin spinning={loading} />;
   if (allData.length === 0)
@@ -207,7 +205,7 @@ const KnowledgeList = ({
           className="w-[124px] h-[122px]"
           alt=""
         />
-        <p>{t("workflow.nodes.relatedKnowledgeModal.noDocuments")}</p>
+        <p>{t('workflow.nodes.relatedKnowledgeModal.noDocuments')}</p>
       </div>
     );
   return (
@@ -244,20 +242,20 @@ const KnowledgeList = ({
                   });
                 }}
               >
-                {t("workflow.nodeList.details")}
+                {t('workflow.nodeList.details')}
               </div>
               <Tooltip
                 overlayClassName="black-tooltip"
                 title={t(
-                  "workflow.nodes.relatedKnowledgeModal.knowledgeTypeTip",
+                  'workflow.nodes.relatedKnowledgeModal.knowledgeTypeTip'
                 )}
               >
                 <div
                   style={{
                     cursor:
                       ragType && item?.tag !== ragType
-                        ? "not-allowed"
-                        : "pointer",
+                        ? 'not-allowed'
+                        : 'pointer',
                   }}
                   onClick={() => {
                     if (ragType && item?.tag !== ragType) return;
@@ -268,14 +266,14 @@ const KnowledgeList = ({
                     <div
                       className="bg-[#EBEBF1] py-1 px-6 rounded-lg"
                       style={{
-                        border: "1px solid transparent",
+                        border: '1px solid transparent',
                       }}
                     >
-                      {t("workflow.nodes.relatedKnowledgeModal.remove")}
+                      {t('workflow.nodes.relatedKnowledgeModal.remove')}
                     </div>
                   ) : (
                     <div className="border border-[#E5E5E5] py-1 px-6 rounded-lg">
-                      {t("workflow.nodes.relatedKnowledgeModal.add")}
+                      {t('workflow.nodes.relatedKnowledgeModal.add')}
                     </div>
                   )}
                 </div>
@@ -288,14 +286,14 @@ const KnowledgeList = ({
                 alt=""
               />
               <p className="text-[#757575] text-xs">
-                {orderBy === "create_time"
+                {orderBy === 'create_time'
                   ? `${t(
-                      "workflow.nodes.relatedKnowledgeModal.createTimePrefix",
-                    )}${dayjs(item?.createTime)?.format("YYYY-MM-DD HH:mm:ss")}`
+                      'workflow.nodes.relatedKnowledgeModal.createTimePrefix'
+                    )}${dayjs(item?.createTime)?.format('YYYY-MM-DD HH:mm:ss')}`
                   : `${t(
-                      "workflow.nodes.relatedKnowledgeModal.updateTimePrefix",
+                      'workflow.nodes.relatedKnowledgeModal.updateTimePrefix'
                     )}${dayjs(item?.updateTime)?.format(
-                      "YYYY-MM-DD HH:mm:ss",
+                      'YYYY-MM-DD HH:mm:ss'
                     )}`}
               </p>
             </div>
@@ -308,11 +306,9 @@ const KnowledgeList = ({
 
 const AddKnowledge = (): React.ReactElement => {
   const { t } = useTranslation();
-  const knowledgeModalInfo = useFlowsManager(
-    (state) => state.knowledgeModalInfo,
-  );
+  const knowledgeModalInfo = useFlowsManager(state => state.knowledgeModalInfo);
   const setKnowledgeModalInfo = useFlowsManager(
-    (state) => state.setKnowledgeModalInfo,
+    state => state.setKnowledgeModalInfo
   );
   const {
     tag,
@@ -340,7 +336,7 @@ const AddKnowledge = (): React.ReactElement => {
               <div className="p-6 pr-0 absolute bg-[#fff] rounded-2xl top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 text-second font-medium text-md min-w-[820px] h-[570px] flex flex-col">
                 <div className="flex items-center justify-between font-medium pr-6">
                   <span className="font-semibold">
-                    {t("workflow.nodes.relatedKnowledgeModal.title")}
+                    {t('workflow.nodes.relatedKnowledgeModal.title')}
                   </span>
                   <img
                     src={Icons.advancedConfig.close}
@@ -349,7 +345,7 @@ const AddKnowledge = (): React.ReactElement => {
                     onClick={() =>
                       setKnowledgeModalInfo({
                         open: false,
-                        nodeId: "",
+                        nodeId: '',
                       })
                     }
                   />
@@ -358,7 +354,7 @@ const AddKnowledge = (): React.ReactElement => {
                   <div className="flex items-center gap-2.5">
                     <Select
                       placeholder={t(
-                        "workflow.nodes.relatedKnowledgeModal.versionSelection",
+                        'workflow.nodes.relatedKnowledgeModal.versionSelection'
                       )}
                       suffixIcon={
                         <img
@@ -369,7 +365,7 @@ const AddKnowledge = (): React.ReactElement => {
                       className="p-0"
                       style={{ height: 40, width: 160 }}
                       value={tag}
-                      onChange={(value) => setTag(value)}
+                      onChange={value => setTag(value)}
                       options={versionList}
                       allowClear
                     />
@@ -383,19 +379,19 @@ const AddKnowledge = (): React.ReactElement => {
                       className="p-0"
                       style={{ height: 40, width: 160 }}
                       value={orderBy}
-                      onChange={(value) => setOrderBy(value)}
+                      onChange={value => setOrderBy(value)}
                       options={[
                         {
                           label: t(
-                            "workflow.nodes.relatedKnowledgeModal.createTime",
+                            'workflow.nodes.relatedKnowledgeModal.createTime'
                           ),
-                          value: "create_time",
+                          value: 'create_time',
                         },
                         {
                           label: t(
-                            "workflow.nodes.relatedKnowledgeModal.updateTime",
+                            'workflow.nodes.relatedKnowledgeModal.updateTime'
                           ),
-                          value: "update_time",
+                          value: 'update_time',
                         },
                       ]}
                     />
@@ -408,7 +404,7 @@ const AddKnowledge = (): React.ReactElement => {
                       <Input
                         className="w-[250px] pl-10 h-10"
                         placeholder={t(
-                          "workflow.nodes.relatedKnowledgeModal.searchPlaceholder",
+                          'workflow.nodes.relatedKnowledgeModal.searchPlaceholder'
                         )}
                         onChange={getKnowledgesDebounce}
                       />
@@ -416,23 +412,23 @@ const AddKnowledge = (): React.ReactElement => {
                   </div>
                   <Button
                     type="primary"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       window.open(
                         `${window.location.origin}/resource/knowledge`,
-                        "_blank",
+                        '_blank'
                       );
                     }}
                   >
                     {t(
-                      "workflow.nodes.relatedKnowledgeModal.createNewKnowledge",
+                      'workflow.nodes.relatedKnowledgeModal.createNewKnowledge'
                     )}
                   </Button>
                 </div>
                 <div
                   className="flex flex-col gap-2.5 mt-4 flex-1 pr-6"
                   style={{
-                    overflow: "auto",
+                    overflow: 'auto',
                   }}
                 >
                   <KnowledgeList
@@ -447,7 +443,7 @@ const AddKnowledge = (): React.ReactElement => {
                 </div>
               </div>
             </div>,
-            document.body,
+            document.body
           )
         : null}
     </>

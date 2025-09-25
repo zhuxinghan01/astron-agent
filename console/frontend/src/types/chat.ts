@@ -26,7 +26,7 @@ export interface BotInfoType {
   pc_background: string;
   botStatus: number;
   chatId: number;
-  supportUpload: SupportUploadConfig[];
+  supportUploadConfig: SupportUploadConfig[];
   model: string;
   botId: number;
   creatorNickname: string;

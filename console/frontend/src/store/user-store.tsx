@@ -38,12 +38,18 @@ export interface UserState {
   } | null;
   logOut: () => void;
   setMobile: (_mobile: string) => void;
+  getIsLogin: () => boolean;
 }
 
 const useUserStore = create<UserState>((set, get) => ({
   // 初始状态
   user: {} as User,
   isLogin: !!get()?.user?.uid,
+  getIsLogin: () => {
+    const hasValidToken = !!tokenStorage.getAccessToken();
+    const hasUser = !!get()?.user?.uid;
+    return hasValidToken && hasUser;
+  },
   // 操作方法
   getUserInfo: async (): Promise<void> => {
     try {

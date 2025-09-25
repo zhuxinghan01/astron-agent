@@ -13,7 +13,6 @@ import {
   generateRandomPosition,
 } from '@/components/workflow/utils/reactflowUtils';
 import { isJSON } from '@/utils';
-import { getCookie } from '@/utils';
 import useSpaceStore from '@/store/space-store';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
@@ -28,7 +27,7 @@ import {
 } from '@/components/workflow/types/hooks';
 
 import { UseFlowCommonReturn } from '@/components/workflow/types/hooks';
-import { RpaInfo, RpaNodeParam } from '@/types/rpa';
+import { RpaNodeParam } from '@/types/rpa';
 import { Edge } from 'reactflow';
 import { transRpaParameters } from '@/utils/rpa';
 

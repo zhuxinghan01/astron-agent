@@ -110,8 +110,10 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   }, [nodeType]);
 
   const showInputs = useMemo(() => {
-    return data?.inputs?.length > 0 && !isIfElseNode;
-  }, [data?.inputs, isIfElseNode]);
+    return (
+      data?.inputs?.length > 0 && !isIfElseNode && data?.nodeParam?.mode !== 1
+    );
+  }, [data, isIfElseNode]);
 
   const showOutputs = useMemo(() => {
     return data?.outputs?.length > 0;
@@ -260,7 +262,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       setNode(id, old => {
         const currentOutput = findItemById(old.data.outputs, outputId);
         if (currentOutput) {
-          fn(currentOutput, value);
+          fn(currentOutput, value, old?.data);
         }
         handleIteratorEndChange('replace', outputId, value, old);
         return {
@@ -852,12 +854,11 @@ const titleRender = (nodeData: {
   schema?: { type?: string };
   type?: string;
 }): React.ReactElement => {
-  const type = nodeData?.schema?.type || nodeData?.type;
   return (
     <div className="flex items-center gap-2">
       <span>{nodeData.name}</span>
       <div className="bg-[#F0F0F0] px-2.5 py-0.5 rounded text-xs">
-        {renderType(type)}
+        {renderType(nodeData)}
       </div>
     </div>
   );

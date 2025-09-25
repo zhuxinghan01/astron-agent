@@ -2,7 +2,7 @@ const NODE_ENV = import.meta.env.MODE;
 const envUrl =
   NODE_ENV === 'production'
     ? ''
-    : NODE_ENV === 'development'
+    : NODE_ENV === 'development' || NODE_ENV === 'test'
       ? 'test.'
       : 'pre.';
 

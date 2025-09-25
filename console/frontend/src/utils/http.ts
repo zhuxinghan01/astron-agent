@@ -411,11 +411,30 @@ axios.interceptors.response.use(
   }
 );
 
-//根据环境与域名设置baseURL：本地localhost走 /xingchen-api，其它走 /
-export const baseURL =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? '/xingchen-api'
-    : 'http://172.29.201.92:8080/';
+//根据环境设置baseURL：本地localhost走 /xingchen-api，dev环境和test环境分别对应不同服务器
+const getBaseURL = (): string => {
+  // 在客户端环境下检查是否为localhost
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'localhost'
+  ) {
+    return '/xingchen-api';
+  }
+
+  // 通过import.meta.env.MODE获取构建时的环境模式
+  const mode = import.meta.env.MODE;
+  switch (mode) {
+    case 'development':
+      return 'http://172.29.202.54:8080/';
+    case 'test':
+      return 'http://172.29.201.92:8080/';
+    default:
+      // production和其他环境保持原有逻辑
+      return 'http://172.29.201.92:8080/';
+  }
+};
+
+export const baseURL = getBaseURL();
 
 axios.defaults.baseURL = baseURL;
 export default axios;

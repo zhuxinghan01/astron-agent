@@ -6,6 +6,8 @@ import BottomLogin from './bottom-login';
 import PersonalCenter from './personal-center';
 import MenuList from './menu-list';
 import IconEntry from './icon-entry';
+import NoticeModal from './notice-modal';
+import useUserStore from '@/store/user-store';
 
 interface User {
   nickname?: string;
@@ -34,10 +36,23 @@ interface SidebarProps {
 
   // Icon entry props
   myMessage?: {
-    messages?: Array<{ isRead: number }>;
+    total?: number;
+    messages?: Array<{
+      messageCenter: {
+        id: number;
+        title: string;
+        summary: string;
+        updateTime: string;
+        messageType: number;
+        baseId?: string;
+        outLink?: string;
+        coverImage?: string;
+        jumpType?: number;
+      };
+      isRead: number;
+    }>;
   };
   onDocumentClick?: () => void;
-  onMessageClick?: () => void;
 }
 
 const Sidebar = ({
@@ -49,7 +64,6 @@ const Sidebar = ({
   languageCode = 'zh',
 
   // Create button props
-  isLogin = false,
   onCreateClick,
   onCreateAnalytics,
   onNotLogin,
@@ -61,10 +75,11 @@ const Sidebar = ({
   // Icon entry props
   myMessage,
   onDocumentClick,
-  onMessageClick,
 }: SidebarProps): ReactElement => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPersonCenterOpen, setIsPersonCenterOpen] = useState(false);
+  const [noticeModalVisible, setNoticeModalVisible] = useState(false);
+  const getIsLogin = useUserStore.getState().getIsLogin;
 
   return (
     <div
@@ -114,7 +129,7 @@ const Sidebar = ({
         {/* Create Button */}
         <CreateButton
           isCollapsed={isCollapsed}
-          isLogin={isLogin}
+          isLogin={getIsLogin()}
           onClick={onCreateClick}
           onAnalytics={onCreateAnalytics}
           onNotLogin={onNotLogin}
@@ -124,10 +139,11 @@ const Sidebar = ({
 
         {/* Icon Entry */}
         <IconEntry
-          isLogin={isLogin}
           myMessage={myMessage}
           onDocumentClick={onDocumentClick}
-          onMessageClick={onMessageClick}
+          onMessageClick={() => {
+            setNoticeModalVisible(true);
+          }}
           onNotLogin={onNotLogin}
         />
 
@@ -150,6 +166,14 @@ const Sidebar = ({
           open={isPersonCenterOpen}
           onCancel={() => {
             setIsPersonCenterOpen(false);
+          }}
+        />
+
+        {/* Notice Modal */}
+        <NoticeModal
+          open={noticeModalVisible}
+          onClose={() => {
+            setNoticeModalVisible(false);
           }}
         />
       </div>

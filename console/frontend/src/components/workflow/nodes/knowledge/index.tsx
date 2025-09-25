@@ -147,7 +147,6 @@ export const KnowledgeRepoList = ({
 
 export const KnowledgeDetail = memo(props => {
   const { id, data } = props;
-  console.log(id, data, 999996);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const autoSaveCurrentFlow = useFlowsManager(
     state => state.autoSaveCurrentFlow

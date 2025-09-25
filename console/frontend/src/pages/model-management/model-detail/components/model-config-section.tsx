@@ -42,22 +42,26 @@ const ModelConfigSection: React.FC<ModelConfigSectionProps> = ({
                     {modelDetail?.domain}
                   </span>
                 </p>
-                <p>
-                  <span className="font-['PingFang_SC'] text-sm font-normal text-[#7F7F7F]">
-                    {t('model.interfaceAddress')}：
-                  </span>
-                  <span className="font-['PingFang_SC'] text-sm font-normal text-[#333333]">
-                    {modelDetail?.url}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-['PingFang_SC'] text-sm font-normal text-[#7F7F7F]">
-                    {t('model.apiKey')}：
-                  </span>
-                  <span className="font-['PingFang_SC'] text-sm font-normal text-[#333333]">
-                    {maskKey(modelDetail?.apiKey || '')}
-                  </span>
-                </p>
+                {modelDetail.type === ModelCreateType.THIRD_PARTY && (
+                  <>
+                    <p>
+                      <span className="font-['PingFang_SC'] text-sm font-normal text-[#7F7F7F]">
+                        {t('model.interfaceAddress')}：
+                      </span>
+                      <span className="font-['PingFang_SC'] text-sm font-normal text-[#333333]">
+                        {modelDetail?.url}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="font-['PingFang_SC'] text-sm font-normal text-[#7F7F7F]">
+                        {t('model.apiKey')}：
+                      </span>
+                      <span className="font-['PingFang_SC'] text-sm font-normal text-[#333333]">
+                        {maskKey(modelDetail?.apiKey || '')}
+                      </span>
+                    </p>
+                  </>
+                )}
                 {modelDetail.type === ModelCreateType.LOCAL && (
                   <p>
                     <span className="font-['PingFang_SC'] text-sm font-normal text-[#7F7F7F]">

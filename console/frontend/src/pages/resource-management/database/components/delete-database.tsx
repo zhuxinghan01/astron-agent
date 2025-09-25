@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { deleteDb } from '@/services/database';
 import { useTranslation } from 'react-i18next';
 import dialogDel from '@/assets/imgs/common/delete-red.png';
@@ -23,6 +23,9 @@ export default function DeleteModal({
       .then(() => {
         setDeleteModal(false);
         getDataBase();
+      })
+      .catch(error => {
+        message.error(error.message);
       })
       .finally(() => {
         setLoading(false);
