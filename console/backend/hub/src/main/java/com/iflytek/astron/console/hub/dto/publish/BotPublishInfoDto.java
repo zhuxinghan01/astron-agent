@@ -62,7 +62,7 @@ public class BotPublishInfoDto {
     /**
      * Creator user ID
      */
-    private Long uid;
+    private String uid;
 
     /**
      * Space ID
