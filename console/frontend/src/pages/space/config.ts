@@ -1,9 +1,5 @@
 import { localeConfig } from '@/locales/localeConfig';
-import {
-  ModuleType,
-  OperationType,
-  RoleType,
-} from '@/permissions/permission-type';
+import { ModuleType, OperationType, RoleType } from '@/types/permission';
 
 // 获取国际化文案的工具函数
 export const getI18nText = (locale: string, key: string) => {

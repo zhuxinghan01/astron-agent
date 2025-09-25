@@ -222,6 +222,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
   const updateNodeRef = currentStore(state => state.updateNodeRef);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const deleteNodeRef = currentStore(state => state.deleteNodeRef);
+  const nodes = currentStore(state => state.nodes);
   const handleNodeClick = useMemoizedFn(() => {
     setNodeInfoEditDrawerlInfo({
       open: true,
@@ -396,7 +397,7 @@ const OutputTypeSelector = ({ id, data, output }): React.ReactElement => {
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const delayUpdateNodeRef = currentStore(state => state.delayUpdateNodeRef);
 
-  const handleTypeChange = useMemoizedFn((value: any) => {
+  const handleTypeChange = useMemoizedFn((value: unknown) => {
     handleChangeOutputParam(
       output.id,
       (data, value) => {
@@ -768,7 +769,7 @@ export const OutputActions = ({
 
   const handleAdd = useMemoizedFn(() => handleAddItem(output));
 
-  const handleRequiredChange = useMemoizedFn((e: any) => {
+  const handleRequiredChange = useMemoizedFn((e: unknown) => {
     handleChangeOutputParam(
       output.id,
       (data, value) => (data.required = value),
@@ -1043,7 +1044,7 @@ export const useNodeCommon = ({
     }
   );
 
-  const renderTypeOneClickUpdate = () => {
+  const renderTypeOneClickUpdate = (): React.ReactElement | null => {
     const { nodeType } = useNodeInfo({ id, data });
     if (nodeType === 'agent') {
       return <AgentNodeOneClickUpdate id={id} data={data} />;

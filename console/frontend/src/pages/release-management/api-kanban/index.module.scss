@@ -1,0 +1,493 @@
+.keyInfoCardContainer {
+  // padding: 20px;
+  min-width: 900px;
+
+  .backButton {
+    height: 80px;
+    display: flex;
+    align-items: center;
+
+    .backButtonContainer {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 1px;
+
+      .backButtonIcon {
+        width: 28px;
+        height: 28px;
+        margin-right: 12px;
+      }
+
+      .backButtonText {
+        font-family: PingFang SC;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 26px;
+        display: flex;
+        align-items: center;
+        letter-spacing: normal;
+        color: rgba(0, 0, 0, 0.8);
+      }
+    }
+  }
+
+
+
+  // 顶部卡片
+  .keyInfoCard {
+    width: 100%;
+    min-height: 120px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 18px;
+    background: #FFFFFF;
+    margin-bottom: 12px;
+
+    .keyInfoCardLeft {
+      display: flex;
+    }
+
+    .keyInfoCardAvatar {
+      width: 72px;
+      height: 72px;
+      margin-right: 20px;
+    }
+
+    .keyInfoCardContent {
+      display: flex;
+
+      .keyInfoCardContentLeft {
+        display: flex;
+        flex-direction: column;
+
+        .keyInfoCardContentLeftTop {
+          font-family: PingFang SC;
+          font-size: 24px;
+          font-weight: 500;
+          line-height: 30px;
+          letter-spacing: normal;
+          color: #333333;
+          margin-bottom: 10px;
+          min-width: 100px;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .keyInfoCardContentLeftUser {
+          display: flex;
+          align-items: center;
+
+          .userAvatar {
+            width: 24px;
+            height: 24px;
+            margin-right: 6px;
+          }
+
+          .userName {
+            font-family: PingFang SC;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+            letter-spacing: normal;
+            color: #7F7F7F;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .line {
+        width: 1px;
+        min-height: 72px;
+        background-color: #D8D8D8;
+        margin: 0 25px;
+      }
+
+      .keyInfoCardContentRight {
+        margin-right: 50px;
+
+        .keyInfoCardContentRightTop {
+          font-family: PingFang SC;
+          font-size: 14px;
+          font-weight: normal;
+          line-height: 24px;
+          letter-spacing: normal;
+          color: #7F7F7F;
+        }
+
+        .keyInfoCardContentRightDesc {
+          font-family: PingFang SC;
+          font-size: 14px;
+          font-weight: normal;
+          line-height: 24px;
+          letter-spacing: normal;
+          color: #333333;
+        }
+      }
+
+
+    }
+
+    .keyInfoCardContentRightTitleImg {
+      width: 252px;
+      height: 97px;
+    }
+  }
+
+
+  // 绑定卡片
+  .boundInfoContainer {
+    height: 366px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    background: #FFFFFF;
+    padding: 24px;
+
+    .boundInfoHeader {
+      font-family: 苹方;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 22px;
+      letter-spacing: normal;
+      color: #333333;
+    }
+
+    .boundInfoContent {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      height: 276px;
+
+      .boundInfoContentLeft {
+        width: 252px;
+        height: 100%;
+
+        border-radius: 16px;
+        opacity: 0.8;
+        background: #FFFFFF;
+        box-sizing: border-box;
+        border: 1px solid #E2E8FF;
+
+        .recommend_card_item {
+          padding: 0 16px;
+          height: 252px;
+          border-radius: 18px;
+          opacity: 0.8;
+          background: rgba(255, 255, 255, 0.8);
+          position: relative;
+          display: flex;
+          align-items: center;
+          flex-direction: column;
+          cursor: pointer;
+          max-width: 266px;
+
+          .item_img {
+            width: 26px;
+            height: 34px;
+            position: absolute;
+            left: 16px;
+            color: #9aabda;
+            text-align: center;
+            line-height: 30px;
+            font-family: Barlow;
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            margin-top: 24px;
+          }
+
+          .bot_name {
+            height: 26px;
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 26px;
+            color: #000000;
+            margin-top: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .bot_desc {
+            font-size: 14px;
+            font-weight: normal;
+            color: #7f7f7f;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            line-clamp: 3;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 8px;
+          }
+
+          .bot_author {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 16px;
+            width: 100%;
+            max-width: 100%;
+
+            img {
+              width: 14px;
+              height: 14px;
+              margin-right: 8px;
+            }
+
+            span {
+              font-size: 12px;
+              color: #7f7f7f;
+              margin-right: 24px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+      }
+
+      .boundInfoContentDesc {
+        flex: 1;
+        padding: 0 22px;
+
+        .infoContainerTop {
+          display: flex;
+
+          .infoContainerTopItem {
+            display: flex;
+            align-items: center;
+
+            .infoContainerTopItemIcon {
+              width: 16px;
+              height: 16px;
+              margin-right: 8px;
+            }
+
+            .infoContainerTopItemTitle {
+              font-family: PingFang SC;
+              font-size: 14px;
+              font-weight: 500;
+              line-height: 24px;
+              letter-spacing: normal;
+              color: #7F7F7F;
+              margin-right: 14px;
+            }
+
+            .infoContainerTopItemNum {
+              font-family: PingFang SC;
+              font-size: 18px;
+              font-weight: 600;
+              line-height: 32px;
+              letter-spacing: normal;
+              color: #333333;
+            }
+
+
+          }
+
+          .infoContainerTopLine {
+            width: 1px;
+            min-height: 24px;
+            background-color: #D8D8D8;
+            margin: 0 24px;
+          }
+
+        }
+
+        @media screen and (max-width: 1425px) {
+          .infoContainerTop {
+            display: block;
+          }
+
+          .infoContainerTopLine {
+            display: none;
+          }
+        }
+        @media screen and (max-width: 1100px) {
+          .infoContainerTopItemTitle {
+            width: 70px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+
+        .infoContainerLine {
+          width: 100%;
+          height: 1px;
+          background-color: #D8D8D8;
+          margin: 20px 0;
+        }
+
+        .infoContainerItem {
+          display: flex;
+          height: 42px;
+          align-items: center;
+
+          .infoContainerTitle {
+            width: 80px;
+            font-family: PingFang SC;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 16px;
+            letter-spacing: normal;
+            color: #7F7F7F;
+            margin-right: 6px;
+          }
+
+          .infoContainerDesc {
+            font-family: PingFang SC;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 16px;
+            letter-spacing: normal;
+            color: #333333;
+          }
+        }
+      }
+
+      .boundInfoContentRight {
+        width: 404px;
+        height: 100%;
+        padding: 26px 22px;
+        border-radius: 18px;
+        background: #F5F6F9;
+
+        .boundInfoContentRightTop {
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+
+          .boundInfoContentRightTopTitle {
+            font-family: PingFang SC;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 24px;
+            letter-spacing: normal;
+            color: #3D3D3D;
+            margin-right: 13px;
+          }
+
+        }
+
+        .boundInfoContentRightDesc {
+          display: flex;
+          flex-direction: column;
+
+          .tokenContainer {
+            display: flex;
+            justify-content: space-between;
+            height: 60px;
+            margin-bottom: 24px;
+
+            .tokenInfo {
+              flex: 1;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              flex-direction: column;
+
+              .tokenInfoTitle {
+                font-family: PingFang SC;
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 24px;
+                letter-spacing: normal;
+                color: #3D3D3D;
+              }
+
+              .tokenInfoNum {
+                font-family: MiSans;
+                font-size: 28px;
+                font-weight: bold;
+                line-height: 32px;
+                text-align: center;
+                letter-spacing: normal;
+                color: #333333;
+              }
+
+            }
+
+            .line {
+              width: 1px;
+              height: 60px;
+              background-color: #D8D8D8;
+            }
+          }
+
+          .line {
+            width: 100%;
+            height: 1px;
+            background-color: #D8D8D8;
+            margin-bottom: 15px;
+          }
+
+          .qpsContainer {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+
+            .qpsInfoTitle {
+              font-family: PingFang SC;
+              font-size: 14px;
+              font-weight: 500;
+              line-height: 24px;
+              letter-spacing: normal;
+              color: #3D3D3D;
+            }
+
+            .qpsInfoNum {
+              font-family: MiSans;
+              font-size: 28px;
+              font-weight: bold;
+              line-height: 32px;
+              text-align: center;
+              letter-spacing: normal;
+              color: #333333;
+            }
+          }
+        }
+      }
+
+
+    }
+  }
+
+
+
+  // 暂未绑定提示
+  .unboundTip {
+    margin-top: 20px;
+    height: 366px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: PingFang SC;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: #333333;
+
+    img {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 12px;
+    }
+  }
+}

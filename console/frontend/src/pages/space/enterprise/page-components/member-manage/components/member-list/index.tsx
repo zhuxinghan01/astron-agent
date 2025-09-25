@@ -9,7 +9,7 @@ import SpaceTable, {
 } from '@/components/space/space-table';
 import { ButtonConfig } from '@/components/button-group';
 import { useSpaceI18n } from '@/pages/space/hooks/use-space-i18n';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import { usePermissions } from '@/hooks/use-permissions';
 import useUserStore from '@/store/user-store';
 

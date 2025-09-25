@@ -206,6 +206,9 @@ importers:
       tailwindcss:
         specifier: 3.3.5
         version: 3.3.5(ts-node@10.9.2(@types/node@22.18.1)(typescript@5.9.2))
+      unist-util-visit:
+        specifier: ^5.0.0
+        version: 5.0.0
       url-parse:
         specifier: ^1.5.10
         version: 1.5.10

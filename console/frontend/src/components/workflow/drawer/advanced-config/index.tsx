@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Drawer, Switch, Input, Upload, message } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
 import useFlowsManager from '@/components/workflow/store/useFlowsManager';
@@ -19,8 +13,8 @@ import {
   AdvancedConfigType,
   UploadResponse,
   DrawerStyleType,
-  VoiceBroadcastInstance,
   AdvancedConfigUpdate,
+  useAdvancedConfigurationProps,
 } from '@/components/workflow/types';
 
 // 从统一的图标管理中导入
@@ -31,40 +25,357 @@ const icons = Icons.advancedConfig;
 
 const { Dragger } = Upload;
 
-function AdvancedConfiguration(): void {
-  const { t } = useTranslation();
+const ConversationStarter = ({
+  advancedConfig,
+  handleAdvancedConfigChange,
+  updateAdvancedConfigParams,
+  setOpeningRemarksModal,
+  updateAdvancedConfigParamsDebounce,
+  handlePresetQuestionChange,
+  t,
+}): React.ReactElement => {
+  return (
+    <div
+      className="bg-[#F7F7FA] rounded-lg"
+      style={{
+        padding: '10px 17px 16px 17px',
+      }}
+    >
+      <div className="w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <img
+            src={icons.conversationStarter}
+            className="w-[22px] h-[22px]"
+            alt=""
+          />
+          <div className="font-medium">
+            {t('workflow.advancedConfiguration.conversationStarter')}
+          </div>
+        </div>
+        <Switch
+          className="list-switch config-switch"
+          checked={advancedConfig?.prologue?.enabled}
+          onChange={value => {
+            handleAdvancedConfigChange(
+              () => (advancedConfig.prologue.enabled = value)
+            );
+            updateAdvancedConfigParams({
+              prologue: {
+                enabled: value,
+              },
+            });
+          }}
+        />
+      </div>
+      <div className="text-xs font-medium text-[#666] mt-1">
+        {t('workflow.advancedConfiguration.conversationStarterDescription')}
+      </div>
+      {advancedConfig?.prologue?.enabled && (
+        <>
+          <div className="relative">
+            <div
+              className="absolute bottom-2 right-2.5 inline-flex items-center rounded-md gap-1 cursor-pointer  py-1 px-2.5 text-[#275EFF] text-sm bg-[#ececfb] z-20"
+              onClick={() => setOpeningRemarksModal(true)}
+            >
+              <img src={icons.promptOptimization} className="w-4 h-4" alt="" />
+              <span>{t('workflow.advancedConfiguration.aiGenerate')}</span>
+            </div>
+            <Input.TextArea
+              className="mt-2.5 global-textarea pr-6 flow-advanced-configuration-textarea"
+              placeholder={t(
+                'workflow.advancedConfiguration.openingRemarksPlaceholder'
+              )}
+              style={{ height: 96, resize: 'none' }}
+              value={advancedConfig?.prologue?.prologueText}
+              onChange={e => {
+                handleAdvancedConfigChange(
+                  () =>
+                    (advancedConfig.prologue.prologueText = e?.target?.value)
+                );
+                updateAdvancedConfigParamsDebounce({
+                  prologue: {
+                    prologueText: e?.target?.value,
+                  },
+                });
+              }}
+              maxLength={300}
+            />
+          </div>
+          <div className="w-full flex items-center justify-between mt-4">
+            <div className="font-medium">
+              {t(
+                'workflow.advancedConfiguration.openingRemarksPresetQuestions'
+              )}
+            </div>
+            {advancedConfig?.prologue?.inputExample?.length < 3 && (
+              <div
+                className="flex items-center gap-2 text-[#275EFF] text-xs font-medium cursor-pointer"
+                onClick={() => {
+                  handleAdvancedConfigChange(
+                    () =>
+                      (advancedConfig.prologue.inputExample = [
+                        ...advancedConfig.prologue.inputExample,
+                        '',
+                      ])
+                  );
+                  updateAdvancedConfigParams({
+                    prologue: {
+                      inputExample: advancedConfig?.prologue?.inputExample,
+                    },
+                  });
+                }}
+              >
+                <img
+                  src={icons.inputAdd}
+                  className="w-[10px] h-[10px]"
+                  alt=""
+                />
+                <span>{t('workflow.advancedConfiguration.add')}</span>
+              </div>
+            )}
+          </div>
+          {advancedConfig?.prologue?.inputExample?.map((question, index) => (
+            <div key={index} className="w-full relative">
+              <Input
+                style={{
+                  height: 40,
+                }}
+                value={question}
+                onChange={e =>
+                  handlePresetQuestionChange(index, e.target.value?.trim())
+                }
+                placeholder={t(
+                  'workflow.advancedConfiguration.presetQuestionPlaceholder'
+                )}
+                className="global-input flex-1 shrink-0 mt-1.5 flow-advanced-configuration-input pr-8"
+              />
+              {advancedConfig?.prologue?.inputExample?.length > 1 ? (
+                <img
+                  src={icons.remove}
+                  className="w-5 h-5 cursor-pointer absolute right-2 top-4"
+                  alt=""
+                  onClick={() => {
+                    handleAdvancedConfigChange(() =>
+                      advancedConfig?.prologue?.inputExample?.splice(index, 1)
+                    );
+                    updateAdvancedConfigParams({
+                      prologue: {
+                        inputExample: advancedConfig?.prologue?.inputExample,
+                      },
+                    });
+                  }}
+                />
+              ) : null}
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+};
 
+const SuggestedQuestions = ({
+  advancedConfig,
+  handleAdvancedConfigChange,
+  updateAdvancedConfigParams,
+  t,
+}): React.ReactElement => {
+  return (
+    <div
+      className="bg-[#F7F7FA] rounded-lg"
+      style={{
+        padding: '10px 17px 16px 17px',
+      }}
+    >
+      <div className="w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <img
+            src={icons.problemSuggestion}
+            className="w-[22px] h-[22px]"
+            alt=""
+          />
+          <div className="font-medium">
+            {t('workflow.advancedConfiguration.nextQuestionSuggestion')}
+          </div>
+        </div>
+        <Switch
+          className="list-switch config-switch"
+          checked={advancedConfig?.suggestedQuestionsAfterAnswer?.enabled}
+          onChange={value => {
+            handleAdvancedConfigChange(
+              () =>
+                (advancedConfig.suggestedQuestionsAfterAnswer.enabled = value)
+            );
+            updateAdvancedConfigParams({
+              suggestedQuestionsAfterAnswer: {
+                enabled: value,
+              },
+            });
+          }}
+        />
+      </div>
+      <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
+        {t('workflow.advancedConfiguration.nextQuestionSuggestionDescription')}
+      </div>
+    </div>
+  );
+};
+
+const FeedbackSwitch = ({
+  advancedConfig,
+  handleAdvancedConfigChange,
+  updateAdvancedConfigParams,
+  t,
+}): React.ReactElement => {
+  return (
+    <div
+      className="bg-[#F7F7FA] rounded-lg"
+      style={{
+        padding: '10px 17px 16px 17px',
+      }}
+    >
+      <div className="w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <img
+            src={icons.likeAndDislike}
+            className="w-[22px] h-[22px]"
+            alt=""
+          />
+          <div className="font-medium">
+            {t('workflow.advancedConfiguration.likeAndDislike')}
+          </div>
+        </div>
+        <Switch
+          className="list-switch config-switch"
+          checked={advancedConfig?.feedback?.enabled}
+          onChange={value => {
+            handleAdvancedConfigChange(
+              () => (advancedConfig.feedback.enabled = value)
+            );
+            updateAdvancedConfigParams({
+              feedback: {
+                enabled: value,
+              },
+            });
+          }}
+        />
+      </div>
+      <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
+        {t('workflow.advancedConfiguration.likeAndDislikeDescription')}
+      </div>
+    </div>
+  );
+};
+
+const ChatBackground = ({
+  advancedConfig,
+  handleAdvancedConfigChange,
+  updateAdvancedConfigParams,
+  t,
+  uploadProps,
+  chatBackgroundInfo,
+  setChatBackgroundInfo,
+}): React.ReactElement => {
+  return (
+    <div
+      className="bg-[#F7F7FA] rounded-lg"
+      style={{
+        padding: '10px 17px 16px 17px',
+      }}
+    >
+      <div className="w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <img
+            src={icons.settingBackground}
+            className="w-[22px] h-[22px]"
+            alt=""
+          />
+          <div className="font-medium">
+            {t('workflow.advancedConfiguration.setBackground')}
+          </div>
+        </div>
+        <Switch
+          className="list-switch config-switch"
+          checked={advancedConfig?.chatBackground?.enabled}
+          onChange={value => {
+            handleAdvancedConfigChange(
+              () => (advancedConfig.chatBackground.enabled = value)
+            );
+            updateAdvancedConfigParams({
+              chatBackground: {
+                enabled: value,
+              },
+            });
+          }}
+        />
+      </div>
+      <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
+        {t('workflow.advancedConfiguration.setBackgroundDescription')}
+      </div>
+      {advancedConfig?.chatBackground?.enabled && (
+        <div className="w-full pt-4">
+          <Dragger {...uploadProps} className="icon-upload">
+            <img src={icons.uploadAct} className="w-8 h-8" alt="" />
+            <div className="font-medium mt-6">
+              {t('workflow.advancedConfiguration.dragFileHere')}
+              <span className="text-[#275EFF]">
+                {t('workflow.advancedConfiguration.selectFile')}
+              </span>
+            </div>
+            <p className="text-desc mt-2">
+              {t('workflow.advancedConfiguration.fileFormatTip')}
+            </p>
+          </Dragger>
+          {chatBackgroundInfo && (
+            <div className="w-full flex items-center gap-2.5 justify-between mt-2.5 rounded-xl p-2.5 bg-[#fff]">
+              <div className="flex items-center gap-2.5 flex-1">
+                <img
+                  src={icons.advancedConfigurationUpload}
+                  className="w-[20px] h-[20px]"
+                  alt=""
+                />
+                <div
+                  className="max-w-[250px] text-overflow"
+                  title={chatBackgroundInfo?.name}
+                >
+                  {chatBackgroundInfo?.name}
+                </div>
+                <div>{chatBackgroundInfo?.total}</div>
+              </div>
+              <img
+                src={icons.backgroundClose}
+                className="w-[10px] h-[10px] cursor-pointer"
+                onClick={() => {
+                  setChatBackgroundInfo(null);
+                  handleAdvancedConfigChange(
+                    () => (advancedConfig.chatBackground.info = null)
+                  );
+                  updateAdvancedConfigParams({
+                    chatBackground: {
+                      info: null,
+                    },
+                  });
+                }}
+                alt=""
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const useAdvancedConfiguration = (): useAdvancedConfigurationProps => {
+  const { t } = useTranslation();
   const currentFlow = useFlowsManager(state => state.currentFlow) as
     | FlowType
     | undefined;
-  const open = useFlowsManager(state => state.advancedConfiguration);
-  const setOpen = useFlowsManager(state => state.setAdvancedConfiguration);
   const setCurrentFlow = useFlowsManager(state => state.setCurrentFlow);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const websocketAudioRef = useRef<VoiceBroadcastInstance | null>(null);
   const [openingRemarksModal, setOpeningRemarksModal] =
     useState<boolean>(false);
-  const [drawerStyle, setDrawerStyle] = useState<DrawerStyleType>({
-    height: window?.innerHeight - 80,
-    top: 80,
-    right: 0,
-    zIndex: 998,
-  });
-  const [playing, setPlaying] = useState<boolean>(false);
   const [chatBackgroundInfo, setChatBackgroundInfo] =
     useState<ChatBackgroundInfo | null>(null);
-
-  useEffect(() => {
-    const handleAdjustmentDrawerStyle = (): void => {
-      setDrawerStyle({
-        ...drawerStyle,
-        height: window?.innerHeight - 80,
-      });
-    };
-    window.addEventListener('resize', handleAdjustmentDrawerStyle);
-    return (): void =>
-      window.removeEventListener('resize', handleAdjustmentDrawerStyle);
-  }, [drawerStyle]);
 
   const advancedConfig = useMemo<AdvancedConfigType>(() => {
     if (currentFlow?.advancedConfig && isJSON(currentFlow.advancedConfig)) {
@@ -224,7 +535,54 @@ function AdvancedConfiguration(): void {
       }
     },
   };
+  return {
+    advancedConfig,
+    handleAdvancedConfigChange,
+    updateAdvancedConfigParams,
+    updateAdvancedConfigParamsDebounce,
+    handlePresetQuestionChange,
+    openingRemarksModal,
+    setOpeningRemarksModal,
+    chatBackgroundInfo,
+    setChatBackgroundInfo,
+    uploadProps,
+  };
+};
 
+function AdvancedConfiguration(): React.ReactElement {
+  const { t } = useTranslation();
+  const [drawerStyle, setDrawerStyle] = useState<DrawerStyleType>({
+    height: window?.innerHeight - 80,
+    top: 80,
+    right: 0,
+    zIndex: 998,
+  });
+  const open = useFlowsManager(state => state.advancedConfiguration);
+  const setOpen = useFlowsManager(state => state.setAdvancedConfiguration);
+  const currentFlow = useFlowsManager(state => state.currentFlow);
+  const {
+    advancedConfig,
+    handleAdvancedConfigChange,
+    updateAdvancedConfigParams,
+    updateAdvancedConfigParamsDebounce,
+    handlePresetQuestionChange,
+    openingRemarksModal,
+    setOpeningRemarksModal,
+    chatBackgroundInfo,
+    setChatBackgroundInfo,
+    uploadProps,
+  } = useAdvancedConfiguration();
+  useEffect(() => {
+    const handleAdjustmentDrawerStyle = (): void => {
+      setDrawerStyle({
+        ...drawerStyle,
+        height: window?.innerHeight - 80,
+      });
+    };
+    window.addEventListener('resize', handleAdjustmentDrawerStyle);
+    return (): void =>
+      window.removeEventListener('resize', handleAdjustmentDrawerStyle);
+  }, [drawerStyle]);
   return (
     <Drawer
       rootClassName="advanced-configuration-container"
@@ -253,18 +611,6 @@ function AdvancedConfiguration(): void {
           isFlow={true}
         />
       )}
-      <audio
-        ref={audioRef}
-        style={{ display: 'none' }}
-        onEnded={() => {
-          const audio = audioRef.current;
-          if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-          setPlaying(false);
-        }}
-      ></audio>
       <div
         className="w-full h-full py-4 flex flex-col overflow-hidden"
         onKeyDown={e => e.stopPropagation()}
@@ -284,323 +630,38 @@ function AdvancedConfiguration(): void {
           {t('workflow.advancedConfiguration.subtitle')}
         </div>
         <div className="flex-1 overflow-auto flex flex-col mt-8 gap-2.5 px-5">
-          <div
-            className="bg-[#F7F7FA] rounded-lg"
-            style={{
-              padding: '10px 17px 16px 17px',
-            }}
-          >
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={icons.conversationStarter}
-                  className="w-[22px] h-[22px]"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {t('workflow.advancedConfiguration.conversationStarter')}
-                </div>
-              </div>
-              <Switch
-                className="list-switch config-switch"
-                checked={advancedConfig?.prologue?.enabled}
-                onChange={value => {
-                  handleAdvancedConfigChange(
-                    () => (advancedConfig.prologue.enabled = value)
-                  );
-                  updateAdvancedConfigParams({
-                    prologue: {
-                      enabled: value,
-                    },
-                  });
-                }}
-              />
-            </div>
-            <div className="text-xs font-medium text-[#666] mt-1">
-              {t(
-                'workflow.advancedConfiguration.conversationStarterDescription'
-              )}
-            </div>
-            {advancedConfig?.prologue?.enabled && (
-              <>
-                <div className="relative">
-                  <div
-                    className="absolute bottom-2 right-2.5 inline-flex items-center rounded-md gap-1 cursor-pointer  py-1 px-2.5 text-[#275EFF] text-sm bg-[#ececfb] z-20"
-                    onClick={() => setOpeningRemarksModal(true)}
-                  >
-                    <img
-                      src={icons.promptOptimization}
-                      className="w-4 h-4"
-                      alt=""
-                    />
-                    <span>
-                      {t('workflow.advancedConfiguration.aiGenerate')}
-                    </span>
-                  </div>
-                  <Input.TextArea
-                    className="mt-2.5 global-textarea pr-6 flow-advanced-configuration-textarea"
-                    placeholder={t(
-                      'workflow.advancedConfiguration.openingRemarksPlaceholder'
-                    )}
-                    style={{ height: 96, resize: 'none' }}
-                    value={advancedConfig?.prologue?.prologueText}
-                    onChange={e => {
-                      handleAdvancedConfigChange(
-                        () =>
-                          (advancedConfig.prologue.prologueText =
-                            e?.target?.value)
-                      );
-                      updateAdvancedConfigParamsDebounce({
-                        prologue: {
-                          prologueText: e?.target?.value,
-                        },
-                      });
-                    }}
-                    maxLength={300}
-                  />
-                </div>
-                <div className="w-full flex items-center justify-between mt-4">
-                  <div className="font-medium">
-                    {t(
-                      'workflow.advancedConfiguration.openingRemarksPresetQuestions'
-                    )}
-                  </div>
-                  {advancedConfig?.prologue?.inputExample?.length < 3 && (
-                    <div
-                      className="flex items-center gap-2 text-[#275EFF] text-xs font-medium cursor-pointer"
-                      onClick={() => {
-                        handleAdvancedConfigChange(
-                          () =>
-                            (advancedConfig.prologue.inputExample = [
-                              ...advancedConfig.prologue.inputExample,
-                              '',
-                            ])
-                        );
-                        updateAdvancedConfigParams({
-                          prologue: {
-                            inputExample:
-                              advancedConfig?.prologue?.inputExample,
-                          },
-                        });
-                      }}
-                    >
-                      <img
-                        src={icons.inputAdd}
-                        className="w-[10px] h-[10px]"
-                        alt=""
-                      />
-                      <span>{t('workflow.advancedConfiguration.add')}</span>
-                    </div>
-                  )}
-                </div>
-                {advancedConfig?.prologue?.inputExample?.map(
-                  (question, index) => (
-                    <div key={index} className="w-full relative">
-                      <Input
-                        style={{
-                          height: 40,
-                        }}
-                        value={question}
-                        onChange={e =>
-                          handlePresetQuestionChange(
-                            index,
-                            e.target.value?.trim()
-                          )
-                        }
-                        placeholder={t(
-                          'workflow.advancedConfiguration.presetQuestionPlaceholder'
-                        )}
-                        className="global-input flex-1 shrink-0 mt-1.5 flow-advanced-configuration-input pr-8"
-                      />
-                      {advancedConfig?.prologue?.inputExample?.length > 1 ? (
-                        <img
-                          src={icons.remove}
-                          className="w-5 h-5 cursor-pointer absolute right-2 top-4"
-                          alt=""
-                          onClick={() => {
-                            handleAdvancedConfigChange(() =>
-                              advancedConfig?.prologue?.inputExample?.splice(
-                                index,
-                                1
-                              )
-                            );
-                            updateAdvancedConfigParams({
-                              prologue: {
-                                inputExample:
-                                  advancedConfig?.prologue?.inputExample,
-                              },
-                            });
-                          }}
-                        />
-                      ) : null}
-                    </div>
-                  )
-                )}
-              </>
-            )}
-          </div>
-          <div
-            className="bg-[#F7F7FA] rounded-lg"
-            style={{
-              padding: '10px 17px 16px 17px',
-            }}
-          >
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={icons.problemSuggestion}
-                  className="w-[22px] h-[22px]"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {t('workflow.advancedConfiguration.nextQuestionSuggestion')}
-                </div>
-              </div>
-              <Switch
-                className="list-switch config-switch"
-                checked={advancedConfig?.suggestedQuestionsAfterAnswer?.enabled}
-                onChange={value => {
-                  handleAdvancedConfigChange(
-                    () =>
-                      (advancedConfig.suggestedQuestionsAfterAnswer.enabled =
-                        value)
-                  );
-                  updateAdvancedConfigParams({
-                    suggestedQuestionsAfterAnswer: {
-                      enabled: value,
-                    },
-                  });
-                }}
-              />
-            </div>
-            <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
-              {t(
-                'workflow.advancedConfiguration.nextQuestionSuggestionDescription'
-              )}
-            </div>
-          </div>
-          <div
-            className="bg-[#F7F7FA] rounded-lg"
-            style={{
-              padding: '10px 17px 16px 17px',
-            }}
-          >
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={icons.likeAndDislike}
-                  className="w-[22px] h-[22px]"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {t('workflow.advancedConfiguration.likeAndDislike')}
-                </div>
-              </div>
-              <Switch
-                className="list-switch config-switch"
-                checked={advancedConfig?.feedback?.enabled}
-                onChange={value => {
-                  handleAdvancedConfigChange(
-                    () => (advancedConfig.feedback.enabled = value)
-                  );
-                  updateAdvancedConfigParams({
-                    feedback: {
-                      enabled: value,
-                    },
-                  });
-                }}
-              />
-            </div>
-            <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
-              {t('workflow.advancedConfiguration.likeAndDislikeDescription')}
-            </div>
-          </div>
-          <div
-            className="bg-[#F7F7FA] rounded-lg"
-            style={{
-              padding: '10px 17px 16px 17px',
-            }}
-          >
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={icons.settingBackground}
-                  className="w-[22px] h-[22px]"
-                  alt=""
-                />
-                <div className="font-medium">
-                  {t('workflow.advancedConfiguration.setBackground')}
-                </div>
-              </div>
-              <Switch
-                className="list-switch config-switch"
-                checked={advancedConfig?.chatBackground?.enabled}
-                onChange={value => {
-                  handleAdvancedConfigChange(
-                    () => (advancedConfig.chatBackground.enabled = value)
-                  );
-                  updateAdvancedConfigParams({
-                    chatBackground: {
-                      enabled: value,
-                    },
-                  });
-                }}
-              />
-            </div>
-            <div className="text-xs font-medium text-[#666] mt-1 max-w-[274px] whitespace-pre-wrap">
-              {t('workflow.advancedConfiguration.setBackgroundDescription')}
-            </div>
-            {advancedConfig?.chatBackground?.enabled && (
-              <div className="w-full pt-4">
-                <Dragger {...uploadProps} className="icon-upload">
-                  <img src={icons.uploadAct} className="w-8 h-8" alt="" />
-                  <div className="font-medium mt-6">
-                    {t('workflow.advancedConfiguration.dragFileHere')}
-                    <span className="text-[#275EFF]">
-                      {t('workflow.advancedConfiguration.selectFile')}
-                    </span>
-                  </div>
-                  <p className="text-desc mt-2">
-                    {t('workflow.advancedConfiguration.fileFormatTip')}
-                  </p>
-                </Dragger>
-                {chatBackgroundInfo && (
-                  <div className="w-full flex items-center gap-2.5 justify-between mt-2.5 rounded-xl p-2.5 bg-[#fff]">
-                    <div className="flex items-center gap-2.5 flex-1">
-                      <img
-                        src={icons.advancedConfigurationUpload}
-                        className="w-[20px] h-[20px]"
-                        alt=""
-                      />
-                      <div
-                        className="max-w-[250px] text-overflow"
-                        title={chatBackgroundInfo?.name}
-                      >
-                        {chatBackgroundInfo?.name}
-                      </div>
-                      <div>{chatBackgroundInfo?.total}</div>
-                    </div>
-                    <img
-                      src={icons.backgroundClose}
-                      className="w-[10px] h-[10px] cursor-pointer"
-                      onClick={() => {
-                        setChatBackgroundInfo(null);
-                        handleAdvancedConfigChange(
-                          () => (advancedConfig.chatBackground.info = null)
-                        );
-                        updateAdvancedConfigParams({
-                          chatBackground: {
-                            info: null,
-                          },
-                        });
-                      }}
-                      alt=""
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <ConversationStarter
+            advancedConfig={advancedConfig}
+            handleAdvancedConfigChange={handleAdvancedConfigChange}
+            updateAdvancedConfigParams={updateAdvancedConfigParams}
+            setOpeningRemarksModal={setOpeningRemarksModal}
+            updateAdvancedConfigParamsDebounce={
+              updateAdvancedConfigParamsDebounce
+            }
+            handlePresetQuestionChange={handlePresetQuestionChange}
+            t={t}
+          />
+          <SuggestedQuestions
+            advancedConfig={advancedConfig}
+            handleAdvancedConfigChange={handleAdvancedConfigChange}
+            updateAdvancedConfigParams={updateAdvancedConfigParams}
+            t={t}
+          />
+          <FeedbackSwitch
+            advancedConfig={advancedConfig}
+            handleAdvancedConfigChange={handleAdvancedConfigChange}
+            updateAdvancedConfigParams={updateAdvancedConfigParams}
+            t={t}
+          />
+          <ChatBackground
+            advancedConfig={advancedConfig}
+            handleAdvancedConfigChange={handleAdvancedConfigChange}
+            updateAdvancedConfigParams={updateAdvancedConfigParams}
+            t={t}
+            uploadProps={uploadProps}
+            chatBackgroundInfo={chatBackgroundInfo}
+            setChatBackgroundInfo={setChatBackgroundInfo}
+          />
         </div>
       </div>
     </Drawer>

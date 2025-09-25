@@ -10,9 +10,6 @@ import {
   listTools,
   listToolSquare,
   getMcpServerList as getMcpServerListAPI,
-  workflowGetEnvKey,
-  workflowPushEnvKey,
-  addToolOperateHistory,
 } from '@/services/plugin';
 import { Button, Select, Spin, Tooltip, message } from 'antd';
 import { FlowInput } from '@/components/workflow/ui';
@@ -29,7 +26,6 @@ import {
 } from '@/components/modal/plugin';
 import MCPDetail from './components/mcp-detail';
 import KnowledgeList from './components/knowledge-list';
-import { ActivateMCPModal } from './components/modal-component';
 import { configListRepos } from '@/services/knowledge';
 import { useTranslation } from 'react-i18next';
 
@@ -72,11 +68,6 @@ function AddTools({
   });
   const [botIcon, setBotIcon] = useState<unknown>({});
   const [botColor, setBotColor] = useState('');
-  const [activeMcpModal, setActiveMcpModal] = useState(false);
-  const [envKeyParameters, setEnvKeyParameters] = useState([]);
-  const [envKeyDescription, setEnvKeyDescription] = useState('');
-  const [mcpDetail, setMcpDetail] = useState({});
-  const [envKeyMode, setEnvKeyMode] = useState('create');
   const [orderBy, setOrderBy] = useState('create_time');
 
   const checkedIds = useMemo(() => {
@@ -339,78 +330,14 @@ function AddTools({
 
   const handleCheckTool = useCallback(
     throttle((tool): unknown => {
-      setEnvKeyMode('create');
       if (!checkedIds.includes(tool.toolId) && checkedIds?.length >= 30) {
         message.warning(t('workflow.nodes.common.maxAddWarning'));
-        return;
-      }
-      if (
-        !checkedIds?.includes(tool?.toolId) &&
-        currentTab === 'mcp' &&
-        tool?.['mcp_type'] !== 'flow' &&
-        !tool?.hasConfig
-      ) {
-        workflowGetEnvKey(tool?.id, tool?.['recordId']).then(data => {
-          if (
-            data?.parameters?.filter(item => item?.hasDefault === false)
-              ?.length > 0
-          ) {
-            setActiveMcpModal(true);
-            setEnvKeyParameters(
-              data?.parameters?.filter(item => item?.hasDefault === false)
-            );
-            setEnvKeyDescription(data?.['user_guide']);
-            setMcpDetail(tool);
-          } else {
-            const params = {
-              recordId: tool['recordId'],
-              mcpId: tool.id,
-              serverName: tool.name,
-              serverDesc: tool.brief,
-              env: null,
-              customize: false,
-            };
-            workflowPushEnvKey(params).then(data => {
-              handleThrottleAddTool({
-                ...tool,
-                toolId: data,
-              });
-              setDataSource(dataSource => {
-                dataSource.forEach(item => {
-                  if (item.id === tool.id) {
-                    item.toolId = data;
-                    item.hasConfig = true;
-                  }
-                });
-                return [...dataSource];
-              });
-            });
-          }
-        });
         return;
       }
       handleThrottleAddTool(tool);
     }, 1000),
     [nodes, currentTab, checkedIds]
   );
-
-  const handleUpdateAPIKEY = useCallback((tool): void => {
-    setEnvKeyMode('update');
-    workflowGetEnvKey(tool?.id, tool?.['recordId']).then(data => {
-      setActiveMcpModal(true);
-      setEnvKeyParameters(
-        data?.parameters?.map(item => ({
-          ...item,
-          default:
-            data?.oldParameters?.[item.name] !== undefined
-              ? data?.oldParameters?.[item.name]
-              : item.default,
-        }))
-      );
-      setEnvKeyDescription(data?.['user_guide']);
-      setMcpDetail(tool);
-    });
-  }, []);
 
   const handleClearData = (): void => {
     if (toolRef.current) {
@@ -451,25 +378,6 @@ function AddTools({
     handleClearData();
   };
 
-  const handleMcpModalParamsOk = (data): void => {
-    if (envKeyMode === 'create') {
-      handleThrottleAddTool({
-        ...mcpDetail,
-        toolId: data,
-      });
-    }
-    setDataSource(dataSource => {
-      dataSource.forEach(item => {
-        if (item.id === mcpDetail.id) {
-          item.toolId = data;
-          item.hasConfig = true;
-          item.param = true;
-        }
-      });
-      return [...dataSource];
-    });
-  };
-
   return (
     <>
       {createPortal(
@@ -481,16 +389,6 @@ function AddTools({
           onClick={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()}
         >
-          {activeMcpModal && (
-            <ActivateMCPModal
-              mcpDetail={mcpDetail}
-              envKeyParameters={envKeyParameters}
-              setEnvKeyParameters={setEnvKeyParameters}
-              setActiveMcpModal={setActiveMcpModal}
-              handleMcpModalParamsOk={handleMcpModalParamsOk}
-              envKeyDescription={envKeyDescription}
-            />
-          )}
           {deleteModal && (
             <DeletePlugin
               currentTool={currentTool}
@@ -781,22 +679,6 @@ function AddTools({
                                             {t('workflow.nodes.toolNode.test')}
                                           </div>
                                         )}
-                                        {item?.hasConfig && item?.param && (
-                                          <div
-                                            className="px-6 bg-[#fff] rounded-lg text-sm text-[#275EFF]"
-                                            style={{
-                                              height: 32,
-                                              lineHeight: '32px',
-                                            }}
-                                            onClick={() =>
-                                              handleUpdateAPIKEY(item)
-                                            }
-                                          >
-                                            {t(
-                                              'workflow.promptDebugger.updateConfig'
-                                            )}
-                                          </div>
-                                        )}
                                         <div
                                           onClick={() => handleCheckTool(item)}
                                         >
@@ -817,13 +699,6 @@ function AddTools({
                                               className="px-6"
                                               style={{
                                                 height: 32,
-                                              }}
-                                              onClick={() => {
-                                                addToolOperateHistory(
-                                                  item.isMcp
-                                                    ? item.id
-                                                    : item.toolId
-                                                );
                                               }}
                                             >
                                               {t(

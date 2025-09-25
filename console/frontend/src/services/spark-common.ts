@@ -246,6 +246,11 @@ export const getWechatAuthUrl = (
   );
 };
 
+// 点击调试前
+export const getInputsType = (params: any) => {
+  return http.post(`/xingchen-api/u/bot/v2/getInputsType`, params);
+};
+
 // mcp发布
 export const publishMCP = (params: any) => {
   return http.post(`/publishMCP`, params);

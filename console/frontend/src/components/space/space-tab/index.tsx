@@ -6,7 +6,7 @@ import {
   RoleType,
   ModuleType,
   OperationType,
-} from '@/permissions/permission-type';
+} from '@/types/permission';
 import styles from './index.module.scss';
 
 import { useUserStoreHook } from '@/hooks/use-user-store';

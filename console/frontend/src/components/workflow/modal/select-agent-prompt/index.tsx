@@ -9,14 +9,99 @@ import dayjs from 'dayjs';
 import { getAgentPromptList } from '@/services/prompt';
 import { isJSON } from '@/utils';
 import { useTranslation } from 'react-i18next';
-import { AgentPromptItem } from '@/components/workflow/types';
+import {
+  AgentPromptItem,
+  useSelectPromptType,
+} from '@/components/workflow/types';
 import { Icons } from '@/components/workflow/icons';
 
-function SelectAgentPrompt(): React.ReactElement {
-  const { t } = useTranslation();
-  const selectAgentPromptModal = useFlowsManager(
-    state => state.selectAgentPromptModalInfo?.open
+const PromptList = ({
+  loading,
+  dataSource,
+  currentTemplateId,
+  setCurrentTemplateId,
+}): React.ReactElement => {
+  return (
+    <>
+      {!loading && dataSource?.length > 0 && (
+        <div className="w-full flex flex-col gap-2 h-[336px] overflow-auto pr-1">
+          {dataSource?.map(item => (
+            <div
+              key={item?.id}
+              className="flex flex-col gap-2 rounded-lg px-4 py-[14px] cursor-pointer"
+              onClick={() => setCurrentTemplateId(item?.id)}
+              style={{
+                border:
+                  currentTemplateId === item?.id
+                    ? '1px solid #275EFF'
+                    : '1px solid #E4EAFF',
+                backgroundColor:
+                  currentTemplateId === item?.id ? '#f8faff' : 'transparent',
+              }}
+            >
+              <h4
+                className="text-sm font-medium"
+                style={{
+                  color: currentTemplateId === item?.id ? '#275EFF' : '#333',
+                }}
+              >
+                {item?.name}
+              </h4>
+              <p className="text-xs text-[#666]">{item?.description}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
+};
+
+const PromptDetail = ({
+  loading,
+  currentTemplateId,
+  currentTemplate,
+}): React.ReactElement => {
+  const { t } = useTranslation();
+  return (
+    <>
+      {!loading && currentTemplateId && (
+        <div className="flex-1 flex flex-col gap-4 rounded-lg border-[1px] h-[400px] border-[#E4EAFF] px-4">
+          <div className="flex items-center py-2 border-b-[1px] border-[#E4EAFF]">
+            <div>{t('workflow.promptDebugger.adaptationModel')}</div>
+            <img
+              src={currentTemplate?.modelInfo?.icon}
+              className="w-[24px] h-[24px]"
+              alt=""
+            />
+            <div>{currentTemplate?.modelInfo?.name}</div>
+          </div>
+          <div className="flex-1 overflow-auto text-xs flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <div className="text-[#275EFF]">
+                {t('workflow.promptDebugger.roleSettingLabel')}
+              </div>
+              <div>{currentTemplate?.characterSettings}</div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-[#275EFF]">
+                {t('workflow.promptDebugger.thinkingStepsLabel')}
+              </div>
+              <div>{currentTemplate?.thinkStep}</div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-[#275EFF]">
+                {t('workflow.promptDebugger.userQueryLabel')}
+              </div>
+              <div>{currentTemplate?.userQuery}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const useSelectPrompt = (): useSelectPromptType => {
   const setUpdateNodeInputData = useFlowsManager(
     state => state.setUpdateNodeInputData
   );
@@ -26,26 +111,15 @@ function SelectAgentPrompt(): React.ReactElement {
   const setSelectAgentPromptModalInfo = useFlowsManager(
     state => state.setSelectAgentPromptModalInfo
   );
-  const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
-  const currentStore = getCurrentStore();
-  const updateNodeRef = currentStore(state => state.updateNodeRef);
-  const setNode = currentStore(state => state.setNode);
   const [dataSource, setDataSource] = useState<AgentPromptItem[]>([]);
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [currentTemplateId, setCurrentTemplateId] = useState<string>('');
-
+  const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
+  const currentStore = getCurrentStore();
+  const updateNodeRef = currentStore(state => state.updateNodeRef);
+  const setNode = currentStore(state => state.setNode);
   const debouncedValue = useDebounce(value, { wait: 500 });
-
-  const currentTemplate = useMemo(() => {
-    const res = dataSource?.find(item => item?.id === currentTemplateId);
-    return {
-      ...res,
-      modelInfo: isJSON(res?.adaptationModel || '')
-        ? JSON.parse(res?.adaptationModel || '{}')
-        : {},
-    };
-  }, [dataSource, currentTemplateId]);
 
   useEffect(() => {
     setLoading(true);
@@ -71,7 +145,15 @@ function SelectAgentPrompt(): React.ReactElement {
       })
       .finally(() => setLoading(false));
   }, [debouncedValue]);
-
+  const currentTemplate = useMemo(() => {
+    const res = dataSource?.find(item => item?.id === currentTemplateId);
+    return {
+      ...res,
+      modelInfo: isJSON(res?.adaptationModel || '')
+        ? JSON.parse(res?.adaptationModel || '{}')
+        : {},
+    };
+  }, [dataSource, currentTemplateId]);
   const handleAddTemplateDataToNode = useMemoizedFn(() => {
     const inputs =
       currentTemplate?.inputs?.map(item => ({
@@ -125,6 +207,38 @@ function SelectAgentPrompt(): React.ReactElement {
       setUpdateNodeInputData(updateNodeInputData => !updateNodeInputData);
     });
   });
+  return {
+    dataSource,
+    setDataSource,
+    value,
+    setValue,
+    loading,
+    setLoading,
+    currentTemplateId,
+    setCurrentTemplateId,
+    handleAddTemplateDataToNode,
+    currentTemplate,
+  };
+};
+
+function SelectAgentPrompt(): React.ReactElement {
+  const { t } = useTranslation();
+  const selectAgentPromptModal = useFlowsManager(
+    state => state.selectAgentPromptModalInfo?.open
+  );
+  const setSelectAgentPromptModalInfo = useFlowsManager(
+    state => state.setSelectAgentPromptModalInfo
+  );
+  const {
+    dataSource,
+    value,
+    setValue,
+    loading,
+    currentTemplateId,
+    setCurrentTemplateId,
+    handleAddTemplateDataToNode,
+    currentTemplate,
+  } = useSelectPrompt();
 
   return (
     <>
@@ -170,78 +284,18 @@ function SelectAgentPrompt(): React.ReactElement {
                         placeholder={t('workflow.nodes.toolNode.pleaseEnter')}
                       />
                     </div>
-                    {!loading && dataSource?.length > 0 && (
-                      <div className="w-full flex flex-col gap-2 h-[336px] overflow-auto pr-1">
-                        {dataSource?.map(item => (
-                          <div
-                            key={item?.id}
-                            className="flex flex-col gap-2 rounded-lg px-4 py-[14px] cursor-pointer"
-                            onClick={() => setCurrentTemplateId(item?.id)}
-                            style={{
-                              border:
-                                currentTemplateId === item?.id
-                                  ? '1px solid #275EFF'
-                                  : '1px solid #E4EAFF',
-                              backgroundColor:
-                                currentTemplateId === item?.id
-                                  ? '#f8faff'
-                                  : 'transparent',
-                            }}
-                          >
-                            <h4
-                              className="text-sm font-medium"
-                              style={{
-                                color:
-                                  currentTemplateId === item?.id
-                                    ? '#275EFF'
-                                    : '#333',
-                              }}
-                            >
-                              {item?.name}
-                            </h4>
-                            <p className="text-xs text-[#666]">
-                              {item?.description}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <PromptList
+                      loading={loading}
+                      dataSource={dataSource}
+                      currentTemplateId={currentTemplateId}
+                      setCurrentTemplateId={setCurrentTemplateId}
+                    />
                   </div>
-                  {!loading && currentTemplateId && (
-                    <div className="flex-1 flex flex-col gap-4 rounded-lg border-[1px] h-[400px] border-[#E4EAFF] px-4">
-                      <div className="flex items-center py-2 border-b-[1px] border-[#E4EAFF]">
-                        <div>
-                          {t('workflow.promptDebugger.adaptationModel')}
-                        </div>
-                        <img
-                          src={currentTemplate?.modelInfo?.icon}
-                          className="w-[24px] h-[24px]"
-                          alt=""
-                        />
-                        <div>{currentTemplate?.modelInfo?.name}</div>
-                      </div>
-                      <div className="flex-1 overflow-auto text-xs flex flex-col gap-6">
-                        <div className="flex flex-col gap-2">
-                          <div className="text-[#275EFF]">
-                            {t('workflow.promptDebugger.roleSettingLabel')}
-                          </div>
-                          <div>{currentTemplate?.characterSettings}</div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="text-[#275EFF]">
-                            {t('workflow.promptDebugger.thinkingStepsLabel')}
-                          </div>
-                          <div>{currentTemplate?.thinkStep}</div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="text-[#275EFF]">
-                            {t('workflow.promptDebugger.userQueryLabel')}
-                          </div>
-                          <div>{currentTemplate?.userQuery}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <PromptDetail
+                    loading={loading}
+                    currentTemplateId={currentTemplateId}
+                    currentTemplate={currentTemplate}
+                  />
                 </div>
                 {loading && (
                   <div className="h-[360px] w-full flex items-center justify-center">

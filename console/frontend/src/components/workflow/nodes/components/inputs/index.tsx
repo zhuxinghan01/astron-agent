@@ -152,7 +152,7 @@ function ReferenceField({
     ? [item?.schema?.value?.content?.nodeId, item?.schema?.value?.content?.name]
     : [];
 
-  const handleSelect = (node: unknown) =>
+  const handleSelect = (node: unknown): void =>
     handleChangeInputParam(
       item.id,
       (data, val) => {

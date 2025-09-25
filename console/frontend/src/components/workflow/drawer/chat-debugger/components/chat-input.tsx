@@ -1,19 +1,10 @@
-import React, { useCallback, useRef, useState, useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  FlowTextArea,
-  FlowSelect,
-  FlowInputNumber,
-  FlowUpload,
-} from '@/components/workflow/ui';
 import Ajv from 'ajv';
-import {
-  renderType,
-  generateUploadType,
-} from '@/components/workflow/utils/reactflowUtils';
-import JsonMonacoEditor from '@/components/monaco-editor/JsonMonacoEditor';
-import { typeList } from '@/constants';
+import { renderType } from '@/components/workflow/utils/reactflowUtils';
 import { cloneDeep } from 'lodash';
+import { renderParamInput } from '@/components/workflow/nodes/node-common';
+import { useMemoizedFn } from 'ahooks';
 
 // 类型导入
 import {
@@ -24,24 +15,12 @@ import {
   AjvValidationError,
 } from '@/components/workflow/types';
 
-// 从统一的图标管理中导入
-import { Icons } from '@/components/workflow/icons';
-
-// 获取 Chat Input 模块的图标
-const icons = Icons.chatDebugger.chatInput;
-
-const fileTypeFor50 = ['pdf', 'excel', 'doc', 'txt', 'ppt', 'audio'];
-
-function ChatInput({
-  interruptChat,
-  startNodeParams,
-  setStartNodeParams,
-  textareRef,
-  handleEnterKey,
-}: ChatInputProps): React.ReactElement {
+const useChatInput = (
+  startNodeParams: StartNodeType[],
+  setStartNodeParams: (params: StartNodeType[]) => void
+) => {
   const { t } = useTranslation();
-
-  const uploadComplete = useCallback(
+  const uploadComplete = useMemoizedFn(
     (
       event: ProgressEvent<EventTarget>,
       index: number,
@@ -64,11 +43,10 @@ function ChatInput({
           return cloneDeep(oldNodeParams);
         });
       }
-    },
-    [setStartNodeParams]
+    }
   );
 
-  const handleFileUpload = useCallback(
+  const handleFileUpload = useMemoizedFn(
     (file: File, index: number, multiple: boolean, fileId: string): void => {
       const fileUploadItem: FileUploadItem = {
         id: fileId,
@@ -86,21 +64,10 @@ function ChatInput({
         startNodeParams[index].default = [fileUploadItem];
       }
       setStartNodeParams([...startNodeParams]);
-    },
-    [startNodeParams, setStartNodeParams]
+    }
   );
 
-  const convertToKBMB = useCallback((bytes: number): string => {
-    if (bytes >= 1024 * 1024) {
-      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    } else if (bytes >= 1024) {
-      return (bytes / 1024).toFixed(1) + 'KB';
-    } else {
-      return bytes + 'B';
-    }
-  }, []);
-
-  const handleDeleteFile = useCallback(
+  const handleDeleteFile = useMemoizedFn(
     (index: number, fileId: string): void => {
       setStartNodeParams(oldStartNodeParams => {
         const defaultValue = oldStartNodeParams[index]?.default;
@@ -111,163 +78,9 @@ function ChatInput({
         }
         return cloneDeep(oldStartNodeParams);
       });
-    },
-    [setStartNodeParams]
+    }
   );
-
-  const renderTypeInput = useCallback(
-    (input: StartNodeType, index: number): React.ReactElement => {
-      const type = input.type;
-      if (input?.allowedFileType) {
-        const multiple = type === 'array-string';
-        return (
-          <>
-            <FlowUpload
-              multiple={multiple}
-              uploadType={generateUploadType(input?.allowedFileType || '')}
-              {...({
-                uploadComplete: (
-                  event: ProgressEvent<EventTarget>,
-                  fileId: string
-                ) => {
-                  uploadComplete(event, index, fileId);
-                },
-                handleFileUpload: (file: File, fileId: string) => {
-                  handleFileUpload(file, index, multiple, fileId);
-                },
-              } as unknown)}
-              maxSize={
-                input?.allowedFileType === 'image'
-                  ? 3
-                  : fileTypeFor50.includes(input?.allowedFileType)
-                    ? 50
-                    : 20
-              }
-            />
-            {Array.isArray(input?.default) &&
-              input.default.length > 0 &&
-              (input.default as FileUploadItem[]).map(file => (
-                <div
-                  key={file?.id}
-                  className="bg-[#EBF4FD] rounded-lg p-1 pr-4 flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center w-[28px] h-[28px] bg-[#fff] justify-center">
-                      {file.loading ? (
-                        <img
-                          src={icons.chatLoading}
-                          className="w-3 h-3 flow-rotate-center"
-                          alt=""
-                        />
-                      ) : (
-                        <img
-                          src={typeList.get(input?.allowedFileType || '')}
-                          className="w-[16px] h-[13px]"
-                          alt=""
-                        />
-                      )}
-                    </div>
-                    <span>{file?.name}</span>
-                    <span className="text-desc">
-                      {convertToKBMB(file.size)}
-                    </span>
-                  </div>
-                  <img
-                    src={icons.remove}
-                    className="w-[16px] h-[17px] mt-1.5 opacity-50 cursor-pointer"
-                    onClick={() => handleDeleteFile(index, file?.id)}
-                    alt=""
-                  />
-                </div>
-              ))}
-            <div></div>
-          </>
-        );
-      } else if (type === 'string') {
-        return (
-          <FlowTextArea
-            style={{
-              height: 30,
-              minHeight: 30,
-            }}
-            adaptiveHeight={true}
-            placeholder={input?.description || t('common.inputPlaceholder')}
-            value={typeof input?.default === 'string' ? input.default : ''}
-            {...({
-              onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                handleInputChange(index, e.target.value),
-            } as unknown)}
-            onKeyDown={e => {
-              if (e.key === 'Tab') {
-                e.preventDefault();
-                const currentDefault = startNodeParams[index].default;
-                handleInputChange(
-                  index,
-                  (typeof currentDefault === 'string' ? currentDefault : '') +
-                    '\t'
-                );
-              }
-            }}
-          />
-        );
-      } else if (type === 'integer') {
-        return (
-          <FlowInputNumber
-            className="w-full"
-            placeholder={input?.description || t('common.inputPlaceholder')}
-            step={1}
-            precision={0}
-            value={
-              typeof input?.default === 'number' ? input.default : undefined
-            }
-            onChange={value => handleInputChange(index, value || 0)}
-          />
-        );
-      } else if (type === 'number') {
-        return (
-          <FlowInputNumber
-            className="w-full"
-            placeholder={input?.description || t('common.inputPlaceholder')}
-            value={
-              typeof input?.default === 'number' ? input.default : undefined
-            }
-            onChange={value => handleInputChange(index, value || 0)}
-          />
-        );
-      } else if (type === 'boolean') {
-        return (
-          <FlowSelect
-            placeholder={input?.description || t('common.selectPlaceholder')}
-            value={input?.default}
-            options={[
-              {
-                label: 'true',
-                value: true,
-              },
-              {
-                label: 'false',
-                value: false,
-              },
-            ]}
-            onChange={value => handleInputChange(index, value)}
-          />
-        );
-      } else if (type === 'object' || type.includes('array')) {
-        return (
-          <>
-            <JsonMonacoEditor
-              value={typeof input?.default === 'string' ? input.default : '{}'}
-              onChange={value => handleInputChange(index, value)}
-            />
-            <div className="text-[#F74E43] text-xs">{input.errorMsg}</div>
-          </>
-        );
-      }
-    },
-    [startNodeParams]
-  );
-
-  const validateInputJSON = useCallback(
+  const validateInputJSON = useMemoizedFn(
     (newValue: string, schema: object): string => {
       try {
         const ajv = new Ajv();
@@ -290,17 +103,16 @@ function ChatInput({
       } catch {
         return t('workflow.nodes.validation.invalidJSONFormat');
       }
-    },
-    [t]
+    }
   );
 
-  const handleInputChange = useCallback(
-    (index: number, value: string | number | boolean): void => {
+  const handleChangeParam = useMemoizedFn(
+    (index: number, fn, value: string | number | boolean): void => {
       const currentInput: StartNodeType | undefined = startNodeParams.find(
         (_, i) => index === i
       );
       if (currentInput) {
-        currentInput.default = value;
+        fn(currentInput, value);
         if (
           currentInput?.type === 'object' ||
           currentInput.type.includes('array')
@@ -314,9 +126,30 @@ function ChatInput({
         }
       }
       setStartNodeParams([...startNodeParams]);
-    },
-    [startNodeParams, setStartNodeParams, validateInputJSON]
+    }
   );
+  return {
+    uploadComplete,
+    handleFileUpload,
+    handleDeleteFile,
+    handleChangeParam,
+  };
+};
+
+function ChatInput({
+  interruptChat,
+  startNodeParams,
+  setStartNodeParams,
+  textareRef,
+  handleEnterKey,
+}: ChatInputProps): React.ReactElement {
+  const { t } = useTranslation();
+  const {
+    uploadComplete,
+    handleFileUpload,
+    handleDeleteFile,
+    handleChangeParam,
+  } = useChatInput(startNodeParams, setStartNodeParams);
 
   return (
     <div
@@ -374,7 +207,12 @@ function ChatInput({
                   )}
                 </div>
               </div>
-              {renderTypeInput(params, index)}
+              {renderParamInput(params, index, {
+                handleChangeParam,
+                uploadComplete,
+                handleFileUpload,
+                handleDeleteFile,
+              })}
             </div>
           );
         })

@@ -12,7 +12,7 @@ import SpaceModal from '@/components/space/space-modal';
 import SpaceTab from '@/components/space/space-tab';
 
 import styles from './index.module.scss';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 
 import { getAllCorporateList, getJoinedCorporateList } from '@/services/space';
 import { useEnterprise } from '@/hooks/use-enterprise';

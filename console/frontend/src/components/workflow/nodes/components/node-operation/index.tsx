@@ -39,8 +39,17 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
         edges: [],
       },
     };
-    nodeDebug(id, params)
-      .then(res => {
+    const latestAccessToken = localStorage.getItem('accessToken');
+    fetch(`http://172.29.201.92:8080/workflow/node/debug/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${latestAccessToken}`,
+      },
+    })
+      .then(async response => {
+        const res = await response.json();
         if (res.code === 0) {
           currentNode.data.debuggerResult = {
             timeCost: res.data['node_exec_cost'],

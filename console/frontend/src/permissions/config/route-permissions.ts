@@ -2,7 +2,7 @@ import {
   ModuleType,
   OperationType,
   RoutePermissionConfig,
-} from '@/permissions/permission-type';
+} from '@/types/permission';
 
 // ==================== 路由权限映射 ===================
 

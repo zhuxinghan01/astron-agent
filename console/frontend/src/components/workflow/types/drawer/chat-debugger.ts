@@ -633,3 +633,25 @@ export interface NewNodeType {
   zIndex?: number;
   draggable?: boolean;
 }
+
+export interface IFlyCollectorType {
+  onEvent: (
+    eventName: string,
+    params: Record<string, unknown>,
+    category: string
+  ) => void;
+}
+
+export interface UseChatContentProps {
+  advancedConfig: ChatContentAdvancedConfig;
+  goodFeedback: (id: string | undefined, sid: string) => void;
+  badFeedback: (id: string | undefined, sid: string) => void;
+  modalVisible: boolean;
+  sid: string | undefined;
+  modalType: 'good' | 'bad';
+  setModalVisible: (visible: boolean) => void;
+  handleActiveStyle: (style: string) => void;
+  renderInputElement: (input: unknown) => React.ReactElement;
+  setSid: (sid: string) => void;
+  copyData: (data: unknown) => void;
+}
