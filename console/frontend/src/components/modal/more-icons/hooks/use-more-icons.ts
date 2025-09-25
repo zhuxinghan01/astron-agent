@@ -131,7 +131,7 @@ export const useMoreIcons = ({
 
   function beforeUpload(file: UploadFile): boolean {
     const maxSize = 2 * 1024 * 1024;
-    if (file?.size || 0 > maxSize) {
+    if ((file?.size || 0) > maxSize) {
       message.error('上传文件大小不能超出2M！');
       return false;
     }
@@ -156,6 +156,9 @@ export const useMoreIcons = ({
     name: 'file',
     action: '/xingchen-api/image/upload',
     showUploadList: false,
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+    },
     accept: '.png,.jpg,.jpeg,.gif,.webp,.bmp,.tiff',
     beforeUpload,
     onChange: (info: UploadChangeParam<UploadFile>): void => {
