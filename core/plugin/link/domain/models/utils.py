@@ -247,7 +247,7 @@ class RedisService:
         :return:
         """
         logger.debug("redis cluster init in progress")
-        if os.getenv(const.REDIS_IS_CLUSTER_KEY).lower() == "true":
+        if os.getenv(const.REDIS_CLUSTER_ADDR_KEY):
             host_port_pairs = cluster_addr.split(",")
             cluster_nodes = []
             for pair in host_port_pairs:

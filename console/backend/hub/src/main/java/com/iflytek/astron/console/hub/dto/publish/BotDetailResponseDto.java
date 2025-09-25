@@ -49,7 +49,7 @@ public class BotDetailResponseDto {
     private LocalDateTime updateTime;
 
     @Schema(description = "User ID", example = "3")
-    private Long uid;
+    private String uid;
 
     @Schema(description = "Space ID", example = "1")
     private Long spaceId;

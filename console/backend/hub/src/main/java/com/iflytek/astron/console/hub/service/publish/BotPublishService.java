@@ -9,6 +9,8 @@ import com.iflytek.astron.console.hub.dto.publish.BotVersionVO;
 import com.iflytek.astron.console.hub.dto.publish.BotSummaryStatsVO;
 import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
+import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 
 /**
@@ -136,4 +138,29 @@ public interface BotPublishService {
      */
     WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl,
             String uid, Long spaceId);
+
+    // ==================== Trace Log Management ====================
+
+    /**
+     * Get paginated trace logs for a bot
+     *
+     * @param uid User ID
+     * @param botId Bot ID
+     * @param requestDto Trace query parameters
+     * @param spaceId Space ID (optional)
+     * @return Paginated trace log results
+     */
+    PageResponse<Object> getBotTrace(String uid, Integer botId, BotTraceRequestDto requestDto, Long spaceId);
+
+    // ==================== Workflow Input Management ====================
+
+    /**
+     * Get workflow input parameters for bot
+     *
+     * @param botId Bot ID
+     * @param uid User ID
+     * @param spaceId Space ID (optional)
+     * @return Workflow input parameter definitions
+     */
+    WorkflowInputsResponseDto getInputsType(Integer botId, String uid, Long spaceId);
 }

@@ -6,11 +6,11 @@ This module contains comprehensive unit tests for API response classes,
 testing BaseResponse, SuccessResponse, SuccessDataResponse, and ErrorResponse.
 """
 
-from unittest.mock import MagicMock
 from typing import List
+from unittest.mock import MagicMock
 
-from knowledge.domain.response import BaseResponse, SuccessDataResponse, ErrorResponse
 from knowledge.consts.error_code import CodeEnum
+from knowledge.domain.response import BaseResponse, ErrorResponse, SuccessDataResponse
 
 
 class TestBaseResponse:
@@ -111,9 +111,7 @@ class TestSuccessDataResponse:
         """Test initialization with all parameters."""
         test_data = [1, 2, 3, 4, 5]
         response = SuccessDataResponse(
-            data=test_data,
-            message="Data retrieved",
-            sid="data_session"
+            data=test_data, message="Data retrieved", sid="data_session"
         )
 
         assert response.code == 0
@@ -154,9 +152,7 @@ class TestSuccessDataResponse:
         """Test that to_dict method includes data field."""
         test_data = {"result": "test", "items": [1, 2, 3]}
         response = SuccessDataResponse(
-            data=test_data,
-            message="Success with data",
-            sid="test_sid"
+            data=test_data, message="Success with data", sid="test_sid"
         )
 
         result = response.to_dict()
@@ -164,7 +160,7 @@ class TestSuccessDataResponse:
             "code": 0,
             "message": "Success with data",
             "sid": "test_sid",
-            "data": test_data
+            "data": test_data,
         }
         assert result == expected
 
@@ -242,8 +238,7 @@ class TestErrorResponse:
         mock_code_enum.msg = "Default error message"
 
         response = ErrorResponse(
-            code_enum=mock_code_enum,
-            message="Custom error message"
+            code_enum=mock_code_enum, message="Custom error message"
         )
 
         assert response.code == 10003
@@ -259,7 +254,7 @@ class TestErrorResponse:
         response = ErrorResponse(
             code_enum=mock_code_enum,
             sid="full_test_session",
-            message="Override message"
+            message="Override message",
         )
 
         assert response.code == 10004
@@ -368,16 +363,12 @@ class TestResponseIntegration:
 
     def test_success_vs_error_distinction(self) -> None:
         """Test distinguishing success from error responses."""
-        success_responses = [
-            SuccessDataResponse(data="test")
-        ]
+        success_responses = [SuccessDataResponse(data="test")]
 
         mock_error_enum = MagicMock()
         mock_error_enum.code = 10001
         mock_error_enum.msg = "Error"
-        error_responses = [
-            ErrorResponse(code_enum=mock_error_enum)
-        ]
+        error_responses = [ErrorResponse(code_enum=mock_error_enum)]
 
         # All success responses should return True for is_success
         for response in success_responses:
