@@ -511,16 +511,16 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // TODO: Implement actual trace log retrieval logic when ElasticSearch is available
         // This is a placeholder implementation until ES integration is ready
-        // 
+        //
         // When implementing:
         // 1. Validate bot permissions (check if user has access to this bot)
-        // 2. Get bot flow ID from bot configuration  
+        // 2. Get bot flow ID from bot configuration
         // 3. Query trace logs from ElasticSearch with time range and filters
         // 4. Apply additional filters (logLevel, keyword, traceId, sessionId)
         // 5. Return paginated results
-        
+
         log.warn("Trace log functionality not yet implemented - ElasticSearch integration pending");
-        
+
         // Return empty result for now
         return PageResponse.of(requestDto.getPage(), requestDto.getPageSize(), 0L, new ArrayList<>());
     }
@@ -536,7 +536,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         log.info("Workflow input parameters retrieved successfully: botId={}, paramCount={}",
                 botId, result.getParameters().size());
-        
+
         return result;
     }
 }
