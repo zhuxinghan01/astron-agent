@@ -517,28 +517,71 @@ services:
 #      - astron-agent-network
 #    restart: always
 
-  # 控制台Hub服务
-#  console-hub:
-#    image: ghcr.io/lyj715824/astron-agent/astron-agent-console-hub:latest
-#    container_name: astron-agent-console-hub
-#    ports:
-#      - "${CONSOLE_HUB_PORT:-8080}:8080"
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      mysql:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      elasticsearch:
-#        condition: service_healthy
-#      kafka:
-#        condition: service_healthy
-#      minio:
-#        condition: service_healthy
-#    networks:
-#      - astron-agent-network
-#    restart: always
+#   控制台Hub服务
+  console-hub:
+    image: ghcr.io/lyj715824/astron-agent/astron-agent-console-hub:latest
+    container_name: astron-agent-console-hub
+    environment:
+      # Astron Domain
+      ASTRON_DOMAIN: "${ASTRON_DOMAIN:-https://your.deployment.domain}"
+      # 数据库配置 (console 模块)
+      MYSQL_URL: "${MYSQL_URL:-jdbc:mysql://db:3306/astron_console}"
+      MYSQL_USERNAME: "${MYSQL_USER:-root}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-root123}"
+      # Redis 配置 (console 模块)
+      REDIS_HOST: "${REDIS_HOST:-redis}"
+      REDIS_PORT: "${REDIS_PORT:-6379}"
+      REDIS_DATABASE: "${REDIS_DATABASE:-0}"
+      # S3/MinIO 配置 (console 模块)
+      S3_ENDPOINT: "${S3_ENDPOINT:-http://minio:9000}"
+      S3_ACCESS_KEY: "${S3_ACCESS_KEY:-minioadmin}"
+      S3_SECRET_KEY: "${S3_SECRET_KEY:-minioadmin}"
+      S3_BUCKET: "${S3_BUCKET:-astron-project}"
+      S3_PRESIGN_EXPIRY_SECONDS: "${S3_PRESIGN_EXPIRY_SECONDS:-600}"
+      # OAuth2 配置 (console 模块)
+      OAUTH2_ISSUER_URI: "${OAUTH2_ISSUER_URI:-http://auth-server:8000}"
+      OAUTH2_JWK_SET_URI: "${OAUTH2_JWK_SET_URI:-http://auth-server:8000/.well-known/jwks}"
+      OAUTH2_AUDIENCE: "${OAUTH2_AUDIENCE:-your-oauth2-client-id}"
+      # API_AUTH_SECRET
+      API_AUTH_SECRET: "${API_AUTH_SECRET:-secret}"
+      # 公共 appId
+      COMMON_APPID: "${COMMON_APPID:-appid}"
+      COMMON_APIKEY: "${COMMON_APIKEY:-apiKey}"
+      COMMON_API_SECRET: "${COMMON_API_SECRET:-apiSecret}"
+      # toolkit 租户体系
+      TENANT_ID: "${TENANT_ID:-tenantId}"
+      TENANT_KEY: "${TENANT_KEY:-tenantKey}"
+      TENANT_SECRET: "${TENANT_SECRET:-tenantSecret}"
+      # apikey, secret for Toolkit module
+      APP_APIKEY: "${APP_APIKEY:-apikey}"
+      APP_API_SECRET: "${APP_API_SECRET:-apiSecret}"
+      # Toolkit Admin uid
+      ADMIN_UID: "${ADMIN_UID:-9999}"
+      # MaaS Platform Configuration
+      MAAS_APP_ID: "${MAAS_APP_ID:-your-maas-app-id}"
+      MAAS_API_KEY: "${MAAS_API_KEY:-your-maas-api-key}"
+      MAAS_API_SECRET: "${MAAS_API_SECRET:-your-maas-api-secret}"
+      MAAS_CONSUMER_ID: "${MAAS_CONSUMER_ID:-your-maas-consumer-id}"
+      MAAS_CONSUMER_SECRET: "${MAAS_CONSUMER_SECRET:-your-maas-consumer-secret}"
+      MAAS_CONSUMER_KEY: "${MAAS_CONSUMER_KEY:-your-maas-consumer-key}"
+    ports:
+      - "${CONSOLE_HUB_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - astron-agent-network
+    restart: always
 
   # 控制台Toolkit服务
 #  console-toolkit:
