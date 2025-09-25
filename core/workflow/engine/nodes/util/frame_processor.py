@@ -330,14 +330,3 @@ class FrameProcessorFactory:
             raise ValueError(f"Unsupported protocol: {protocol}")
         # All registered processors are concrete subclasses of FrameProcessor
         return cast(FrameProcessor, processor_class())
-
-
-if __name__ == "__main__":
-    aipaas_response = {
-        "header": {"code": 200, "status": "success"},
-        "payload": {"choices": {"text": ["Hello, world!"]}},
-    }
-
-    processor = FrameProcessorFactory.get_processor("aipaas")
-    frame = processor.process_frame(aipaas_response)
-    print(frame)

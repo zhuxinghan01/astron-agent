@@ -49,7 +49,7 @@ class ChatCompletion(CompletionBase):
                     "app_id": self.app_id,
                     "bot_id": self.inputs.bot_id,
                     "uid": self.inputs.uid,
-                    "question": self.inputs.messages[-1].content,
+                    "question": self.inputs.get_last_message_content(),
                     "caller": self.inputs.meta_data.caller,
                     "caller_sid": self.inputs.meta_data.caller_sid,
                 }
@@ -89,6 +89,8 @@ class ChatCompletion(CompletionBase):
                 continue
             chunk_data = json.loads(line.lstrip("data: ").strip())
             chunk = ReasonChatCompletionChunk(**chunk_data)
+            if not chunk.choices:
+                continue
             if chunk.choices[0].delta.reasoning_content:
                 if response.choices[0].message.reasoning_content is None:
                     response.choices[0].message.reasoning_content = ""

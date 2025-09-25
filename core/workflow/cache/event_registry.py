@@ -240,7 +240,7 @@ class EventRegistry(BaseShutdownEvent):
     @classmethod
     async def write_resume_data(
         cls, queue_name: str, data: str, expire_time: int = 180
-    ) -> bool:
+    ) -> None:
         """
         Asynchronously write resume data to specified queue.
 
@@ -274,11 +274,8 @@ class EventRegistry(BaseShutdownEvent):
                 pipe.expire(metadata_key, expire_time)
 
                 pipe.execute()
-
-            return True
         except Exception as e:
-            print(f"Error writing to queue {queue_name}: {e}")
-            return False
+            raise e
 
     @classmethod
     async def fetch_resume_data(cls, queue_name: str, timeout: int = 180) -> dict:

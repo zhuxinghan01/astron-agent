@@ -33,8 +33,11 @@ from workflow.engine.nodes.util.frame_processor import (
     FrameProcessorFactory,
     UnionFrame,
 )
-from workflow.engine.nodes.util.prompt import process_prompt
-from workflow.engine.nodes.util.string_parse import TemplateUnitObj, parse_prompt
+from workflow.engine.nodes.util.prompt import (
+    PromptUtils,
+    TemplateUnitObj,
+    process_prompt,
+)
 from workflow.exception.e import CustomException
 from workflow.exception.errors.code_convert import CodeConvert
 from workflow.exception.errors.err_code import CodeEnum
@@ -408,15 +411,16 @@ class BaseOutputNode(BaseNode):
             ),
         ]
         for template_unit in template_units:
-            template_unit.unit_list = await self._template_spilt(
-                variable_pool=variable_pool, template=template_unit.template, span=span
+            template_unit.unit_list = PromptUtils.get_template_unit(
+                self.node_id, template_unit.template, variable_pool, span
             )
 
         # Initialize output caches for all referenced dependency nodes
         for template_unit in template_units:
             for unit in template_unit.unit_list:
-                llm_output_cache[unit.dep_node_id] = []
-                llm_reasoning_content[unit.dep_node_id] = []
+                if unit.ref_node_info:
+                    llm_output_cache[unit.ref_node_info.ref_node_id] = []
+                    llm_reasoning_content[unit.ref_node_info.ref_node_id] = []
 
         # Cache buffers for non-streaming output frames
         not_stream_output_cache: dict[str, list] = {
@@ -470,75 +474,6 @@ class BaseOutputNode(BaseNode):
                     )
         return None
 
-    async def _template_spilt(
-        self, variable_pool: VariablePool, template: str, span: Span
-    ) -> list[TemplateUnitObj]:
-        """
-        Split and parse the prompt template into template units.
-
-        This method analyzes the prompt template and breaks it down into
-        different types of units: constants, variables, and LLM JSON outputs.
-        Each unit is marked with its type for proper processing during execution.
-
-        :param variable_pool: Pool containing variables and their references
-        :param template: Prompt template string to be parsed
-        :param span: Tracing span for monitoring and debugging
-        :return: List of TemplateUnitObj representing parsed template units
-        """
-
-        prompt_template = template
-        # Parse template and mark each part with its type:
-        # 0: Constants that can be output directly
-        # 1: Variables that need to be retrieved from variable pool
-        # 2: LLM node outputs in JSON format that need to be extracted from variable pool
-        template_unit_list = parse_prompt(prompt_template)
-
-        for index, template_unit in enumerate(template_unit_list):
-            if template_unit.key_type == TemplateSplitType.VARIABLE.value:
-                # Get reference information for the variable
-                ref_node_info = variable_pool.get_variable_ref_node_id(
-                    self.node_id, template_unit.key, span
-                )
-                dep_node_id = ref_node_info.ref_node_id
-                dep_node_var_type = ref_node_info.ref_var_type
-
-                if dep_node_var_type == "literal":
-                    # Convert literal variables to constants
-                    template_unit_list[index].key_type = TemplateSplitType.CONSTS.value
-                    template_unit_list[index].key = ref_node_info.literal_var_value
-                elif dep_node_var_type == "ref":
-                    # Handle reference variables
-                    llm_resp_format = ref_node_info.llm_resp_format
-                    if dep_node_id:
-                        template_unit_list[index].dep_node_id = dep_node_id
-                        template_unit_list[index].ref_var_name = (
-                            ref_node_info.ref_var_name
-                        )
-                        if llm_resp_format == RespFormatEnum.JSON.value:
-                            # Mark as LLM JSON output if response format is JSON
-                            template_unit_list[index].key_type = (
-                                TemplateSplitType.LLM_JSON.value
-                            )
-                    else:
-                        # No dependency node found, treat as constant placeholder
-                        template_unit_list[index].key_type = (
-                            TemplateSplitType.CONSTS.value
-                        )
-                        template_unit_list[index].key = "{{" + template_unit.key + "}}"
-                        template_unit_list[index].ref_var_name = (
-                            ref_node_info.ref_var_name
-                        )
-                else:
-                    # Empty ref_var_type indicates variable doesn't exist
-                    template_unit_list[index].key_type = TemplateSplitType.CONSTS.value
-                    template_unit_list[index].key = "{{" + template_unit.key + "}}"
-
-            # Mark the last unit as the end unit
-            if index == len(template_unit_list) - 1:
-                template_unit_list[index].is_end = True
-
-        return template_unit_list
-
     def get_variable_from_vp(
         self,
         variable_pool: VariablePool,
@@ -575,7 +510,7 @@ class BaseOutputNode(BaseNode):
     def _is_valid_stream_dependency(
         self,
         dep_node_id: str,
-        template_unit: Any,
+        template_unit: TemplateUnitObj,
         variable_pool: VariablePool,
     ) -> bool:
         """
@@ -595,9 +530,12 @@ class BaseOutputNode(BaseNode):
             # LLM and Agent nodes always support streaming
             return True
 
+        if not template_unit.ref_node_info:
+            raise ValueError(f"Node {dep_node_id} has no ref node info")
+
         if node_type == NodeType.KNOWLEDGE_PRO.value:
             # Knowledge Pro nodes support streaming except for result variables
-            return not template_unit.ref_var_name.startswith("result")
+            return not template_unit.ref_node_info.ref_var_name.startswith("result")
 
         if node_type == NodeType.FLOW.value:
             # Flow nodes support streaming only in prompt mode
@@ -714,19 +652,24 @@ class BaseOutputNode(BaseNode):
             if template_unit.key_type == TemplateSplitType.CONSTS.value:
                 yield OutputNodeFrameData(
                     content=(
-                        template_unit.key
+                        template_unit.value
                         if template_type == TemplateType.NORMAL
                         else ""
                     ),
                     reasoning_content=(
-                        template_unit.key
+                        template_unit.value
                         if template_type == TemplateType.REASONING
                         else ""
                     ),
                     data_type="text",
                     is_end=template_unit.is_end,
                 )
-            dep_node_id = template_unit.dep_node_id
+
+            dep_node_id = (
+                template_unit.ref_node_info.ref_node_id
+                if template_unit.ref_node_info
+                else ""
+            )
 
             # Handle node data
             if template_unit.key_type == TemplateSplitType.VARIABLE.value:

@@ -1,6 +1,7 @@
 import os
 
 from loguru import logger
+from workflow.consts.runtime_env import RuntimeEnv
 from workflow.extensions.middleware.factory import ServiceFactory
 from workflow.extensions.middleware.log.manager import LogService
 
@@ -56,6 +57,15 @@ class LogServiceFactory(ServiceFactory):
             serialize=True,  # Enable JSON format
             level=log_level,  # Log level
         )
+
+        # Add console handler for local environment
+        if os.getenv("RUNTIME_ENV", "") == RuntimeEnv.Local.value:
+            logger.add(
+                lambda msg: print(msg, end=""),
+                level=log_level,
+                colorize=True,
+            )
+
         logger.debug(
             f"Loguru initialized successfully. Log file: {log_path}, Log level: {log_level}"
         )
