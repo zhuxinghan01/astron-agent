@@ -62,7 +62,7 @@ class CompletionBase(BaseModel, ABC):
                 sub="Agent",
                 caller=self.inputs.meta_data.caller,
                 log_caller=self.log_caller,
-                question=self.inputs.messages[-1].content,
+                question=self.inputs.get_last_message_content(),
             )
             node_trace.record_start()
 
