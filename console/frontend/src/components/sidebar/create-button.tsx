@@ -2,7 +2,6 @@ import { ReactElement, useState } from 'react';
 import addIcon from '@/assets/imgs/sidebar/btn_create_add.png';
 import { useTranslation } from 'react-i18next';
 import CreateApplicationModal from '@/components/create-application-modal';
-import { baseURL } from '@/utils/http';
 
 interface CreateButtonProps {
   isCollapsed: boolean;
@@ -52,8 +51,6 @@ const CreateButton = ({
       onClick();
     }
   };
-
-  console.log('import.meta.env.MODE', import.meta.env.MODE, baseURL);
 
   return (
     <div className="w-full mt-4">
