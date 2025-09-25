@@ -65,8 +65,8 @@ jobs:
             SHOULD_PUSH="true"
           fi
 
-          # Set platforms (single arch for development builds)
-          PLATFORMS="linux/amd64"
+          # Set platforms (multi-arch builds for better compatibility)
+          PLATFORMS="linux/amd64,linux/arm64"
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "should-push=$SHOULD_PUSH" >> $GITHUB_OUTPUT
@@ -549,52 +549,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  build-console-toolkit:
-    name: 🧰 Build Console Toolkit
-    runs-on: ubuntu-latest
-    needs: detect-and-prepare
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        if: needs.detect-and-prepare.outputs.should-push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY_GHCR }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-toolkit
-          tags: |
-            type=raw,value=latest
-
-      - name: Build and push Console Toolkit image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./console/backend/toolkit/Dockerfile
-          platforms: ${{ needs.detect-and-prepare.outputs.platforms }}
-          push: ${{ needs.detect-and-prepare.outputs.should-push }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            VERSION=${{ needs.detect-and-prepare.outputs.version }}
-            GIT_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ github.run_id }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # ============================================================================
   # Stage 3: Summary and Notifications
@@ -614,7 +568,6 @@ jobs:
       - build-core-workflow
       - build-console-frontend
       - build-console-hub
-      - build-console-toolkit
     if: always()
     steps:
       - name: Generate build summary
@@ -638,12 +591,11 @@ jobs:
           echo "  ⚡ Core Workflow: ${{ needs.build-core-workflow.result }}"
           echo "  🌐 Console Frontend: ${{ needs.build-console-frontend.result }}"
           echo "  🎯 Console Hub: ${{ needs.build-console-hub.result }}"
-          echo "  🧰 Console Toolkit: ${{ needs.build-console-toolkit.result }}"
           echo ""
 
           # Count successful builds
           SUCCESS_COUNT=0
-          TOTAL_COUNT=11
+          TOTAL_COUNT=10
 
           [[ "${{ needs.build-core-tenant.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
           [[ "${{ needs.build-core-memory.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
@@ -655,7 +607,6 @@ jobs:
           [[ "${{ needs.build-core-workflow.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
           [[ "${{ needs.build-console-frontend.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
           [[ "${{ needs.build-console-hub.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-          [[ "${{ needs.build-console-toolkit.result }}" == "success" ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 
           echo "📊 Build Success Rate: $SUCCESS_COUNT/$TOTAL_COUNT images built successfully"
 
@@ -672,7 +623,6 @@ jobs:
             [[ "${{ needs.build-core-workflow.result }}" == "success" ]] && echo "  ⚡ ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-core-workflow:${{ needs.detect-and-prepare.outputs.version }}"
             [[ "${{ needs.build-console-frontend.result }}" == "success" ]] && echo "  🌐 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-frontend:${{ needs.detect-and-prepare.outputs.version }}"
             [[ "${{ needs.build-console-hub.result }}" == "success" ]] && echo "  🎯 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-hub:${{ needs.detect-and-prepare.outputs.version }}"
-            [[ "${{ needs.build-console-toolkit.result }}" == "success" ]] && echo "  🧰 ${{ env.REGISTRY_GHCR }}/${{ github.repository }}/astron-agent-console-toolkit:${{ needs.detect-and-prepare.outputs.version }}"
           fi
 
           if [[ "$SUCCESS_COUNT" == "$TOTAL_COUNT" ]]; then

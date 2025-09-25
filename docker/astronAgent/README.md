@@ -25,7 +25,6 @@ OpenStellar 微服务架构的 Docker Compose 一键部署方案，包含所有�
 ### OpenStellar 控制台服务 (Console Services)
 - **console-frontend** (3000) - 前端Web界面
 - **console-hub** (8080) - 控制台核心API
-- **console-toolkit** (8081) - 工具包API服务
 
 ## 🚀 快速开始
 
