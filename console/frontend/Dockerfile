@@ -1,4 +1,4 @@
-FROM artifacts.iflytek.com/cbg-docker-private/xfyun_webdev/nginx:1.15-alpine
+FROM nginx:1.15-alpine
 ENV port 1881
 RUN echo "user nginx; \
 worker_processes  8; \
@@ -22,7 +22,7 @@ http { \
         root /var/www; \
         access_log off; \
 	location / { \
-      try_files \$uri \$uri /index.html; \
+    try_files \$uri \$uri /index.html; \
             expires -1; \
         } \
         location ~ .*\.(gif|jpg|jpeg|png|PNG|bmp|swf|asp|cfm|xml|py|pl|lasso|cfc|afp|txt|zip|log|ico|csv|json|xls|pdf|mp3|mp4|apk)$ \
