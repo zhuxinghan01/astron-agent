@@ -423,18 +423,15 @@ const getBaseURL = (): string => {
 
   // 通过import.meta.env.MODE获取构建时的环境模式
   const mode = import.meta.env.MODE;
-  console.log('mode', mode);
-  // switch (mode) {
-  //   case 'development':
-  //     return 'http://172.29.202.54:8080/';
-  //   case 'test':
-  //     return 'http://172.29.201.92:8080/';
-  //   default:
-  //     // production和其他环境保持原有逻辑
-  //     return 'http://172.29.201.92:8080/';
-  // }
-
-  return 'http://172.29.202.54:8080/';
+  switch (mode) {
+    case 'development':
+      return 'http://172.29.202.54:8080/';
+    case 'test':
+      return 'http://172.29.201.92:8080/';
+    default:
+      // production和其他环境保持原有逻辑
+      return 'http://172.29.201.92:8080/';
+  }
 };
 
 export const baseURL = getBaseURL();
