@@ -9,9 +9,16 @@ and custom validators.
 
 import pytest
 from pydantic import ValidationError
+
 from knowledge.domain.entity.chunk_dto import (
-    FileSplitReq, ChunkSaveReq, ChunkUpdateReq, ChunkDeleteReq,
-    QueryMatch, ChunkQueryReq, QueryDocReq, RAGType
+    ChunkDeleteReq,
+    ChunkQueryReq,
+    ChunkSaveReq,
+    ChunkUpdateReq,
+    FileSplitReq,
+    QueryDocReq,
+    QueryMatch,
+    RAGType,
 )
 
 
@@ -36,7 +43,7 @@ class TestFileSplitReq:
             overlap=50,
             separator=["\n", "\r\n"],
             cutOff=["EOF"],
-            titleSplit=True
+            titleSplit=True,
         )
         assert req.file == "test file content"
         assert req.resourceType == 1
@@ -78,7 +85,7 @@ class TestChunkSaveReq:
             docId="doc123",
             group="test-group",
             chunks=[{"content": "test chunk"}],
-            ragType=RAGType.AIUI_RAG2
+            ragType=RAGType.AIUI_RAG2,
         )
         assert req.docId == "doc123"
         assert req.group == "test-group"
@@ -93,7 +100,7 @@ class TestChunkSaveReq:
             group="test-group",
             uid="user456",
             chunks=[{"content": "test chunk"}],
-            ragType=RAGType.AIUI_RAG2
+            ragType=RAGType.AIUI_RAG2,
         )
         assert req.uid == "user456"
 
@@ -101,10 +108,7 @@ class TestChunkSaveReq:
         """Test chunks list empty validation."""
         with pytest.raises(ValidationError) as exc_info:
             ChunkSaveReq(
-                docId="doc123",
-                group="test-group",
-                chunks=[],
-                ragType=RAGType.AIUI_RAG2
+                docId="doc123", group="test-group", chunks=[], ragType=RAGType.AIUI_RAG2
             )
 
         errors = exc_info.value.errors()
@@ -117,13 +121,10 @@ class TestChunkSaveReq:
         chunks = [
             {"content": "chunk 1"},
             {"content": "chunk 2"},
-            {"content": "chunk 3"}
+            {"content": "chunk 3"},
         ]
         req = ChunkSaveReq(
-            docId="doc123",
-            group="test-group",
-            chunks=chunks,
-            ragType=RAGType.AIUI_RAG2
+            docId="doc123", group="test-group", chunks=chunks, ragType=RAGType.AIUI_RAG2
         )
         assert req.chunks == chunks
 
@@ -134,7 +135,7 @@ class TestChunkSaveReq:
                 docId="",
                 group="test-group",
                 chunks=[{"content": "test"}],
-                ragType=RAGType.AIUI_RAG2
+                ragType=RAGType.AIUI_RAG2,
             )
 
         errors = exc_info.value.errors()
@@ -152,7 +153,7 @@ class TestChunkUpdateReq:
             docId="doc123",
             group="test-group",
             chunks=[{"id": "chunk1", "content": "updated content"}],
-            ragType=RAGType.AIUI_RAG2
+            ragType=RAGType.AIUI_RAG2,
         )
         assert req.docId == "doc123"
         assert req.group == "test-group"
@@ -165,7 +166,7 @@ class TestChunkUpdateReq:
             docId="doc123",
             group="test-group",
             chunks=[{"id": "chunk1"}, {"id": "chunk2"}],
-            ragType=RAGType.AIUI_RAG2
+            ragType=RAGType.AIUI_RAG2,
         )
         assert len(req.chunks) == 2
         assert all(isinstance(chunk, dict) for chunk in req.chunks)
@@ -186,17 +187,13 @@ class TestChunkDeleteReq:
         req = ChunkDeleteReq(
             docId="doc123",
             chunkIds=["chunk1", "chunk2", "chunk3"],
-            ragType=RAGType.AIUI_RAG2
+            ragType=RAGType.AIUI_RAG2,
         )
         assert req.chunkIds == ["chunk1", "chunk2", "chunk3"]
 
     def test_empty_chunk_ids_list(self) -> None:
         """Test with empty chunk IDs list."""
-        req = ChunkDeleteReq(
-            docId="doc123",
-            chunkIds=[],
-            ragType=RAGType.AIUI_RAG2
-        )
+        req = ChunkDeleteReq(docId="doc123", chunkIds=[], ragType=RAGType.AIUI_RAG2)
         assert req.chunkIds == []
 
 
@@ -217,7 +214,7 @@ class TestQueryMatch:
             docIds=["doc1", "doc2"],
             repoId=["repo1", "repo2"],
             threshold=0.8,
-            flowId="flow123"
+            flowId="flow123",
         )
         assert match.docIds == ["doc1", "doc2"]
         assert match.repoId == ["repo1", "repo2"]
@@ -264,18 +261,12 @@ class TestQueryMatch:
     def test_doc_ids_unique_validation(self) -> None:
         """Test docIds unique validation."""
         # Valid case with unique docIds
-        match = QueryMatch(
-            docIds=["doc1", "doc2", "doc3"],
-            repoId=["repo1"]
-        )
+        match = QueryMatch(docIds=["doc1", "doc2", "doc3"], repoId=["repo1"])
         assert match.docIds == ["doc1", "doc2", "doc3"]
 
         # Invalid case with duplicate docIds
         with pytest.raises(ValidationError) as exc_info:
-            QueryMatch(
-                docIds=["doc1", "doc2", "doc1"],
-                repoId=["repo1"]
-            )
+            QueryMatch(docIds=["doc1", "doc2", "doc1"], repoId=["repo1"])
 
         errors = exc_info.value.errors()
         assert len(errors) == 1
@@ -309,10 +300,7 @@ class TestChunkQueryReq:
         """Test valid creation."""
         match = QueryMatch(repoId=["repo1"])
         req = ChunkQueryReq(
-            query="test query",
-            topN=3,
-            match=match,
-            ragType=RAGType.AIUI_RAG2
+            query="test query", topN=3, match=match, ragType=RAGType.AIUI_RAG2
         )
         assert req.query == "test query"
         assert req.topN == 3
@@ -323,12 +311,7 @@ class TestChunkQueryReq:
         """Test query field empty validation."""
         match = QueryMatch(repoId=["repo1"])
         with pytest.raises(ValidationError) as exc_info:
-            ChunkQueryReq(
-                query="",
-                topN=3,
-                match=match,
-                ragType=RAGType.AIUI_RAG2
-            )
+            ChunkQueryReq(query="", topN=3, match=match, ragType=RAGType.AIUI_RAG2)
 
         errors = exc_info.value.errors()
         assert len(errors) == 1
@@ -342,10 +325,7 @@ class TestChunkQueryReq:
         # Valid range values
         for valid_n in [1, 2, 3, 4, 5]:
             req = ChunkQueryReq(
-                query="test",
-                topN=valid_n,
-                match=match,
-                ragType=RAGType.AIUI_RAG2
+                query="test", topN=valid_n, match=match, ragType=RAGType.AIUI_RAG2
             )
             assert req.topN == valid_n
 
@@ -353,10 +333,7 @@ class TestChunkQueryReq:
         for invalid_n in [0, 6, -1, 10]:
             with pytest.raises(ValidationError) as exc_info:
                 ChunkQueryReq(
-                    query="test",
-                    topN=invalid_n,
-                    match=match,
-                    ragType=RAGType.AIUI_RAG2
+                    query="test", topN=invalid_n, match=match, ragType=RAGType.AIUI_RAG2
                 )
 
             errors = exc_info.value.errors()
@@ -371,7 +348,7 @@ class TestChunkQueryReq:
                 query="test query",
                 topN=3,
                 match=QueryMatch(repoId=[]),  # Invalid empty repoId
-                ragType=RAGType.AIUI_RAG2
+                ragType=RAGType.AIUI_RAG2,
             )
 
         errors = exc_info.value.errors()
@@ -420,13 +397,13 @@ class TestIntegrationCases:
             docIds=["doc1", "doc2", "doc3"],
             repoId=["repo1", "repo2"],
             threshold=0.75,
-            flowId="complex-flow"
+            flowId="complex-flow",
         )
         req = ChunkQueryReq(
             query="complex integration test query",
             topN=5,
             match=match,
-            ragType=RAGType.SparkDesk_RAG
+            ragType=RAGType.SparkDesk_RAG,
         )
 
         assert req.query == "complex integration test query"
@@ -440,9 +417,7 @@ class TestIntegrationCases:
     def test_model_serialization(self) -> None:
         """Test model serialization to dict."""
         req = FileSplitReq(
-            file="test content",
-            ragType=RAGType.AIUI_RAG2,
-            lengthRange=[100, 500]
+            file="test content", ragType=RAGType.AIUI_RAG2, lengthRange=[100, 500]
         )
 
         data = req.model_dump()
@@ -469,9 +444,9 @@ class TestIntegrationCases:
             valid_match = QueryMatch(repoId=["repo1"])
             ChunkQueryReq(
                 query="",  # Invalid empty query
-                topN=0,    # Invalid topN range
+                topN=0,  # Invalid topN range
                 match=valid_match,
-                ragType=RAGType.AIUI_RAG2
+                ragType=RAGType.AIUI_RAG2,
             )
         except ValidationError as e:
             errors = e.errors()

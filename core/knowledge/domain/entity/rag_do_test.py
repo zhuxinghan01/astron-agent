@@ -73,7 +73,9 @@ class TestChunkInfo:
 
     def test_chunk_info_with_special_characters(self) -> None:
         """Test ChunkInfo with special characters in content."""
-        special_content = "Content with\nnewlines\tand\ttabs and unicode: chinese text 🎉"
+        special_content = (
+            "Content with\nnewlines\tand\ttabs and unicode: chinese text 🎉"
+        )
         chunk = ChunkInfo(docId="doc_special", chunkId=1, content=special_content)
 
         assert chunk.content == special_content
@@ -96,10 +98,7 @@ class TestFileInfo:
     def test_init_with_all_params(self) -> None:
         """Test initialization with all parameters."""
         file_info = FileInfo(
-            docId=456,
-            fileName="document.pdf",
-            fileStatus="processed",
-            fileQuantity=5
+            docId=456, fileName="document.pdf", fileStatus="processed", fileQuantity=5
         )
 
         assert file_info.docId == 456
@@ -143,11 +142,7 @@ class TestFileInfo:
         statuses = ["pending", "processing", "completed", "error", ""]
 
         for status in statuses:
-            file_info = FileInfo(
-                docId="doc1",
-                fileName="file.txt",
-                fileStatus=status
-            )
+            file_info = FileInfo(docId="doc1", fileName="file.txt", fileStatus=status)
             assert file_info.fileStatus == status
 
     def test_file_quantity_variations(self) -> None:
@@ -156,9 +151,7 @@ class TestFileInfo:
 
         for quantity in quantities:
             file_info = FileInfo(
-                docId="doc1",
-                fileName="file.txt",
-                fileQuantity=quantity
+                docId="doc1", fileName="file.txt", fileQuantity=quantity
             )
             assert file_info.fileQuantity == quantity
 
@@ -170,7 +163,7 @@ class TestFileInfo:
             "file_with_underscores.txt",
             "file.with.dots.txt",
             "file_chinese.txt",
-            "file🎉.txt"
+            "file🎉.txt",
         ]
 
         for name in special_names:
@@ -228,12 +221,14 @@ class TestDataObjectIntegration:
     def test_multiple_chunks_for_same_file(self) -> None:
         """Test multiple chunks associated with same file."""
         doc_id = "multi_chunk_doc"
-        file_info = FileInfo(docId=doc_id, fileName="large_document.txt", fileQuantity=3)
+        file_info = FileInfo(
+            docId=doc_id, fileName="large_document.txt", fileQuantity=3
+        )
 
         chunks = [
             ChunkInfo(docId=doc_id, chunkId=1, content="First chunk"),
             ChunkInfo(docId=doc_id, chunkId=2, content="Second chunk"),
-            ChunkInfo(docId=doc_id, chunkId=3, content="Third chunk")
+            ChunkInfo(docId=doc_id, chunkId=3, content="Third chunk"),
         ]
 
         # Verify all chunks belong to same document
@@ -264,7 +259,9 @@ class TestDataObjectIntegration:
     def test_repr_contains_complete_info(self) -> None:
         """Test that repr methods provide sufficient debugging information."""
         chunk = ChunkInfo(docId="debug_doc", chunkId=42, content="debug content")
-        file_info = FileInfo(docId="debug_doc", fileName="debug.txt", fileStatus="debug", fileQuantity=1)
+        file_info = FileInfo(
+            docId="debug_doc", fileName="debug.txt", fileStatus="debug", fileQuantity=1
+        )
 
         chunk_repr = repr(chunk)
         file_repr = repr(file_info)

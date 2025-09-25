@@ -7,7 +7,7 @@ that extends BaseNode to handle global variable operations (set/get) in workflow
 """
 
 import json
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
 from pydantic import Field
 from workflow.engine.entities.variable_pool import VariablePool
@@ -126,39 +126,6 @@ class GlobalVariablesNode(BaseNode):
 
     method: Literal["set", "get"] = Field(...)  # Operation method: "set" or "get"
     flowId: str = Field(...)  # Flow identifier for variable scope
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration parameters.
-
-        :return: Dictionary containing node configuration (method and flowId)
-        """
-        return {
-            "method": self.method,
-            "flowId": self.flowId,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for this node).
-
-        :param variable_pool: Variable pool containing workflow variables
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node logging trace
-        :param kwargs: Additional keyword arguments
-        :return: Basic NodeRunResult with node metadata
-        """
-        return NodeRunResult(
-            node_id=self.node_id,
-            node_type=self.node_type,
-            alias_name=self.alias_name,
-        )
 
     async def async_execute(
         self,

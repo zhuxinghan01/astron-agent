@@ -183,45 +183,6 @@ class AgentNode(BaseNode):
     )
     source: str = Field(default=ModelProviderEnum.XINGHUO.value)
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """Get node configuration as dictionary.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "app_id": self.appId,
-            "api_key": self.apiKey,
-            "api_secret": self.apiSecret,
-            "uid": self.uid,
-            "modelConfig": self.modelConfig.dict(),
-            "instruction": self.instruction.dict(),
-            "plugin": self.plugin.dict(),
-            "metaData": self.metaData.dict(),
-            "max_loop_count": self.maxLoopCount,
-            "maxTokens": self.maxTokens,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "knowledge": [k.dict() for k in self.plugin.knowledge],
-            "source": self.source,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """Synchronous execution method (not implemented for agent nodes).
-
-        :param variable_pool: Variable pool for data storage
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Event logging for node execution
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises NotImplementedError: Always raised as agent nodes use async execution
-        """
-        raise NotImplementedError
-
     async def _call_agent(
         self,
         inputs: dict,

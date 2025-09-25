@@ -31,7 +31,9 @@ class RAGStrategyFactory:
         return strategy_class()
 
     @classmethod
-    def register_strategy(cls, ragType: str, strategy_class: type) -> None:  # pylint: disable=invalid-name
+    def register_strategy(
+        cls, ragType: str, strategy_class: type
+    ) -> None:  # pylint: disable=invalid-name
         """Register a new RAG strategy."""
         if not issubclass(strategy_class, RAGStrategy):
             raise TypeError("Strategy class must be a subclass of RAGStrategy.")

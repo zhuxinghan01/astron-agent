@@ -190,56 +190,6 @@ class QuestionAnswerNode(BaseLLMNode):
     token_usage: dict = Field(default_factory=dict)
     processed_options: List[Option] = Field(default_factory=list)
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get node configuration as dictionary
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "question": self.question,
-            "answerType": self.answerType,
-            "timeout": self.timeout,
-            "needReply": self.needReply,
-            "directAnswer": self.directAnswer.dict(),
-            "optionAnswer": (
-                [opt.dict() for opt in self.optionAnswer] if self.optionAnswer else []
-            ),
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "topK": self.topK,
-            "patch_id": self.patch_id,
-            "start_time": self.start_time,
-            "event_id": self.event_id,
-            "default_output": self.default_outputs,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented)
-
-        :param variable_pool: Variable pool for data access
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Event logging trace
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises NotImplementedError: This method is not implemented
-        """
-        raise NotImplementedError
-
     def assemble_schema_info(self) -> dict:
         """
         Assemble schema information from extractor parameters

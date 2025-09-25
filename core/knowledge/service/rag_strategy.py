@@ -42,29 +42,45 @@ class RAGStrategy(ABC):
 
     @abstractmethod
     async def chunks_save(
-        self, docId: str, group: str, uid: str, chunks: List[object], **kwargs: Any  # pylint: disable=invalid-name
+        self,
+        docId: str,
+        group: str,
+        uid: str,
+        chunks: List[object],
+        **kwargs: Any  # pylint: disable=invalid-name
     ) -> Any:
         """Save knowledge chunks."""
         raise NotImplementedError
 
     @abstractmethod
     async def chunks_update(
-        self, docId: str, group: str, uid: str, chunks: List[dict], **kwargs: Any  # pylint: disable=invalid-name
+        self,
+        docId: str,
+        group: str,
+        uid: str,
+        chunks: List[dict],
+        **kwargs: Any  # pylint: disable=invalid-name
     ) -> Any:
         """Update knowledge chunks."""
         raise NotImplementedError
 
     @abstractmethod
-    async def chunks_delete(self, docId: str, chunkIds: List[str], **kwargs: Any) -> Any:  # pylint: disable=invalid-name
+    async def chunks_delete(
+        self, docId: str, chunkIds: List[str], **kwargs: Any
+    ) -> Any:  # pylint: disable=invalid-name
         """Delete knowledge chunks."""
         raise NotImplementedError
 
     @abstractmethod
-    async def query_doc(self, docId: str, **kwargs: Any) -> List[dict]:  # pylint: disable=invalid-name
+    async def query_doc(
+        self, docId: str, **kwargs: Any
+    ) -> List[dict]:  # pylint: disable=invalid-name
         """Query all chunk information for a document."""
         raise NotImplementedError
 
     @abstractmethod
-    async def query_doc_name(self, docId: str, **kwargs: Any) -> Optional[dict]:  # pylint: disable=invalid-name
+    async def query_doc_name(
+        self, docId: str, **kwargs: Any
+    ) -> Optional[dict]:  # pylint: disable=invalid-name
         """Query document name and information."""
         raise NotImplementedError

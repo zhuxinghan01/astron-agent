@@ -74,18 +74,18 @@ def extract_request_params(run_params_list):
 
 def send_telemetry(node_trace):
     """Send telemetry data to Kafka."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+            os.getenv(const.KAFKA_TOPIC_KEY),
             node_trace.to_json()
         )
 
 
 def handle_validation_error(validate_err, span_context, node_trace, m):
     """Handle validation errors with telemetry."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
         node_trace.answer = validate_err
         node_trace.status = Status(
@@ -109,7 +109,7 @@ def handle_sparklink_error(err, span_context, node_trace, m, tool_id="", tool_ty
     span_context.add_error_event(err.message)
     span_context.set_status(OTelStatus(StatusCode.ERROR))
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(err.code)
         node_trace.answer = err.message
         node_trace.service_id = tool_id
@@ -134,7 +134,7 @@ def handle_custom_error(error_code, message, span_context, node_trace, m, tool_i
     span_context.add_error_event(message)
     span_context.set_status(OTelStatus(StatusCode.ERROR))
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(error_code.code)
         node_trace.answer = message
         node_trace.service_id = tool_id
@@ -161,7 +161,7 @@ def handle_general_exception(err, span_context, node_trace, m, tool_id="", tool_
     span_context.add_error_event(f"{ErrCode.COMMON_ERR.msg}: {err}")
     span_context.set_status(OTelStatus(StatusCode.ERROR))
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(ErrCode.COMMON_ERR.code)
         node_trace.answer = f"{ErrCode.COMMON_ERR.msg}: {err}"
         node_trace.service_id = tool_id
@@ -264,7 +264,7 @@ def validate_response_schema(result_json, open_api_schema):
 
 def handle_success_response(result, span_context, node_trace, m, tool_id, tool_type):
     """Handle successful response with telemetry."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_success_count()
         node_trace.answer = result
         node_trace.service_id = tool_id
@@ -295,7 +295,7 @@ def handle_debug_validation_error(validate_err, span_context, node_trace, m, too
         f"Error code: {ErrCode.JSON_PROTOCOL_PARSER_ERR.code}, error message: {validate_err}"
     )
 
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(ErrCode.JSON_PROTOCOL_PARSER_ERR.code)
         node_trace.answer = validate_err
         node_trace.service_id = tool_id
@@ -318,7 +318,7 @@ def handle_debug_validation_error(validate_err, span_context, node_trace, m, too
 
 def handle_debug_success_response(result, span_context, node_trace, m, tool_id, tool_type):
     """Handle successful debug response with telemetry."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_success_count()
         node_trace.answer = result
         node_trace.service_id = tool_id
@@ -443,7 +443,7 @@ def setup_logging_and_metrics(span_context, run_params_list):
     )
     span_context.set_attributes(
         attributes={
-            "tool_id": run_params_list.get("parameter", {}).get("tool_id", {})
+            "tool_id": str(run_params_list.get("parameter", {}).get("tool_id", {}))
         }
     )
     return Meter(app_id=span_context.app_id, func="http_run")
@@ -598,7 +598,7 @@ async def tool_debug(tool_debug_params: ToolDebugRequest) -> ToolDebugResponse:
                 {"usr_input": json.dumps(run_params_list, ensure_ascii=False)}
             )
             span_context.set_attributes(
-                attributes={"server": run_params_list.get("server", {})}
+                attributes={"server": str(run_params_list.get("server", {}))}
             )
             tool_type = (
                 os.getenv(const.OFFICIAL_TOOL_KEY)
