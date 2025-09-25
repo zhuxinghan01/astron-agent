@@ -9,44 +9,44 @@ enabled = true
 [[typescript.apps]]
 name = "console-frontend"
 dir = "console/frontend"
-enabled = true
+enabled = false
 
 [[go.apps]]
 name = "core-tenant"
 dir = "core/tenant"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-memory"
 dir = "core/memory/database"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-rpa"
 dir = "core/plugin/rpa"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-link"
 dir = "core/plugin/link"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-aitools"
 dir = "core/plugin/aitools"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-agent"
 dir = "core/agent"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-knowledge"
 dir = "core/knowledge"
-enabled = true
+enabled = false
 
 [[python.apps]]
 name = "core-workflow"
 dir = "core/workflow"
-enabled = true
+enabled = false

@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 
 
 class AtomicCounter:
-    def __init__(self):
+    def __init__(self) -> None:
         self.value = 0
         self.lock = threading.Lock()
 
-    def increment(self):
+    def increment(self) -> None:
         with self.lock:
             self.value += 1
 
@@ -35,7 +35,7 @@ class Meter:
     func: str
     labels: Dict[str, str] = {}
 
-    def __init__(self, app_id: str = "", func: str = ""):
+    def __init__(self, app_id: str = "", func: str = "") -> None:
         self.app_id = app_id
         self.start_time = int(int(round(time.time() * 1000)))
 
@@ -49,10 +49,10 @@ class Meter:
                 self.func = frame.f_code.co_name
         self.labels = {}
 
-    def set_label(self, key: str, value: str):
+    def set_label(self, key: str, value: str) -> None:
         self.labels[key] = value
 
-    def _get_default_labels(self):
+    def _get_default_labels(self) -> dict:
         default_labels = {
             "dc": global_otlp_metric_args.otlp_dc,
             "server_host": local_ip,
@@ -72,7 +72,7 @@ class Meter:
         count: int = 1,
         is_in_histogram: bool = True,
         span: Optional["Span"] = None,
-    ):
+    ) -> None:
         """
         上报错误次数，默认上报耗时
         :param code:    错误码
@@ -99,7 +99,7 @@ class Meter:
             span.set_code(code)
         # print(f"code: {code}, count: {counter.value}, pid: {os.getpid()}")
 
-    def in_success_count(self, lables: Optional[dict] = None, count: int = 1):
+    def in_success_count(self, lables: Optional[dict] = None, count: int = 1) -> None:
         """
         上报成功次数
         :param code:    错误码
@@ -109,7 +109,7 @@ class Meter:
         """
         self.in_error_count(0, lables, count)
 
-    def in_histogram(self, lables: Optional[dict] = None):
+    def in_histogram(self, lables: Optional[dict] = None) -> None:
         """
         上报耗时
         :param lables:  耗时标签

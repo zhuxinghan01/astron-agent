@@ -44,4 +44,5 @@ public class ApiUrl {
     String xinghuoDatasetFileUrl;
     String deleteXinghuoDatasetFileUrl;
     String deleteXinghuoDatasetUrl;
+    String rpaUrl;
 }

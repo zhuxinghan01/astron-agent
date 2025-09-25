@@ -53,4 +53,11 @@ public class Model {
      * notExist 6 terminating
      */
     private Integer status;
+    private Integer acceleratorCount;
+    /**
+     * Replica configuration
+     */
+    private Integer replicaCount;
+
+    private String modelPath;
 }

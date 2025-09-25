@@ -20,7 +20,9 @@ class AuditOrchestrator:
     def __init__(self, audit_strategy: AuditStrategy):
         self.audit_strategy = audit_strategy
 
-    async def process_output(self, output_frame: OutputFrameAudit, span: "Span"):
+    async def process_output(
+        self, output_frame: OutputFrameAudit, span: "Span"
+    ) -> None:
         """
         处理输出内容的审核逻辑。
         :param output_frame:
@@ -55,7 +57,7 @@ class AuditOrchestrator:
 
             return await self.audit_strategy.output_review(output_frame, context_span)
 
-    async def process_input(self, input_frame: InputFrameAudit, span: "Span"):
+    async def process_input(self, input_frame: InputFrameAudit, span: "Span") -> None:
         """
         处理输出内容的审核逻辑。
         :param input_frame:

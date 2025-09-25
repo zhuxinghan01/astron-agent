@@ -56,11 +56,11 @@ public class LocalModelHandler {
      * @return
      */
     public String deployModel(ModelDeployVo deployVo) {
-        String url = apiUrl.getLocalModel() + MODEL_DEPLOY;
-        log.info("deployModel request url:{}", url);
-        String resp = OkHttpUtil.post(url, JSON.toJSONString(deployVo));
-        log.info("deployModel response data:{}", resp);
         try {
+            String url = apiUrl.getLocalModel() + MODEL_DEPLOY;
+            log.info("deployModel request url:{}", url);
+            String resp = OkHttpUtil.post(url, JSON.toJSONString(deployVo));
+            log.info("deployModel response data:{}", resp);
             JSONObject respObj = JSONObject.parseObject(resp);
             if (respObj.getInteger("code") == 0) {
                 JSONObject data = respObj.getJSONObject("data");
