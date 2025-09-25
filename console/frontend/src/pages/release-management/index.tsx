@@ -11,7 +11,6 @@ const AgentList = React.lazy(() => import('./agent-list'));
 const DetailListPage = React.lazy(() => import('./detail-list-page'));
 const DetailOverview = React.lazy(() => import('./detail-overview'));
 const TracePage = React.lazy(() => import('./trace-logs'));
-const ApiKanban = React.lazy(() => import('./api-kanban'));
 
 export default function Index() {
   return (
@@ -38,7 +37,6 @@ export default function Index() {
             <Route index element={<DetailOverview />} />
             <Route path="trace" element={<TracePage />} />
           </Route>
-          <Route path="/kanban/:id" element={<ApiKanban />} />
         </Routes>
       </Suspense>
     </div>
