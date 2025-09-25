@@ -83,7 +83,7 @@ def _send_error_telemetry(meter, node_trace, error_code, error_msg):
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+            os.getenv(const.KAFKA_TOPIC_KEY),
             node_trace.to_json()
         )
 
@@ -102,7 +102,7 @@ def _send_success_telemetry(meter, node_trace, response_data, service_id=None):
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+            os.getenv(const.KAFKA_TOPIC_KEY),
             node_trace.to_json()
         )
 
