@@ -1,7 +1,5 @@
 """Test error code definition module."""
 
-import pytest
-
 from plugin.rpa.errors.error_code import ErrorCode
 
 
