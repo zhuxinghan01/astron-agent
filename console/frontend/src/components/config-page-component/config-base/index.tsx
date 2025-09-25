@@ -913,7 +913,7 @@ const BaseConfig: React.FC<ChatProps> = ({
       { model: 'spark', promptAnswerCompleted: true },
     ]);
   };
-
+  console.log(modelList, 'modelList');
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden">
       <ConfigHeader

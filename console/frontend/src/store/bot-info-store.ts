@@ -11,7 +11,7 @@ const useBotInfoStore = create<BotInfoStore>(set => ({
     pc_background: '',
     botStatus: 0,
     chatId: 0,
-    supportUpload: [],
+    supportUploadConfig: [],
     model: '',
     botId: 0,
     creatorNickname: '',

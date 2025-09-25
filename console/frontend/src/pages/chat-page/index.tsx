@@ -70,6 +70,9 @@ const ChatPage = (): ReactElement => {
         botId,
         version !== 'debugger' ? version || '' : ''
       );
+      if (botInfo?.pc_background) {
+        getBotNameColor(botInfo?.pc_background);
+      }
 
       const workflowBotInfo = await getWorkflowBotInfoApi(botId);
       setBotInfo({
@@ -117,6 +120,47 @@ const ChatPage = (): ReactElement => {
   //停止生成
   const stopAnswer = () => {
     postStopChat(streamId);
+  };
+
+  //设置颜色
+  const getBotNameColor = (imgUrl: string) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // 处理跨域问题
+    img.src = imgUrl;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const context: any = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      context.drawImage(img, 0, 0);
+
+      const imageData = context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      ).data;
+      const length = imageData.length / 4;
+
+      let r = 0,
+        g = 0,
+        b = 0;
+
+      for (let i = 0; i < length; i++) {
+        r += imageData[i * 4 + 0];
+        g += imageData[i * 4 + 1];
+        b += imageData[i * 4 + 2];
+      }
+
+      r = Math.floor(r / length);
+      g = Math.floor(g / length);
+      b = Math.floor(b / length);
+
+      // 计算亮度（YIQ公式）
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      const fontColor = brightness > 144 ? '#000000' : '#FFFFFF'; // 根据亮度设置字体颜色
+      setBotNameColor(fontColor);
+    };
   };
 
   return (
