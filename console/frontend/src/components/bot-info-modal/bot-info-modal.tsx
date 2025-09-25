@@ -14,17 +14,17 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { placeholderText } from '@/components/bot-center/edit-bot/placeholder';
 import UploadCover from '@/components/upload-avatar/index';
 import styles from './bot-info-modal.module.scss';
-import closeIcon from '@/assets/images/create-bot-v2/close-icon.svg';
+import closeIcon from '@/assets/imgs/create-bot-v2/close-icon.svg';
 import {
   getBotType,
   submitBotBaseInfo,
   applyCancelUpload,
   sendApplyBot,
   uploadBotImg,
-} from '@/services/sparkCommon';
+} from '@/services/spark-common';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
 import Cropper from 'react-easy-crop';
-import deleteBg from '@/assets/images/create-bot-v2/delete_bg.svg';
+import deleteBg from '@/assets/imgs/create-bot-v2/delete_bg.svg';
 
 const BotInfoModal: React.FC<{
   show: boolean;
@@ -64,7 +64,7 @@ const BotInfoModal: React.FC<{
   const [botTemplateInfoValue, _setBotTemplateInfoValue] = useState<any>(
     JSON.parse(sessionStorage.getItem('botTemplateInfoValue') ?? '{}')
   );
-  const botBaseInfo = useBotStateStore((state) => state.botDetailInfo); // 助手详细信息
+  const botBaseInfo = useBotStateStore(state => state.botDetailInfo); // 助手详细信息
   const [editData, setEditData] = useState<any>({});
   const [pageOperate, setPageOperate] = useState<'create' | 'update'>('create'); // 页面操作模式()
   const [promptNow, setPromptNow] = useState();
@@ -187,7 +187,7 @@ const BotInfoModal: React.FC<{
       .then((data: any) => {
         setBotTypeList(data);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
         err?.msg && message.error(err.msg);
       });
@@ -255,7 +255,7 @@ const BotInfoModal: React.FC<{
 
           onCancel();
         })
-        .catch((e) => {
+        .catch(e => {
           message.error(e?.msg || '创建失败');
         });
     }
@@ -312,13 +312,13 @@ const BotInfoModal: React.FC<{
                   }));
                 }
               })
-              .catch((err) => {
+              .catch(err => {
                 console.error(err);
                 err?.msg && message.error(err.msg);
               });
           }, 400);
         })
-        .catch((e) => {
+        .catch(e => {
           message.error(e?.msg || '创建失败');
         });
     }
@@ -361,7 +361,7 @@ const BotInfoModal: React.FC<{
           croppedAreaPixels.height
         );
       canvas.toBlob(
-        (blob) => {
+        blob => {
           const res = new FormData();
           blob && res.append('file', blob, 'cropped-image.jpeg');
           setFormDataPc(res);
@@ -393,7 +393,7 @@ const BotInfoModal: React.FC<{
           croppedAreaPixels.height
         );
       canvas.toBlob(
-        (blob) => {
+        blob => {
           const res = new FormData();
           blob && res.append('file', blob, 'cropped-image.jpeg');
           setFormData(res);
@@ -431,7 +431,7 @@ const BotInfoModal: React.FC<{
               setBotNameNow(value?.name ?? '');
               setBotDescNow(value?.botDesc ?? '');
             }}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               e.stopPropagation();
               if (e.ctrlKey && e.key === 'v') {
                 e.stopPropagation();
@@ -585,9 +585,9 @@ const BotInfoModal: React.FC<{
                       style={{ cursor: 'pointer' }}
                       src={deleteBg}
                       onClick={() => {
-                        setCoverUrlApp(''),
+                        (setCoverUrlApp(''),
                           setCoverUrlPC(''),
-                          setUploadedSrc('');
+                          setUploadedSrc(''));
                       }}
                     />
                   </div>
@@ -609,7 +609,7 @@ const BotInfoModal: React.FC<{
                     inputRef && inputRef?.current?.click();
                   }}
                   onDrop={handleDrop}
-                  onDragOver={(e) => e.preventDefault()}
+                  onDragOver={e => e.preventDefault()}
                 />
               )}
               {coverUrlPC && (
@@ -759,9 +759,9 @@ const BotInfoModal: React.FC<{
                 if (!uploadedSrc) {
                   return;
                 }
-                uploadBotImg(formData as FormData).then((res) => {
+                uploadBotImg(formData as FormData).then(res => {
                   setTimeout(() => {
-                    uploadBotImg(formDataPC as FormData).then((resp) => {
+                    uploadBotImg(formDataPC as FormData).then(resp => {
                       setCoverUrlPC(resp);
                       setCoverUrlApp(res);
                       setIsModalPeizhiUploadOpen(false);
