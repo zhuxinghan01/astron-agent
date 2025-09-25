@@ -12,6 +12,7 @@
     "build-demo": "vite build --mode demo",
     "build-prod": "vite build --mode production",
     "build:test": "vite build --mode test",
+    "build-test": "vite build --mode test",
     "preview": "vite preview",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
