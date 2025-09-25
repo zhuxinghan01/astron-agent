@@ -28,7 +28,8 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
     return !isOverFlow && logCount > 0;
   }, [logCount, isOverFlow]);
 
-  const [downloadController, setDownloadController] = useState<AbortController | null>(null);
+  const [downloadController, setDownloadController] =
+    useState<AbortController | null>(null);
 
   // 处理导出按钮点击
   const handleExportClick = async () => {
@@ -50,7 +51,7 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
         startTime: timeRange[0].format('YYYY-MM-DD HH:mm:ss'),
         endTime: timeRange[1].format('YYYY-MM-DD HH:mm:ss'),
       };
-      
+
       const count = await getTraceCount(params);
       setLogCount(count || 0);
       setIsModalVisible(true);
@@ -69,7 +70,7 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
       message.error('参数不完整');
       return;
     }
-  
+
     setExportLoading(true);
     const controller = new AbortController();
     setDownloadController(controller);
@@ -79,25 +80,37 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
         startTime: timeRange[0].format('YYYY-MM-DD HH:mm:ss'),
         endTime: timeRange[1].format('YYYY-MM-DD HH:mm:ss'),
       };
-  
+
       // 调用导出API获取二进制数据流
-      const response: any = await traceDownload(params, { signal: controller.signal });
-  
+      const response: any = await traceDownload(params, {
+        signal: controller.signal,
+      });
+
       // 处理二进制流数据（axios 返回）
-      const disposition = response.headers?.['content-disposition'] || response.headers?.['Content-Disposition'] || '';
+      const disposition =
+        response.headers?.['content-disposition'] ||
+        response.headers?.['Content-Disposition'] ||
+        '';
       let filename = 'trace.xlsx';
-      const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename=([^;]+)/i);
+      const match = disposition.match(
+        /filename\*=UTF-8''([^;]+)|filename=([^;]+)/i
+      );
       if (match) {
-        filename = decodeURIComponent((match[1] || match[2] || filename).replace(/\"/g, ''));
+        filename = decodeURIComponent(
+          (match[1] || match[2] || filename).replace(/\"/g, '')
+        );
       }
-      const dataBlob = response.data instanceof Blob ? response.data : new Blob([response.data]);
+      const dataBlob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data]);
       const url = URL.createObjectURL(dataBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-  
+
       message.success('导出成功');
       setIsModalVisible(false);
     } catch (error: any) {
@@ -133,9 +146,9 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
 
   return (
     <>
-      <Button 
-        size="small" 
-        type="default" 
+      <Button
+        size="small"
+        type="default"
         onClick={handleExportClick}
         loading={loading}
         disabled={!timeRange || !timeRange[0] || !timeRange[1] || !botId}
@@ -152,9 +165,9 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
           <Button key="cancel" onClick={handleCancel}>
             取消
           </Button>,
-          <Button 
-            key="export" 
-            type="primary" 
+          <Button
+            key="export"
+            type="primary"
             loading={exportLoading}
             disabled={!canDownload}
             onClick={handleConfirmExport}
@@ -168,18 +181,18 @@ const ExportBtn: React.FC<ExportBtnProps> = ({ timeRange, record, botId }) => {
           <div className={styles.exportInfo}>
             您即将导出符合以下条件的trace日志：
           </div>
-          
+
           <div className={styles.exportDetails}>
             <div className={styles.detailItem}>
               <span className={styles.label}>智能体名称：</span>
               <span className={styles.value}>{record?.botName || '-'}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>时间范围：</span>
               <span className={styles.value}>{formatTimeRange()}</span>
             </div>
-            
+
             <div className={styles.detailItem}>
               <span className={styles.label}>预计导出数据量：</span>
               <span className={styles.value}>约{logCount}条</span>
