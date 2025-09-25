@@ -46,7 +46,6 @@ export enum LLMSource {
 
 // 模型类型枚举
 export enum ModelCreateType {
-  OFFICIAL = 0, // 官方模型
   THIRD_PARTY = 1, // 第三方模型
   LOCAL = 2, // 本地模型
 }
@@ -346,4 +345,5 @@ export interface LocalModelParams {
   modelCategoryReq?: ModelCategoryReq; // 模型分类请求参数
   acceleratorCount: number; // 加速器数量
   modelPath: string; // 模型路径
+  config?: ConfigObject[]; // 模型配置参数
 }

@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Image } from "antd";
-import useFlowsManager from "@/components/workflow/store/useFlowsManager";
-import { isJSON } from "@/utils";
-import MarkdownRender from "@/components/markdown-render";
-import JSONPretty from "react-json-view";
-import copy from "copy-to-clipboard";
-import { useSearchParams } from "react-router-dom";
-import { useMemoizedFn } from "ahooks";
-import ChatFeedback from "@/components/modal/chat-feedback";
-import { typeList } from "@/constants";
-import FeedbackDialog from "@/components/workflow/modal/feedback-dialog";
+import React, { useEffect, useRef, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image } from 'antd';
+import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import { isJSON } from '@/utils';
+import MarkdownRender from '@/components/markdown-render';
+import JSONPretty from 'react-json-view';
+import copy from 'copy-to-clipboard';
+import { useSearchParams } from 'react-router-dom';
+import { useMemoizedFn } from 'ahooks';
+import ChatFeedback from '@/components/modal/chat-feedback';
+import { typeList } from '@/constants';
+import FeedbackDialog from '@/components/workflow/modal/feedback-dialog';
 
 // 类型导入
 import {
@@ -20,10 +20,10 @@ import {
   ChatListItemExtended,
   StartNodeType,
   UseChatContentProps,
-} from "@/components/workflow/types";
+} from '@/components/workflow/types';
 
 // 从统一的图标管理中导入
-import { Icons } from "@/components/workflow/icons";
+import { Icons } from '@/components/workflow/icons';
 
 // 获取 Chat Content 模块的图标
 const icons = Icons.chatDebugger.chatContent;
@@ -60,11 +60,11 @@ const Prologue = ({
         )}
       {startNodeParams?.length === 1 &&
         advancedConfig?.prologue?.enabled &&
-        advancedConfig?.prologue?.inputExample?.filter((item) => item?.trim())
+        advancedConfig?.prologue?.inputExample?.filter(item => item?.trim())
           ?.length > 0 && (
           <div className="flex flex-col gap-3 ml-[52px]">
             {advancedConfig?.prologue?.inputExample
-              ?.filter((item) => item?.trim())
+              ?.filter(item => item?.trim())
               ?.map((item, index) => (
                 <div
                   key={index}
@@ -74,16 +74,16 @@ const Prologue = ({
                     const { nodes, edges } = resetNodesAndEdges();
                     handleRunDebugger(nodes, edges, [
                       {
-                        name: "AGENT_USER_INPUT",
-                        type: "string",
+                        name: 'AGENT_USER_INPUT',
+                        type: 'string',
                         default: item,
                         description: t(
-                          "workflow.nodes.chatDebugger.userCurrentRoundInput"
+                          'workflow.nodes.chatDebugger.userCurrentRoundInput'
                         ),
                         required: true,
                         validationSchema: null,
-                        errorMsg: "",
-                        originErrorMsg: "",
+                        errorMsg: '',
+                        originErrorMsg: '',
                       },
                     ]);
                   }}
@@ -106,7 +106,7 @@ const MessageDivider = ({ chat, t }): React.ReactElement => {
         alt=""
       />
       <span className="text-[#275EFF] font-medium">
-        {t("workflow.nodes.chatDebugger.startNewConversation")}
+        {t('workflow.nodes.chatDebugger.startNewConversation')}
       </span>
       <img
         src={icons.startNewConversationRight}
@@ -166,23 +166,23 @@ const MessageReplyContent = ({
                 />
               </div>
             )}
-            {isJSON(chat?.content || "") ? (
-              <div onClick={(e) => e.stopPropagation()}>
+            {isJSON(chat?.content || '') ? (
+              <div onClick={e => e.stopPropagation()}>
                 <JSONPretty
                   name={false}
-                  src={JSON.parse(chat?.content || "{}")}
+                  src={JSON.parse(chat?.content || '{}')}
                   theme="rjv-default"
                 />
               </div>
             ) : (
               <MarkdownRender
-                content={chat?.content || ""}
+                content={chat?.content || ''}
                 isSending={debuggering && index === chatList?.length - 1}
               />
             )}
             {chat?.option && (
               <div className="flex flex-col items-center gap-2 my-2">
-                {chat?.option?.map((item) => (
+                {chat?.option?.map(item => (
                   <div
                     key={item?.id}
                     className="w-full rounded-lg border border-[#E4EAFF] px-3 py-2.5 hover:bg-[#F8FAFF] flex items-start gap-3"
@@ -192,11 +192,11 @@ const MessageReplyContent = ({
                     }
                     style={{
                       cursor:
-                        index === chatList?.length - 1 ? "pointer" : "default",
+                        index === chatList?.length - 1 ? 'pointer' : 'default',
                     }}
                   >
                     <span>{item?.id}</span>
-                    {item?.content_type === "image" ? (
+                    {item?.content_type === 'image' ? (
                       <img src={item?.text} alt="" />
                     ) : (
                       <span>{item?.text}</span>
@@ -230,7 +230,7 @@ const MessageActions = ({
         <div className="flex justify-end mt-1">
           <div
             className="inline-flex items-center justify-end gap-1.5 ml-6 shrink-0"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <img
               src={icons.feedback}
@@ -327,16 +327,16 @@ const MessageSuggestions = ({
                   const { nodes, edges } = resetNodesAndEdges();
                   handleRunDebugger(nodes, edges, [
                     {
-                      name: "AGENT_USER_INPUT",
-                      type: "string",
+                      name: 'AGENT_USER_INPUT',
+                      type: 'string',
                       default: item,
                       description: t(
-                        "workflow.nodes.chatDebugger.userCurrentRoundInput"
+                        'workflow.nodes.chatDebugger.userCurrentRoundInput'
                       ),
                       required: true,
                       validationSchema: null,
-                      errorMsg: "",
-                      originErrorMsg: "",
+                      errorMsg: '',
+                      originErrorMsg: '',
                     },
                   ]);
                 }}
@@ -369,7 +369,7 @@ const MessageRegenerate = ({
           {!needReply && (
             <div
               className="px-4 py-1.5 text-[#7F7F7F] border border-[transparent] rounded-[16px] hover:bg-[#F8FAFF] hover:text-[#275EFF] cursor-pointer flex items-center gap-1 group"
-              onClick={() => handleResumeChat("")}
+              onClick={() => handleResumeChat('')}
             >
               <img
                 src={icons.chatIgnoreNormal}
@@ -381,7 +381,7 @@ const MessageRegenerate = ({
                 className="w-[14px] h-[14px] hidden group-hover:block"
                 alt=""
               />
-              <span>{t("workflow.nodes.chatDebugger.ignoreThisQuestion")}</span>
+              <span>{t('workflow.nodes.chatDebugger.ignoreThisQuestion')}</span>
             </div>
           )}
           <div
@@ -399,7 +399,7 @@ const MessageRegenerate = ({
               alt=""
             />
             <span>
-              {t("workflow.nodes.chatDebugger.endThisRoundConversation")}
+              {t('workflow.nodes.chatDebugger.endThisRoundConversation')}
             </span>
           </div>
         </div>
@@ -408,13 +408,13 @@ const MessageRegenerate = ({
         <div
           className="flex items-center gap-1.5 text-desc cursor-pointer ml-[52px]"
           onClick={() => {
-            setChatList((chatList) => chatList.slice(0, chatList?.length - 2));
+            setChatList(chatList => chatList.slice(0, chatList?.length - 2));
             const { nodes, edges } = resetNodesAndEdges();
             handleRunDebugger(nodes, edges, chatList[index - 1]?.inputs, true);
           }}
         >
           <img src={icons.chatRefresh} className="w-4 h-4" alt="" />
-          <span>{t("workflow.nodes.chatDebugger.regenerate")}</span>
+          <span>{t('workflow.nodes.chatDebugger.regenerate')}</span>
         </div>
       )}
     </>
@@ -475,7 +475,7 @@ const MessageReply = ({
                   stroke-width=".2"
                 ></path>
               </svg>
-              <span>{t("workflow.nodes.chatDebugger.deepThinking")}</span>
+              <span>{t('workflow.nodes.chatDebugger.deepThinking')}</span>
             </div>
           )}
           <div className="rounded-xl p-4  relative flex-1 bg-[#f7f7fa]">
@@ -492,7 +492,7 @@ const MessageReply = ({
               !chat?.reasoningContent &&
               !chat?.content && (
                 <div className="flex items-center gap-2.5">
-                  <span>{t("workflow.nodes.chatDebugger.generating")}</span>
+                  <span>{t('workflow.nodes.chatDebugger.generating')}</span>
                   <img
                     src={icons.chatLoading}
                     className="w-5 h-5 flow-rotate-center"
@@ -548,21 +548,21 @@ const MessageReply = ({
 };
 
 const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
-  let optionId = useRef<string | undefined>("");
-  const currentFlow = useFlowsManager((state) => state.currentFlow);
-  const [sid, setSid] = useState<string | undefined>("");
+  let optionId = useRef<string | undefined>('');
+  const currentFlow = useFlowsManager(state => state.currentFlow);
+  const [sid, setSid] = useState<string | undefined>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [modalType, setModalType] = useState<"good" | "bad">("good");
+  const [modalType, setModalType] = useState<'good' | 'bad'>('good');
   const advancedConfig = useMemo<ChatContentAdvancedConfig>(() => {
     if (currentFlow?.advancedConfig && isJSON(currentFlow.advancedConfig)) {
       const parsedConfig = JSON.parse(currentFlow.advancedConfig);
-      const newInputExampleList = ["", "", ""].map(
+      const newInputExampleList = ['', '', ''].map(
         (item, index) => parsedConfig?.prologue?.inputExample?.[index] || item
       );
       return {
         prologue: {
           enabled: parsedConfig?.prologue?.enabled ?? true,
-          prologueText: parsedConfig?.prologue?.prologueText || "",
+          prologueText: parsedConfig?.prologue?.prologueText || '',
           inputExample: newInputExampleList,
         },
         feedback: {
@@ -580,8 +580,8 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
       return {
         prologue: {
           enabled: true,
-          prologueText: "",
-          inputExample: ["", "", ""],
+          prologueText: '',
+          inputExample: ['', '', ''],
         },
         feedback: {
           enabled: true,
@@ -598,13 +598,13 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
   }, [currentFlow?.advancedConfig]);
   const copyData = useMemoizedFn((params: ChatListItemExtended): void => {
     optionId = params.id;
-    const clickData = chatList.find((item) => item.id === params.id) as
+    const clickData = chatList.find(item => item.id === params.id) as
       | ChatListItemExtended
       | undefined;
     if (clickData) {
       clickData.copied = true;
       setChatList([...chatList]);
-      const content = params?.content || "";
+      const content = params?.content || '';
       copy(content);
       setTimeout(() => {
         if (clickData) {
@@ -619,7 +619,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
     (id: string | undefined, sid: string): void => {
       optionId = id;
       setSid(sid);
-      setModalType("good");
+      setModalType('good');
       setModalVisible(true);
     }
   );
@@ -628,17 +628,17 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
     (id: string | undefined, sid: string): void => {
       optionId = id;
       setSid(sid);
-      setModalType("bad");
+      setModalType('bad');
       setModalVisible(true);
     }
   );
 
   const handleActiveStyle = useMemoizedFn((): void => {
     const newDialog = chatList as ChatListItemExtended[];
-    (chatList as ChatListItemExtended[]).forEach((item) => {
+    (chatList as ChatListItemExtended[]).forEach(item => {
       if (item.id === optionId) {
         (item as unknown)[modalType] = true;
-        if (modalType === "good") {
+        if (modalType === 'good') {
           item.bad = false;
         } else {
           item.good = false;
@@ -655,7 +655,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
           {input?.name}
         </div>
       );
-      if (input?.allowedFileType === "image" && input?.type === "string") {
+      if (input?.allowedFileType === 'image' && input?.type === 'string') {
         return (
           <div>
             {inputName}
@@ -696,12 +696,12 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
         <div className="flex items-start gap-2.5 text-[#fff]">
           {inputName}
           <div className="flow-chat-drawer-ask inline-block flex-1 overflow-hidden min-h-[29px]">
-            {typeof input?.default === "string" ? (
+            {typeof input?.default === 'string' ? (
               <MarkdownRender content={input?.default} isSending={false} />
             ) : (
               <div
                 style={{
-                  lineHeight: "29px",
+                  lineHeight: '29px',
                 }}
               >{`${input?.default}`}</div>
             )}
@@ -742,13 +742,13 @@ function ChatContent({
   handleStopConversation,
 }: ChatContentProps): React.ReactElement {
   const { t } = useTranslation();
-  const currentFlow = useFlowsManager((state) => state.currentFlow) as
+  const currentFlow = useFlowsManager(state => state.currentFlow) as
     | FlowType
     | undefined;
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState<boolean>(false);
   const [searchParams] = useSearchParams();
-  const botId = searchParams.get("botId");
+  const botId = searchParams.get('botId');
   const {
     advancedConfig,
     goodFeedback,
@@ -798,8 +798,8 @@ function ChatContent({
           advancedConfig?.chatBackground?.enabled &&
           advancedConfig?.chatBackground?.info?.url
             ? `url(${advancedConfig?.chatBackground?.info?.url})`
-            : "none",
-        backgroundSize: "cover",
+            : 'none',
+        backgroundSize: 'cover',
       }}
     >
       {modalVisible && (
@@ -823,9 +823,9 @@ function ChatContent({
         t={t}
       />
       {chatList.map((chat, index) =>
-        chat.type === "divider" ? (
+        chat.type === 'divider' ? (
           <MessageDivider chat={chat} t={t} />
-        ) : chat.type === "ask" ? (
+        ) : chat.type === 'ask' ? (
           <MessageAsk chat={chat} renderInputElement={renderInputElement} />
         ) : (
           <MessageReply
@@ -855,8 +855,8 @@ function ChatContent({
       <FeedbackDialog
         visible={visible}
         sid={sid}
-        botId={botId || ""}
-        flowId={currentFlow?.flowId || ""}
+        botId={botId || ''}
+        flowId={currentFlow?.flowId || ''}
         onCancel={() => setVisible(false)}
       />
     </div>
