@@ -3,17 +3,17 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 
 from plugin.aitools.service.ase_sdk.__base.power import Power
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.client import OcrLLMClient
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.entities.ocr_result import (
+from plugin.aitools.service.ocr_llm.client import OcrLLMClient
+from plugin.aitools.service.ocr_llm.entities.ocr_result import (
     OcrResultM,
     OcrResultMStream,
 )
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.entities.req_data import (
+from plugin.aitools.service.ocr_llm.entities.req_data import (
     Body,
     OcrLLMReqSourceData,
     Payload,
 )
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.entities.req_data_multithreading import (
+from plugin.aitools.service.ocr_llm.entities.req_data_multithreading import (
     OcrLLMReqSourceDataMultithreading,
 )
 from plugin.aitools.service.ase_sdk.util.pdf_convert import pdf_convert_png
