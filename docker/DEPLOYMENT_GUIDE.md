@@ -19,13 +19,16 @@ OpenStellar 项目包含以下三个主要组件：
 - 至少 16GB 可用内存
 - 至少 50GB 可用磁盘空间
 
-### 第一步：启动 Casdoor 身份认证服务
+### 第一步：启动 Casdoor 身份认证服务（根据需要部署）
 
 Casdoor 是一个开源的身份和访问管理平台，提供OAuth 2.0、OIDC、SAML等多种认证协议支持。
 
 ```bash
 # 进入 Casdoor 目录
 cd docker/casdoor
+
+# 修改环境变量配置
+vim conf/app.conf
 
 # 启动 Casdoor 服务
 docker-compose up -d
@@ -89,12 +92,7 @@ docker-compose logs -f ragflow
 
 #### 3.1 配置知识库服务连接
 
-编辑 `core/knowledge/knowledge_config.env` 文件，配置 RagFlow 连接信息：
-
-```bash
-# 编辑知识库配置文件
-vim ../core/knowledge/knowledge_config.env
-```
+编辑 `docker/astronAgent/.env` 文件，配置 RagFlow 连接信息：
 
 **关键配置项：**
 
@@ -112,22 +110,7 @@ RAGFLOW_DEFAULT_GROUP=星辰知识库
 3. 生成 API Token
 4. 将 Token 更新到配置文件中
 
-#### 3.2 配置其他核心服务
-
-检查并根据需要修改以下配置文件：
-
-```bash
-# AI工具插件配置
-vim ../core/plugin/aitools/config.env
-
-# 工作流服务配置
-vim ../core/workflow/config.env
-
-# 内存数据库配置
-vim ../core/memory/database/database_config.env
-```
-
-#### 3.3 配置 Casdoor 认证集成
+#### 3.2 配置 Casdoor 认证集成
 
 根据您的需求配置 Casdoor 认证集成，主要包括：
 
@@ -135,11 +118,11 @@ vim ../core/memory/database/database_config.env
 2. **回调地址配置**：设置正确的回调URL
 3. **权限配置**：配置用户角色和权限
 
-### 第四步：启动 OpenStellar 核心服务
+### 第四步：启动 astronAgent 核心服务
 
 ```bash
-# 进入 OpenStellar 目录
-cd docker/openstellar
+# 进入 astronAgent 目录
+cd docker/astronAgent
 
 # 复制环境变量配置
 cp .env.example .env
@@ -169,18 +152,8 @@ docker-compose logs -f
 - **MinIO 控制台**：http://localhost:9001 (minioadmin/minioadmin)
 
 ### OpenStellar 核心服务
-- **控制台前端**：http://localhost:3000
+- **控制台前端**：http://localhost:1881
 - **控制台Hub API**：http://localhost:8080
-- **控制台Toolkit API**：http://localhost:8081
-- **核心服务端口**：
-  - 租户服务：8001
-  - 内存服务：8002
-  - RPA服务：8003
-  - 链接服务：8004
-  - AI工具服务：8005
-  - Agent服务：8006
-  - 知识库服务：8007
-  - 工作流服务：8008
 
 ### 中间件服务
 - **PostgreSQL**：localhost:5432
@@ -242,33 +215,6 @@ docker volume ls
 # 检查数据卷挂载
 docker volume inspect volume-name
 ```
-
-## 🔒 安全配置建议
-
-### 生产环境安全配置
-
-1. **修改默认密码**：
-   ```bash
-   # 修改数据库密码
-   POSTGRES_PASSWORD=your-secure-password
-   MYSQL_PASSWORD=your-secure-password
-
-   # 修改对象存储密码
-   MINIO_ROOT_PASSWORD=your-secure-password
-
-   # 启用Redis认证
-   REDIS_PASSWORD=your-secure-password
-   ```
-
-2. **网络安全**：
-   - 使用防火墙限制端口访问
-   - 配置反向代理（Nginx/Traefik）
-   - 启用HTTPS/TLS
-
-3. **认证安全**：
-   - 配置强密码策略
-   - 启用多因素认证
-   - 定期轮换API密钥
 
 ## 📚 更多资源
 
