@@ -1,7 +1,6 @@
 // Modal 相关类型导出
 export * from './add-flow';
 export * from './add-plugin';
-export * from './add-rpa';
 export * from './add-knowledge';
 export * from './iterative-amplification';
 export * from './knowledge-detail';

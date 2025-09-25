@@ -1,11 +1,12 @@
-import { memo } from "react";
-import FixedOutputs from "../components/fixed-outputs";
-import ExceptionHandling from "../components/exception-handling";
-import SingleInput from "../components/single-input";
+import { memo } from 'react';
+import FixedOutputs from '../components/fixed-outputs';
+import ExceptionHandling from '../components/exception-handling';
+import SingleInput from '../components/single-input';
+import { NodeCommonProps } from '../../types';
 
-export const RpaDetail = memo((props: unknown) => {
+export const RpaDetail = memo((props: NodeCommonProps) => {
   const { id, data } = props;
-  console.log(id, data, 999996);
+  console.log(data, 99999, id);
 
   return (
     <div className="p-[14px] pb-[6px]">

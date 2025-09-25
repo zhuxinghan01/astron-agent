@@ -1,9 +1,10 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import useAntModal, { CommonAntModalProps } from "@/hooks/use-ant-modal";
-import { createRpa, getRpaSourceList, updateRpa } from "@/services/rpa";
-import { RpaDetailFormInfo, RpaInfo } from "@/types/rpa";
-import { useRequest } from "ahooks";
-import { Button, Form, Input, message, Modal, Select, Space } from "antd";
+import { forwardRef, useImperativeHandle, useState } from 'react';
+import useAntModal, { CommonAntModalProps } from '@/hooks/use-ant-modal';
+import { createRpa, getRpaSourceList, updateRpa } from '@/services/rpa';
+import { RpaDetailFormInfo, RpaInfo } from '@/types/rpa';
+import { useRequest } from 'ahooks';
+import { Button, Form, Input, message, Modal, Select, Space } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export const ModalForm = forwardRef<
   { showModal: (values?: RpaDetailFormInfo) => void },
@@ -11,8 +12,9 @@ export const ModalForm = forwardRef<
     refresh: () => void;
   }
 >(({ refresh }, ref) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
-  const [type, setType] = useState<"create" | "edit">("create");
+  const [type, setType] = useState<'create' | 'edit'>('create');
   const { showModal, commonAntModalProps, open, closeModal } = useAntModal();
   const { data: rpaSourceList } = useRequest(
     open ? getRpaSourceList : () => [] as unknown as Promise<RpaInfo[]>,
@@ -21,12 +23,12 @@ export const ModalForm = forwardRef<
     }
   );
   useImperativeHandle(ref, () => ({
-    showModal: (values) => {
+    showModal: values => {
       if (values) {
         form.setFieldsValue(values);
-        setType("edit");
+        setType('edit');
       } else {
-        setType("create");
+        setType('create');
       }
       showModal();
     },
@@ -36,23 +38,29 @@ export const ModalForm = forwardRef<
     form.resetFields();
   };
   const handleSave = async () => {
-    const { platformId, assistantName, icon, id, ...values } =
+    const { platformId, assistantName, icon, id, remarks, ...values } =
       await form.validateFields();
 
-    (type === "create"
-      ? createRpa({ fields: values, platformId, assistantName, icon })
+    (type === 'create'
+      ? createRpa({ fields: values, platformId, assistantName, icon, remarks })
       : updateRpa(id, {
           fields: values,
           assistantName,
           icon,
           platformId,
+          remarks,
+          replaceFields: true,
         })
     )
       .then(() => {
-        message.success(type === "create" ? "创建成功" : "编辑成功");
+        message.success(
+          type === 'create'
+            ? t('rpa.createRpaSuccess')
+            : t('rpa.editRpaSuccess')
+        );
         refresh?.();
       })
-      .catch((error) => {
+      .catch(error => {
         message.error(error.message);
       })
       .finally(() => {
@@ -66,31 +74,41 @@ export const ModalForm = forwardRef<
       <Modal
         {...commonAntModalProps}
         footer={null}
-        title={type === "create" ? "创建 RPA" : "编辑 RPA"}
+        title={type === 'create' ? t('rpa.createRpa') : t('rpa.editRpa')}
         onCancel={handleReset}
       >
         <div className="pt-[24px]">
           <Form.Item name="id" label="id" hidden>
             <Input />
           </Form.Item>
+          <Form.Item name="icon" label="icon" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="remarks" label="remarks" hidden>
+            <Input />
+          </Form.Item>
           <Form.Item
             name="platformId"
-            label="RPA平台"
+            label={t('rpa.rpaPlatform')}
             required
-            rules={[{ required: true, message: "请选择RPA平台" }]}
+            rules={[
+              { required: true, message: t('rpa.pleaseSelectRpaPlatform') },
+            ]}
           >
             <Select
-              placeholder="请选择RPA平台"
-              options={rpaSourceList?.map((item) => ({
+              placeholder={t('rpa.pleaseSelectRpaPlatform')}
+              options={rpaSourceList?.map(item => ({
                 label: item.name,
                 value: item.id,
               }))}
-              onChange={(value) => {
+              onChange={value => {
+                console.log(rpaSourceList?.find(item => item.id === value));
                 form.setFieldsValue({
-                  assistantName: rpaSourceList?.find(
-                    (item) => item.id === value
-                  )?.name,
-                  icon: rpaSourceList?.find((item) => item.id === value)?.icon,
+                  assistantName: rpaSourceList?.find(item => item.id === value)
+                    ?.name,
+                  icon: rpaSourceList?.find(item => item.id === value)?.icon,
+                  remarks: rpaSourceList?.find(item => item.id === value)
+                    ?.remarks,
                 });
               }}
             />
@@ -98,23 +116,20 @@ export const ModalForm = forwardRef<
           <Form.Item name="assistantName" label="assistantName" hidden>
             <Input />
           </Form.Item>
-          <Form.Item name="icon" label="icon" hidden>
-            <Input />
-          </Form.Item>
-          <Form.Item dependencies={["platformId"]} noStyle>
+          <Form.Item dependencies={['platformId']} noStyle>
             {({ getFieldValue }) => {
-              const platformId = getFieldValue("platformId");
+              const platformId = getFieldValue('platformId');
               const platformInfo = rpaSourceList?.find(
-                (item) => item.id === platformId
+                item => item.id === platformId
               );
-              const fields = JSON.parse(platformInfo?.value || "[]") as {
+              const fields = JSON.parse(platformInfo?.value || '[]') as {
                 key: string;
                 name: string;
                 required: boolean;
                 desc: string;
               }[];
 
-              return fields?.map((item) => {
+              return fields?.map(item => {
                 return (
                   <Form.Item
                     key={item.name}
@@ -122,7 +137,9 @@ export const ModalForm = forwardRef<
                     label={item.key}
                     required={item.required}
                   >
-                    <Input placeholder={`请输入${item.desc}`} />
+                    <Input
+                      placeholder={`${t('rpa.pleaseEnter')} ${item.desc}`}
+                    />
                   </Form.Item>
                 );
               });
@@ -130,9 +147,9 @@ export const ModalForm = forwardRef<
           </Form.Item>
           <div className="w-full flex justify-end">
             <Space>
-              <Button onClick={() => handleReset()}>取消</Button>
+              <Button onClick={() => handleReset()}>{t('rpa.cancel')}</Button>
               <Button type="primary" onClick={handleSave}>
-                保存
+                {t('rpa.save')}
               </Button>
             </Space>
           </div>

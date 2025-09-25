@@ -28,6 +28,9 @@ import {
 } from '@/components/workflow/types/hooks';
 
 import { UseFlowCommonReturn } from '@/components/workflow/types/hooks';
+import { RpaInfo, RpaNodeParam } from '@/types/rpa';
+import { Edge } from 'reactflow';
+import { transRpaParameters } from '@/utils/rpa';
 
 // 全局类型声明 - 移除重复声明
 export const useFlowCommon = (): UseFlowCommonReturn => {
@@ -84,7 +87,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
         }`,
       };
       setEdges((edges: unknown[]) => {
-        const newEdges = [...edges, edge];
+        const newEdges = [...edges, edge] as Edge[];
         return newEdges;
       });
     }
@@ -173,19 +176,20 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
     }
   });
 
-  const handleAddRpaNode = useMemoizedFn((rpa: unknown): void => {
+  const handleAddRpaNode = useMemoizedFn((rpaParam: RpaNodeParam): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.toolId === (rpa as unknown)?.id
+      node => node?.data?.nodeParam?.projectId === rpaParam.project_id
     );
-    willAddNode.data.nodeParam.toolDescription = (rpa as unknown)?.description;
-    willAddNode.data.nodeParam.toolId = (rpa as unknown)?.id;
-    willAddNode.data.nodeParam.rpaId = (rpa as unknown)?.id;
-    willAddNode.data.nodeParam.platform = (rpa as unknown)?.platform;
-    willAddNode.data.nodeParam.uid = user?.uid?.toString() || '';
-    willAddNode.data.nodeParam.version = (rpa as unknown)?.version || 'V1.0';
-    willAddNode.data.inputs = (rpa as unknown)?.inputs || [];
-    willAddNode.data.outputs = (rpa as unknown)?.outputs || [];
+    willAddNode.data.nodeParam.projectId = rpaParam.project_id;
+    willAddNode.data.nodeParam.source = rpaParam.platform;
+    willAddNode.data.nodeParam.header = rpaParam.fields;
+    willAddNode.data.inputs = transRpaParameters(
+      rpaParam.parameters?.filter(item => item.varDirection === 0) || []
+    );
+    willAddNode.data.outputs = transRpaParameters(
+      rpaParam.parameters?.filter(item => item.varDirection === 1) || []
+    );
     const newRpaNode = {
       id: getNodeId(willAddNode.idType),
       type: 'custom',
@@ -195,7 +199,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
       data: {
         icon: willAddNode.icon,
         ...copyNodeData(willAddNode.data),
-        label: getNextName(currentTypeList, (rpa as unknown)?.name),
+        label: getNextName(currentTypeList, rpaParam.name),
         labelEdit: false,
       },
     };
@@ -204,7 +208,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
       newRpaNode,
     ]);
     canPublishSetNot();
-    message.success(`${(rpa as unknown)?.name} 已添加`);
+    message.success(`${rpaParam?.name} 已添加`);
     if (beforeNode) {
       addEdge(beforeNode.sourceHandle, beforeNode, newRpaNode);
     }
@@ -225,7 +229,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
           open: true,
         });
         return null;
-      } else if (nodeType === 'rpa-base') {
+      } else if (nodeType === 'rpa') {
         setRpaModal({
           open: true,
         });

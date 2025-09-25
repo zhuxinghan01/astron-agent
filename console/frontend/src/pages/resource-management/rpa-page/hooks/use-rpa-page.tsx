@@ -1,7 +1,7 @@
-import { getRpaList } from "@/services/rpa";
-import { RpaInfo } from "@/types/rpa";
-import { useRequest, useDebounceFn } from "ahooks";
-import React, { useCallback, useEffect, useState } from "react";
+import { getRpaList } from '@/services/rpa';
+import { RpaInfo } from '@/types/rpa';
+import { useRequest, useDebounceFn } from 'ahooks';
+import React, { useCallback, useEffect, useState } from 'react';
 
 export const useRpaPage = (): {
   handleSearchRpas: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -11,7 +11,7 @@ export const useRpaPage = (): {
   refresh: () => void;
 } => {
   const [isHovered, setIsHovered] = useState<boolean | null>(null);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
 
   const { data, refresh } = useRequest(
     () =>

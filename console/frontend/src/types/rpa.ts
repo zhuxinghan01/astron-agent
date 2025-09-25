@@ -1,3 +1,4 @@
+import { Node } from 'reactflow';
 export interface RpaInfo {
   id: number;
   category: string;
@@ -44,6 +45,8 @@ export interface RpaRobot {
   created_at: string;
 
   updated_at: string;
+
+  icon: string;
 }
 
 export interface RpaDetailInfo {
@@ -65,9 +68,10 @@ export interface RpaDetailInfo {
   createTime: string;
 
   icon?: string;
-
   replaceFields?: boolean;
   userName?: string;
+  remarks?: string;
+  platform?: string;
 }
 
 export interface RpaDetailFormInfo {
@@ -85,4 +89,19 @@ export interface RpaFormInfo {
     apiKey: string;
   };
   replaceFields?: boolean;
+  remarks?: string;
+}
+
+export interface RpaNode extends Node {
+  nodeType: string;
+  data: {
+    nodeParam: {
+      projectId: string;
+    };
+  };
+}
+
+export interface RpaNodeParam extends RpaRobot {
+  fields: RpaDetailInfo['fields'];
+  platform?: string;
 }

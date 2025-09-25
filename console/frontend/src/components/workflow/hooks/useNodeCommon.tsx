@@ -166,7 +166,7 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
     return currentNode?.description || currentNode?.data?.description;
   }, [nodeList, data, nodeType]);
   const isRpaNode = useMemo(() => {
-    return nodeType === 'rpa' || nodeType === 'rpa-base';
+    return nodeType === 'rpa' || nodeType === 'rpa';
   }, [nodeType]);
 
   return {

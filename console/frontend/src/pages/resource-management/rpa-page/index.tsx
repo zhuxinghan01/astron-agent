@@ -1,17 +1,17 @@
-import React, { memo, FC, useRef } from "react";
-import { useTranslation } from "react-i18next";
+import React, { memo, FC, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { useNavigate } from "react-router-dom";
-import RetractableInput from "@/components/ui/global/retract-table-input";
-import { jumpTologin } from "@/utils/http";
-import { useRpaPage } from "./hooks/use-rpa-page";
-import { Button, Divider, Dropdown, Modal, Space } from "antd";
-import { EllipsisOutlined } from "@ant-design/icons";
+import { useNavigate } from 'react-router-dom';
+import RetractableInput from '@/components/ui/global/retract-table-input';
+import { jumpTologin } from '@/utils/http';
+import { useRpaPage } from './hooks/use-rpa-page';
+import { Button, Divider, Dropdown, Modal, Space } from 'antd';
+import { EllipsisOutlined } from '@ant-design/icons';
 
-import useUserStore, { User } from "@/store/user-store";
-import { ModalForm } from "./components/modal-form";
-import { RpaDetailFormInfo, RpaInfo } from "@/types/rpa";
-import { deleteRpa, getRpaDetail } from "@/services/rpa";
+import useUserStore, { User } from '@/store/user-store';
+import { ModalForm } from './components/modal-form';
+import { RpaDetailFormInfo, RpaInfo } from '@/types/rpa';
+import { deleteRpa, getRpaDetail } from '@/services/rpa';
 const RpaPage: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -20,14 +20,14 @@ const RpaPage: FC = () => {
   }>(null);
   const { rpas, isHovered, setIsHovered, handleSearchRpas, refresh } =
     useRpaPage();
-  const user = useUserStore((state) => state.user);
+  const user = useUserStore(state => state.user);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden py-8">
       <div
         className="flex justify-between mx-auto max-w-[1425px]"
         style={{
-          width: "calc(0.85 * (100% - 8px))",
+          width: 'calc(0.85 * (100% - 8px))',
         }}
       >
         <div className="font-medium"></div>
@@ -40,22 +40,22 @@ const RpaPage: FC = () => {
         <div
           className="h-full mx-auto max-w-[1425px]"
           style={{
-            width: "85%",
+            width: '85%',
           }}
         >
           <div className="grid lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-3 gap-6">
             <div
               className={`rpa-card-add-container relative ${
                 isHovered === null
-                  ? ""
+                  ? ''
                   : isHovered
-                    ? "rpa-no-hover"
-                    : "rpa-hover"
+                    ? 'rpa-no-hover'
+                    : 'rpa-hover'
               }`}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 setIsHovered(true);
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 setIsHovered(false);
               }}
               onClick={() => {
@@ -75,17 +75,17 @@ const RpaPage: FC = () => {
                   className="mt-4 font-semibold add-name"
                   style={{ fontSize: 22 }}
                 >
-                  {t("rpa.createRpa")}
+                  {t('rpa.createRpa')}
                 </div>
               </div>
             </div>
-            {rpas.map((rpa) => (
+            {rpas.map(rpa => (
               <RpaCard
                 rpa={rpa}
                 key={rpa.id}
                 user={user}
                 refresh={refresh}
-                showModal={(values) => modalFormRef.current?.showModal(values)}
+                showModal={values => modalFormRef.current?.showModal(values)}
               />
             ))}
           </div>
@@ -108,9 +108,10 @@ export const RpaCard = ({
   showModal: (values?: RpaDetailFormInfo) => void;
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const actions = new Map([
     [
-      "edit",
+      'edit',
       async (record: RpaInfo) => {
         const result = await getRpaDetail(record.id);
         const formData = {
@@ -124,11 +125,11 @@ export const RpaCard = ({
       },
     ],
     [
-      "delete",
+      'delete',
       (record: RpaInfo) => {
         Modal.confirm({
-          title: "删除",
-          content: "确定删除吗？",
+          title: t('rpa.deleteRpa'),
+          content: t('rpa.deleteRpaConfirm'),
           onOk: () => {
             deleteRpa(record.id).then(() => {
               refresh?.();
@@ -171,7 +172,7 @@ export const RpaCard = ({
             </div>
             <div
               className="text-desc text-overflow h-5 text-sm"
-              title={rpa.userName || ""}
+              title={rpa.userName || ''}
             >
               {rpa.userName}
             </div>
@@ -179,17 +180,19 @@ export const RpaCard = ({
         </div>
       </div>
       <div className="text-sm px-6 pt-[6px] text-desc  text-overflow-more text-overflow-2">
-        啊啊手机大叔啊啊手机大叔大婶都是啊啊手机大叔大婶都是啊啊手机大叔大婶都是大婶都是
+        {rpa.remarks}
       </div>
       <div
         className="flex justify-between items-center  overflow-hidden overflow-x-auto overflow-y-hidden py-[8px] px-6"
         style={{
-          borderTop: "1px dashed #e2e8ff",
-          scrollbarWidth: "none", // 隐藏滚动条
-          msOverflowStyle: "none", // IE/Edge隐藏滚动条
+          borderTop: '1px dashed #e2e8ff',
+          scrollbarWidth: 'none', // 隐藏滚动条
+          msOverflowStyle: 'none', // IE/Edge隐藏滚动条
         }}
       >
-        <div className="text-desc">机器人资源：{rpa.robotCount || 0}个</div>
+        <div className="text-desc">
+          {t('rpa.robotResource')}: {rpa.robotCount || 0}个
+        </div>
         <Dropdown
           menu={{
             onClick: ({ key, domEvent }) => {
@@ -198,19 +201,19 @@ export const RpaCard = ({
             },
             items: [
               {
-                label: <span className="text-[#275EFF]">编辑</span>,
-                key: "edit",
+                label: <span className="text-[#275EFF]">{t('rpa.edit')}</span>,
+                key: 'edit',
               },
               {
-                label: <span className="text-red-500">删除</span>,
-                key: "delete",
+                label: <span className="text-red-500">{t('rpa.delete')}</span>,
+                key: 'delete',
               },
             ],
           }}
         >
           <EllipsisOutlined
-            style={{ color: "#7F7F7F" }}
-            onClick={(e) => e.stopPropagation()}
+            style={{ color: '#7F7F7F' }}
+            onClick={e => e.stopPropagation()}
           />
         </Dropdown>
       </div>
