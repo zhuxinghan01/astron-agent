@@ -5,10 +5,10 @@
 # Python project variables - use dynamic directories from config
 PYTHON := $(shell which python3 || which python)
 BLACK := black
-ISORT := isort
-FLAKE8 := flake8
-MYPY := mypy
-PYLINT := pylint
+ISORT := isort --profile black
+FLAKE8 := flake8 --max-line-length 88 --ignore=E203,W503,E501 --max-complexity 10
+MYPY := mypy --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs --no-implicit-optional
+PYLINT := pylint --max-line-length=88 --max-args=7 --max-locals=15 --max-returns=6 --max-branches=12 --max-statements=50
 
 # Get all Python directories from config
 PYTHON_DIRS := $(shell \
