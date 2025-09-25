@@ -24,19 +24,10 @@ import createSpaceImg from '@/assets/imgs/space/createSpaceImg.png';
 import enterpriseShareCreate from '@/assets/imgs/space/enterpriseShareCreate.png';
 import enterpriseSpaceJoin from '@/assets/imgs/space/enterpriseSpaceJoin.png';
 import arrowRight from '@/assets/imgs/space/arrowRight.png';
-import { deleteChatList, postChatList } from '@/services/chat';
-import { getFavoriteList } from '@/services/agent-square';
-import { BotInfoType } from '@/types/chat';
+import { deleteChatList } from '@/services/chat';
+import { PostChatItem, FavoriteEntry } from '@/types/chat';
 
 // Constants
-const PAGE_SIZE = 45;
-const PAGE_INFO_ORIGIN = {
-  searchValue: '',
-  pageIndex: 1,
-  pageSize: PAGE_SIZE,
-  botType: '',
-};
-
 const getAllMessage = async (params: any) => {
   return { messages: [] };
 };
@@ -279,7 +270,13 @@ const RecentList: FC<RecentListProps> = ({
   );
 };
 
-const MenuList: FC = () => {
+interface MenuListProps {
+  mixedChatList: PostChatItem[];
+  favoriteBotList: FavoriteEntry[];
+  onRefreshData?: () => void;
+}
+
+const MenuList: FC<MenuListProps> = ({ mixedChatList, favoriteBotList, onRefreshData }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -310,9 +307,6 @@ const MenuList: FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoverTab, setHoverTab] = useState('');
   const [menuActiveKey, setMenuActiveKey] = useState('');
-  const [pageInfo, setPageInfo] = useState(PAGE_INFO_ORIGIN);
-  const [favoriteBotList, setFavoriteBotList] = useState([]);
-  const [mixedChatList, setMixedChatList] = useState<BotInfoType[]>([]);
   const [showRecent, setShowRecent] = useState(true);
   const [chatListId, setChatListId] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -341,24 +335,6 @@ const MenuList: FC = () => {
   };
 
   // Chat and favorites management
-  const getChatList = async () => {
-    try {
-      const res = await postChatList();
-      setMixedChatList(res);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const getFavoriteBotListLocal = async () => {
-    try {
-      const res = (await getFavoriteList(pageInfo)) as unknown as any;
-      setFavoriteBotList(res.pageList);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const handleNavigateToChat = (item: any) => {
     handleToChat(item?.botId);
   };
@@ -375,8 +351,11 @@ const MenuList: FC = () => {
     })
       .then((res: any) => {
         setDeleteOpen(false);
-        getChatList();
         message.success(t('commonModal.agentDelete.success'));
+        // Refresh data after successful deletion
+        if (onRefreshData) {
+          onRefreshData();
+        }
       })
       .catch((err: any) => {
         console.log(err);
@@ -423,16 +402,7 @@ const MenuList: FC = () => {
 
   useEffect(() => {
     checkLogin();
-    getChatList();
-    getFavoriteBotListLocal();
     getMessages('0');
-
-    eventBus.on('chatListChange', getChatList);
-    eventBus.on('favoriteChange', getFavoriteBotListLocal);
-    return () => {
-      eventBus.off('chatListChange', getChatList);
-      eventBus.off('favoriteChange', getFavoriteBotListLocal);
-    };
   }, []);
 
   // 根据 spaceStore 状态动态生成 menuList

@@ -1,5 +1,6 @@
 import {
   BotInfoType,
+  PostChatItem,
   CreateChatResponse,
   ChatHistoryResponse,
   RtasrTokenResponse,
@@ -50,7 +51,7 @@ export async function getChatHistory(
  * 获取全部聊天列表
  * @returns
  */
-export async function postChatList(): Promise<BotInfoType[]> {
+export async function postChatList(): Promise<PostChatItem[]> {
   return http.post('/chat-list/all-chat-list');
 }
 

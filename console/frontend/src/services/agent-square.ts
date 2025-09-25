@@ -13,6 +13,7 @@ import {
   BotMarketParam,
   BotMarketPage,
 } from '@/types/agent-square';
+import { FavoriteListResponse } from '@/types/chat';
 
 //获取智能体类型
 export const getAgentType = (): Promise<BotType[]> => {
@@ -65,7 +66,7 @@ export const getAgentShareKey = (params: {
 };
 
 // 获取收藏列表
-export const getFavoriteList = (params: any) => {
+export const getFavoriteList = (params: any): Promise<FavoriteListResponse> => {
   return http.post('/bot/favorite/list', params);
 };
 
