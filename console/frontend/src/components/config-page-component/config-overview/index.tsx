@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getBotInfo } from '@/services/spark-common';
-import useBotStore from '@/store/bot-store';
 import BotAnalysis from '@/components/config-page-component/bot-analysis';
 import ConfigHeader from '@/components/config-page-component/config-header/ConfigHeader';
 
 import styles from './index.module.scss';
+import { BotInfoType } from '@/types/chat';
 
 const ConfigOverview = ({
   currentRobot,
@@ -18,7 +18,7 @@ const ConfigOverview = ({
 }) => {
   const [searchParams] = useSearchParams();
   const botId = searchParams.get('botId');
-  const { detailInfo, setDetailInfo } = useBotStore();
+  const [detailInfo, setDetailInfo] = useState<BotInfoType>();
 
   useEffect(() => {
     getBotInfo({ botId: botId }).then(res => {
@@ -35,7 +35,7 @@ const ConfigOverview = ({
       <ConfigHeader
         coverUrl={detailInfo?.avatar}
         baseinfo={detailInfo}
-        botId={searchParams.get('botId')}
+        botId={searchParams.get('botId') || ''}
         detailInfo={detailInfo}
         currentRobot={currentRobot}
         currentTab={currentTab}

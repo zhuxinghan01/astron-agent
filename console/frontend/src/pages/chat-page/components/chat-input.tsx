@@ -3,28 +3,22 @@ import {
   type BotInfoType,
   type MessageListType,
   type UploadFileInfo,
-  type SupportUploadConfig,
 } from '@/types/chat';
 import TextArea from 'antd/es/input/TextArea';
-import { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import newChatIcon from '@/assets/imgs/chat/new-chat.svg';
 import stopIcon from '@/assets/imgs/chat/stop-icon.svg';
 import delIcon from '@/assets/imgs/chat/delete-history.svg';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import {
-  clearChatList,
-  postNewChat,
-  getS3PresignUrl,
-  uploadFileBindChat,
-  unBindChatFile,
-} from '@/services/chat';
+import { clearChatList, postNewChat } from '@/services/chat';
 import { message, Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import DeleteModal from './delete-modal';
 import RecorderCom, { type RecorderRef } from './recorder-com';
 import deleteIcon from '@/assets/imgs/chat/plugin/delete-file.png';
 import { getFileIcon, getStatusText } from '@/utils';
+import useChatFileUpload from '@/hooks/use-chat-file-upload';
 import FilePreview from './file-preview';
 
 const ChatInput = (props: {
@@ -43,8 +37,6 @@ const ChatInput = (props: {
   const isLoading = useChatStore(state => state.isLoading); //  是否正在加载
   const currentChatId = useChatStore(state => state.currentChatId); //  当前聊天id
   const addMessage = useChatStore(state => state.addMessage); //  添加消息
-  const setMessageList = useChatStore(state => state.setMessageList); //  设置消息列表
-  const setCurrentChatId = useChatStore(state => state.setCurrentChatId); //  设置当前聊天id
   const workflowOperation = useChatStore(state => state.workflowOperation); //  工作流操作
   const isWorkflowOption = useChatStore(state => state.isWorkflowOption); //  是否有工作流选项
   const chatFileListNoReq = useChatStore(state => state.chatFileListNoReq); //  文件列表
@@ -56,10 +48,15 @@ const ChatInput = (props: {
   const [inputValue, setInputValue] = useState<string>(''); //  输入框值
   const textAreaRef = useRef<HTMLTextAreaElement>(null); //  输入框ref
   const $record = useRef<RecorderRef>(null); //  录音ref
-  const [fileList, setFileList] = useState<UploadFileInfo[]>([]);
-  const activeUploads = useRef(new Map()); // 存储正在上传的 XMLHttpRequest
-  const activeBindings = useRef(new Map()); // 存储正在绑定的 AbortController
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    fileList,
+    setFileList,
+    fileInputRef,
+    handleFileSelect,
+    triggerFileSelect,
+    removeFile,
+    hasErrorFiles,
+  } = useChatFileUpload(botInfo);
   const [previewFile, setPreviewFile] = useState<UploadFileInfo>();
 
   // 检查是否有待选择的工作流选项
@@ -118,19 +115,6 @@ const ChatInput = (props: {
     setDeleteModalOpen(true);
   };
 
-  //清除对话历史确认
-  const handleClearChatListConfirm = () => {
-    clearChatList(currentChatId, botInfo.botId)
-      .then(res => {
-        setCurrentChatId(res.id);
-        setMessageList([]);
-        setDeleteModalOpen(false);
-      })
-      .catch(() => {
-        message.error(t('chatPage.chatWindow.clearChatHistoryFailed'));
-      });
-  };
-
   //发送消息
   const handleSend = () => {
     if (!inputValue.trim()) {
@@ -159,336 +143,6 @@ const ChatInput = (props: {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  /**
-   * 生成随机的文件业务Key
-   */
-  const generateFileBusinessKey = (): string => {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  };
-
-  /**
-   * 更新文件状态
-   */
-  const updateFileStatus = useCallback(
-    (
-      uid: string,
-      fileId: string,
-      status: 'pending' | 'uploading' | 'completed' | 'error',
-      progress: number,
-      fileUrl = '',
-      error = ''
-    ) => {
-      setFileList(prev =>
-        prev.map(file =>
-          file.uid === uid
-            ? { ...file, fileId, status, progress, fileUrl, error }
-            : file
-        )
-      );
-    },
-    []
-  );
-
-  /**
-   * 上传文件，并绑定到对话id上
-   */
-  const uploadFileToS3 = async (fileObj: UploadFileInfo) => {
-    try {
-      updateFileStatus(fileObj.uid, '', 'pending', 0, '', '');
-      const signedRes = await getS3PresignUrl(fileObj.fileName, fileObj.type);
-      const realFileUrl = signedRes.url.split('?')[0] || '';
-      const arrayBuffer = await fileObj.file.arrayBuffer();
-      updateFileStatus(fileObj.uid, '', 'uploading', 0, realFileUrl);
-
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        activeUploads.current.set(fileObj.uid, xhr);
-
-        xhr.upload.addEventListener('progress', e => {
-          if (e.lengthComputable) {
-            const progress = Math.round((e.loaded / e.total) * 95);
-            updateFileStatus(
-              fileObj.uid,
-              '',
-              'uploading',
-              progress,
-              realFileUrl
-            );
-          }
-        });
-
-        xhr.addEventListener('load', async () => {
-          activeUploads.current.delete(fileObj.uid);
-
-          if (xhr.status >= 200 && xhr.status < 300) {
-            // 创建可取消的绑定请求
-            const bindController = new AbortController();
-            activeBindings.current.set(fileObj.uid, bindController);
-
-            try {
-              const bindResult = await uploadFileBindChat(
-                {
-                  chatId: botInfo.chatId,
-                  fileName: fileObj.fileName,
-                  fileSize: fileObj.fileSize,
-                  fileUrl: realFileUrl,
-                  fileBusinessKey: fileObj.fileBusinessKey,
-                },
-                bindController.signal
-              );
-
-              // 绑定成功，清理控制器
-              activeBindings.current.delete(fileObj.uid);
-
-              updateFileStatus(
-                fileObj.uid,
-                bindResult,
-                'completed',
-                100,
-                realFileUrl
-              );
-              resolve(true);
-            } catch (error: any) {
-              activeBindings.current.delete(fileObj.uid);
-
-              if (error.name === 'AbortError') {
-                // 请求被取消
-                updateFileStatus(
-                  fileObj.uid,
-                  '',
-                  'error',
-                  0,
-                  realFileUrl,
-                  '绑定已取消'
-                );
-              } else {
-                // 其他错误
-                updateFileStatus(
-                  fileObj.uid,
-                  '',
-                  'error',
-                  0,
-                  realFileUrl,
-                  '绑定失败'
-                );
-              }
-              reject(error);
-            }
-          } else {
-            updateFileStatus(
-              fileObj.uid,
-              '',
-              'error',
-              0,
-              realFileUrl,
-              '上传失败'
-            );
-            reject(new Error('Upload failed'));
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          activeUploads.current.delete(fileObj.uid);
-          updateFileStatus(
-            fileObj.uid,
-            '',
-            'error',
-            0,
-            realFileUrl,
-            '网络错误'
-          );
-          reject(new Error('Network error'));
-        });
-
-        xhr.addEventListener('abort', () => {
-          activeUploads.current.delete(fileObj.uid);
-        });
-
-        xhr.open('PUT', signedRes.url);
-        xhr.setRequestHeader(
-          'Content-Type',
-          fileObj.type || 'application/octet-stream'
-        );
-        xhr.send(arrayBuffer);
-      });
-    } catch (error) {
-      activeUploads.current.delete(fileObj.uid);
-      updateFileStatus(fileObj.uid, '', 'error', 0, '', '获取签名URL失败');
-      throw error;
-    }
-  };
-
-  /**
-   * 开始上传文件
-   */
-  const handleStartUpload = async (files: UploadFileInfo[]) => {
-    const pendingFiles = files.filter(file => file.status === 'pending');
-    if (pendingFiles.length === 0) {
-      return;
-    }
-    const uploadPromises = pendingFiles.map(file => uploadFileToS3(file));
-    try {
-      await Promise.allSettled(uploadPromises);
-    } catch (error) {
-      console.error('Upload error:', error);
-    }
-  };
-
-  /**
-   * 处理移除文件
-   */
-  const removeFile = (file: UploadFileInfo) => {
-    if (file.fileId) {
-      // 已绑定的文件，调用解绑接口
-      unBindChatFile({
-        chatId: botInfo.chatId,
-        fileId: file.fileId,
-      });
-    } else {
-      // 未绑定的文件，取消上传和绑定
-      cancelUpload(file.uid);
-      cancelBinding(file.uid);
-    }
-    setFileList(prev => prev.filter(f => f.uid !== file.uid));
-  };
-
-  /**
-   * 取消上传
-   */
-  const cancelUpload = (uid: string) => {
-    const xhr = activeUploads.current.get(uid);
-    if (xhr) {
-      xhr.abort();
-      activeUploads.current.delete(uid);
-      setFileList(prev =>
-        prev.map(file =>
-          file.uid === uid
-            ? {
-                ...file,
-                status: 'pending' as const,
-                progress: 0,
-                error: '上传已取消',
-              }
-            : file
-        )
-      );
-    }
-  };
-
-  /**
-   * 取消绑定
-   */
-  const cancelBinding = (uid: string) => {
-    const bindController = activeBindings.current.get(uid);
-    if (bindController) {
-      bindController.abort();
-      activeBindings.current.delete(uid);
-    }
-  };
-
-  /**
-   * 检查是否有错误文件
-   */
-  const hasErrorFiles = (): boolean => {
-    return fileList.some(file => file.status === 'error');
-  };
-
-  /**
-   * 验证文件是否符合上传要求
-   */
-  const validateFile = (
-    file: File,
-    config: SupportUploadConfig
-  ): string | null => {
-    // 验证文件类型
-    const acceptTypes = config.accept
-      .toLowerCase()
-      .split(',')
-      .map(type => type.trim());
-    const fileName = file.name.toLowerCase();
-    const isValidType = acceptTypes.some(type => {
-      if (type.startsWith('.')) {
-        return fileName.endsWith(type);
-      }
-      return file.type.includes(type);
-    });
-
-    if (!isValidType) {
-      return `${file.name}是不支持的文件类型`;
-    }
-
-    // 这里可以添加文件大小验证
-    // const maxSize = 10 * 1024 * 1024; // 10MB
-    // if (file.size > maxSize) {
-    //   return '文件大小不能超过10MB';
-    // }
-
-    return null;
-  };
-
-  /**
-   * 处理文件上传
-   */
-  const processSelectedFiles = async (files: File[]) => {
-    // 检查数量限制
-    if (
-      fileList.length + files.length >
-      (botInfo?.supportUploadConfig?.[0]?.limit || 0)
-    ) {
-      message.warning(
-        `最多只能上传 ${botInfo?.supportUploadConfig?.[0]?.limit || 0} 个文件`
-      );
-      return;
-    }
-    // 验证成功的文件
-    const validFiles: File[] = [];
-    // 验证所有文件
-    files.forEach(file => {
-      const validationError = validateFile(
-        file,
-        botInfo?.supportUploadConfig?.[0] || ({} as SupportUploadConfig)
-      );
-      if (!validationError) {
-        validFiles.push(file);
-      }
-    });
-
-    if (validFiles.length > 0) {
-      const newFiles = validFiles.map(file => ({
-        uid: generateFileBusinessKey(),
-        file,
-        fileName: file.name,
-        fileSize: file.size,
-        type: file.type,
-        status: 'pending' as const,
-        fileUrl: '',
-        fileBusinessKey: generateFileBusinessKey(),
-        progress: 0,
-        error: '',
-      }));
-      setFileList(prev => [...prev, ...newFiles]);
-    }
-  };
-
-  /**
-   * 处理文件选择
-   */
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    // 处理选择的文件
-    processSelectedFiles(selectedFiles);
-    // 清空input值，允许重复选择相同文件
-    event.target.value = '';
-  };
-
-  /**
-   * 触发文件选择
-   */
-  const triggerFileSelect = () => {
-    fileInputRef.current?.click();
   };
 
   /**
@@ -546,11 +200,6 @@ const ChatInput = (props: {
       </div>
     );
   };
-
-  // 自动开始上传
-  useEffect(() => {
-    handleStartUpload(fileList);
-  }, [fileList.length]);
 
   // 同步到全局状态
   useEffect(() => {
@@ -682,7 +331,6 @@ const ChatInput = (props: {
       <DeleteModal
         open={deleteModalOpen}
         onCancel={() => setDeleteModalOpen(false)}
-        onOk={handleClearChatListConfirm}
       />
       <FilePreview
         file={previewFile || ({} as UploadFileInfo)}
