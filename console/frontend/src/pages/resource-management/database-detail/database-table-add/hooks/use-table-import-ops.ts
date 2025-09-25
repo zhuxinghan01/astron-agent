@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { message } from 'antd';
-import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
 import { useTableAddContext } from '../context/table-add-context';
 import { TableField, DatabaseItem } from '@/types/database';
@@ -37,12 +36,16 @@ export const useTableImportOps = (): {
       const mergedArray: (TableField | DatabaseItem)[] = [...arr1];
       let hasDuplicate = false;
 
+      // 获取当前最大ID，确保新字段ID不重复
+      let maxId = arr1.reduce((max, item) => Math.max(max, item.id), 0);
+
       arr2.forEach(item2 => {
         const existingItem = arr1.find(item1 => item1.name === item2.name);
         if (!existingItem) {
+          maxId += 1;
           mergedArray.push({
             ...item2,
-            id: Number(uuid()),
+            id: maxId,
             type: typeof item2.type === 'string' ? item2.type : 'String',
             isSystem: false,
             isRequired: false,

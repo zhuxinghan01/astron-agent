@@ -82,9 +82,6 @@ const ChatInput = (props: {
     return false;
   };
 
-  // 文件上传配置
-  const uploadConfig = botInfo.supportUpload?.[0];
-
   useEffect(() => {
     setFileList(chatFileListNoReq);
   }, [chatFileListNoReq]);
@@ -92,7 +89,7 @@ const ChatInput = (props: {
   //全新对话
   const handleNewChat = async () => {
     if (streamId) {
-      message.warning(t('chatPage.chatWindow.answering'));
+      message.warning(t('chatPage.chatWindow.answeringInProgress'));
       return;
     }
     if (messageList.pop()?.reqId === 'START') {
@@ -439,10 +436,10 @@ const ChatInput = (props: {
     // 检查数量限制
     if (
       fileList.length + files.length >
-      (botInfo?.supportUpload?.[0]?.limit || 0)
+      (botInfo?.supportUploadConfig?.[0]?.limit || 0)
     ) {
       message.warning(
-        `最多只能上传 ${botInfo?.supportUpload?.[0]?.limit || 0} 个文件`
+        `最多只能上传 ${botInfo?.supportUploadConfig?.[0]?.limit || 0} 个文件`
       );
       return;
     }
@@ -452,7 +449,7 @@ const ChatInput = (props: {
     files.forEach(file => {
       const validationError = validateFile(
         file,
-        botInfo?.supportUpload?.[0] || ({} as SupportUploadConfig)
+        botInfo?.supportUploadConfig?.[0] || ({} as SupportUploadConfig)
       );
       if (!validationError) {
         validFiles.push(file);
@@ -636,18 +633,18 @@ const ChatInput = (props: {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={botInfo?.supportUpload?.[0]?.accept}
-                multiple={(botInfo?.supportUpload?.[0]?.limit || 0) > 1}
+                accept={botInfo?.supportUploadConfig?.[0]?.accept}
+                multiple={(botInfo?.supportUploadConfig?.[0]?.limit || 0) > 1}
                 onChange={handleFileSelect}
                 style={{ display: 'none' }}
               />
 
               {/* 上传按钮 */}
-              {botInfo?.supportUpload?.length > 0 && (
+              {botInfo?.supportUploadConfig?.length > 0 && (
                 <div
                   className="flex items-center justify-center w-fit h-8 cursor-pointer transition-colors pl-2.5"
                   onClick={triggerFileSelect}
-                  title={`上传${botInfo?.supportUpload?.[0]?.type}文件 (${botInfo?.supportUpload?.[0]?.accept})`}
+                  title={`上传${botInfo?.supportUploadConfig?.[0]?.type}文件 (${botInfo?.supportUploadConfig?.[0]?.accept})`}
                 >
                   <img
                     src="https://openres.xfyun.cn/xfyundoc/2024-10-23/eb1e209f-e13f-4722-8561-8c564658e46d/1729648162929/adfsa.svg"
@@ -655,7 +652,7 @@ const ChatInput = (props: {
                     className="w-3 h-3"
                   />
                   <span className="ml-2 text-sm text-gray-500">
-                    {botInfo?.supportUpload?.[0]?.tip}
+                    {botInfo?.supportUploadConfig?.[0]?.tip}
                   </span>
                 </div>
               )}
