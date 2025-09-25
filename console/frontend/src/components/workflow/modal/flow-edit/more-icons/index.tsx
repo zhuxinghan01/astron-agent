@@ -169,7 +169,10 @@ function index(props): React.ReactElement {
 
   const uploadProps = {
     name: "file",
-    action: "/xingchen-api/image/upload",
+    action: "http://172.29.201.92:8080/image/upload",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+    },
     showUploadList: false,
     accept: ".png,.jpg,.jpeg,.gif,.webp,.bmp,.tiff",
     beforeUpload,

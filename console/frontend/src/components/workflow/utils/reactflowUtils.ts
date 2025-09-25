@@ -54,7 +54,7 @@ export function customStringify(obj: unknown): string {
 
   const keys = Object.keys(obj).sort();
   const keyValuePairs = keys.map(
-    (key) => `"${key}":${customStringify(obj[key])}`,
+    (key) => `"${key}":${customStringify(obj[key])}`
   );
   return `{${keyValuePairs.join(",")}}`;
 }
@@ -63,7 +63,7 @@ export function getHandleId(
   source: string,
   sourceHandle: string,
   target: string,
-  targetHandle: string,
+  targetHandle: string
 ): string {
   return `reactflow__edge-${source}${sourceHandle}-${target}${targetHandle}`;
 }
@@ -117,19 +117,19 @@ export function isValidURL(str: string): boolean {
 // ==================== 输入数据验证 ====================
 function validateInputName(
   data: unknown[],
-  nameCount: Record<string, number>,
+  nameCount: Record<string, number>
 ): boolean {
   let passFlag = true;
 
   data.forEach((item) => {
     if (!item?.name?.trim()) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty",
+        "workflow.nodes.validation.valueCannotBeEmpty"
       );
       passFlag = false;
     } else if (!checkNameConventions(item.name)) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.canOnlyContainLettersNumbersHyphensOrUnderscores",
+        "workflow.nodes.validation.canOnlyContainLettersNumbersHyphensOrUnderscores"
       );
       passFlag = false;
     } else {
@@ -143,7 +143,7 @@ function validateInputName(
 
 function validateInputContent(
   data: unknown[],
-  noNeedCheckIds: string[],
+  noNeedCheckIds: string[]
 ): boolean {
   let passFlag = true;
 
@@ -161,7 +161,7 @@ function validateInputContent(
       (type === "literal" && !content?.trim())
     ) {
       item.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty",
+        "workflow.nodes.validation.valueCannotBeEmpty"
       );
       passFlag = false;
     } else if (
@@ -170,7 +170,7 @@ function validateInputContent(
       !isValidURL(content)
     ) {
       item.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.pleaseEnterValidURL",
+        "workflow.nodes.validation.pleaseEnterValidURL"
       );
       passFlag = false;
     } else {
@@ -183,7 +183,7 @@ function validateInputContent(
 
 export const checkedNodeInputData = (
   data: unknown[],
-  currentCheckNode: unknown,
+  currentCheckNode: unknown
 ): boolean => {
   let passFlag = true;
   const nameCount: Record<string, number> = {};
@@ -195,7 +195,7 @@ export const checkedNodeInputData = (
   data.forEach((item) => {
     if (nameCount[item.name] > 1 && !item.nameErrMsg) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated",
+        "workflow.nodes.validation.valueCannotBeRepeated"
       );
       passFlag = false;
     }
@@ -206,7 +206,7 @@ export const checkedNodeInputData = (
       !item.nameErrMsg
     ) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated",
+        "workflow.nodes.validation.valueCannotBeRepeated"
       );
       passFlag = false;
     }
@@ -218,10 +218,10 @@ export const checkedNodeInputData = (
       item.conditions
         ?.filter((condition) =>
           ["not_null", "null", "empty", "not_empty", "not null"].includes(
-            condition?.compareOperator || condition?.selectCondition,
-          ),
+            condition?.compareOperator || condition?.selectCondition
+          )
         )
-        ?.map((condition) => condition?.rightVarIndex || condition?.varIndex),
+        ?.map((condition) => condition?.rightVarIndex || condition?.varIndex)
     ) || [];
 
   const noNeedCheckToolInputs =
@@ -242,7 +242,7 @@ export const checkedNodeInputData = (
 
 export const checkedNodeRepeatedInputData = (
   inputs: unknown[],
-  variableNodes: unknown[],
+  variableNodes: unknown[]
 ): boolean => {
   let passFlag = true;
   const variableNodesName = variableNodes
@@ -252,7 +252,7 @@ export const checkedNodeRepeatedInputData = (
   inputs.forEach((input) => {
     if (variableNodesName?.includes(input.name)) {
       input.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.variableMemoryNamingConflict",
+        "workflow.nodes.validation.variableMemoryNamingConflict"
       );
       passFlag = false;
     } else {
@@ -267,7 +267,7 @@ export const checkedNodeRepeatedInputData = (
 function validateProperties(
   items: unknown[],
   parentPath = "",
-  parentType: string,
+  parentType: string
 ): { validatedItems: unknown[]; flag: boolean } {
   let flag = true;
   const nameCount: Record<string, number> = {};
@@ -277,12 +277,12 @@ function validateProperties(
     .map((item) => {
       if (!item?.name?.trim()) {
         item.nameErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty",
+          "workflow.nodes.validation.valueCannotBeEmpty"
         );
         flag = false;
       } else if (!checkNameConventions(item.name)) {
         item.nameErrMsg = i18next.t(
-          "workflow.nodes.validation.canOnlyContainLettersNumbersOrUnderscores",
+          "workflow.nodes.validation.canOnlyContainLettersNumbersOrUnderscores"
         );
         flag = false;
       } else {
@@ -295,7 +295,7 @@ function validateProperties(
   newItems.forEach((item) => {
     if (nameCount[item.name] > 1 && !item.nameErrMsg) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated",
+        "workflow.nodes.validation.valueCannotBeRepeated"
       );
       flag = false;
     }
@@ -306,7 +306,7 @@ function validateProperties(
       const result = validateProperties(
         item.schema.properties,
         parentPath,
-        parentType,
+        parentType
       );
       item.schema.properties = result.validatedItems;
       flag = flag && result.flag;
@@ -316,7 +316,7 @@ function validateProperties(
       const result = validateProperties(
         item.properties,
         parentPath,
-        parentType,
+        parentType
       );
       item.properties = result.validatedItems;
       flag = flag && result.flag;
@@ -329,7 +329,7 @@ function validateProperties(
 
 export const checkedNodeOutputData = (
   data: unknown[],
-  currentCheckNode: unknown,
+  currentCheckNode: unknown
 ): boolean => {
   let passFlag = true;
 
@@ -348,7 +348,7 @@ export const checkedNodeOutputData = (
     data.forEach((item) => {
       if (!item?.schema?.description?.trim() && !item?.schema?.default) {
         item.schema.descriptionErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty",
+          "workflow.nodes.validation.valueCannotBeEmpty"
         );
         passFlag = false;
       } else {
@@ -374,7 +374,7 @@ function validateTemplateParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.template?.trim()) {
     currentCheckNode.data.nodeParam.templateErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty",
+      "workflow.nodes.validation.valueCannotBeEmpty"
     );
     return false;
   }
@@ -390,7 +390,7 @@ function validateQuestionAnswerParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.question?.trim()) {
     currentCheckNode.data.nodeParam.questionErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty",
+      "workflow.nodes.validation.valueCannotBeEmpty"
     );
     return false;
   }
@@ -409,7 +409,7 @@ function validateDecisionMakingParams(currentCheckNode: unknown): boolean {
   currentCheckNode.data.nodeParam.intentChains.forEach((chain: unknown) => {
     if (!chain?.name?.trim()) {
       chain.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty",
+        "workflow.nodes.validation.valueCannotBeEmpty"
       );
       passFlag = false;
     } else {
@@ -418,7 +418,7 @@ function validateDecisionMakingParams(currentCheckNode: unknown): boolean {
 
     if (!chain?.description?.trim()) {
       chain.descriptionErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty",
+        "workflow.nodes.validation.valueCannotBeEmpty"
       );
       passFlag = false;
     } else {
@@ -429,7 +429,7 @@ function validateDecisionMakingParams(currentCheckNode: unknown): boolean {
   return (
     passFlag &&
     currentCheckNode.data.nodeParam.intentChains.every(
-      (chain: unknown) => chain?.name?.trim() && chain?.description?.trim(),
+      (chain: unknown) => chain?.name?.trim() && chain?.description?.trim()
     )
   );
 }
@@ -438,7 +438,7 @@ function validateKnowledgeBaseParams(currentCheckNode: unknown): boolean {
   if (currentCheckNode?.nodeType === "knowledge-base") {
     if (currentCheckNode.data.nodeParam?.repoId?.length === 0) {
       currentCheckNode.data.nodeParam.repoIdErrMsg = i18next.t(
-        "workflow.nodes.validation.knowledgeCannotBeEmpty",
+        "workflow.nodes.validation.knowledgeCannotBeEmpty"
       );
       return false;
     }
@@ -448,7 +448,7 @@ function validateKnowledgeBaseParams(currentCheckNode: unknown): boolean {
   if (currentCheckNode?.nodeType === "knowledge-pro-base") {
     if (currentCheckNode.data.nodeParam?.repoIds?.length === 0) {
       currentCheckNode.data.nodeParam.repoIdErrMsg = i18next.t(
-        "workflow.nodes.validation.knowledgeCannotBeEmpty",
+        "workflow.nodes.validation.knowledgeCannotBeEmpty"
       );
       return false;
     }
@@ -465,7 +465,7 @@ function validateIflyCodeParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode.data.nodeParam?.code) {
     currentCheckNode.data.nodeParam.codeErrMsg = i18next.t(
-      "workflow.nodes.validation.codeCannotBeEmpty",
+      "workflow.nodes.validation.codeCannotBeEmpty"
     );
     return false;
   }
@@ -486,7 +486,7 @@ function validateIfElseParams(currentCheckNode: unknown): boolean {
       if (!condition.compareOperator) {
         passFlag = false;
         condition.compareOperatorErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty",
+          "workflow.nodes.validation.valueCannotBeEmpty"
         );
       } else {
         condition.compareOperatorErrMsg = "";
@@ -507,7 +507,7 @@ function validateTextJoinerParams(currentCheckNode: unknown): boolean {
     !currentCheckNode?.data?.nodeParam?.separator
   ) {
     currentCheckNode.data.nodeParam.separatorErrMsg = i18next.t(
-      "workflow.nodes.validation.separatorCannotBeEmpty",
+      "workflow.nodes.validation.separatorCannotBeEmpty"
     );
     return false;
   }
@@ -523,7 +523,7 @@ function validateAgentParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.instruction?.query?.trim()) {
     currentCheckNode.data.nodeParam.instruction.queryErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty",
+      "workflow.nodes.validation.valueCannotBeEmpty"
     );
     return false;
   }
@@ -533,8 +533,8 @@ function validateAgentParams(currentCheckNode: unknown): boolean {
   return Boolean(
     currentCheckNode?.data.nodeParam.instruction?.query?.trim() &&
       currentCheckNode?.data.nodeParam?.plugin?.mcpServerUrls?.every(
-        (item: string) => !item?.trim() || isValidURL(item),
-      ),
+        (item: string) => !item?.trim() || isValidURL(item)
+      )
   );
 }
 
@@ -554,7 +554,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
       if (!item?.content) {
         passFlag = false;
         item.contentErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty",
+          "workflow.nodes.validation.valueCannotBeEmpty"
         );
       } else if (
         item?.["content_type"] === "image" &&
@@ -562,7 +562,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
       ) {
         passFlag = false;
         item.contentErrMsg = i18next.t(
-          "workflow.nodes.validation.pleaseEnterValidURL",
+          "workflow.nodes.validation.pleaseEnterValidURL"
         );
       } else {
         item.contentErrMsg = "";
@@ -575,7 +575,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
 function validateDbId(nodeParam: unknown): boolean {
   if (!nodeParam?.dbId) {
     nodeParam.dbErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty",
+      "workflow.nodes.databaseNode.valueCannotBeEmpty"
     );
     return false;
   }
@@ -586,7 +586,7 @@ function validateDbId(nodeParam: unknown): boolean {
 function validateTableName(nodeParam: unknown): boolean {
   if (!nodeParam?.tableName) {
     nodeParam.tableNameErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty",
+      "workflow.nodes.databaseNode.valueCannotBeEmpty"
     );
     return false;
   }
@@ -597,7 +597,7 @@ function validateTableName(nodeParam: unknown): boolean {
 function validateAssignmentList(nodeParam: unknown): boolean {
   if (!nodeParam?.assignmentList?.length) {
     nodeParam.fieldNameErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty",
+      "workflow.nodes.databaseNode.valueCannotBeEmpty"
     );
     return false;
   }
@@ -611,7 +611,7 @@ function validateCases(nodeParam: unknown): boolean {
     item.conditions?.forEach((condition: unknown) => {
       if (!condition.selectCondition) {
         condition.compareOperatorErrMsg = i18next.t(
-          "workflow.nodes.databaseNode.valueCannotBeEmpty",
+          "workflow.nodes.databaseNode.valueCannotBeEmpty"
         );
         pass = false;
       } else {
@@ -620,7 +620,7 @@ function validateCases(nodeParam: unknown): boolean {
 
       if (!condition.fieldName) {
         condition.fieldErrMsg = i18next.t(
-          "workflow.nodes.databaseNode.valueCannotBeEmpty",
+          "workflow.nodes.databaseNode.valueCannotBeEmpty"
         );
         pass = false;
       } else {
@@ -634,7 +634,7 @@ function validateCases(nodeParam: unknown): boolean {
 function validateSql(nodeParam: unknown): boolean {
   if (!nodeParam?.sql?.trim()) {
     nodeParam.sqlErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty",
+      "workflow.nodes.databaseNode.valueCannotBeEmpty"
     );
     return false;
   }
@@ -682,7 +682,7 @@ function validateServiceIdParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data?.nodeParam?.serviceId) {
     currentCheckNode.data.nodeParam.llmIdErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.modelCannotBeEmpty",
+      "workflow.nodes.databaseNode.modelCannotBeEmpty"
     );
     return false;
   }
@@ -755,7 +755,7 @@ export function getNextName(arr: unknown[], prefix: string): string {
 
 export function findChildrenNodes(
   startNodeId: string,
-  edges: unknown[],
+  edges: unknown[]
 ): string[] {
   const visited = new Set<string>();
   const stack = [startNodeId];
@@ -782,7 +782,7 @@ export function findChildrenNodes(
 
 export function findParentNodes(
   startNodeId: string,
-  edges: unknown[],
+  edges: unknown[]
 ): string[] {
   const visited = new Set<string>();
   const stack = [startNodeId];
@@ -824,7 +824,7 @@ export const copyNodeData = (data: unknown): unknown => {
       (item: unknown) => ({
         ...item,
         id: `intent-one-of::${uuid()}`,
-      }),
+      })
     );
   }
 
@@ -833,7 +833,7 @@ export const copyNodeData = (data: unknown): unknown => {
       (item: unknown) => ({
         ...item,
         id: `option-one-of::${uuid()}`,
-      }),
+      })
     );
   }
 
@@ -860,8 +860,10 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
       return item;
     }
 
-    if (item.children) {
-      const found = findItemById(item.children, id);
+    const properties = item.schema?.properties || item.properties;
+
+    if (properties) {
+      const found = findItemById(properties, id);
       if (found) {
         return found;
       }
@@ -871,11 +873,15 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
 }
 
 export function renderType(params): string {
+  console.log("params@@", params);
   if (params.fileType && params?.type === "array-string") {
     return `Array<${
       (params?.fileType?.slice(0, 1).toUpperCase() || "") +
       (params?.fileType?.slice(1) || "")
     }>`;
+  }
+  if (params.fileType && params?.type === "string") {
+    return params?.fileType;
   }
   const type = params?.type || params?.schema?.type || "";
   if (type?.includes("array")) {
@@ -967,20 +973,20 @@ export function hasDecisionMakingNode(nodes: unknown[]): boolean {
   return nodes?.some(
     (node) =>
       node?.id?.startsWith("decision-making") &&
-      node?.data?.nodeParam?.reasonMode !== 1,
+      node?.data?.nodeParam?.reasonMode !== 1
   );
 }
 
 export const handleReplaceNodeId = (
   childNodes: unknown[],
-  replacements: Record<string, string>,
+  replacements: Record<string, string>
 ): unknown[] => {
   const childNodesString = JSON.stringify(childNodes);
   return JSON.parse(
     childNodesString.replace(
       new RegExp(Object.keys(replacements).join("|"), "g"),
-      (match) => replacements[match],
-    ),
+      (match) => replacements[match]
+    )
   );
 };
 
@@ -994,7 +1000,7 @@ export const isRefKnowledgeBase = (input: unknown): boolean => {
 // ==================== JSON 验证函数 ====================
 export const validateInputJSON = (
   newValue: string,
-  schema: unknown,
+  schema: unknown
 ): string => {
   try {
     const ajv = new Ajv();
@@ -1121,7 +1127,7 @@ export const generateUploadType = (type: string): string[] => {
 // ==================== 工具函数 ====================
 const handleParmasOrder = (
   source: unknown[],
-  target: Record<string, unknown>,
+  target: Record<string, unknown>
 ): Record<string, unknown> => {
   const ordered: Record<string, unknown> = {};
   const sourceKeys = source?.map((item) => item?.name) || [];
@@ -1145,7 +1151,7 @@ const handleParmasOrder = (
 export const generateInputsAndOutputsOrder = (
   currentNode: unknown,
   target: Record<string, unknown>,
-  key: string,
+  key: string
 ): Record<string, unknown> => {
   let source: unknown[] = [];
 
@@ -1186,7 +1192,7 @@ export function filterTreeNodes(nodes: unknown[]): unknown[] {
 // ==================== 对象生成和合并函数 ====================
 export function generateOrUpdateObject(
   schemaList: unknown[],
-  oldObj: unknown = null,
+  oldObj: unknown = null
 ): unknown {
   const newObj = generateDefaultObject(schemaList);
   return oldObj ? mergeByStructure(newObj, oldObj) : newObj;
@@ -1198,7 +1204,7 @@ function generateDefaultObject(schemaList: unknown[]): Record<string, unknown> {
   schemaList.forEach((item) => {
     defaultValues[item.name] = getDefaultValueForType(
       item.schema?.type,
-      item.schema,
+      item.schema
     );
   });
 
@@ -1219,7 +1225,7 @@ function mergeByStructure(newObj: unknown, oldObj: unknown): unknown {
 
 function mergeObjectsByStructure(
   newObj: Record<string, unknown>,
-  oldObj: Record<string, unknown>,
+  oldObj: Record<string, unknown>
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const newKeys = Object.keys(newObj);
@@ -1240,7 +1246,7 @@ function mergeObjectsByStructure(
 
 function mergeArraysByStructure(
   newObj: unknown[],
-  oldObj: unknown[],
+  oldObj: unknown[]
 ): unknown[] {
   if (Array.isArray(oldObj) && oldObj.length > 0) {
     return [mergeByStructure(newObj[0], oldObj[0])];
@@ -1289,7 +1295,7 @@ function isObject(value: unknown): boolean {
 export function findPathById(
   schemaList: unknown[],
   targetId: string,
-  currentPath: string[] = [],
+  currentPath: string[] = []
 ): string[] | null {
   for (const item of schemaList) {
     if (item.id === targetId) {
@@ -1342,7 +1348,7 @@ export function deleteFieldByPath(obj: unknown, path: string[]): unknown {
 
 // ==================== 工具参数处理函数 ====================
 export const handleModifyToolUrlParams = (
-  toolUrlParams: unknown[],
+  toolUrlParams: unknown[]
 ): unknown[] => {
   return (toolUrlParams || [])
     .filter((item) => item?.open !== false)
@@ -1408,7 +1414,7 @@ function transformArrayItem(item: unknown, isFirstLevel: boolean): unknown {
 function handleArrayTransformation(
   item: unknown,
   transformedItem: unknown,
-  isFirstLevel: boolean,
+  isFirstLevel: boolean
 ): void {
   const firstChildType = item?.children?.[0]?.type;
 
@@ -1439,7 +1445,7 @@ function handleArrayTransformation(
 function handleObjectTransformation(
   item: unknown,
   transformedItem: unknown,
-  isFirstLevel: boolean,
+  isFirstLevel: boolean
 ): void {
   const transformedChildren = item.children
     .map((child: unknown) => transformArrayItem(child, false))
@@ -1463,7 +1469,7 @@ export const transformTree = (inputArray: unknown[]): unknown[] => {
 // ==================== 项目删除函数 ====================
 function removeFromProperties(
   propertiesArray: unknown[],
-  idToRemove: string,
+  idToRemove: string
 ): unknown[] {
   return propertiesArray
     .map((property) => {
@@ -1480,7 +1486,7 @@ function removeFromProperties(
 
 export const removeItemById = (
   dataArray: unknown[],
-  idToRemove: string,
+  idToRemove: string
 ): unknown[] => {
   return dataArray
     .map((item) => {
@@ -1491,7 +1497,7 @@ export const removeItemById = (
             ...item.schema,
             properties: removeFromProperties(
               item.schema.properties,
-              idToRemove,
+              idToRemove
             ),
           },
         };
@@ -1543,7 +1549,7 @@ type EdgeType = {
 
 function buildOwnReferences(
   sourceNode: NodeType,
-  targetNode: NodeType,
+  targetNode: NodeType
 ): unknown[] {
   const errorOutputs =
     [1, 2]?.includes(sourceNode?.data?.retryConfig?.errorStrategy) &&
@@ -1554,7 +1560,7 @@ function buildOwnReferences(
   const outputs =
     targetNode?.nodeType === "iteration"
       ? sourceNode?.data?.outputs?.filter((output: unknown) =>
-          output?.schema?.type?.includes("array"),
+          output?.schema?.type?.includes("array")
         )
       : [...(sourceNode?.data?.outputs || []), ...errorOutputs];
 
@@ -1565,7 +1571,7 @@ function buildOwnReferences(
       label: output.name,
       type: output.schema?.type || "string",
       value: output.name,
-      fileType: output.fileType || "",
+      fileType: output.allowedFileType?.[0] || "",
     })) || []
   );
 }
@@ -1581,7 +1587,7 @@ function buildOwnReferences(
 export function generateReferences(
   nodes: NodeType[],
   edges: EdgeType[],
-  id: string,
+  id: string
 ): unknown[] {
   const targetNode = nodes.find((n) => n.id === id);
   if (!targetNode) return [];

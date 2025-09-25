@@ -106,12 +106,12 @@ export const Inputs = memo(({ label = "输入", inputs }) => {
           <ItemBadge item={item} />
         ))}
         {showDropdown && (
-          <div className="absolute right-0 top-0 flex items-center">
+          <div className="absolute right-0 top-1 flex items-center">
             <div
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  "linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 78%)",
+                  "linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 23%)",
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -221,12 +221,12 @@ export const Outputs = memo(({ data, label = "输出", outputs }) => {
           <ItemBadge item={item} />
         ))}
         {showDropdown && (
-          <div className="absolute right-0 top-0 flex items-center">
+          <div className="absolute right-0 top-1 flex items-center">
             <div
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  "linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 78%)",
+                  "linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))",
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -250,13 +250,13 @@ export const Label = memo(
     const { isStartOrEndNode } = useNodeCommon({ id, data });
     const getCurrentStore = useFlowsManager((state) => state.getCurrentStore);
     const autoSaveCurrentFlow = useFlowsManager(
-      (state) => state.autoSaveCurrentFlow,
+      (state) => state.autoSaveCurrentFlow
     );
     const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
     const currentStore = getCurrentStore();
     const setNode = currentStore((state) => state.setNode);
     const updateNodeNameStatus = currentStore(
-      (state) => state.updateNodeNameStatus,
+      (state) => state.updateNodeNameStatus
     );
 
     const handleChangeNodeParam = useCallback(
@@ -270,7 +270,7 @@ export const Label = memo(
         autoSaveCurrentFlow();
         canPublishSetNot();
       },
-      [id, autoSaveCurrentFlow],
+      [id, autoSaveCurrentFlow]
     );
 
     const labelInputId = useMemo(() => {
@@ -287,7 +287,7 @@ export const Label = memo(
             onChange={(value) =>
               handleChangeNodeParam(
                 (data, value) => (data.label = value),
-                value,
+                value
               )
             }
             onBlur={() => {
@@ -314,7 +314,7 @@ export const Label = memo(
         )}
       </>
     );
-  },
+  }
 );
 
 export const ExceptionContent = memo(({ id, data }) => {
@@ -376,7 +376,7 @@ export const IteratorChildNode = memo<IteratorChildNodeProps>(
         />
       </div>
     );
-  },
+  }
 );
 
 interface NodeHeaderProps {
@@ -406,7 +406,7 @@ export const NodeHeader = memo<NodeHeaderProps>(({ id, data }) => {
         {renderTypeOneClickUpdate()}
       </div>
       {showNodeOperation && (
-        <NodeOperation id={id} data={data} labelInput="labelInput1" />
+        <NodeOperation id={id} data={data} labelInput="labelInput" />
       )}
       {hasTargetHandle && <TargetHandle isConnectable={isConnectable} />}
       {hasSourceHandle && (
@@ -554,7 +554,7 @@ const renderFileUpload = (
   index,
   uploadComplete,
   handleFileUpload,
-  handleDeleteFile,
+  handleDeleteFile
 ): React.ReactElement => {
   const multiple = params?.schema?.type === "array-string";
   return (
@@ -567,7 +567,7 @@ const renderFileUpload = (
             uploadComplete(event, index, fileId),
           handleFileUpload: (file, fileId) =>
             handleFileUpload(file, index, multiple, fileId),
-          maxSize: params?.fileType === "image" ? 3 : 20,
+          maxSize: params?.fileType === "image" ? 3 : 50,
         } as unknown)}
       />
       {params?.default?.map((file) => (
@@ -590,7 +590,7 @@ const renderString = (params, index, handleChangeParam): React.ReactElement => (
       handleChangeParam(
         index,
         (d) => (d.default = e.target.value),
-        e.target.value,
+        e.target.value
       )
     }
   />
@@ -599,7 +599,7 @@ const renderString = (params, index, handleChangeParam): React.ReactElement => (
 const renderInteger = (
   params,
   index,
-  handleChangeParam,
+  handleChangeParam
 ): React.ReactElement => (
   <FlowInputNumber
     step={1}
@@ -625,7 +625,7 @@ const renderNumber = (params, index, handleChangeParam): React.ReactElement => (
 const renderBoolean = (
   params,
   index,
-  handleChangeParam,
+  handleChangeParam
 ): React.ReactElement => (
   <FlowSelect
     value={params?.default}
@@ -642,7 +642,7 @@ const renderBoolean = (
 const renderJsonEditor = (
   params,
   index,
-  handleChangeParam,
+  handleChangeParam
 ): React.ReactElement => (
   <JsonMonacoEditor
     value={params?.default}
@@ -655,7 +655,7 @@ const renderJsonEditor = (
 export const renderParamInput = (
   params: unknown,
   index: number,
-  fnc,
+  fnc
 ): React.ReactElement | null => {
   const {
     handleChangeParam,
@@ -670,7 +670,7 @@ export const renderParamInput = (
       index,
       uploadComplete,
       handleFileUpload,
-      handleDeleteFile,
+      handleDeleteFile
     );
 
   switch (type) {
@@ -684,7 +684,7 @@ export const renderParamInput = (
       return renderBoolean(params, index, handleChangeParam);
     case "object":
     default:
-      if (type?.includes("array"))
+      if (type?.includes("array") || type === "object")
         return renderJsonEditor(params, index, handleChangeParam);
       return null;
   }

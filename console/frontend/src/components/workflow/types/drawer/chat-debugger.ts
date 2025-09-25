@@ -655,3 +655,23 @@ export interface UseChatContentProps {
   setSid: (sid: string) => void;
   copyData: (data: unknown) => void;
 }
+
+export interface UseChatInputProps {
+  uploadComplete: (
+    event: ProgressEvent<EventTarget>,
+    index: number,
+    fileId: string,
+  ) => void;
+  handleFileUpload: (
+    file: File,
+    index: number,
+    multiple: boolean,
+    fileId: string,
+  ) => void;
+  handleDeleteFile: (index: number, fileId: string) => void;
+  handleChangeParam: (
+    index: number,
+    fn: (data: StartNodeType, value: unknown) => void,
+    value: unknown,
+  ) => void;
+}

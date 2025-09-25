@@ -64,7 +64,7 @@ export function TypeSelector({ id, data, item }: unknown): React.ReactElement {
               data.schema.value.content = {};
             }
           },
-          value,
+          value
         )
       }
     />
@@ -109,7 +109,7 @@ export function LiteralField({
         handleChangeInputParam(
           item.id,
           (data, val) => (data.schema.value.content = val),
-          value,
+          value
         )
       }
     />
@@ -117,7 +117,7 @@ export function LiteralField({
 }
 
 function RemoveButton({ id, data, item }: unknown): React.ReactElement {
-  const { allowNoInputParams, canvasesDisabled, handleRemoveLine } =
+  const { allowNoInputParams, canvasesDisabled, handleRemoveInputLine } =
     useNodeCommon({ id, data });
   if (!allowNoInputParams || canvasesDisabled) return null;
 
@@ -130,7 +130,7 @@ function RemoveButton({ id, data, item }: unknown): React.ReactElement {
         cursor: isImageParam ? "not-allowed" : "pointer",
         opacity: isImageParam ? 0.5 : 1,
       }}
-      onClick={() => !isImageParam && handleRemoveLine(item.id)}
+      onClick={() => !isImageParam && handleRemoveInputLine(item.id)}
       alt=""
     />
   );
@@ -146,7 +146,7 @@ function ReferenceField({
   const currentStore = useFlowsManager((state) => state.getCurrentStore());
   const checkNode = currentStore((state) => state.checkNode);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow,
+    (state) => state.autoSaveCurrentFlow
   );
   const cascaderValue = item?.schema?.value?.content?.nodeId
     ? [item?.schema?.value?.content?.nodeId, item?.schema?.value?.content?.name]
@@ -168,7 +168,7 @@ function ReferenceField({
         },
         type: node.type,
         fileType: node?.fileType,
-      },
+      }
     );
 
   return (
