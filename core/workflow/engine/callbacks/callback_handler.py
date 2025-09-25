@@ -14,7 +14,6 @@ from asyncio import Queue
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Set
 
-from workflow.cache.event_registry import EventRegistry
 from workflow.consts.flow import FLOW_FINISH_REASON
 from workflow.engine.callbacks.openai_types_sse import (
     Choice,
@@ -96,7 +95,6 @@ class ChatCallBacks:
         self.support_stream_node_id_set = support_stream_node_ids
         self.order_stream_result_q = need_order_stream_result_q
         self.chains = chains
-        self.resume_event = asyncio.Event()
         self.event_id = event_id
         self.flow_id = flow_id
 
@@ -124,50 +122,6 @@ class ChatCallBacks:
                 )
         return completed_node_cnt / self.all_simple_paths_node_cnt
 
-    async def put_frame_into_queue(
-        self, node_id: str, resp: LLMGenerate, finish_reason: str = ""
-    ) -> None:
-        """
-        Add node response frame to appropriate queue for ordering.
-
-        Routing logic:
-        - Message nodes and end nodes are added to order_stream_result_q for sequencing
-        - Other nodes are directly added to stream_queue
-
-        :param node_id: Unique identifier of the node
-        :param resp: Generated response from the node
-        :param finish_reason: Reason for node completion
-        """
-        await self._interrupt_event_stream(resp)
-        if node_id.split(":")[0] in [NodeType.MESSAGE.value, NodeType.END.value]:
-            await self.order_stream_result_q.put(
-                ChatCallBackStreamResult(
-                    node_id=node_id,
-                    node_answer_content=resp,
-                    finish_reason=finish_reason,
-                )
-            )
-        else:
-            await self.stream_queue.put(resp)
-
-    async def _interrupt_event_stream(self, resp: Any) -> None:
-        """
-        Handle event stream interruption by writing data to event registry.
-
-        This method is called when the resume event is set, allowing the system
-        to persist streaming data for later resumption.
-
-        :param resp: Response data to be written to the event registry
-        """
-        if self.resume_event.is_set():
-            event = EventRegistry().get_event(event_id=self.event_id)
-            data = json.dumps(resp.dict(), ensure_ascii=False)
-            await EventRegistry().write_resume_data(
-                queue_name=event.get_workflow_q_name(),
-                data=data,
-                expire_time=event.timeout,
-            )
-
     async def on_sparkflow_start(self) -> None:
         """
         Handle workflow start event.
@@ -176,7 +130,6 @@ class ChatCallBacks:
         """
         resp = LLMGenerate.workflow_start(self.sid)
         await self.stream_queue.put(resp)
-        await self._interrupt_event_stream(resp)
 
     async def on_sparkflow_end(self, message: NodeRunResult) -> None:
         """
@@ -193,7 +146,6 @@ class ChatCallBacks:
             message=message.error.message if message.error else CodeEnum.Success.msg,
         )
         await self.stream_queue.put(resp)
-        await self._interrupt_event_stream(resp)
 
     async def on_node_start(self, code: int, node_id: str, alias_name: str) -> None:
         """
@@ -214,7 +166,7 @@ class ChatCallBacks:
             code=code,
             message="Success",
         )
-        await self.put_frame_into_queue(node_id, resp)
+        await self._put_frame_into_queue(node_id, resp)
 
     async def on_node_process(
         self,
@@ -259,7 +211,7 @@ class ChatCallBacks:
             code=code,
             message="Success" if code == 0 else message,
         )
-        await self.put_frame_into_queue(node_id, resp)
+        await self._put_frame_into_queue(node_id, resp)
 
     async def on_node_interrupt(
         self,
@@ -300,51 +252,7 @@ class ChatCallBacks:
             message="Success",
             finish_reason=finish_reason,
         )
-        await self.put_frame_into_queue(node_id, resp)
-        if not self.resume_event.is_set():
-            self.resume_event.set()
-
-    async def _on_node_end_error(
-        self, node_id: str, alias_name: str, error: CustomException
-    ) -> None:
-        """
-        Handle node end error event.
-
-        Creates an error response for a node that failed to complete successfully.
-
-        :param node_id: Unique identifier of the failed node
-        :param alias_name: Human-readable name for the node
-        :param error: Exception containing error details
-        """
-        node_type = node_id.split(":")[0]
-        resp = LLMGenerate(
-            code=error.code,
-            message=error.message,
-            id=self.sid,
-            workflow_step=WorkflowStep(
-                node=NodeInfo(
-                    id=node_id,
-                    alias_name=alias_name,
-                    finish_reason="stop",
-                    executed_time=round(
-                        time.time() - self.node_execute_start_time.get(node_id, 0), 3
-                    ),
-                    usage=(
-                        GenerateUsage()
-                        if node_type
-                        in [NodeType.LLM.value, NodeType.DECISION_MAKING.value]
-                        else None
-                    ),
-                ),
-                progress=self._get_node_progress(node_id),
-            ),
-            choices=[
-                Choice(
-                    delta=Delta(),
-                )
-            ],
-        )
-        await self.put_frame_into_queue(node_id, resp, finish_reason=FLOW_FINISH_REASON)
+        await self._put_frame_into_queue(node_id, resp)
 
     async def on_node_end(
         self,
@@ -437,7 +345,78 @@ class ChatCallBacks:
                 )
             ],
         )
-        await self.put_frame_into_queue(node_id, resp, finish_reason=FLOW_FINISH_REASON)
+        await self._put_frame_into_queue(
+            node_id, resp, finish_reason=FLOW_FINISH_REASON
+        )
+
+    async def _on_node_end_error(
+        self, node_id: str, alias_name: str, error: CustomException
+    ) -> None:
+        """
+        Handle node end error event.
+
+        Creates an error response for a node that failed to complete successfully.
+
+        :param node_id: Unique identifier of the failed node
+        :param alias_name: Human-readable name for the node
+        :param error: Exception containing error details
+        """
+        node_type = node_id.split(":")[0]
+        resp = LLMGenerate(
+            code=error.code,
+            message=error.message,
+            id=self.sid,
+            workflow_step=WorkflowStep(
+                node=NodeInfo(
+                    id=node_id,
+                    alias_name=alias_name,
+                    finish_reason="stop",
+                    executed_time=round(
+                        time.time() - self.node_execute_start_time.get(node_id, 0), 3
+                    ),
+                    usage=(
+                        GenerateUsage()
+                        if node_type
+                        in [NodeType.LLM.value, NodeType.DECISION_MAKING.value]
+                        else None
+                    ),
+                ),
+                progress=self._get_node_progress(node_id),
+            ),
+            choices=[
+                Choice(
+                    delta=Delta(),
+                )
+            ],
+        )
+        await self._put_frame_into_queue(
+            node_id, resp, finish_reason=FLOW_FINISH_REASON
+        )
+
+    async def _put_frame_into_queue(
+        self, node_id: str, resp: LLMGenerate, finish_reason: str = ""
+    ) -> None:
+        """
+        Add node response frame to appropriate queue for ordering.
+
+        Routing logic:
+        - Message nodes and end nodes are added to order_stream_result_q for sequencing
+        - Other nodes are directly added to stream_queue
+
+        :param node_id: Unique identifier of the node
+        :param resp: Generated response from the node
+        :param finish_reason: Reason for node completion
+        """
+        if node_id.split(":")[0] in [NodeType.MESSAGE.value, NodeType.END.value]:
+            await self.order_stream_result_q.put(
+                ChatCallBackStreamResult(
+                    node_id=node_id,
+                    node_answer_content=resp,
+                    finish_reason=finish_reason,
+                )
+            )
+        else:
+            await self.stream_queue.put(resp)
 
 
 class ChatCallBackConsumer:
