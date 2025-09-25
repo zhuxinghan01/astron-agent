@@ -34,4 +34,5 @@ dependencies = [
     "googleapis-common-protos>=1.60.0",
     "websocket-client>=1.8.0",
     "python-dotenv>=1.1.1",
+    "cryptography>=46.0.1",
 ]
