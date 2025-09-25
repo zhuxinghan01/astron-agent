@@ -363,7 +363,7 @@ export const checkedNodeOutputData = (
 // ==================== 节点参数验证 ====================
 function validateTemplateParams(currentCheckNode: unknown): boolean {
   if (
-    !["spark-llm", "message"].includes(currentCheckNode?.type) &&
+    !["spark-llm", "message"].includes(currentCheckNode?.nodeType) &&
     !(
       currentCheckNode?.nodeType === "node-end" &&
       currentCheckNode?.data?.nodeParam?.outputMode === 1

@@ -41,7 +41,7 @@ function index({ id, data, children }): React.ReactElement {
             <h4 className="w-1/4">
               {t("workflow.nodes.common.parameterValue")}
             </h4>
-            <h4 className="flex-1">''</h4>
+            <h4 className="flex-1"></h4>
             {isStartNode && (
               <h4 className="w-[50px]">
                 {t("workflow.nodes.common.required")}
