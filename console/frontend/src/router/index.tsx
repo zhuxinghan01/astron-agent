@@ -26,6 +26,8 @@ const SpacePage = lazy(() => import('@/pages/space-page'));
 const TeamCreate = lazy(() => import('@/pages/space/team-create'));
 // const SmartRedirect = lazy(() => import('@/pages/smart-redirect'));
 const ReleaseManagement = lazy(() => import('@/pages/release-management'));
+const BotApi = lazy(() => import('@/pages/bot-api/api'));
+const ApiHistory = lazy(() => import('@/pages/bot-api/api-history'));
 
 const routes = [
   {
@@ -45,6 +47,23 @@ const routes = [
         element: (
           <Suspense fallback={<Loading />}>
             <HomePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/management/botApi',
+        element: (
+          <Suspense fallback={<Loading />}>
+            <BotApi />
+            {/* <BotApiPublish /> */}
+          </Suspense>
+        ),
+      },
+      {
+        path: '/management/botApi/history',
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ApiHistory />
           </Suspense>
         ),
       },
