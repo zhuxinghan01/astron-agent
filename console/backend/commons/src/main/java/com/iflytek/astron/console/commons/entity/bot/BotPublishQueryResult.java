@@ -19,7 +19,7 @@ public class BotPublishQueryResult {
     /**
      * User ID
      */
-    private Long uid;
+    private String uid;
 
     /**
      * Space ID

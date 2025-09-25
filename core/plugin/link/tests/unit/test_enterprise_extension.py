@@ -133,13 +133,13 @@ class TestEnterpriseExtension:
         with patch('service.enterprise.extension.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"  # Return a valid datacenter_id
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"  # Return a valid worker_id
                 else:
                     return default if default is not None else "default_value"
@@ -175,13 +175,13 @@ class TestEnterpriseExtension:
         with patch('service.enterprise.extension.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"  # Return a valid datacenter_id
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"  # Return a valid worker_id
                 else:
                     return default if default is not None else "default_value"
@@ -228,13 +228,13 @@ class TestEnterpriseExtension:
         with patch('service.enterprise.extension.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"  # Return a valid datacenter_id
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"  # Return a valid worker_id
                 else:
                     return default if default is not None else "default_value"
@@ -283,13 +283,13 @@ class TestEnterpriseExtension:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "true"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "enterprise_123"  # Return a valid app_id
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"  # Return a valid datacenter_id
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"  # Return a valid worker_id
                 else:
                     return default if default is not None else "default_value"
@@ -376,7 +376,7 @@ class TestEnterpriseExtension:
             "DEFAULT_APPID_KEY": "Default app ID for enterprise",
             "DEF_VER": "Default version for MCP tools",
             "DEF_DEL": "Default deletion flag",
-            "enable_otlp_key": "Enterprise telemetry setting"
+            "OTLP_ENABLE_KEY": "Enterprise telemetry setting"
         }
 
         for config, description in enterprise_configs.items():

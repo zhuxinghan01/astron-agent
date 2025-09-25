@@ -48,6 +48,17 @@
         <result column="uid" property="uid"/>
     </resultMap>
 
+    <select id="checkBotPermission" resultType="int">
+        SELECT COUNT(1)
+        FROM chat_bot_base
+        WHERE id = #{botId}
+          AND is_delete = 0
+          AND (
+            (space_id IS NULL AND uid = #{uid}) OR
+            (space_id = #{spaceId})
+          )
+    </select>
+    
     <select id="selectByBotIds" parameterType="java.util.List" resultMap="ChatBotBaseResultMap">
         SELECT id, uid, bot_name, avatar
         FROM chat_bot_base

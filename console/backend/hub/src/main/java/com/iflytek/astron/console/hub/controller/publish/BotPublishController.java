@@ -14,12 +14,12 @@ import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotVersionVO;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlRequestDto;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpContentResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
 import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.hub.service.publish.McpService;
-import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -45,14 +45,13 @@ import org.springframework.validation.annotation.Validated;
 @Slf4j
 @Tag(name = "Bot Publishing Management", description = "Comprehensive bot publishing management and analytics APIs")
 @RestController
-@RequestMapping("/api/v1/publish")
+@RequestMapping("/publish")
 @RequiredArgsConstructor
 @Validated
 public class BotPublishController {
 
     private final BotPublishService botPublishService;
     private final McpService mcpService;
-    private final WorkflowInputService workflowInputService;
 
     /**
      * Retrieve paginated bot list with advanced filtering
@@ -263,6 +262,30 @@ public class BotPublishController {
     }
 
     /**
+     * Get workflow input parameters for MCP publishing
+     */
+    @Operation(
+            summary = "Get bot input parameters",
+            description = "Retrieve dynamic input parameter definitions for workflow bot, used for MCP service configuration")
+    @RateLimit(limit = 50, window = 60, dimension = "USER")
+    @GetMapping("/mcp/{botId}/inputs")
+    public ApiResult<WorkflowInputsResponseDto> getInputsType(
+            @Parameter(description = "Unique bot identifier", required = true)
+            @PathVariable Integer botId) {
+
+        String currentUid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+
+        log.info("Retrieving bot input parameters: botId={}, uid={}, spaceId={}", botId, currentUid, spaceId);
+
+        WorkflowInputsResponseDto result = botPublishService.getInputsType(botId, currentUid, spaceId);
+
+        log.info("Bot input parameters retrieved successfully: botId={}, paramCount={}",
+                botId, result.getParameters().size());
+        return ApiResult.success(result);
+    }
+
+    /**
      * Publish bot as MCP service
      */
     @Operation(
@@ -285,27 +308,31 @@ public class BotPublishController {
         return ApiResult.success();
     }
 
+    // ==================== Trace Log Management ====================
+
     /**
-     * Get workflow input parameters for MCP publishing
+     * Get bot trace logs with pagination
      */
     @Operation(
-            summary = "Get bot input parameters",
-            description = "Retrieve dynamic input parameter definitions for workflow bot, used for MCP service configuration")
+            summary = "Get bot trace logs",
+            description = "Retrieve paginated trace logs for bot debugging and monitoring with advanced filtering options")
     @RateLimit(limit = 50, window = 60, dimension = "USER")
-    @GetMapping("/mcp/{botId}/inputs")
-    public ApiResult<WorkflowInputsResponseDto> getInputsType(
+    @GetMapping("/bots/{botId}/trace")
+    public ApiResult<PageResponse<Object>> getBotTrace(
             @Parameter(description = "Unique bot identifier", required = true)
-            @PathVariable Integer botId) {
+            @PathVariable Integer botId,
+            @ModelAttribute @Valid BotTraceRequestDto requestDto) {
 
         String currentUid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
 
-        log.info("Retrieving bot input parameters: botId={}, uid={}, spaceId={}", botId, currentUid, spaceId);
+        log.info("Retrieving bot trace logs: botId={}, request={}, uid={}, spaceId={}",
+                botId, requestDto, currentUid, spaceId);
 
-        WorkflowInputsResponseDto result = workflowInputService.getInputsType(botId, currentUid, spaceId);
+        // Bot permission validation is handled by the service layer
+        PageResponse<Object> result = botPublishService.getBotTrace(currentUid, botId, requestDto, spaceId);
 
-        log.info("Bot input parameters retrieved successfully: botId={}, paramCount={}",
-                botId, result.getParameters().size());
+        log.info("Bot trace logs retrieved successfully: botId={}, total={}", botId, result.getTotal());
         return ApiResult.success(result);
     }
 }
