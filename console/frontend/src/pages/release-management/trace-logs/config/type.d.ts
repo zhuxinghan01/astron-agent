@@ -23,7 +23,7 @@ interface DataType {
   statusCode?: string;
 }
 
-interface TimeOption {  
+interface TimeOption {
   key: string;
   label: React.ReactNode;
   value: string;
