@@ -243,8 +243,9 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         ToolBox toolBox;
         if (toolBoxDto.getId() != null) {
             toolBox = getById(toolBoxDto.getId());
-            if (toolBox != null) {
-                // 添加越权校验
+            if (toolBox == null) {
+                toolBox = new ToolBox();
+            } else {
                 dataPermissionCheckTool.checkToolBelong(toolBox);
             }
         } else {

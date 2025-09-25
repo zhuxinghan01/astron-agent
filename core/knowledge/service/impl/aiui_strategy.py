@@ -15,13 +15,13 @@ class AIUIRAGStrategy(RAGStrategy):
     """AIUI-RAG2 strategy implementation."""
 
     async def query(
-            self,
-            query: str,
-            doc_ids: Optional[List[str]] = None,
-            repo_ids: Optional[List[str]] = None,
-            top_k: Optional[int] = None,
-            threshold: Optional[float] = 0,
-            **kwargs: Any
+        self,
+        query: str,
+        doc_ids: Optional[List[str]] = None,
+        repo_ids: Optional[List[str]] = None,
+        top_k: Optional[int] = None,
+        threshold: Optional[float] = 0,
+        **kwargs: Any
     ) -> Dict[str, Any]:
         """
         Execute RAG query
@@ -41,16 +41,22 @@ class AIUIRAGStrategy(RAGStrategy):
             query, doc_ids, repo_ids, top_k, threshold, **kwargs
         )
 
-        if not (chunk_query_response_data
-                and "results" in chunk_query_response_data
-                and chunk_query_response_data["results"] is not None):
+        if not (
+            chunk_query_response_data
+            and "results" in chunk_query_response_data
+            and chunk_query_response_data["results"] is not None
+        ):
             return {"query": query, "count": 0, "results": []}
 
         results = []
         for result in chunk_query_response_data["results"]:
             if isinstance(result, dict):
                 doc_info = result.get("docInfo", {})
-                file_name = doc_info.get("documentName", "") if check_not_empty(doc_info) else ""
+                file_name = (
+                    doc_info.get("documentName", "")
+                    if check_not_empty(doc_info)
+                    else ""
+                )
 
                 results.append(
                     {
@@ -73,15 +79,15 @@ class AIUIRAGStrategy(RAGStrategy):
         }
 
     async def split(
-            self,
-            file: str,
-            lengthRange: List[int],
-            overlap: int,
-            resourceType: int,
-            separator: List[str],
-            titleSplit: bool,
-            cutOff: List[str],
-            **kwargs: Any
+        self,
+        file: str,
+        lengthRange: List[int],
+        overlap: int,
+        resourceType: int,
+        separator: List[str],
+        titleSplit: bool,
+        cutOff: List[str],
+        **kwargs: Any
     ) -> List[Dict[str, Any]]:
         """
         Split file into multiple chunks
@@ -141,7 +147,7 @@ class AIUIRAGStrategy(RAGStrategy):
         return data
 
     async def chunks_save(
-            self, docId: str, group: str, uid: str, chunks: List[Any], **kwargs: Any
+        self, docId: str, group: str, uid: str, chunks: List[Any], **kwargs: Any
     ) -> Any:
         """
         Save chunks to knowledge base
@@ -156,12 +162,15 @@ class AIUIRAGStrategy(RAGStrategy):
         Returns:
             Save result
         """
-        return await aiui.chunk_save(
-            doc_id=docId, group=group, chunks=chunks, **kwargs
-        )
+        return await aiui.chunk_save(doc_id=docId, group=group, chunks=chunks, **kwargs)
 
     async def chunks_update(
-            self, docId: str, group: str, uid: str, chunks: List[Dict[str, Any]], **kwargs: Any
+        self,
+        docId: str,
+        group: str,
+        uid: str,
+        chunks: List[Dict[str, Any]],
+        **kwargs: Any
     ) -> Any:
         """
         Update chunks
@@ -178,7 +187,11 @@ class AIUIRAGStrategy(RAGStrategy):
         """
         chunk_ids = []
         if check_not_empty(chunks):
-            chunk_ids = [chunk.get("chunkId") for chunk in chunks if check_not_empty(chunk) and isinstance(chunk, dict)]
+            chunk_ids = [
+                chunk.get("chunkId")
+                for chunk in chunks
+                if check_not_empty(chunk) and isinstance(chunk, dict)
+            ]
 
         # Delete first, then save
         await self.chunks_delete(doc_id=docId, chunk_ids=chunk_ids, **kwargs)
@@ -187,7 +200,7 @@ class AIUIRAGStrategy(RAGStrategy):
         )
 
     async def chunks_delete(
-            self, docId: str, chunkIds: List[str], **kwargs: Any
+        self, docId: str, chunkIds: List[str], **kwargs: Any
     ) -> Any:
         """
         Delete chunks
@@ -200,13 +213,9 @@ class AIUIRAGStrategy(RAGStrategy):
         Returns:
             Delete result
         """
-        return await aiui.chunk_delete(
-            doc_id=docId, chunk_ids=chunkIds, **kwargs
-        )
+        return await aiui.chunk_delete(doc_id=docId, chunk_ids=chunkIds, **kwargs)
 
-    async def query_doc(
-            self, docId: str, **kwargs: Any
-    ) -> List[dict]:
+    async def query_doc(self, docId: str, **kwargs: Any) -> List[dict]:
         """
         Query all chunks of a document
         """
@@ -227,7 +236,9 @@ class AIUIRAGStrategy(RAGStrategy):
                                     )
                                 elif value.get("format") == "image":
                                     content_text = content_text.replace(
-                                        "<" + key + ">", "")
+                                        "<" + key + ">",
+                                        "![Image name](" + value.get("link", "") + ")",
+                                    )
 
                     result.append(
                         ChunkInfo(
@@ -240,9 +251,7 @@ class AIUIRAGStrategy(RAGStrategy):
             result = sorted(result, key=lambda x: x["chunkId"])
         return result
 
-    async def query_doc_name(
-            self, docId: str, **kwargs: Any
-    ) -> Optional[dict]:
+    async def query_doc_name(self, docId: str, **kwargs: Any) -> Optional[dict]:
         """
         Query document name information
 

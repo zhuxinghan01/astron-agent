@@ -165,13 +165,13 @@ class TestHttpRun:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -214,13 +214,13 @@ class TestHttpRun:
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -266,13 +266,13 @@ class TestHttpRun:
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -331,13 +331,13 @@ class TestHttpRun:
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -427,13 +427,13 @@ class TestHttpRun:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -518,13 +518,13 @@ class TestToolDebug:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -584,13 +584,13 @@ class TestToolDebug:
         with patch('service.community.tools.http.execution_server.os.getenv') as mock_getenv:
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
@@ -669,13 +669,13 @@ class TestToolDebug:
 
             # Mock different environment variables appropriately
             def mock_getenv_side_effect(key, default=None):
-                if key == const.enable_otlp_key:
+                if key == const.OTLP_ENABLE_KEY:
                     return "false"
                 elif key == const.DEFAULT_APPID_KEY:
                     return "12345678"
-                elif key == const.datacenter_id_key:
+                elif key == const.DATACENTER_ID_KEY:
                     return "1"
-                elif key == const.worker_id_key:
+                elif key == const.WORKER_ID_KEY:
                     return "1"
                 else:
                     return default if default is not None else "default_value"
