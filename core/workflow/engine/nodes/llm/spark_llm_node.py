@@ -1,9 +1,8 @@
 import json
 import os
 import re
-from typing import Any, Dict
+from typing import Any
 
-from workflow.consts.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import History
@@ -72,37 +71,6 @@ class SparkLLMNode(BaseLLMNode):
     including prompt processing, history management, and response formatting.
     """
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the complete configuration dictionary for this LLM node.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "template": self.template,
-            "topK": self.topK,
-            "patch_id": self.patch_id,
-            "respFormat": self.respFormat,
-            "enableChatHistory": self.enableChatHistory,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "re_match_pattern": self.re_match_pattern,
-            "systemTemplate": self.systemTemplate,
-            "source": (
-                ModelProviderEnum.XINGHUO.value
-                if not hasattr(self, "source")
-                else self.source
-            ),
-        }
-
     def resp_format_text_parser(self, res: str, think_contents: str) -> dict:
         """
         Parse text format response from LLM.
@@ -152,25 +120,6 @@ class SparkLLMNode(BaseLLMNode):
         except Exception:
             return {}
         return res_json
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        :param variable_pool: Variable pool containing workflow variables
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises: NotImplementedError - This method is not implemented
-        """
-        raise
 
     async def async_execute(
         self,

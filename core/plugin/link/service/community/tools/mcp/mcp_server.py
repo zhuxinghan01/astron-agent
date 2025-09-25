@@ -220,7 +220,7 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
             sid=session_id,
             data=MCPToolListData(servers=items),
         )
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
             m.in_success_count()
             node_trace.answer = result.model_dump_json()
             node_trace.service_id = "tool_list"
@@ -231,7 +231,7 @@ async def tool_list(list_info: MCPToolListRequest = Body()) -> MCPToolListRespon
             )
             kafka_service = get_kafka_producer_service()
             node_trace.start_time = int(round(time.time() * 1000))
-            kafka_service.send(os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY), node_trace.to_json())
+            kafka_service.send(os.getenv(const.KAFKA_TOPIC_KEY), node_trace.to_json())
         return result
 
 
@@ -251,7 +251,7 @@ def _log_error_to_kafka(
     err: ErrCode, node_trace: NodeTraceLog, mcp_server_id: str, m: Meter
 ):
     """Log error information to Kafka if OTLP is enabled."""
-    if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+    if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         m.in_error_count(err.code)
         node_trace.answer = err.msg
         node_trace.service_id = mcp_server_id
@@ -262,7 +262,7 @@ def _log_error_to_kafka(
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+            os.getenv(const.KAFKA_TOPIC_KEY),
             node_trace.to_json()
         )
 
@@ -372,7 +372,7 @@ def _validate_and_get_url(
     # Check blacklist first
     if url and is_in_blacklist(url=url):
         err = ErrCode.MCP_SERVER_BLACKLIST_URL_ERR
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
             m.in_error_count(err.code)
         return err, ""
 
@@ -382,14 +382,14 @@ def _validate_and_get_url(
             mcp_server_id=call_info.mcp_server_id, span=span_context
         )
         if err is not ErrCode.SUCCESSES:
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
                 m.in_error_count(err.code)
             return err, ""
 
     # Check local URL
     if is_local_url(url):
         err = ErrCode.MCP_SERVER_LOCAL_URL_ERR
-        if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+        if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
             m.in_error_count(err.code)
         return err, ""
 
@@ -418,7 +418,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
             {"mcp api, call_tool router usr_input": call_info.model_dump_json()}
         )
         span_context.add_info_events({"usr_input": call_info.model_dump_json()})
-        span_context.set_attributes(attributes={"tool_id": mcp_server_id})
+        span_context.set_attributes(attributes={"tool_id": str(mcp_server_id)})
         node_trace = NodeTraceLog(
             service_id="",
             sid=span_context.sid,
@@ -447,7 +447,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
 
         # Log success if the call succeeded
         if result.code == ErrCode.SUCCESSES.code:
-            if os.getenv(const.enable_otlp_key, "false").lower() == "true":
+            if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
                 m.in_success_count()
                 node_trace.answer = result.model_dump_json()
                 node_trace.service_id = mcp_server_id
@@ -459,7 +459,7 @@ async def call_tool(call_info: MCPCallToolRequest = Body()) -> MCPCallToolRespon
                 kafka_service = get_kafka_producer_service()
                 node_trace.start_time = int(round(time.time() * 1000))
                 kafka_service.send(
-                    os.getenv(const.KAFKA_TOPIC_SPARKLINK_LOG_TRACE_KEY),
+                    os.getenv(const.KAFKA_TOPIC_KEY),
                     node_trace.to_json()
                 )
 
