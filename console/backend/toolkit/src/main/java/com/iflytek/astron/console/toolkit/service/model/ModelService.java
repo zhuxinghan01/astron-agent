@@ -1291,6 +1291,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setModelPath(dto.getModelPath());
         model.setAcceleratorCount(dto.getAcceleratorCount());
         model.setReplicaCount(dto.getReplicaCount());
+        model.setEnable(false);
         model.setConfig(
                 Optional.ofNullable(dto.getConfig()).map(JSON::toJSONString).orElse(null));
     }
@@ -1333,6 +1334,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
             String status = ret.getString("status");
             String endpoint = ret.getString("endpoint");
             Integer codeByValue = ModelStatusEnum.getCodeByValue(status);
+            if (!ModelStatusEnum.RUNNING.getCode().equals(model.getStatus()) && ModelStatusEnum.RUNNING.getValue().equals(status)) {
+                model.setEnable(true);
+            }
             model.setStatus(codeByValue);
             model.setUrl(endpoint);
             this.updateById(model);
@@ -1366,6 +1370,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                 boolean changed = false;
                 if (!Objects.equals(model.getStatus(), newCode)) {
                     model.setStatus(newCode);
+                    if (!ModelStatusEnum.RUNNING.getCode().equals(model.getStatus()) && ModelStatusEnum.RUNNING.getValue().equals(statusStr)) {
+                        model.setEnable(true);
+                    }
                     changed = true;
                 }
                 if (!Objects.equals(model.getUrl(), endpoint)) {

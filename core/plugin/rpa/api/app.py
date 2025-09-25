@@ -1,25 +1,25 @@
 """Main application module for RPA service.
 This module defines the main entry point of the FastAPI application and includes
-environment variable loading, configuration checking, logging setup, and Uvicorn server startup logic."""
+environment variable loading, configuration checking, logging setup, and Uvicorn
+server startup logic."""
 
-import json
 import os
-from importlib import import_module
-from pathlib import Path
 
 import uvicorn
-from dotenv import load_dotenv
+from common.initialize.initialize import initialize_services
 from fastapi import FastAPI
-
 from plugin.rpa.api.router import router
-from consts import const
+from plugin.rpa.consts import const
 from plugin.rpa.exceptions.config_exceptions import EnvNotFoundException
 from plugin.rpa.utils.log.logger import set_log
-from common.initialize.initialize import initialize_services
 
 
 class RPAServer:
-    """Main class for RPA service, responsible for loading environment variables, checking configuration, setting up logging, and starting the Uvicorn server."""
+    """Main class for RPA service.
+
+    Responsible for loading environment variables, checking configuration,
+    setting up logging, and starting the Uvicorn server.
+    """
 
     def start(self) -> None:
         """Start the RPA service."""
@@ -29,9 +29,16 @@ class RPAServer:
         self.start_uvicorn()
 
     @staticmethod
-    def setup_server():
+    def setup_server() -> None:
         """Initialize service suite"""
-        need_init_services = ["settings_service", "log_service", "otlp_sid_service", "otlp_span_service", "otlp_metric_service", "kafka_producer_service"]
+        need_init_services = [
+            "settings_service",
+            "log_service",
+            "otlp_sid_service",
+            "otlp_span_service",
+            "otlp_metric_service",
+            "kafka_producer_service",
+        ]
         initialize_services(services=need_init_services)
 
     @staticmethod
@@ -40,17 +47,15 @@ class RPAServer:
         Check if all required environment variables are set.
         Raise an exception if any required environment variables are not set.
         """
-        required_keys = [
-            const.LOG_LEVEL_KEY,
-            const.LOG_PATH_KEY,
-            const.XIAOWU_RPA_TIMEOUT_KEY,
-            const.XIAOWU_RPA_PING_INTERVAL_KEY,
-            const.XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY,
-            const.XIAOWU_RPA_TASK_CREATE_URL_KEY,
-            const.XIAOWU_RPA_TASK_QUERY_URL_KEY,
-        ]
+        required_keys = const.base_keys
+        if os.getenv(const.OTLP_ENABLE_KEY, "0") == "1":
+            required_keys += const.otlp_keys
 
-        missing_keys = [key for key in required_keys if os.getenv(key) is None]
+        missing_keys = [
+            key
+            for key in required_keys
+            if (os.getenv(key, None) is None or os.getenv(key, None) == "")
+        ]
 
         if missing_keys:
             print(
@@ -74,7 +79,7 @@ class RPAServer:
         """
         # assert task_create_url is not None
         uvicorn_config = uvicorn.Config(
-            app=xingchen_rap_server_app(),
+            app=rpa_server_app(),
             host="0.0.0.0",
             port=int(os.getenv(const.SERVICE_PORT_KEY, "19999")),
             workers=20,
@@ -85,7 +90,7 @@ class RPAServer:
         uvicorn_server.run()
 
 
-def xingchen_rap_server_app() -> FastAPI:
+def rpa_server_app() -> FastAPI:
     """
     description: Create and return a FastAPI application instance.
     This application instance contains all API routes registered through the router.
@@ -96,6 +101,7 @@ def xingchen_rap_server_app() -> FastAPI:
     app = FastAPI()
     app.include_router(router)
     return app
+
 
 if __name__ == "__main__":
     RPAServer().start()

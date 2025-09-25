@@ -616,7 +616,7 @@ async def async_form_request(
                         data=form_data,
                         headers=headers,
                         timeout=aiohttp.ClientTimeout(
-                            total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0"))
+                            total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))
                         ),
                     ) as resp:
                         return await _process_form_response(resp, url, span_context)
@@ -636,7 +636,7 @@ async def async_form_request(
                     data=form_data,
                     headers=headers,
                     timeout=aiohttp.ClientTimeout(
-                        total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0"))
+                        total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))
                     ),
                 ) as resp:
                     return await _process_form_response(resp, url, None)
