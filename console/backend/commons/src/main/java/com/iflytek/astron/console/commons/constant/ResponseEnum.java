@@ -70,6 +70,7 @@ public enum ResponseEnum {
     FILE_NOT_PROCESS(60028, "error.file.not.process"),
     CLONE_BOT_FAILED(60029, "error.clone.bot.failed"),
     ACTIVITY_NOT_FOUND_ERROR(60030, "error.activity.not.found"),
+    BOT_CHAIN_UPDATE_ERROR(60031, "error.bot.chain.update.error"),
 
 
     // Space application related errors
