@@ -1,7 +1,5 @@
 """Test configuration exception module."""
 
-import pytest
-
 from plugin.rpa.exceptions.config_exceptions import (
     ConfigNotFoundException,
     CreatTaskException,
@@ -230,7 +228,13 @@ class TestExceptionInteroperability:
         for exception in exceptions:
             try:
                 raise exception
-            except Exception as e:
+            except (
+                ConfigNotFoundException,
+                EnvNotFoundException,
+                InvalidConfigException,
+                CreatTaskException,
+                QueryTaskException,
+            ) as e:
                 assert isinstance(e, type(exception))
 
     def test_exception_message_consistency(self) -> None:

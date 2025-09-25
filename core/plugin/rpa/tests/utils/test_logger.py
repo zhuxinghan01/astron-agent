@@ -2,13 +2,11 @@
 
 import os
 import tempfile
-from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
-import pytest
+import orjson
 from loguru import logger
-
 from plugin.rpa.utils.log.logger import VALID_LOG_LEVELS, patching, serialize, set_log
 
 
@@ -29,8 +27,6 @@ class TestLoggerUtilities:
 
         assert isinstance(result, bytes)
         # Verify result contains timestamp
-        import orjson
-
         data = orjson.loads(result)
         assert "timestamp" in data
         assert data["timestamp"] == 1234567890.123
@@ -130,7 +126,7 @@ class TestSetLog:
             assert call_args[1]["level"] == "INFO"
 
     @patch("utils.log.logger.logger")
-    def test_set_log_creates_directory(self, mock_logger: MagicMock) -> None:
+    def test_set_log_creates_directory(self, _mock_logger: MagicMock) -> None:
         """Test log function creates non-existent directory."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create a non-existent subdirectory path
@@ -164,7 +160,7 @@ class TestSetLog:
     @patch("utils.log.logger.logger")
     @patch.dict(os.environ, {"LOG_LEVEL": "DEBUG"})
     def test_set_log_env_level_priority(self, mock_logger: MagicMock) -> None:
-        """Test environment variable priority: use environment variable when explicit parameter is None."""
+        """Test env variable priority: use env var when explicit param is None."""
         with tempfile.TemporaryDirectory() as temp_dir:
             log_path = os.path.join(temp_dir, "test.log")
 
@@ -183,4 +179,6 @@ class TestSetLog:
             set_log(log_level="WARNING", log_path=log_path)
 
             call_args = mock_logger.add.call_args
-            assert call_args[1]["level"] == "WARNING"  # Use explicit parameter, not environment variable
+            assert (
+                call_args[1]["level"] == "WARNING"
+            )  # Use explicit parameter, not environment variable

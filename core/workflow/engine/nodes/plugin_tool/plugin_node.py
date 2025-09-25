@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import Field
 from workflow.engine.entities.variable_pool import (
@@ -38,18 +38,6 @@ class PluginNode(BaseNode):
     businessInput: list = Field(default_factory=list)
     # Version of the plugin tool
     version: str = "V1.0"
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration parameters.
-
-        :return: Dictionary containing plugin configuration parameters
-        """
-        return {
-            "pluginId": self.pluginId,
-            "operationId": self.operationId,
-            "appId": self.appId,
-        }
 
     def get_business_input(self, action_input: Any) -> dict:
         """
@@ -214,28 +202,6 @@ class PluginNode(BaseNode):
                 node_type=self.node_type,
                 alias_name=self.alias_name,
             )
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        This method is not supported for plugin nodes as they require
-        asynchronous communication with external services.
-
-        :param variable_pool: Pool containing workflow variables
-        :param span: Tracing span for monitoring execution
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution status
-        :raises NotImplementedError: Always raised as sync execution is not supported
-        """
-        raise NotImplementedError
 
     async def async_execute(
         self,

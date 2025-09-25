@@ -85,7 +85,7 @@ class SmartTTSClient:
 
     def parse_url(self, request_url):
         stidx = request_url.index("://")
-        host = request_url[stidx + 3:]
+        host = request_url[stidx + 3 :]
         schema = request_url[: stidx + 3]
         edidx = host.index("/")
         if edidx <= 0:
@@ -127,13 +127,14 @@ class SmartTTSClient:
                 if status == 2:
                     # print("Connection closed by server")
                     ws.close()
-                if code != 0:
-                     errMsg = message["message"]
-                    # print(f"sid:{sid} call error:{errMsg} code is:{code}")
-                else:    
+                if code == 0:
                     self.audio_data.extend(audio)  # 将音频数据追加到bytearray中
                     # with open('./demo.MP3', 'ab') as f:
                     #     f.write(audio)
+                # else:
+                #     errMsg = message["message"]
+                #     print(f"sid:{sid} call error:{errMsg} code is:{code}")
+
         except Exception as e:
             raise e
 

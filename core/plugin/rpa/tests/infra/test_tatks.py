@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 from fastapi import HTTPException
-
 from plugin.rpa.errors.error_code import ErrorCode
 from plugin.rpa.exceptions.config_exceptions import InvalidConfigException
 from plugin.rpa.infra.xiaowu.tasks import create_task, query_task_status
@@ -17,7 +16,9 @@ class TestCreateTask:
     """Test cases for create_task function."""
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_create_task_success(self, mock_client_class: Any) -> None:
         """Test successful task creation."""
@@ -81,7 +82,9 @@ class TestCreateTask:
         assert "Invalid task creation URL" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_create_task_api_error_response(self, mock_client_class: Any) -> None:
         """Test API error response."""
@@ -109,7 +112,9 @@ class TestCreateTask:
         assert "Task creation failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_create_task_missing_execution_id(
         self, mock_client_class: Any
@@ -139,7 +144,9 @@ class TestCreateTask:
         assert "Task ID not returned" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_create_task_http_status_error(self, mock_client_class: Any) -> None:
         """Test HTTP status error."""
@@ -167,7 +174,9 @@ class TestCreateTask:
         assert exc_info.value.status_code == 400
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_CREATE_URL": "https://api.example.com/create"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_create_task_request_error(self, mock_client_class: Any) -> None:
         """Test network request error."""
@@ -193,7 +202,9 @@ class TestQueryTaskStatus:
     """Test cases for query_task_status function."""
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_completed(self, mock_client_class: Any) -> None:
         """Test querying completed task status."""
@@ -223,7 +234,9 @@ class TestQueryTaskStatus:
         assert data == {"output": "task completed successfully"}
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_failed(self, mock_client_class: Any) -> None:
         """Test querying failed task status."""
@@ -250,7 +263,9 @@ class TestQueryTaskStatus:
         assert data == {}
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_pending(self, mock_client_class: Any) -> None:
         """Test querying pending task status."""
@@ -280,7 +295,9 @@ class TestQueryTaskStatus:
         assert "Invalid task query URL" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_api_error(self, mock_client_class: Any) -> None:
         """Test API error response."""
@@ -303,7 +320,9 @@ class TestQueryTaskStatus:
         assert "Query task status failed" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_unknown_status(
         self, mock_client_class: Any
@@ -328,7 +347,9 @@ class TestQueryTaskStatus:
         assert "Unknown task status" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_missing_execution(
         self, mock_client_class: Any
@@ -353,7 +374,9 @@ class TestQueryTaskStatus:
         assert "Task info not returned" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_request_error(
         self, mock_client_class: Any
@@ -372,7 +395,9 @@ class TestQueryTaskStatus:
         assert "Network error" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"})
+    @patch.dict(
+        os.environ, {"XIAOWU_RPA_TASK_QUERY_URL": "https://api.example.com/query"}
+    )
     @patch("infra.xiaowu.tatks.httpx.AsyncClient")
     async def test_query_task_status_url_construction(
         self, mock_client_class: Any
