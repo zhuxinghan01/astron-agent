@@ -20,12 +20,16 @@ import com.iflytek.astron.console.commons.enums.bot.BotTypeEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import com.iflytek.astron.console.hub.data.ReqKnowledgeRecordsDataService;
+import com.iflytek.astron.console.hub.entity.ReqKnowledgeRecords;
 import com.iflytek.astron.console.hub.service.PromptChatService;
 import com.iflytek.astron.console.hub.service.SparkChatService;
 import com.iflytek.astron.console.hub.service.chat.BotChatService;
 import com.iflytek.astron.console.commons.service.data.ChatHistoryService;
 import com.iflytek.astron.console.commons.service.workflow.WorkflowBotChatService;
 import com.iflytek.astron.console.hub.service.chat.ChatListService;
+import com.iflytek.astron.console.hub.service.knowledge.KnowledgeService;
+import com.iflytek.astron.console.toolkit.entity.vo.CategoryTreeVO;
 import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
 import com.iflytek.astron.console.toolkit.service.model.ModelService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,17 +64,20 @@ public class BotChatServiceImpl implements BotChatService {
     @Autowired
     private WorkflowBotChatService workflowBotChatService;
 
+    @Autowired
+    private KnowledgeService knowledgeService;
+
     @Value("${spark.chat.max.input.tokens:8000}")
     private int maxInputTokens;
 
     public static final String LOOSE_PREFIX_PROMPT = """
-
-            Please use the following document fragments as known information:[]\
-            Please answer questions accurately based on the original text of the above paragraphs and your knowledge
-            When answering user questions, please answer in the language the user asked
-            If the above content cannot answer the user's information, combine the information you know to answer the user's question
-            Answer the user's questions concisely and professionally, do not allow fabricated components to be added to the answer.
+            请将下列文档的片段作为已知信息:[]
+            请根据以上文段的原文和你所知道的知识准确地回答问题
+            当回答用户问题时，请使用户提问的语言回答问题
+            如果以上内容无法回答用户信息，结合你所知道的信息, 回答用户提问
+            简洁而专业地充分回答用户的问题，不允许在答案中添加编造成分。
             """;
+
     @Autowired
     private ChatListDataService chatListDataService;
 
@@ -86,6 +93,9 @@ public class BotChatServiceImpl implements BotChatService {
     @Autowired
     private PromptChatService promptChatService;
 
+    @Autowired
+    private ReqKnowledgeRecordsDataService reqKnowledgeRecordsDataService;
+
     @Override
     public void chatMessageBot(ChatBotReqDto chatBotReqDto, SseEmitter sseEmitter, String sseId, String workflowOperation, String workflowVersion) {
         try {
@@ -95,13 +105,19 @@ public class BotChatServiceImpl implements BotChatService {
             if (botConfig.version.equals(BotTypeEnum.WORKFLOW_BOT.getType())) {
                 workflowBotChatService.chatWorkflowBot(chatBotReqDto, sseEmitter, sseId, workflowOperation, workflowVersion);
             } else {
-                List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt);
                 ChatReqRecords chatReqRecords = createChatRequest(chatBotReqDto);
+                int maxInputTokens = this.maxInputTokens;
                 if (botConfig.modelId == null) {
+                    List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
                     SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
                     sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
                 } else {
-                    JSONObject jsonObject = buildPromptChatRequest(botConfig, messages);
+                    ModelConfigResult modelConfig = getModelConfiguration(botConfig.modelId, sseEmitter);
+                    if (modelConfig == null) {
+                        return;
+                    }
+                    List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt, modelConfig.maxInputTokens(), chatReqRecords.getId());
+                    JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo(), messages);
                     promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
                 }
             }
@@ -124,13 +140,18 @@ public class BotChatServiceImpl implements BotChatService {
             chatBotReqDto.setUid(chatReqRecords.getUid());
             chatBotReqDto.setAsk(chatReqRecords.getMessage());
             chatBotReqDto.setEdit(true);
-            List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt);
-
+            int maxInputTokens = this.maxInputTokens;
             if (botConfig.modelId == null) {
+                List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
                 SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
                 sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
             } else {
-                JSONObject jsonObject = buildPromptChatRequest(botConfig, messages);
+                ModelConfigResult modelConfig = getModelConfiguration(botConfig.modelId, sseEmitter);
+                if (modelConfig == null) {
+                    return;
+                }
+                List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.prompt, modelConfig.maxInputTokens(), chatReqRecords.getId());
+                JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo, messages);
                 promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
             }
         } catch (Exception e) {
@@ -140,32 +161,12 @@ public class BotChatServiceImpl implements BotChatService {
     }
 
     @Override
-    public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, SseEmitter sseEmitter, String sseId) {
-        // 1. Create system message (must be kept)
-        SparkChatRequest.MessageDto systemMessage = new SparkChatRequest.MessageDto();
-        systemMessage.setRole("system");
-        systemMessage.setContent(prompt);
-        // 2. Create current user message (must be kept)
-        SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
-        queryMessage.setRole("user");
-        queryMessage.setContent(text);
-        // 3. Build history messages
-        List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
-        int index = 0;
-        for (String message : messages) {
-            SparkChatRequest.MessageDto messageDto = new SparkChatRequest.MessageDto();
-            messageDto.setRole(index % 2 == 0 ? "user" : "assistant");
-            messageDto.setContent(message);
-            historyMessages.add(messageDto);
-            index++;
-        }
-        // Integrate message list
-        List<SparkChatRequest.MessageDto> messageList = new ArrayList<>();
-        messageList.add(systemMessage);
-        messageList.addAll(historyMessages);
-        messageList.add(queryMessage);
-        // 4. Build request object
+    public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, List<String> maasDatasetList, SseEmitter sseEmitter, String sseId) {
+        int maxInputTokens = this.maxInputTokens;
+        List<SparkChatRequest.MessageDto> messageList;
+
         if (modelId == null) {
+            messageList = buildDebugMessageList(text, prompt, messages, maxInputTokens, maasDatasetList);
             SparkChatRequest sparkChatRequest = new SparkChatRequest();
             sparkChatRequest.setModel(model);
             sparkChatRequest.setMessages(messageList);
@@ -174,14 +175,12 @@ public class BotChatServiceImpl implements BotChatService {
             sparkChatRequest.setEnableWebSearch(enableWebSearch(openedTool));
             sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, null, false, true);
         } else {
-            BotConfiguration botConfig = new BotConfiguration(
-                    prompt,
-                    false,
-                    model,
-                    openedTool,
-                    BotTypeEnum.SYSTEM_BOT.getType(),
-                    modelId);
-            JSONObject jsonObject = buildPromptChatRequest(botConfig, messageList);
+            ModelConfigResult modelConfig = getModelConfiguration(modelId, sseEmitter);
+            if (modelConfig == null) {
+                return;
+            }
+            messageList = buildDebugMessageList(text, prompt, messages, modelConfig.maxInputTokens(), maasDatasetList);
+            JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo(), messageList);
             promptChatService.chatStream(jsonObject, sseEmitter, sseId, null, false, false);
         }
     }
@@ -213,6 +212,34 @@ public class BotChatServiceImpl implements BotChatService {
         }
 
         return chatListCreateResponse;
+    }
+
+    /**
+     * Get model configuration and extract max input tokens
+     *
+     * @param modelId Model ID
+     * @param sseEmitter SSE emitter for error handling
+     * @return ModelConfigResult containing LLMInfoVo and maxInputTokens, or null if model doesn't exist
+     */
+    private ModelConfigResult getModelConfiguration(Long modelId, SseEmitter sseEmitter) {
+        LLMInfoVo llmInfoVo = (LLMInfoVo) modelService.getDetail(0, modelId, null).data();
+        if (llmInfoVo == null) {
+            SseEmitterUtil.completeWithError(sseEmitter, "Model is not exist!");
+            return null;
+        }
+
+        int maxInputTokens = this.maxInputTokens;
+        List<CategoryTreeVO> categoryTree = llmInfoVo.getCategoryTree();
+        if (!categoryTree.isEmpty()) {
+            for (CategoryTreeVO categoryTreeVO : categoryTree) {
+                if ("contextLengthTag".equals(categoryTreeVO.getKey())) {
+                    maxInputTokens = Integer.parseInt(categoryTreeVO.getName().replace("k", "")) * 1000;
+                    break;
+                }
+            }
+        }
+
+        return new ModelConfigResult(llmInfoVo, maxInputTokens);
     }
 
     /**
@@ -265,6 +292,59 @@ public class BotChatServiceImpl implements BotChatService {
     }
 
     /**
+     * Get historical conversation messages
+     *
+     * @param chatBotReqDto Chat bot request data transfer object
+     * @param supportContext Whether to support context
+     * @param availableTokens Available token count for history messages
+     * @return List of historical message data transfer objects
+     */
+    private List<SparkChatRequest.MessageDto> getHistoryMessages(ChatBotReqDto chatBotReqDto, boolean supportContext, int availableTokens) {
+        if (!supportContext || availableTokens <= 0) {
+            return new ArrayList<>();
+        }
+
+        List<SparkChatRequest.MessageDto> historyMessages = chatHistoryService.getSystemBotHistory(chatBotReqDto.getUid(), chatBotReqDto.getChatId());
+
+        // If it's a re-answer request, need to remove the last Q&A pair
+        if (chatBotReqDto.getEdit() && !historyMessages.isEmpty()) {
+            historyMessages.removeLast();
+            if (!historyMessages.isEmpty()) {
+                historyMessages.removeLast();
+            }
+        }
+
+        if (historyMessages.isEmpty()) {
+            return historyMessages;
+        }
+
+        List<SparkChatRequest.MessageDto> truncatedHistory = truncateHistoryByTokens(historyMessages, availableTokens);
+        log.debug("History message truncation completed - Original count: {}, After truncation: {}",
+                historyMessages.size(), truncatedHistory.size());
+
+        return truncatedHistory;
+    }
+
+    /**
+     * Calculate token statistics for system and user messages
+     *
+     * @param prompt System prompt text
+     * @param userMessage User message text
+     * @return TokenStatistics object containing token counts
+     */
+    private TokenStatistics calculateTokenStatistics(String prompt, String userMessage, int maxInputTokens) {
+        int systemTokens = estimateTokenCount(prompt);
+        int currentUserTokens = estimateTokenCount(userMessage);
+        int reservedTokens = systemTokens + currentUserTokens;
+        int availableTokens = Math.max(0, maxInputTokens - reservedTokens);
+
+        log.debug("Token statistics - System message: {}, Current user message: {}, Reserved total: {}, Available for history: {}, Maximum limit: {}",
+                systemTokens, currentUserTokens, reservedTokens, availableTokens, maxInputTokens);
+
+        return new TokenStatistics(systemTokens, currentUserTokens, reservedTokens, availableTokens);
+    }
+
+    /**
      * Build message list, truncate historical conversation data based on maximum input tokens
      *
      * @param chatBotReqDto Chat bot request data transfer object
@@ -272,52 +352,46 @@ public class BotChatServiceImpl implements BotChatService {
      * @param prompt Prompt text
      * @return List of message data transfer objects
      */
-    private List<SparkChatRequest.MessageDto> buildMessageList(ChatBotReqDto chatBotReqDto, boolean supportContext, String prompt) {
+    private List<SparkChatRequest.MessageDto> buildMessageList(ChatBotReqDto chatBotReqDto, boolean supportContext, String prompt, int maxInputTokens, Long reqId) {
         List<SparkChatRequest.MessageDto> messageDtoList = new ArrayList<>();
 
-        // 1. Create system message (must be kept)
         SparkChatRequest.MessageDto systemMessage = new SparkChatRequest.MessageDto();
         systemMessage.setRole("system");
         systemMessage.setContent(prompt);
 
-        // 2. Create current user message (must be kept)
+        // 最后拼接当前提问
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append(LOOSE_PREFIX_PROMPT);
+        promptBuilder.append(prompt);
+        List<String> knowledgeList = knowledgeService.getChuncksByBotId(chatBotReqDto.getBotId(), chatBotReqDto.getAsk(), 3);
+        // 把检索到的知识条目存到库里, 下轮对话用
+        String knowledgeStr = knowledgeList.toString();
+        ReqKnowledgeRecords reqKnowledgeRecords = ReqKnowledgeRecords.builder()
+                .uid(chatBotReqDto.getUid())
+                .chatId(chatBotReqDto.getChatId())
+                .reqId(reqId)
+                .reqMessage(chatBotReqDto.getAsk())
+                .knowledge(knowledgeStr.substring(0, Math.min(3900, knowledgeStr.length())))
+                .build();
+        reqKnowledgeRecordsDataService.create(reqKnowledgeRecords);
+        promptBuilder.insert(promptBuilder.indexOf("[") + 1, knowledgeList);
+        promptBuilder.append("\n接下来我的输入是：{{}}");
+        promptBuilder.insert(promptBuilder.indexOf("{{") + 2, chatBotReqDto.getAsk());
+        // 需要文档问答, 把prompt和数据集都拼起来, 成为真正的ask
+        String ask = promptBuilder.toString();
         SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
         queryMessage.setRole("user");
-        queryMessage.setContent(chatBotReqDto.getAsk());
+        queryMessage.setContent(ask);
 
-        // 3. Calculate token count for system message and current user message
-        int systemTokens = estimateTokenCount(prompt);
-        int currentUserTokens = estimateTokenCount(chatBotReqDto.getAsk());
-        int reservedTokens = systemTokens + currentUserTokens;
+        TokenStatistics tokenStats = calculateTokenStatistics(prompt, chatBotReqDto.getAsk(), maxInputTokens);
 
-        log.debug("Token statistics - System message: {}, Current user message: {}, Reserved total: {}, Maximum limit: {}",
-                systemTokens, currentUserTokens, reservedTokens, maxInputTokens);
-
-        // 4. Add system message to the top of the list
         messageDtoList.add(systemMessage);
 
-        // 5. If supporting context, add historical messages (truncated by token limit)
-        if (supportContext && reservedTokens < maxInputTokens) {
-            List<SparkChatRequest.MessageDto> historyMessages = chatHistoryService.getSystemBotHistory(chatBotReqDto.getUid(), chatBotReqDto.getChatId());
-            // If it's a re-answer request, need to remove the last Q&A pair
-            if (chatBotReqDto.getEdit()) {
-                historyMessages.removeLast();
-                historyMessages.removeLast();
-            }
+        List<SparkChatRequest.MessageDto> historyMessages = getHistoryMessages(chatBotReqDto, supportContext, tokenStats.availableTokens());
+        messageDtoList.addAll(historyMessages);
 
-            if (!historyMessages.isEmpty()) {
-                List<SparkChatRequest.MessageDto> truncatedHistory = truncateHistoryByTokens(historyMessages, maxInputTokens - reservedTokens);
-                messageDtoList.addAll(truncatedHistory);
-
-                log.debug("History message truncation completed - Original count: {}, After truncation: {}",
-                        historyMessages.size(), truncatedHistory.size());
-            }
-        }
-
-        // 6. Add current user message to the end of the list
         messageDtoList.add(queryMessage);
 
-        // 7. Output final statistics
         int totalTokens = messageDtoList.stream()
                 .mapToInt(msg -> estimateTokenCount(msg.getContent()))
                 .sum();
@@ -326,6 +400,89 @@ public class BotChatServiceImpl implements BotChatService {
                 messageDtoList.size(), totalTokens, maxInputTokens);
 
         return messageDtoList;
+    }
+
+    /**
+     * Build debug message list with token-based truncation
+     *
+     * @param text Current user message text
+     * @param prompt System prompt text
+     * @param messages List of history message strings
+     * @param maxInputTokens Maximum input token limit
+     * @return List of message data transfer objects with truncation applied
+     */
+    private List<SparkChatRequest.MessageDto> buildDebugMessageList(String text, String prompt, List<String> messages, int maxInputTokens, List<String> maasDatasetList) {
+        List<SparkChatRequest.MessageDto> messageDtoList = new ArrayList<>();
+
+        SparkChatRequest.MessageDto systemMessage = new SparkChatRequest.MessageDto();
+        systemMessage.setRole("system");
+        systemMessage.setContent(prompt);
+
+        SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
+        queryMessage.setRole("user");
+        // 拼接当前提问
+        StringBuilder askBuilder = new StringBuilder();
+        askBuilder.append(LOOSE_PREFIX_PROMPT);
+        List<String> askKnowledgeList = knowledgeService.getChuncks(maasDatasetList, text, 3, true);
+        askBuilder.insert(askBuilder.indexOf("[") + 1, askKnowledgeList);
+        askBuilder.append("\n接下来我的输入是：{{}}");
+        askBuilder.insert(askBuilder.indexOf("{{") + 2, text);
+        queryMessage.setContent(askBuilder.toString());
+
+        TokenStatistics tokenStats = calculateTokenStatistics(prompt, text, maxInputTokens);
+
+        messageDtoList.add(systemMessage);
+
+        if (tokenStats.availableTokens() > 0 && !messages.isEmpty()) {
+            List<SparkChatRequest.MessageDto> historyMessages = convertStringMessagesToDto(messages);
+            // maas数据集处理
+            for (SparkChatRequest.MessageDto messageDto : historyMessages) {
+                // 只拼接用户的问题, 不处理回答
+                if ("user".equals(messageDto.getRole())) {
+                    String ask = messageDto.getContent();
+                    StringBuilder builder = new StringBuilder();
+                    builder.append(LOOSE_PREFIX_PROMPT);
+                    List<String> knowledgeList = knowledgeService.getChuncks(maasDatasetList, ask, 3, true);
+                    builder.insert(builder.indexOf("[") + 1, knowledgeList);
+                    builder.append("\n接下来我的输入是：{{}}");
+                    builder.insert(builder.indexOf("{{") + 2, ask);
+                    messageDto.setContent(builder.toString());
+                }
+            }
+            List<SparkChatRequest.MessageDto> truncatedHistory = truncateHistoryByTokens(historyMessages, tokenStats.availableTokens());
+            messageDtoList.addAll(truncatedHistory);
+
+            log.debug("Debug history message truncation completed - Original count: {}, After truncation: {}",
+                    historyMessages.size(), truncatedHistory.size());
+        }
+
+        messageDtoList.add(queryMessage);
+
+        int totalTokens = messageDtoList.stream()
+                .mapToInt(msg -> estimateTokenCount(msg.getContent()))
+                .sum();
+
+        log.info("Debug message list build completed - Total messages: {}, Estimated total tokens: {}, Maximum limit: {}",
+                messageDtoList.size(), totalTokens, maxInputTokens);
+
+        return messageDtoList;
+    }
+
+    /**
+     * Convert string messages to MessageDto objects with alternating roles
+     *
+     * @param messages List of message strings
+     * @return List of MessageDto objects
+     */
+    private List<SparkChatRequest.MessageDto> convertStringMessagesToDto(List<String> messages) {
+        List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
+        for (int i = 0; i < messages.size(); i++) {
+            SparkChatRequest.MessageDto messageDto = new SparkChatRequest.MessageDto();
+            messageDto.setRole(i % 2 == 0 ? "user" : "assistant");
+            messageDto.setContent(messages.get(i));
+            historyMessages.add(messageDto);
+        }
+        return historyMessages;
     }
 
     /**
@@ -411,9 +568,8 @@ public class BotChatServiceImpl implements BotChatService {
         return sparkChatRequest;
     }
 
-    private JSONObject buildPromptChatRequest(BotConfiguration botConfig, List<SparkChatRequest.MessageDto> messages) {
+    private JSONObject buildPromptChatRequest(LLMInfoVo llmInfoVo, List<SparkChatRequest.MessageDto> messages) {
         JSONObject jsonObject = new JSONObject();
-        LLMInfoVo llmInfoVo = (LLMInfoVo) modelService.getDetail(0, botConfig.modelId, null).data();
         jsonObject.put("url", llmInfoVo.getUrl());
         jsonObject.put("apiKey", llmInfoVo.getApiKey());
         jsonObject.put("model", llmInfoVo.getDomain());
@@ -454,6 +610,10 @@ public class BotChatServiceImpl implements BotChatService {
     }
 
     private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool, Integer version, Long modelId) {}
+
+    private record TokenStatistics(int systemTokens, int currentUserTokens, int reservedTokens, int availableTokens) {}
+
+    private record ModelConfigResult(LLMInfoVo llmInfoVo, int maxInputTokens) {}
 
     /**
      * Determine whether to enable web search
