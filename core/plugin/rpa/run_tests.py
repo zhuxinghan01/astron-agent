@@ -4,6 +4,7 @@
 This script is used to run various test suites for the project.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -47,7 +48,10 @@ def main() -> int:
     test_commands = [
         ("python -m pytest tests/api/test_schemas.py -v", "API Schemas test"),
         ("python -m pytest tests/errors/test_error_code.py -v", "Error code test"),
-        ("python -m pytest tests/exceptions/test_config_exceptions.py -v", "Exception test"),
+        (
+            "python -m pytest tests/exceptions/test_config_exceptions.py -v",
+            "Exception test",
+        ),
         ("python -m pytest tests/consts/test_const.py -v", "Constants test"),
         ("python -m pytest tests/utils/test_utl_util.py -v", "Utility functions test"),
         ("python -m pytest tests/api/test_router.py -v", "Router test"),
@@ -78,6 +82,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import os
-
     sys.exit(main())

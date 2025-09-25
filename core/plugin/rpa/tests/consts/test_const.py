@@ -1,8 +1,8 @@
 """Test constants definition module."""
 
-import pytest
-
-from consts import const
+from plugin.rpa.consts import const
+from plugin.rpa.consts.log.log_keys import LOG_LEVEL_KEY
+from plugin.rpa.consts.rpa.rpa_keys import XIAOWU_RPA_TIMEOUT_KEY
 
 
 class TestConstModule:
@@ -133,14 +133,11 @@ class TestConstModule:
             # Constant values should be valid environment variable name format
             assert (
                 value.replace("_", "").replace("-", "").isalnum()
-            ), f"Constant {constant_name} value should be a valid environment variable name"
+            ), f"Constant {constant_name} value should be a valid env var name"
 
     def test_import_structure(self) -> None:
         """Test correctness of import structure."""
         # Verify that constants can be imported from submodules
-        from plugin.rpa.consts.log.log_keys import LOG_LEVEL_KEY
-        from plugin.rpa.consts.rpa.rpa_keys import XIAOWU_RPA_TIMEOUT_KEY
-
         # Verify that imported constants match those in main module
         assert LOG_LEVEL_KEY == const.LOG_LEVEL_KEY
         assert XIAOWU_RPA_TIMEOUT_KEY == const.XIAOWU_RPA_TIMEOUT_KEY

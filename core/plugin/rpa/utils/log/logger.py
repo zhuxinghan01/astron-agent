@@ -7,8 +7,7 @@ from typing import Any, Optional
 import appdirs
 import orjson
 from loguru import logger
-
-from consts import const
+from plugin.rpa.consts import const
 
 VALID_LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -39,7 +38,7 @@ def set_log(log_level: Optional[str] = None, log_path: Optional[str] = None) -> 
     logger.patch(patcher=patching)
 
     if not log_path:
-        log_path = Path(appdirs.user_cache_dir("rpa-server"))
+        log_path = appdirs.user_cache_dir("rpa-server")
 
     log_path = f"{log_path}/rpa-server.log"
     log_path_ = Path(log_path)
