@@ -159,7 +159,7 @@ const MessageList = (props: {
     return (
       <div
         key={item.id}
-        className="max-w-[90%] text-white py-2.5 flex flex-row-reverse rounded-tr rounded-tl rounded-br-[2px] leading-[1.4] ml-auto h-auto"
+        className="max-w-[90%] text-white py-2.5 flex flex-row-reverse leading-[1.4] ml-auto h-auto"
       >
         <img src={user?.avatar} alt="" className="h-9 w-9 rounded-full ml-4" />
         <div className="bg-[#275eff] rounded-[12px_0px_12px_12px] p-[14px_19px] relative max-w-full">
@@ -222,7 +222,7 @@ const MessageList = (props: {
           <img
             src={botInfo.avatar}
             alt="avatar"
-            className="w-9 h-9 rounded-full mr-4"
+            className="w-9 h-9 rounded-full mr-4 object-cover"
           />
           <div className="bg-white rounded-[0px_12px_12px_12px] p-[14px_19px] w-auto text-[#333333] max-w-full min-w-[10%]">
             {showLoading && (
@@ -281,7 +281,7 @@ const MessageList = (props: {
         <div className="w-full flex flex-col-reverse items-center max-w-[960px] min-h-min scrollbar-hide">
           <div ref={scrollAnchorRef} />
 
-          {/* 直接渲染消息列表 - 性能优化版：合并已在store中完成 */}
+          {/* 直接渲染消息列表 */}
           {messageList
             .slice()
             .reverse()
