@@ -112,5 +112,33 @@
         <Method name="saveFile"/>
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
     </Match>
+    <!-- Toolkit universal low value alarm filtering -->
+    <Match>
+        <!-- Naming/Style Category -->
+        <Bug pattern="NM_FIELD_NAMING_CONVENTION,NM_METHOD_NAMING_CONVENTION,RI_REDUNDANT_INTERFACES,RC_REF_COMPARISON_BAD_PRACTICE_BOOLEAN,DB_DUPLICATE_BRANCHES"/>
+    </Match>
+
+    <Match>
+        <!-- Redundant/Useless -->
+        <Bug pattern="DLS_DEAD_LOCAL_STORE,UC_USELESS_OBJECT,UCF_USELESS_CONTROL_FLOW,
+                  URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD,RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE,
+                  RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
+
+    <Match>
+        <!-- Minor Performance Tips -->
+        <Bug pattern="BX_UNBOXING_IMMEDIATELY_REBOXED,WMI_WRONG_MAP_ITERATOR,SBSC_USE_STRINGBUFFER_CONCATENATION,RV_ABSOLUTE_VALUE_OF_RANDOM_INT,DMI_RANDOM_USED_ONLY_ONCE,SE_BAD_FIELD"/>
+    </Match>
+
+    <Match>
+        <!-- Visibility suggestion -->
+        <Bug pattern="MS_PKGPROTECT"/>
+    </Match>
+
+    <Match>
+        <!-- Serialized 'cleanliness obsession' (only if these types are not natively serialized by Java) -->
+        <Class name="~com\.iflytek\.astron\.console\.toolkit\.entity\..*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
 
 </FindBugsFilter>

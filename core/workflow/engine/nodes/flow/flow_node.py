@@ -59,40 +59,6 @@ class FlowNode(BaseNode):
     # Optional version specification for the target flow
     version: Optional[str] = None
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration as a dictionary.
-
-        :return: Dictionary containing flow configuration parameters
-        """
-        return {
-            "flow_id": self.flowId,
-            "app_id": self.appId,
-            "uid": self.uid,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "version": self.version,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution is not supported for flow nodes.
-        Flow nodes require asynchronous execution due to API calls.
-
-        :param variable_pool: Variable pool containing workflow variables
-        :param span: Tracing span for observability
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises: NotImplementedError as sync execution is not supported
-        """
-        raise NotImplementedError("Flow nodes only support async execution")
-
     def assemble_chat_body(self, inputs: dict) -> dict:
         """
         Assemble the chat body for API requests.

@@ -196,43 +196,24 @@ def parse_prompt(template: str) -> list[TemplateUnitObj]:
     """
     template_unit_list: list[TemplateUnitObj] = []
 
-    i = 0
-    while i < len(template):
-        if template[i : i + 2] == "{{":  # Start of variable section
-            # Try to match closing }} to determine if it's a valid variable
-            j = i + 2
-            while j < len(template) and template[j : j + 2] != "}}":
-                j += 1
-            if j < len(template):  # Found closing }}, this is a complete variable
-                var_name = template[i + 2 : j]
-                if is_varname_valid(
-                    var_name
-                ):  # Only treat as variable if name is valid
-                    template_unit = TemplateUnitObj.generate_var_unit(key=var_name)
-                    template_unit_list.append(template_unit)
-                    i = j + 2  # Skip }}, continue checking remaining content
-                else:
-                    template_unit = TemplateUnitObj.generate_const_unit(
-                        key=template[i : i + 1]
-                    )
-                    template_unit_list.append(template_unit)
-                    i += 1
-            else:  # Only {{ without closing, treat as constant
-                template_unit = TemplateUnitObj.generate_const_unit(key=template[i:])
-                template_unit_list.append(template_unit)
-                break  # Treat remaining part as constant, output directly
-        elif template[i : i + 2] == "}}":  # Only }}, treat as constant
-            template_unit = TemplateUnitObj.generate_const_unit(key=template[i:])
-            template_unit_list.append(template_unit)
-            i += 2
-        else:  # Constant part
-            j = i
-            while j < len(template) and template[j : j + 2] != "{{":
-                j += 1
-            template_unit = TemplateUnitObj.generate_const_unit(key=template[i:j])
-            template_unit_list.append(template_unit)
-            i = j  # Skip constant part, continue checking remaining content
+    # Step1 : Extract content between {{ ... }}
+    braces_pattern = re.compile(r"\{\{(.*?)}}")
+    raw_matches = braces_pattern.findall(template)
 
-    template_unit_list = integration_const_parts(template_unit_list)
+    # Step2: Define variable name rules
+    # Single name: letters, numbers, underscores, hyphens
+    name_pattern = r"[A-Za-z0-9_-]+"
+    # Optional array index: multiple [numbers], allow negative numbers
+    index_pattern = r"(?:\[-?\d+\])*"
+    # One complete segment: name + optional index
+    segment_pattern = rf"{name_pattern}{index_pattern}"
+    # Multiple segments connected by dots
+    variable_pattern = re.compile(rf"^{segment_pattern}(?:\.{segment_pattern})*$")
 
+    # Step3: Filter valid variable names
+    for key in raw_matches:
+        if not variable_pattern.match(key):
+            continue
+        template_unit = TemplateUnitObj.generate_var_unit(key=key)
+        template_unit_list.append(template_unit)
     return template_unit_list

@@ -1263,7 +1263,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
 
     private Model loadForEdit(LocalModelDto dto) {
         Model model = this.getById(dto.getId());
-        if (model == null || Objects.equals(model.getIsDeleted(), 1)) {
+        if (model == null || Objects.equals(model.getIsDeleted(), true)) {
             throw new BusinessException(ResponseEnum.MODEL_NOT_EXIST);
         }
         if (!Objects.equals(model.getUid(), dto.getUid())) {
