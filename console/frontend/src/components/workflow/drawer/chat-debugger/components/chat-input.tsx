@@ -1,10 +1,10 @@
-import React from "react";
-import { useTranslation } from "react-i18next";
-import Ajv from "ajv";
-import { renderType } from "@/components/workflow/utils/reactflowUtils";
-import { cloneDeep } from "lodash";
-import { renderParamInput } from "@/components/workflow/nodes/node-common";
-import { useMemoizedFn } from "ahooks";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import Ajv from 'ajv';
+import { renderType } from '@/components/workflow/utils/reactflowUtils';
+import { cloneDeep } from 'lodash';
+import { renderParamInput } from '@/components/workflow/nodes/node-common';
+import { useMemoizedFn } from 'ahooks';
 
 // 类型导入
 import {
@@ -13,7 +13,7 @@ import {
   FileUploadResponse,
   FileUploadItem,
   AjvValidationError,
-} from "@/components/workflow/types";
+} from '@/components/workflow/types';
 
 const useChatInput = (
   startNodeParams: StartNodeType[],
@@ -29,15 +29,15 @@ const useChatInput = (
       const target = event.currentTarget as XMLHttpRequest;
       const res: FileUploadResponse = JSON.parse(target.responseText);
       if (res.code === 0) {
-        setStartNodeParams((oldNodeParams) => {
+        setStartNodeParams(oldNodeParams => {
           const defaultValue = oldNodeParams?.[index]?.default;
           if (Array.isArray(defaultValue)) {
             const file = (defaultValue as FileUploadItem[]).find(
-              (item) => item.id === fileId
+              item => item.id === fileId
             );
             if (file) {
               file.loading = false;
-              file.url = res?.data?.[0] || "";
+              file.url = res?.data?.[0] || '';
             }
           }
           return cloneDeep(oldNodeParams);
@@ -53,7 +53,7 @@ const useChatInput = (
         name: file.name,
         size: file.size,
         loading: true,
-        url: "",
+        url: '',
       };
 
       if (Array.isArray(startNodeParams[index]?.default) && multiple) {
@@ -69,12 +69,12 @@ const useChatInput = (
 
   const handleDeleteFile = useMemoizedFn(
     (index: number, fileId: string): void => {
-      setStartNodeParams((oldStartNodeParams) => {
+      setStartNodeParams(oldStartNodeParams => {
         const defaultValue = oldStartNodeParams[index]?.default;
         if (Array.isArray(defaultValue)) {
           oldStartNodeParams[index].default = (
             defaultValue as FileUploadItem[]
-          ).filter((file) => fileId !== file?.id);
+          ).filter(file => fileId !== file?.id);
         }
         return cloneDeep(oldStartNodeParams);
       });
@@ -93,15 +93,15 @@ const useChatInput = (
             | null
             | undefined;
           return (
-            (errors?.[0]?.instancePath?.slice(1) ?? "") +
-            " " +
-            (errors?.[0]?.message ?? "")
+            (errors?.[0]?.instancePath?.slice(1) ?? '') +
+            ' ' +
+            (errors?.[0]?.message ?? '')
           ).trim();
         } else {
-          return "";
+          return '';
         }
       } catch {
-        return t("workflow.nodes.validation.invalidJSONFormat");
+        return t('workflow.nodes.validation.invalidJSONFormat');
       }
     }
   );
@@ -114,8 +114,8 @@ const useChatInput = (
       if (currentInput) {
         fn(currentInput, value);
         if (
-          currentInput?.type === "object" ||
-          currentInput.type.includes("array")
+          currentInput?.type === 'object' ||
+          currentInput.type.includes('array')
         ) {
           if (currentInput?.validationSchema) {
             currentInput.errorMsg = validateInputJSON(
@@ -155,20 +155,20 @@ function ChatInput({
     <div
       className="flex flex-col gap-1 mt-2"
       style={{
-        maxHeight: "40vh",
-        overflow: "auto",
+        maxHeight: '40vh',
+        overflow: 'auto',
       }}
     >
       {startNodeParams?.length === 1 || interruptChat?.interrupt ? (
         <div className="relative mx-5">
           <textarea
-            disabled={interruptChat?.type === "option"}
+            disabled={interruptChat?.type === 'option'}
             className="user-chat-input pr-3.5 w-full py-3"
             ref={textareRef}
             style={{
-              resize: "none",
+              resize: 'none',
             }}
-            onChange={(e) => {
+            onChange={e => {
               e.stopPropagation();
               const value = e.target.value;
               if (startNodeParams[0]) {
@@ -179,7 +179,7 @@ function ChatInput({
             onKeyDown={handleEnterKey}
             placeholder={
               startNodeParams[0]?.description ||
-              t("workflow.nodes.chatDebugger.tryFlow")
+              t('workflow.nodes.chatDebugger.tryFlow')
             }
           />
         </div>
@@ -196,7 +196,7 @@ function ChatInput({
                 <div className="bg-[#F0F0F0] px-2.5 py-1 rounded text-xs">
                   {renderType(
                     (params as unknown).fileType &&
-                      params.type === "array-string"
+                      params.type === 'array-string'
                       ? `Array<${
                           (params as unknown).allowedFileType
                             ?.slice(0, 1)

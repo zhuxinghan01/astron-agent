@@ -291,7 +291,7 @@ function UploadTab({
   const { t } = useTranslation();
   return (
     <div className="mt-8">
-      {!uploadImageObject.downloadLink && (
+      {!uploadImageObject?.downloadLink && (
         <Spin spinning={uploadLoading}>
           <Dragger {...uploadProps} className="icon-upload">
             <img src={uploadAct} className="w-8 h-8" alt="" />
@@ -307,9 +307,9 @@ function UploadTab({
           </Dragger>
         </Spin>
       )}
-      {uploadImageObject.downloadLink && (
+      {uploadImageObject?.downloadLink && (
         <Image
-          imageUrl={uploadImageObject.downloadLink}
+          imageUrl={uploadImageObject?.downloadLink}
           uploadProps={uploadProps}
         />
       )}
@@ -544,7 +544,7 @@ function index(props: IndexProps): React.JSX.Element {
           info.file.response.data &&
           info.file.response.code === 0
         ) {
-          const data = info.file.response.data.data;
+          const data = info.file.response.data;
           setUploadImageObject(data);
         } else {
           message.error(info.file.response.message);
@@ -558,8 +558,8 @@ function index(props: IndexProps): React.JSX.Element {
 
   const checkEnableSave = useMemo(() => {
     return (
-      (activeTab === 'upload' && !uploadImageObject.downloadLink) ||
-      (activeTab === 'chat' && !generateImageObject.downloadLink)
+      (activeTab === 'upload' && !uploadImageObject?.downloadLink) ||
+      (activeTab === 'chat' && !generateImageObject?.downloadLink)
     );
   }, [activeTab, uploadImageObject, generateImageObject]);
 

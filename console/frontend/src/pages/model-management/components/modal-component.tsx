@@ -247,6 +247,7 @@ const handleLocalModelSubmit = (params: {
   botIcon: { name?: string; value?: string };
   botColor: string;
   acceleratorCount: number;
+  modelParams: ModelConfigParam[];
   modelTypes: number[];
   modelTypeOtherText: string;
   languageSystemId?: number;
@@ -258,7 +259,6 @@ const handleLocalModelSubmit = (params: {
   setLoading: (loading: boolean) => void;
   setCreateModal: (visible: boolean) => void;
   getModels?: () => void;
-  t: (key: string) => string;
 }): void => {
   const {
     selectedLocalModel,
@@ -266,6 +266,7 @@ const handleLocalModelSubmit = (params: {
     botIcon,
     botColor,
     acceleratorCount,
+    modelParams,
     modelTypes,
     modelTypeOtherText,
     languageSystemId,
@@ -299,6 +300,8 @@ const handleLocalModelSubmit = (params: {
     return;
   }
 
+  if (!validateFormData(modelParams)) return;
+
   setLoading(true);
   // 构建本地模型参数
   const localModelParams: LocalModelParams = {
@@ -309,6 +312,21 @@ const handleLocalModelSubmit = (params: {
     color: botColor,
     acceleratorCount,
     modelPath: selectedLocalModel,
+    config: modelParams?.map(item => ({
+      id: item?.id,
+      constraintType: item?.fieldType === 'boolean' ? 'switch' : 'range',
+      default: item?.default,
+      constraintContent:
+        item?.fieldType === 'boolean'
+          ? []
+          : [{ name: item?.min || 0 }, { name: item?.max || 0 }],
+      name: item?.name,
+      fieldType: item?.fieldType,
+      initialValue: item?.fieldType === 'boolean' ? false : item?.min || 0,
+      key: item?.key,
+      required: item?.required,
+      precision: item?.precision,
+    })),
     modelCategoryReq: buildModelCategoryReq({
       modelTypes,
       modelTypeOtherText,
@@ -586,12 +604,14 @@ const ModelBasicForm = ({
   botIcon,
   botColor,
   setShowModal,
+  modelCreateType,
 }: {
   modelInfo: ModelFormData;
   setModelInfo: (info: ModelFormData) => void;
   botIcon: { name?: string; value?: string };
   botColor: string;
   setShowModal: (show: boolean) => void;
+  modelCreateType: ModelCreateType;
 }): JSX.Element => {
   const { t } = useTranslation();
   return (
@@ -635,21 +655,27 @@ const ModelBasicForm = ({
           />
         </div>
       </div>
-      <div className="flex flex-col gap-2 font-normal text-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[#F74E43]">*</span> model：
+      {modelCreateType === ModelCreateType.THIRD_PARTY && (
+        <>
+          <div className="flex flex-col gap-2 font-normal text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[#F74E43]">*</span> model：
+              </div>
+            </div>
+            <Input
+              maxLength={50}
+              showCount
+              placeholder={t('model.enterModelFieldValue')}
+              className="global-input w-full"
+              value={modelInfo?.domain}
+              onChange={e =>
+                setModelInfo({ ...modelInfo, domain: e.target.value })
+              }
+            />
           </div>
-        </div>
-        <Input
-          maxLength={50}
-          showCount
-          placeholder={t('model.enterModelFieldValue')}
-          className="global-input w-full"
-          value={modelInfo?.domain}
-          onChange={e => setModelInfo({ ...modelInfo, domain: e.target.value })}
-        />
-      </div>
+        </>
+      )}
       <div className="flex flex-col gap-2 font-normal text-sm">
         <div className="flex items-center justify-between">
           <div>
@@ -673,39 +699,45 @@ const ModelBasicForm = ({
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-2 font-normal text-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[#F74E43]">* </span>{' '}
-            {t('model.interfaceAddress')}：
+      {modelCreateType === ModelCreateType.THIRD_PARTY && (
+        <>
+          <div className="flex flex-col gap-2 font-normal text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[#F74E43]">* </span>{' '}
+                {t('model.interfaceAddress')}：
+              </div>
+            </div>
+            <Input
+              maxLength={100}
+              showCount
+              placeholder={t('model.interfaceAddressPlaceholder')}
+              className="global-input w-full"
+              value={modelInfo?.interfaceAddress}
+              onChange={e =>
+                setModelInfo({ ...modelInfo, interfaceAddress: e.target.value })
+              }
+            />
           </div>
-        </div>
-        <Input
-          maxLength={100}
-          showCount
-          placeholder={t('model.interfaceAddressPlaceholder')}
-          className="global-input w-full"
-          value={modelInfo?.interfaceAddress}
-          onChange={e =>
-            setModelInfo({ ...modelInfo, interfaceAddress: e.target.value })
-          }
-        />
-      </div>
-      <div className="flex flex-col gap-2 font-normal text-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[#F74E43]">*</span> {t('model.apiKey')}：
+          <div className="flex flex-col gap-2 font-normal text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[#F74E43]">*</span> {t('model.apiKey')}：
+              </div>
+            </div>
+            <Input
+              maxLength={100}
+              showCount
+              placeholder={t('common.inputPlaceholder')}
+              className="global-input w-full"
+              value={modelInfo?.apiKEY}
+              onChange={e =>
+                setModelInfo({ ...modelInfo, apiKEY: e.target.value })
+              }
+            />
           </div>
-        </div>
-        <Input
-          maxLength={100}
-          showCount
-          placeholder={t('common.inputPlaceholder')}
-          className="global-input w-full"
-          value={modelInfo?.apiKEY}
-          onChange={e => setModelInfo({ ...modelInfo, apiKEY: e.target.value })}
-        />
-      </div>
+        </>
+      )}
     </>
   );
 };
@@ -1238,6 +1270,72 @@ const useCreateModal = (
   const paramsState = useModelParams(modalRef);
   const categoryState = useModelCategories(categoryTree);
 
+  // 重置表单数据函数
+  const resetFormData = useCallback((): void => {
+    // 重置基本信息
+    formState.setModelInfo({
+      modelName: '',
+      modelDesc: '',
+      interfaceAddress: '',
+      apiKEY: '',
+      domain: '',
+    });
+    formState.setTags([]);
+    formState.beforeModelKeys.current = '';
+
+    // 重置头像和颜色为默认值
+    if (avatarState.avatarIcon.length > 0 && avatarState.avatarIcon[0]) {
+      avatarState.setBotIcon(avatarState.avatarIcon[0]);
+    }
+    if (avatarState.avatarColor.length > 0) {
+      avatarState.setBotColor(avatarState.avatarColor[0]?.name || '');
+    }
+
+    // 重置模型参数为默认值
+    const { t } = formState;
+    paramsState.setModelParams([
+      {
+        id: uuid(),
+        key: 'temperature',
+        name: t('model.temperatureDescription'),
+        fieldType: 'float',
+        precision: 1,
+        min: 0,
+        max: 2,
+        required: false,
+        default: 1,
+        standard: true,
+        constraintType: 'range',
+        constraintContent: [],
+        initialValue: 1,
+      },
+    ]);
+
+    // 重置分类相关状态
+    categoryState.setModelTypes([]);
+    categoryState.setModelTypeOtherText('');
+    categoryState.setLanguageSystemId(undefined);
+    categoryState.setContextLengthSystemId(undefined);
+    categoryState.setModelScenes([]);
+    categoryState.setModelSceneOtherText('');
+
+    // 重置本地模型相关状态
+    setSelectedLocalModel('');
+    setAcceleratorCount(1);
+  }, [formState, avatarState, paramsState, categoryState]);
+
+  // 切换模型类型并重置表单数据
+  const handleModelCreateTypeChange = useCallback(
+    (type: ModelCreateType): void => {
+      setModelCreateType(type);
+      // 只在非编辑模式下重置表单数据
+      if (!modelId) {
+        resetFormData();
+      }
+    },
+    [modelId, resetFormData]
+  );
+
   // 编辑模式数据加载
   useEffect(() => {
     if (modelId) {
@@ -1250,6 +1348,9 @@ const useCreateModal = (
           updateBasicInfo(data, formState, avatarState);
           updateModelParams(data, paramsState);
           setModelCreateType(data.type);
+          if (data.type === ModelCreateType.LOCAL) {
+            setSelectedLocalModel(data.domain || '');
+          }
         })
         .catch((error: ResponseBusinessError) => {
           message.error(error.message);
@@ -1262,7 +1363,7 @@ const useCreateModal = (
     showModal,
     setShowModal,
     modelCreateType,
-    setModelCreateType,
+    setModelCreateType: handleModelCreateTypeChange,
     selectedLocalModel,
     setSelectedLocalModel,
     acceleratorCount,
@@ -1325,6 +1426,7 @@ export function CreateModal({
         botIcon: modalState.botIcon,
         botColor: modalState.botColor,
         acceleratorCount: modalState.acceleratorCount,
+        modelParams: modalState.modelParams,
         modelTypes: modalState.modelTypes,
         modelTypeOtherText: modalState.modelTypeOtherText,
         languageSystemId: modalState.languageSystemId,
@@ -1336,7 +1438,6 @@ export function CreateModal({
         setLoading: modalState.setLoading,
         setCreateModal,
         getModels,
-        t,
       });
     } else {
       handleSubmitForm({
@@ -1397,7 +1498,7 @@ export function CreateModal({
           style={{ maxHeight: '60vh' }}
           ref={modalState.modalRef}
         >
-          {/* <div className="flex">
+          <div className="flex">
             <div className="flex items-center bg-[#f6f9ff] rounded-xl h-10 p-1 gap-1">
               <div
                 className={`${
@@ -1424,7 +1525,7 @@ export function CreateModal({
                 {t('model.selectLocalModel')}
               </div>
             </div>
-          </div> */}
+          </div>
 
           {modalState.modelCreateType === ModelCreateType.LOCAL && (
             <SelectLocalModel
@@ -1438,6 +1539,7 @@ export function CreateModal({
             botIcon={modalState.botIcon}
             botColor={modalState.botColor}
             setShowModal={modalState.setShowModal}
+            modelCreateType={modalState.modelCreateType}
           />
           <ModelCategoryForm
             modelTypes={modalState.modelTypes}
@@ -1482,8 +1584,11 @@ export function CreateModal({
             disabled={
               !modalState.modelInfo?.modelName ||
               !modalState.modelInfo?.modelDesc ||
-              !modalState.modelInfo?.interfaceAddress ||
-              !modalState.modelInfo?.apiKEY
+              (modalState.modelCreateType === ModelCreateType.THIRD_PARTY &&
+                (!modalState.modelInfo?.interfaceAddress ||
+                  !modalState.modelInfo?.apiKEY)) ||
+              (modalState.modelCreateType === ModelCreateType.LOCAL &&
+                !modalState.selectedLocalModel)
             }
           >
             {modalState.t('common.submit')}

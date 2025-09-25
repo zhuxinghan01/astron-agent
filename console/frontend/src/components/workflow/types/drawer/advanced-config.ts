@@ -87,7 +87,7 @@ export interface useAdvancedConfigurationProps {
   handleAdvancedConfigChange: (callback: () => void) => void;
   updateAdvancedConfigParams: (updateParams: AdvancedConfigUpdate) => void;
   updateAdvancedConfigParamsDebounce: (
-    updateParams: AdvancedConfigUpdate,
+    updateParams: AdvancedConfigUpdate
   ) => void;
   handlePresetQuestionChange: (index: number, value: string) => void;
   openingRemarksModal: boolean;

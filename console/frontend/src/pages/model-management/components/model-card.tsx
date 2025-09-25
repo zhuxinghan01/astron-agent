@@ -2,9 +2,16 @@ import { useState, useMemo, useCallback, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Switch, message } from 'antd';
+import JSEncrypt from 'jsencrypt';
 
 import { DeleteModal, CreateModal } from './modal-component';
-import { enabledModelAPI } from '@/services/model';
+import {
+  enabledModelAPI,
+  getModelDetail,
+  modelCreate,
+  createOrUpdateLocalModel,
+  modelRsaPublicKey,
+} from '@/services/model';
 import {
   ModelInfo,
   CategoryNode,
@@ -14,6 +21,92 @@ import {
   ModelCreateType,
 } from '@/types/model';
 import { ResponseBusinessError } from '@/types/global';
+import i18next from 'i18next';
+
+// 加密API密钥工具函数
+const encryptApiKey = (publicKey: string, apiKey: string): string => {
+  const encrypt = new JSEncrypt();
+  encrypt.setPublicKey(publicKey);
+  const encrypted = encrypt.encrypt(apiKey);
+  if (!encrypted) {
+    throw new Error('API密钥加密失败');
+  }
+  return encrypted;
+};
+
+// 重新发布模型函数
+const republishModel = async (
+  model: ModelInfo,
+  getModels: () => void
+): Promise<void> => {
+  try {
+    // 获取模型详细信息
+    const modelDetail = await getModelDetail({
+      modelId: model.id,
+      llmSource: model.llmSource,
+    });
+
+    if (model.type === ModelCreateType.LOCAL) {
+      // 本地模型重新发布
+      const localModelParams = {
+        id: model.id,
+        modelName: modelDetail.name,
+        domain: modelDetail.domain,
+        description: modelDetail.desc,
+        icon: modelDetail.icon,
+        color: modelDetail.color || '',
+        acceleratorCount: modelDetail.acceleratorCount || 1,
+        modelPath: modelDetail.domain, // 使用domain作为modelPath
+        modelCategoryReq: {}, // 根据需要构建分类信息
+      };
+
+      await createOrUpdateLocalModel(localModelParams);
+    } else {
+      // 第三方模型重新发布
+      const publicKey = await modelRsaPublicKey();
+      const encryptedApiKey = encryptApiKey(
+        publicKey,
+        modelDetail.apiKey || ''
+      );
+
+      // 解析配置参数
+      let config = [];
+      if (modelDetail.config && typeof modelDetail.config === 'string') {
+        try {
+          config = JSON.parse(modelDetail.config);
+        } catch (e) {
+          console.warn('解析模型配置失败:', e);
+        }
+      }
+
+      const submitParams = {
+        id: model.id,
+        endpoint: modelDetail.url,
+        apiKey: encryptedApiKey,
+        apiKeyMasked: false, // 因为重新发布，不需要掩码
+        modelName: modelDetail.name,
+        description: modelDetail.desc,
+        domain: modelDetail.domain,
+        tag: modelDetail.tag || [],
+        icon: modelDetail.icon,
+        config,
+        modelCategoryReq: {}, // 根据需要构建分类信息
+      };
+
+      await modelCreate(submitParams);
+    }
+
+    message.success(i18next.t('model.republishSuccess'));
+    getModels(); // 刷新模型列表
+  } catch (error) {
+    console.error('重新发布失败:', error);
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : i18next.t('model.republishFailed');
+    message.error(errorMessage);
+  }
+};
 
 function collectNames(nodes: CategoryNode[] = []): string[] {
   const res: string[] = [];
@@ -37,24 +130,24 @@ function checkLocalModelStatus(model: ModelInfo): boolean {
 }
 
 // 获取发布状态样式和文本
-function getPublishStatusInfo(
-  status: LocalModelStatus,
-  t: (key: string) => string
-): { text: string; className: string } {
+function getPublishStatusInfo(status: LocalModelStatus): {
+  text: string;
+  className: string;
+} {
   switch (status) {
     case LocalModelStatus.RUNNING:
       return {
-        text: t('model.publishRunning'),
+        text: i18next.t('model.publishRunning'),
         className: 'bg-[#dfffce] text-[#3DC253]',
       };
     case LocalModelStatus.PENDING:
       return {
-        text: t('model.publishPending'),
+        text: i18next.t('model.publishPending'),
         className: 'bg-[#FFF4E5] text-[#EBA300]',
       };
     case LocalModelStatus.FAILED:
       return {
-        text: t('model.publishFailed'),
+        text: i18next.t('model.publishFailed'),
         className: 'bg-[#FEEDEC] text-[#F74E43]',
       };
     default:
@@ -108,7 +201,7 @@ function ModelCardHeader({
           <span className="font-semibold text-gray-900">{model.name}</span>
           {model.llmSource === LLMSource.CUSTOM &&
             ((): JSX.Element | null => {
-              const statusInfo = getPublishStatusInfo(model.status, t);
+              const statusInfo = getPublishStatusInfo(model.status);
               return statusInfo.text ? (
                 <span
                   className={`${statusInfo.className} rounded-[12px] px-2 py-1 inline-block text-[12px] text-center ml-2`}
@@ -166,7 +259,10 @@ function ModelCardHeader({
         <Switch
           size="small"
           checked={enabled}
-          disabled={checkLocalModelStatus(model)}
+          disabled={[
+            LocalModelStatus.FAILED,
+            LocalModelStatus.PENDING,
+          ].includes(model.status)}
           className={
             model.enabled
               ? '[&_.ant-switch-inner]:bg-[#275EFF]'
@@ -254,14 +350,8 @@ function ModelCardFooter({
                 onMouseLeave={() => setMenuVisible(false)}
               >
                 <button
-                  className={`block w-full text-left px-3 py-1 text-sm ${
-                    model.status === LocalModelStatus.PENDING
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'hover:bg-gray-100'
-                  }`}
-                  disabled={model.status === LocalModelStatus.PENDING}
+                  className={`block w-full text-left px-3 py-1 text-sm hover:bg-gray-100`}
                   onClick={e => {
-                    if (model.status === LocalModelStatus.PENDING) return;
                     e.stopPropagation();
                     setModelId(model.id);
                     setCreateModal(true);
@@ -271,15 +361,9 @@ function ModelCardFooter({
                   {t('model.editAction')}
                 </button>
                 <button
-                  className={`block w-full text-left px-3 py-1 text-sm ${
-                    checkLocalModelStatus(model)
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'hover:bg-gray-100 text-red-600'
-                  }`}
-                  disabled={checkLocalModelStatus(model)}
+                  className={`block w-full text-left px-3 py-1 text-sm hover:bg-gray-100 text-red-600`}
                   onClick={e => {
                     e.stopPropagation();
-                    if (checkLocalModelStatus(model)) return;
                     setDeleteModal(true);
                     setMenuVisible(false);
                   }}
@@ -291,8 +375,8 @@ function ModelCardFooter({
                     className="block w-full text-left px-3 py-1 hover:bg-gray-100 text-sm text-blue-600"
                     onClick={e => {
                       e.stopPropagation();
-                      // TODO: 实现重新发布逻辑
                       setMenuVisible(false);
+                      republishModel(model, getModels);
                     }}
                   >
                     {t('model.republish')}
@@ -388,6 +472,8 @@ function ModelCard({
   };
 
   const bottomTexts = [
+    model.type === ModelCreateType.LOCAL && t('model.localUploadModel'),
+    model.type === ModelCreateType.THIRD_PARTY && t('model.thirdPartyModel'),
     modelProvider?.[0],
     languageSupport?.[0] && `${t('model.language')}${languageSupport[0]}`,
     contextLengthTag?.[0] &&
@@ -399,7 +485,7 @@ function ModelCard({
   const handleUse = (): void => {
     navigate(
       `/management/model/detail/${model.id}?llmSource=${model.llmSource}&modelIcon=${model.icon}`,
-      { state: { model, bottomTexts } } // ← 整个 model 放在 state
+      { state: { model, bottomTexts } }
     );
   };
 
