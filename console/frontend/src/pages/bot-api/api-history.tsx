@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import arrowLeft from '@/assets/imgs/ApiKey/btn_zhishi_back.svg';
+import arrowLeft from '@/assets/imgs/api-key/btn_zhishi_back.svg';
 import { getApiInfo } from '@/services/spark-common';
 
 import styles from './api-history.module.scss';

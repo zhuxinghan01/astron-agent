@@ -414,13 +414,15 @@ axios.interceptors.response.use(
 //根据环境设置baseURL：本地localhost走 /xingchen-api，dev环境和test环境分别对应不同服务器
 const getBaseURL = (): string => {
   // 在客户端环境下检查是否为localhost
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'localhost'
+  ) {
     return '/xingchen-api';
   }
 
   // 通过import.meta.env.MODE获取构建时的环境模式
   const mode = import.meta.env.MODE;
-
   switch (mode) {
     case 'development':
       return 'http://172.29.202.54:8080/';

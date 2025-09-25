@@ -6,9 +6,9 @@ import messageCenter from '@/assets/imgs/sidebar/message_center.svg';
 import weChatShare from '@/assets/imgs/sidebar/we_chat_share.svg';
 import joinChatGroup from '@/assets/imgs/sidebar/join-chat-group.png';
 import styles from './index.module.scss';
+import useUserStore from '@/store/user-store';
 
 interface IconEntryProps {
-  isLogin: boolean;
   myMessage?: {
     messages?: Array<{ isRead: number }>;
   };
@@ -18,13 +18,13 @@ interface IconEntryProps {
 }
 
 const IconEntry: React.FC<IconEntryProps> = ({
-  isLogin,
   myMessage,
   onDocumentClick,
   onMessageClick,
   onNotLogin,
 }) => {
   const { t } = useTranslation();
+  const isLogin = useUserStore(state => state.getIsLogin());
 
   const handleDocumentClick = () => {
     if (onDocumentClick) {

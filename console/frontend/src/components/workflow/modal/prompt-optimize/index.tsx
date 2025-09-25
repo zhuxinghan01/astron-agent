@@ -9,7 +9,7 @@ import { WebSocketMessage } from '@/components/workflow/types';
 import { Icons } from '@/components/workflow/icons';
 
 const wsOrigin =
-  import.meta.env.MODE === 'development'
+  import.meta.env.MODE === 'development' || import.meta.env.MODE === 'test'
     ? 'dev-agent.xfyun.cn'
     : window.location.host;
 const wsType =

@@ -34,7 +34,7 @@ function useToggle<D, R>(
      * 用于在默认值和反转值之间切换状态
      */
     const toggle = () =>
-      setState((s) => (s === defaultValue ? reverseValueOrigin : defaultValue));
+      setState(s => (s === defaultValue ? reverseValueOrigin : defaultValue));
 
     /**
      * 用于设置状态为指定值，但是限制在D | R两个值之间

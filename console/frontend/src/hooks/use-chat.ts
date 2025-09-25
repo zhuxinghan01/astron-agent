@@ -197,7 +197,6 @@ const useChat = () => {
         } else {
           const errorMsg = message || '发生未知错误';
           updateStreamingMessage(errorMsg);
-          finishStreamingMessage(sidRef.current, id);
           controller.abort('错误结束');
           return;
         }
@@ -232,7 +231,12 @@ const useChat = () => {
     ) {
       esURL = `/xingchen-api/chat-message/chat`;
     } else {
-      esURL = `http://172.29.201.92:8080/chat-message/chat`;
+      const mode = import.meta.env.VITE_MODE;
+      if (mode === 'development') {
+        esURL = `http://172.29.202.54:8080/chat-message/chat`;
+      } else {
+        esURL = `http://172.29.201.92:8080/chat-message/chat`;
+      }
     }
     const form = new FormData();
     form.append('text', msg || '');
@@ -253,6 +257,7 @@ const useChat = () => {
   return {
     onSendMsg,
     handleToChat,
+    fetchSSE,
   };
 };
 
