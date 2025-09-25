@@ -6,7 +6,6 @@ from typing import Any, Dict
 from jsonschema import ValidationError, validate  # type: ignore
 from loguru import logger
 from pydantic import BaseModel, Field
-from workflow.consts.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import History
@@ -110,57 +109,6 @@ class DecisionNode(BaseLLMNode):
     intentChains: list[IntentChain] = Field(
         ..., default_factory=list
     )  # List of intent chain configurations
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the complete configuration for this decision node.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "promptPrefix": self.promptPrefix,
-            "reasonMode": self.reasonMode,
-            "template": self.template,
-            "patch_id": self.patch_id,
-            "topK": self.topK,
-            "enableChatHistory": self.enableChatHistory,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "intentChains": [item.dict() for item in self.intentChains],
-            "source": (
-                ModelProviderEnum.XINGHUO.value
-                if not hasattr(self, "source")
-                else self.source
-            ),
-            "extraParams": self.extraParams,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        :param variable_pool: Pool of variables available to the node
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional event logging for node execution
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises: NotImplementedError as synchronous execution is not supported
-        """
-        raise NotImplementedError("Synchronous execution not implemented")
 
     async def async_execute_fc(
         self,

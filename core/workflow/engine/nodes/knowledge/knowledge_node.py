@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import Field
 from workflow.engine.entities.variable_pool import VariablePool
@@ -37,20 +37,6 @@ class KnowledgeNode(BaseNode):
     )  # Optional list of specific document IDs to search
     flowId: str = Field(default="")  # Optional flow ID for context
     score: float = Field(default=0.1)  # Minimum similarity threshold for results
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration parameters.
-
-        :return: Dictionary containing node configuration parameters
-        """
-        return {
-            "topN": self.topN,
-            "ragType": self.ragType,
-            "repoId": self.repoId,
-            "docsId": self.docIds,
-            "score": self.score,
-        }
 
     @property
     def run_s(self) -> WorkflowNodeExecutionStatus:
@@ -96,7 +82,7 @@ class KnowledgeNode(BaseNode):
             status = self.run_s
 
             # Get knowledge base URL from environment variables
-            knowledge_recall_url = os.getenv("AIUI_KNOWLEDGE_RECALL_URL", "")
+            knowledge_recall_url = os.getenv("KNOWLEDGE_URL", "")
             knowledge_config = KnowledgeConfig(
                 top_n=self.topN,
                 rag_type=self.ragType,
@@ -147,28 +133,6 @@ class KnowledgeNode(BaseNode):
                 alias_name=self.alias_name,
                 node_type=self.node_type,
             )
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        This method is not implemented as the knowledge node only supports
-        asynchronous execution for better performance with HTTP requests.
-
-        :param variable_pool: Pool containing workflow variables
-        :param span: Span object for tracing and logging
-        :param event_log_node_trace: Optional node log trace object
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult (not implemented)
-        :raises NotImplementedError: Always raised as this method is not implemented
-        """
-        raise NotImplementedError
 
     async def async_execute(
         self,

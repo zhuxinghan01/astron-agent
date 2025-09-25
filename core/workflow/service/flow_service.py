@@ -124,10 +124,13 @@ def get(flow_id: str, session: Session, span: Span) -> Flow:
     :return: The flow object if found
     :raises CustomException: If flow with the given ID is not found
     """
-    # TODO: Implement caching mechanism for better performance
+    db_flow = flow_cache.get_flow_by_id(flow_id)
+    if db_flow:
+        return db_flow
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
         raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
+    flow_cache.set_flow_by_id(flow_id, db_flow)
     return db_flow
 
 

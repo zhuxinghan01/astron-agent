@@ -31,32 +31,6 @@ class IterationNode(BaseNode):
     # Node ID of the first node in the workflow subgraph within this iteration
     IterationStartNodeId: str
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration parameters for this iteration node.
-
-        :return: Dictionary containing the iteration start node ID
-        """
-        return {"IterationStartNodeId": self.IterationStartNodeId}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for iteration nodes).
-
-        :param variable_pool: Pool of variables for the workflow execution
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node-level event logging
-        :param kwargs: Additional keyword arguments including callback methods
-        :return: NodeRunResult containing execution status and outputs
-        """
-        raise NotImplementedError
-
     async def async_execute(
         self,
         variable_pool: VariablePool,
@@ -280,32 +254,6 @@ class IterationStartNode(BaseNode):
     in the iteration workflow.
     """
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration parameters for this iteration start node.
-
-        :return: Empty dictionary as this node has no specific configuration
-        """
-        return {}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for iteration start nodes).
-
-        :param variable_pool: Pool of variables for the workflow execution
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node-level event logging
-        :param kwargs: Additional keyword arguments including callback methods
-        :return: NodeRunResult containing execution status and outputs
-        """
-        raise NotImplementedError
-
     async def async_execute(
         self,
         variable_pool: VariablePool,
@@ -365,32 +313,6 @@ class IterationEndNode(BaseNode):
 
     template: str = ""
     outputMode: int
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration parameters for this iteration end node.
-
-        :return: Dictionary containing template and output mode configuration
-        """
-        return {"template": self.template, "outputMode": self.outputMode}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for iteration end nodes).
-
-        :param variable_pool: Pool of variables for the workflow execution
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node-level event logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution status and outputs
-        """
-        raise NotImplementedError
 
     async def async_execute(
         self,
