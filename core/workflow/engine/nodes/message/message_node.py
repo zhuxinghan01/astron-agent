@@ -36,38 +36,6 @@ class MessageNode(BaseOutputNode):
     template: str = Field(...)
     startFrameEnabled: Optional[bool] = None
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration dictionary for this message node.
-
-        :return: Dictionary containing node configuration parameters
-        """
-        return {
-            "template": self.template,
-            "startFrameEnabled": self.startFrameEnabled,
-            "streamOutput": self.streamOutput,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method for the message node.
-
-        This method is not implemented as message nodes are designed to run asynchronously.
-
-        :param variable_pool: Pool of variables available to the node
-        :param span: Tracing span for observability
-        :param event_log_node_trace: Optional node trace logging instance
-        :param kwargs: Additional keyword arguments including callback methods
-        :return: NodeRunResult containing execution results
-        """
-        raise NotImplementedError
-
     async def async_execute(
         self,
         variable_pool: VariablePool,

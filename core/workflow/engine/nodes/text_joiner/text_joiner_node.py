@@ -57,39 +57,6 @@ class TextJoinerNode(BaseNode):
     prompt: str = Field(default="")  # Template for text concatenation
     separator: str = Field(default="")  # Delimiter for text separation
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Retrieve the current node configuration.
-
-        Returns a dictionary containing the node's configuration parameters
-        including processing mode, prompt template, and separator.
-
-        :return: Dictionary containing node configuration parameters
-        """
-        return {"mode": self.mode, "prompt": self.prompt, "separator": self.separator}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        This method is part of the BaseNode interface but is not implemented
-        for TextJoinerNode as it only supports asynchronous execution.
-
-        :param variable_pool: Pool containing workflow variables
-        :param span: Tracing span for monitoring execution
-        :param event_log_node_trace: Optional node logging trace
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises NotImplementedError: Always raises as sync execution is not supported
-        """
-        raise NotImplementedError("TextJoinerNode only supports async execution")
-
     async def async_execute(
         self,
         variable_pool: VariablePool,

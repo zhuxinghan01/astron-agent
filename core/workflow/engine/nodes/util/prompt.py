@@ -3,35 +3,10 @@ import re
 from typing import Any, Union
 
 from workflow.engine.entities.variable_pool import VariablePool
-from workflow.engine.nodes.util.string_parse import get_need_find_var_name, parse_prompt
+from workflow.engine.nodes.util.string_parse import get_need_find_var_name
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.trace.span import Span
-
-
-# Find and replace variables in text (deprecated method)
-def replace_variables_deprecated(text: str, replacements: dict) -> str:
-    """
-    Replace variables in text using regex pattern matching (deprecated).
-
-    This function uses regex to find and replace variables in the format {{variable_name}}
-    with their corresponding values from the replacements dictionary.
-
-    :param text: Text containing variables to be replaced
-    :param replacements: Dictionary mapping variable names to their values
-    :return: Text with variables replaced
-    """
-
-    def replacer(match: re.Match[str]) -> str:
-        # Extract content between {{}}
-        key = match.group(1)
-        # Return replacement value if key exists in replacements dict, otherwise return original key
-        return replacements.get(key, f"{{{{{key}}}}}")
-
-    # Define regex pattern to match content wrapped in {{}}
-    pattern = r"\{\{(.*?)\}\}"
-    # Perform replacement
-    return re.sub(pattern, replacer, text)
 
 
 def replace_variables(prompt_template: str, replacements: dict) -> str:
@@ -45,16 +20,9 @@ def replace_variables(prompt_template: str, replacements: dict) -> str:
     :param replacements: Dictionary mapping variable names to their values
     :return: Template with variables replaced
     """
-    template_unit_list = parse_prompt(prompt_template)
-    ans = ""
-    for index, template_unit in enumerate(template_unit_list):
-        if template_unit.key_type == 1:
-            ans += replacements.get(
-                template_unit.key, "{{" + template_unit.key + "}}"
-            )  # Keep original variable format if not found in replacements
-        else:
-            ans += template_unit.key
-    return ans
+    for key, value in replacements.items():
+        prompt_template = prompt_template.replace("{{" + key + "}}", value)
+    return prompt_template
 
 
 def process_array(name: str) -> str:

@@ -468,13 +468,16 @@ class RetryableErrorHandler(ExceptionHandlerBase):
                 if stream_node_id == run_result.node_id:
                     llm_content = self._get_error_llm_content(node_type, node)
 
+                    domain = (
+                        node.node_instance.domain
+                        if hasattr(node.node_instance, "domain")
+                        else ""
+                    )
                     await workflow_engine_ctx.variable_pool.stream_data[key][
                         run_result.node_id
                     ].put(
                         StreamOutputMsg(
-                            domain=node.node_instance.get_node_config().get(
-                                "domain", ""
-                            ),
+                            domain=domain,
                             llm_response=llm_content,
                             exception_occurred=True,
                         )
@@ -506,8 +509,10 @@ class RetryableErrorHandler(ExceptionHandlerBase):
                 "choices": [{"finish_reason": "stop"}],
             }
         elif node_type == NodeType.LLM.value:
-            model_source = node.node_instance.get_node_config().get(
-                "source", ModelProviderEnum.XINGHUO.value
+            model_source = (
+                node.node_instance.source
+                if hasattr(node.node_instance, "source")
+                else ModelProviderEnum.XINGHUO.value
             )
 
             if model_source == ModelProviderEnum.XINGHUO.value:
@@ -1084,7 +1089,11 @@ class WorkflowEngine(BaseModel):
         :param node: The node to get the default intent chain for
         :return: List of default intent chain node IDs, or None if not found
         """
-        intent_chains = node.node_instance.get_node_config().get("intentChains", [])
+        intent_chains = (
+            node.node_instance.intentChains
+            if hasattr(node.node_instance, "intentChains")
+            else []
+        )
 
         for intent in intent_chains:
             if intent.get("name", "") == "default":
@@ -1106,7 +1115,7 @@ class WorkflowEngine(BaseModel):
 
         if node_type == NodeType.QUESTION_ANSWER.value:
             instance = node.node_instance
-            answer_type = instance.get_node_config().get("answerType")
+            answer_type = instance.answerType if hasattr(instance, "answerType") else ""
             return answer_type == "option"
 
         return False
@@ -1509,8 +1518,10 @@ class WorkflowEngine(BaseModel):
                     "choices": [{"finish_reason": "stop"}],
                 }
             case NodeType.LLM.value:
-                model_source = node.node_instance.get_node_config().get(
-                    "source", ModelProviderEnum.XINGHUO.value
+                model_source = (
+                    node.node_instance.source
+                    if hasattr(node.node_instance, "source")
+                    else ModelProviderEnum.XINGHUO.value
                 )
                 match model_source:
                     case ModelProviderEnum.XINGHUO.value:
@@ -2132,8 +2143,12 @@ class WorkflowEngineBuilder:
         :param spark_node_instance: The SparkFlow engine node instance
         :return: None
         """
-        end_node_config = spark_node_instance.node_instance.get_node_config()
-        if end_node_config["outputMode"] == 0:
+        output_mode = (
+            spark_node_instance.node_instance.outputMode
+            if hasattr(spark_node_instance.node_instance, "outputMode")
+            else 0
+        )
+        if output_mode == 0:
             self.end_node_output_mode = EndNodeOutputModeEnum.VARIABLE_MODE
         else:
             self.end_node_output_mode = EndNodeOutputModeEnum.PROMPT_MODE
