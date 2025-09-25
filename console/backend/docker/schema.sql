@@ -4338,3 +4338,5 @@ SET
 FOREIGN_KEY_CHECKS = 1;
 
 SELECT 'astron_console DATABASE initialization completed' AS '';
+
+ALTER TABLE astron_console.rpa_user_assistant ADD user_name varchar(100) NULL COMMENT '用户名';
