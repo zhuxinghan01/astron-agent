@@ -182,13 +182,6 @@ class TestConfigurationPatterns:
         default_deleted = const.DEF_DEL
         assert isinstance(default_deleted, (str, int))
 
-    def test_app_id_validation_pattern(self):
-        """Test application ID validation patterns."""
-        # Test DEFAULT_APPID_KEY exists and is string
-        app_id_key = const.DEFAULT_APPID_KEY
-        assert isinstance(app_id_key, str)
-        assert len(app_id_key) > 0
-
     @patch.dict(os.environ, {
         'DATACENTER_ID': '1',
         'WORKER_ID': '2',

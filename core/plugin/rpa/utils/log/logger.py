@@ -1,4 +1,4 @@
-"""日志记录模块，配置和管理应用程序的日志记录。"""
+"""Logging module for configuring and managing application logging."""
 
 import os
 from pathlib import Path
@@ -25,7 +25,7 @@ def patching(record: Any) -> None:
 
 
 def set_log(log_level: Optional[str] = None, log_path: Optional[str] = None) -> None:
-    """设置日志记录配置。"""
+    """Set up logging configuration."""
     if os.getenv(const.LOG_LEVEL_KEY) in VALID_LOG_LEVELS and log_level is None:
         log_level = os.getenv(const.LOG_LEVEL_KEY)
     if log_level is None:
@@ -39,14 +39,9 @@ def set_log(log_level: Optional[str] = None, log_path: Optional[str] = None) -> 
     logger.patch(patcher=patching)
 
     if not log_path:
-        cache_dir_str = os.getenv(const.LOG_PATH_KEY)
-        cache_dir = None
-        if cache_dir_str:
-            cache_dir = Path(cache_dir_str)
-        else:
-            cache_dir = Path(appdirs.user_cache_dir("rpa-server"))
-        log_path = f"{cache_dir}/rpa-server.log"
+        log_path = Path(appdirs.user_cache_dir("rpa-server"))
 
+    log_path = f"{log_path}/rpa-server.log"
     log_path_ = Path(log_path)
     log_path_.parent.mkdir(parents=True, exist_ok=True)
 

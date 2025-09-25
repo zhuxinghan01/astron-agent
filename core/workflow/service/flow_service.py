@@ -10,7 +10,6 @@ import time
 from typing import Any, Dict, cast
 
 from sqlmodel import Session  # type: ignore
-
 from workflow.cache import flow as flow_cache
 from workflow.cache.engine import ENGINE_CACHE_PREFIX
 from workflow.domain.entities.flow import FlowUpdate
@@ -128,7 +127,7 @@ def get(flow_id: str, session: Session, span: Span) -> Flow:
     # TODO: Implement caching mechanism for better performance
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
-        raise CustomException(CodeEnum.FlowIDNotFound)
+        raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
     return db_flow
 
 
@@ -160,22 +159,22 @@ def get_latest_published_flow_by(
     # Query database if not found in cache
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
-        raise CustomException(CodeEnum.FlowIDNotFound)
+        raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
 
     # Validate license permissions
     lic = license_dao.get_by(db_flow.group_id, app_alias_id, session)
     if not lic:
-        raise CustomException(CodeEnum.AppFlowNotAuthBondErr)
+        raise CustomException(CodeEnum.APP_FLOW_NOT_AUTH_BOND_ERROR)
 
     if not lic.status:
-        raise CustomException(CodeEnum.AppFlowNoLicenseErr)
+        raise CustomException(CodeEnum.APP_FLOW_NO_LICENSE_ERROR)
 
     # Get the latest published version of the flow
     published_flow = flow_dao.get_latest_published_flow_by(
         db_flow.group_id, session, version
     )
     if not published_flow:
-        raise CustomException(CodeEnum.FlowNotPublish)
+        raise CustomException(CodeEnum.FLOW_NOT_PUBLISH_ERROR)
 
     # Cache the result for future requests
     if not version:
@@ -355,7 +354,7 @@ def build(
     except Exception as err:
         # Handle unexpected exceptions
         workflow_trace.set_status(
-            CodeEnum.ProtocolBuildError.code, CodeEnum.ProtocolBuildError.msg
+            CodeEnum.PROTOCOL_BUILD_ERROR.code, CodeEnum.PROTOCOL_BUILD_ERROR.msg
         )
         raise err
     finally:
