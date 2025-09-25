@@ -13,18 +13,19 @@ import {
   FileUploadResponse,
   FileUploadItem,
   AjvValidationError,
-} from '@/components/workflow/types';
+  UseChatInputProps,
+} from "@/components/workflow/types";
 
 const useChatInput = (
   startNodeParams: StartNodeType[],
-  setStartNodeParams: (params: StartNodeType[]) => void
-) => {
+  setStartNodeParams: (params: StartNodeType[]) => void,
+): UseChatInputProps => {
   const { t } = useTranslation();
   const uploadComplete = useMemoizedFn(
     (
       event: ProgressEvent<EventTarget>,
       index: number,
-      fileId: string
+      fileId: string,
     ): void => {
       const target = event.currentTarget as XMLHttpRequest;
       const res: FileUploadResponse = JSON.parse(target.responseText);
@@ -33,7 +34,7 @@ const useChatInput = (
           const defaultValue = oldNodeParams?.[index]?.default;
           if (Array.isArray(defaultValue)) {
             const file = (defaultValue as FileUploadItem[]).find(
-              item => item.id === fileId
+              (item) => item.id === fileId,
             );
             if (file) {
               file.loading = false;
@@ -43,7 +44,7 @@ const useChatInput = (
           return cloneDeep(oldNodeParams);
         });
       }
-    }
+    },
   );
 
   const handleFileUpload = useMemoizedFn(
@@ -58,13 +59,13 @@ const useChatInput = (
 
       if (Array.isArray(startNodeParams[index]?.default) && multiple) {
         (startNodeParams[index].default as FileUploadItem[]).push(
-          fileUploadItem
+          fileUploadItem,
         );
       } else {
         startNodeParams[index].default = [fileUploadItem];
       }
       setStartNodeParams([...startNodeParams]);
-    }
+    },
   );
 
   const handleDeleteFile = useMemoizedFn(
@@ -78,7 +79,7 @@ const useChatInput = (
         }
         return cloneDeep(oldStartNodeParams);
       });
-    }
+    },
   );
   const validateInputJSON = useMemoizedFn(
     (newValue: string, schema: object): string => {
@@ -103,13 +104,13 @@ const useChatInput = (
       } catch {
         return t('workflow.nodes.validation.invalidJSONFormat');
       }
-    }
+    },
   );
 
   const handleChangeParam = useMemoizedFn(
     (index: number, fn, value: string | number | boolean): void => {
       const currentInput: StartNodeType | undefined = startNodeParams.find(
-        (_, i) => index === i
+        (_, i) => index === i,
       );
       if (currentInput) {
         fn(currentInput, value);
@@ -120,13 +121,13 @@ const useChatInput = (
           if (currentInput?.validationSchema) {
             currentInput.errorMsg = validateInputJSON(
               value as string,
-              currentInput.validationSchema
+              currentInput.validationSchema,
             );
           }
         }
       }
       setStartNodeParams([...startNodeParams]);
-    }
+    },
   );
   return {
     uploadComplete,
@@ -203,7 +204,7 @@ function ChatInput({
                             .toUpperCase() +
                           (params as unknown).allowedFileType?.slice(1)
                         }>`
-                      : (params as unknown).allowedFileType || params.type
+                      : (params as unknown).allowedFileType || params.type,
                   )}
                 </div>
               </div>

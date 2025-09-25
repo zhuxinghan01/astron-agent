@@ -11,13 +11,16 @@ import { cloneDeep } from 'lodash';
 
 function useDeleteCanvas(): () => void {
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    state => state.setNodeInfoEditDrawerlInfo
+    (state) => state.setNodeInfoEditDrawerlInfo
   );
   const nodeList = useFlowsManager(state => state.nodeList);
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const setClearFlowCanvasModalInfo = useFlowsManager(
-    state => state.setClearFlowCanvasModalInfo
+    (state) => state.setClearFlowCanvasModalInfo
+  );
+  const autoSaveCurrentFlow = useFlowsManager(
+    (state) => state.autoSaveCurrentFlow
   );
   const setNodes = currentStore(state => state.setNodes);
   const setEdges = currentStore(state => state.setEdges);
@@ -26,7 +29,7 @@ function useDeleteCanvas(): () => void {
   return useMemoizedFn(() => {
     takeSnapshot();
     const initialNodes = nodeList?.find(
-      node => node?.name === '固定节点'
+      (node) => node?.name === "固定节点"
     )?.nodes;
     initialNodes.forEach(node => {
       node.id = getNodeId(node?.idType);
@@ -51,6 +54,7 @@ function useDeleteCanvas(): () => void {
     setClearFlowCanvasModalInfo({
       open: false,
     });
+    autoSaveCurrentFlow();
   });
 }
 
@@ -59,10 +63,10 @@ export default function DeleteModal(): React.ReactElement {
   const { t } = useTranslation();
   const currentFlow = useFlowsManager(state => state.currentFlow);
   const clearFlowCanvasModalInfo = useFlowsManager(
-    state => state.clearFlowCanvasModalInfo
+    (state) => state.clearFlowCanvasModalInfo
   );
   const setClearFlowCanvasModalInfo = useFlowsManager(
-    state => state.setClearFlowCanvasModalInfo
+    (state) => state.setClearFlowCanvasModalInfo
   );
 
   return (

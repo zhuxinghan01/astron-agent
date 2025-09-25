@@ -65,7 +65,7 @@ export function useVariableMemoryHandlers({
   );
 
   // 判断 currentInput 是否有效
-  const isValidInput = input => {
+  const isValidInput = (input): boolean | string | {} => {
     if (!input?.name) return false;
     const { type, content } = input?.schema?.value || {};
     if (type === 'literal') return !!content;
@@ -74,7 +74,7 @@ export function useVariableMemoryHandlers({
   };
 
   // 更新 output
-  const updateOutputFromInput = (output, currentInput) => {
+  const updateOutputFromInput = (output, currentInput): void => {
     if (!isValidInput(currentInput)) {
       output.name = '';
       output.schema.type = '';
@@ -110,8 +110,10 @@ export function useVariableMemoryHandlers({
               node.nodeType === 'node-variable' &&
               node.data.nodeParam.method === 'get'
             ) {
-              node?.data?.outputs?.forEach(output => {
-                const currentInput = findCurrentInput(nodes, id, output);
+              node?.data?.outputs?.forEach((output) => {
+                const currentInput = nodes
+                  ?.find((node) => node?.id === id)
+                  ?.data?.inputs.find((item) => item?.id === output?.refId);
                 if (currentInput) {
                   updateOutputFromInput(output, currentInput);
                 }

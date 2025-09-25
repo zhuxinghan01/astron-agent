@@ -11,12 +11,11 @@ import {
   findFromTwoItems,
   transformTree,
   generateRandomPosition,
-} from '@/components/workflow/utils/reactflowUtils';
-import { isJSON } from '@/utils';
-import { getCookie } from '@/utils';
-import useSpaceStore from '@/store/space-store';
-import { v4 as uuid } from 'uuid';
-import { cloneDeep } from 'lodash';
+} from "@/components/workflow/utils/reactflowUtils";
+import { isJSON } from "@/utils";
+import useSpaceStore from "@/store/space-store";
+import { v4 as uuid } from "uuid";
+import { cloneDeep } from "lodash";
 
 // 类型导入
 import {
@@ -37,10 +36,10 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
   const setFlowModal = useFlowsManager(state => state.setFlowModalInfo);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const setOpenOperationResult = useFlowsManager(
-    state => state.setOpenOperationResult
+    (state) => state.setOpenOperationResult,
   );
   const setVersionManagement = useFlowsManager(
-    state => state.setVersionManagement
+    (state) => state.setVersionManagement,
   );
   const willAddNode = useFlowsManager(state => state.willAddNode);
   const beforeNode = useFlowsManager(state => state.beforeNode);
@@ -51,7 +50,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const setWillAddNode = useFlowsManager(state => state.setWillAddNode);
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    state => state.setNodeInfoEditDrawerlInfo
+    (state) => state.setNodeInfoEditDrawerlInfo,
   );
   const checkFlow = useFlowsManager(state => state.checkFlow);
   const reactFlowInstance = currentStore(state => state.reactFlowInstance);
@@ -63,7 +62,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
     (
       sourceHandle: string | null,
       currentNode: NewNodeType,
-      nextNode: NewNodeType
+      nextNode: NewNodeType,
     ): void => {
       const edge = {
         source: currentNode?.id,
@@ -86,13 +85,13 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
         const newEdges = [...edges, edge];
         return newEdges;
       });
-    }
+    },
   );
 
   const handleAddToolNode = useMemoizedFn((tool: ToolType): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.pluginId === tool.toolId
+      (node) => node?.data?.nodeParam?.pluginId === tool.toolId,
     );
     willAddNode.data.nodeParam.pluginId = tool.toolId;
     willAddNode.data.nodeParam.operationId = tool.operationId;
@@ -108,9 +107,9 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
     willAddNode.data.nodeParam.businessInput =
       findFromTwoItems(toolRequestInput);
     willAddNode.data.outputs = transformTree(
-      (isJSON(tool?.webSchema || '') &&
-        JSON.parse(tool.webSchema || '')?.toolRequestOutput) ||
-        []
+      (isJSON(tool?.webSchema || "") &&
+        JSON.parse(tool.webSchema || "")?.toolRequestOutput) ||
+        [],
     );
     const newToolNode = {
       id: getNodeId(willAddNode.idType),
@@ -139,7 +138,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
   const handleAddFlowNode = useMemoizedFn((flow: FlowType): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.flowId === flow.flowId
+      (node) => node?.data?.nodeParam?.flowId === flow.flowId,
     );
     willAddNode.data.nodeParam.toolDescription = flow.description;
     willAddNode.data.nodeParam.appId = flow?.appId;
@@ -189,7 +188,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
         return null;
       } else {
         const currentTypeList = nodes.filter(
-          node => node.type === addNode?.data?.nodeMeta?.aliasName
+          (node) => node.type === addNode?.data?.nodeMeta?.aliasName,
         );
         addNode.data.nodeParam.appId = currentFlow?.appId;
         addNode.data.nodeParam.uid = user?.uid?.toString();
@@ -327,13 +326,13 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
           cloneDeep([
             ...nodes.map(node => ({ ...node, selected: false })),
             ...addNodes,
-          ])
+          ]),
         );
         canPublishSetNot();
         setWillAddNode(null);
         return addNodes;
       }
-    }
+    },
   );
 
   const handleEdgeAddNode = useMemoizedFn(
@@ -341,7 +340,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
       addNode: AddNodeType,
       position: PositionType,
       sourceHandle: string | null,
-      currentNode: NewNodeType
+      currentNode: NewNodeType,
     ): void => {
       const addNodes = handleAddNode(addNode, position);
       addNodes && addEdge(sourceHandle, currentNode, addNodes[0]);
@@ -349,7 +348,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
         ...currentNode,
         sourceHandle,
       });
-    }
+    },
   );
 
   const handleDebugger = useMemoizedFn((): void => {
