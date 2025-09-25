@@ -1,6 +1,7 @@
 import json
 from typing import Any
 
+from workflow.domain.entities.chat import HistoryItem
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.trace.span import Span
@@ -26,6 +27,7 @@ class KnowledgeConfig:
         flow_id: str = "",
         doc_ids: list = [],
         threshold: float = 0.1,
+        history: list[HistoryItem] = [],
     ):
         """
         Initialize knowledge configuration parameters.
@@ -47,6 +49,7 @@ class KnowledgeConfig:
         self.flow_id = flow_id
         self.doc_ids = doc_ids
         self.threshold = threshold
+        self.history = history
 
 
 class KnowledgeClient:
@@ -143,6 +146,7 @@ class KnowledgeClient:
                     "flowId": self.config.flow_id,
                     "threshold": self.config.threshold,
                 },
+                "history": [item.dict() for item in self.config.history],
             },
             ensure_ascii=True,
         )

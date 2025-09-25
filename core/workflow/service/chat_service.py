@@ -890,9 +890,20 @@ async def _chat_response_stream(
                 if not response:
                     raise CustomException(CodeEnum.OPEN_API_ERROR)
 
+                # deal with event data
                 if response.event_data:
                     yield await _del_response_resume_data(
                         app_audit_policy, response, is_stream, event_id
+                    )
+                    # forward queue messages
+                    _ = asyncio.create_task(
+                        _forward_queue_messages(
+                            app_audit_policy,
+                            audit_strategy,
+                            response_queue,
+                            event_id,
+                            span_context,
+                        )
                     )
                     return
 
@@ -969,6 +980,41 @@ async def _chat_response_stream(
                     f"final_content: {final_content}, \n"
                     f"final_reasoning_content: {final_reasoning_content}"
                 )
+
+
+async def _forward_queue_messages(
+    app_audit_policy: AppAuditPolicy,
+    audit_strategy: AuditStrategy | None,
+    response_queue: asyncio.Queue,
+    event_id: str,
+    span: Span,
+) -> None:
+    """
+    Forward queue messages to event registry.
+
+    :param app_audit_policy: Application audit policy configuration
+    :param audit_strategy: Audit strategy configuration
+    :param response_queue: Response queue
+    :param event_id: Event identifier
+    :param span: Span
+    """
+    try:
+        while True:
+            response = await _get_response(
+                app_audit_policy, audit_strategy, response_queue
+            )
+            event = EventRegistry().get_event(event_id=event_id)
+            data = json.dumps(response.dict(), ensure_ascii=False)
+            await EventRegistry().write_resume_data(
+                queue_name=event.get_workflow_q_name(),
+                data=data,
+                expire_time=event.timeout,
+            )
+            if response.choices[0].finish_reason == "stop":
+                return
+    except Exception as e:
+        span.record_exception(e)
+        raise e
 
 
 async def _del_response_resume_data(
