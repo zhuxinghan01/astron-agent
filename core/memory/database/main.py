@@ -175,7 +175,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app="main:create_app",
         host="0.0.0.0",
-        port=7990,
+        port=int(os.getenv("SERVICE_PORT", "7990")),
         workers=(
             None
             if sys.platform in ["win", "win32", "darwin"]

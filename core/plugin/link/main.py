@@ -82,13 +82,14 @@ def load_polaris() -> None:
     Load remote configuration and override environment variables
     """
     from common.settings.polaris import ConfigFilter, Polaris
+    from plugin.link.consts import const
 
-    base_url = os.getenv("POLARIS_URL")
-    project_name = os.getenv("PROJECT_NAME", "hy-spark-agent-builder")
-    cluster_group = os.getenv("POLARIS_CLUSTER")
-    service_name = os.getenv("SERVICE_NAME", "spark-link")
-    version = os.getenv("VERSION", "1.0.0")
-    config_file = os.getenv("CONFIG_FILE", "config.env")
+    base_url = os.getenv(const.POLARIS_URL_KEY)
+    project_name = os.getenv(const.PROJECT_NAME_KEY, "hy-spark-agent-builder")
+    cluster_group = os.getenv(const.POLARIS_CLUSTER_KEY)
+    service_name = os.getenv(const.SERVICE_NAME_KEY, "spark-link")
+    version = os.getenv(const.VERSION_KEY, "1.0.0")
+    config_file = os.getenv(const.CONFIG_FILE_KEY, "config.env")
     config_filter = ConfigFilter(
         project_name=project_name,
         cluster_group=cluster_group,
@@ -96,8 +97,10 @@ def load_polaris() -> None:
         version=version,
         config_file=config_file,
     )
-    username = os.getenv("POLARIS_USERNAME")
-    password = os.getenv("POLARIS_PASSWORD")
+
+    from plugin.link.consts import const
+    username = os.getenv(const.POLARIS_USERNAME_KEY)
+    password = os.getenv(const.POLARIS_PASSWORD_KEY)
 
     # Ensure required parameters are not None
     if not base_url or not username or not password or not cluster_group:
@@ -121,25 +124,6 @@ def load_polaris() -> None:
 def start_service() -> None:
     """Start FastAPI service"""
     print("\n🚀 Starting Link service...")
-
-    # Display key environment variables
-    env_vars = [
-        "PYTHONUNBUFFERED",
-        "POLARIS_CLUSTER",
-        "POLARIS_URL",
-        "POLARIS_USERNAME",
-        "USE_POLARIS",
-    ]
-
-    print("📋 Environment configuration:")
-    for var in env_vars:
-        value = os.environ.get(var, "None")
-        # Hide passwords
-        if "password" in var.lower():
-            value = "***"
-        print(f"  - {var}: {value}")
-
-    print("")
 
     try:
         # Start FastAPI application

@@ -1,7 +1,6 @@
 import os
 
 from loguru import logger
-
 from workflow.extensions.middleware.cache.base import BaseCacheService, RedisModel
 from workflow.extensions.middleware.cache.manager import RedisCache
 from workflow.extensions.middleware.factory import ServiceFactory

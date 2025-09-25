@@ -7,6 +7,7 @@ during workflow execution. It supports template-based message generation and str
 
 from typing import Any, Dict, Optional
 
+from pydantic import Field
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_running_status import NodeRunningStatus
@@ -32,7 +33,7 @@ class MessageNode(BaseOutputNode):
     streaming output capabilities.
     """
 
-    template: str
+    template: str = Field(...)
     startFrameEnabled: Optional[bool] = None
 
     def get_node_config(self) -> Dict[str, Any]:
@@ -196,7 +197,7 @@ class MessageNode(BaseOutputNode):
                 status=WorkflowNodeExecutionStatus.FAILED,
                 inputs=inputs,
                 error=CustomException(
-                    CodeEnum.MessageNodeExecutionError,
+                    CodeEnum.MESSAGE_NODE_EXECUTION_ERROR,
                     cause_error=err,
                 ),
                 node_id=self.node_id,
