@@ -28,6 +28,7 @@ const translation = {
   defaultValue: '默认值',
   inputParameter: '输入参数',
   outputParameter: '输出参数',
+  noAccount: '暂无{{platform}}账号',
 };
 
 export default translation;
