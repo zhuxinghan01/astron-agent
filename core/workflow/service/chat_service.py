@@ -10,7 +10,8 @@ from loguru import logger
 from workflow.cache.engine import get_engine, set_engine
 from workflow.cache.event_registry import Event, EventRegistry
 from workflow.consts.app_audit import AppAuditPolicy
-from workflow.consts.model_provider import ModelProviderEnum
+from workflow.consts.engine.chat_status import ChatStatus
+from workflow.consts.engine.model_provider import ModelProviderEnum
 from workflow.domain.entities.chat import ChatVo
 from workflow.domain.entities.response import Streaming
 from workflow.engine.callbacks.callback_handler import (
@@ -792,8 +793,10 @@ def _filter_response_frame(
 
     # Filter out frames with empty content unless it's a valid stop or interrupt
     is_content_empty = not delta.content and not delta.reasoning_content
-    is_valid_stop = node_id == "flow_obj" and choice.finish_reason == "stop"
-    is_interrupted = choice.finish_reason == "interrupt"
+    is_valid_stop = (
+        node_id == "flow_obj" and choice.finish_reason == ChatStatus.FINISH_REASON.value
+    )
+    is_interrupted = choice.finish_reason == ChatStatus.INTERRUPT.value
     if is_content_empty and not (is_valid_stop or is_interrupted):
         return None, False
 
@@ -812,7 +815,10 @@ def _filter_response_frame(
             reasoning_content_cache.append(delta.reasoning_content)
             return None, False
 
-        elif node_id == "flow_obj" and choice.finish_reason == "stop":
+        elif (
+            node_id == "flow_obj"
+            and choice.finish_reason == ChatStatus.FINISH_REASON.value
+        ):
             # Concatenate cached content
             delta.content = "".join(message_cache)
             delta.reasoning_content = "".join(reasoning_content_cache)
@@ -919,7 +925,7 @@ async def _chat_response_stream(
                 )
                 yield Streaming.generate_data(response.model_dump(exclude_none=True))
 
-                if response.choices[0].finish_reason == "stop":
+                if response.choices[0].finish_reason == ChatStatus.FINISH_REASON.value:
                     # Exit condition met
                     EventRegistry().on_finished(event_id=event_id)
                     return
@@ -973,7 +979,8 @@ async def _chat_response_stream(
             if task:
                 await audit_service.audit_task_cancel(task)
             if response and (
-                response.event_data or response.choices[0].finish_reason == "stop"
+                response.event_data
+                or response.choices[0].finish_reason == ChatStatus.FINISH_REASON.value
             ):
                 span.add_info_event(
                     f"Workflow output data processed through audit:\n"
@@ -1010,7 +1017,7 @@ async def _forward_queue_messages(
                 data=data,
                 expire_time=event.timeout,
             )
-            if response.choices[0].finish_reason == "stop":
+            if response.choices[0].finish_reason == ChatStatus.FINISH_REASON.value:
                 return
     except Exception as e:
         span.record_exception(e)
@@ -1145,7 +1152,7 @@ async def chat_resume_response_stream(
             response.id = span.sid
             yield Streaming.generate_data(response.model_dump(exclude_none=True))
 
-            if response.choices[0].finish_reason == "stop":
+            if response.choices[0].finish_reason == ChatStatus.FINISH_REASON.value:
                 span.add_info_event(
                     f"Workflow output data processed through audit:\n"
                     f"final_content: {final_content}, \n"

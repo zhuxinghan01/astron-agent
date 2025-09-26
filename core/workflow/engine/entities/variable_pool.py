@@ -4,6 +4,7 @@ import re
 from enum import Enum, unique
 from typing import Any, Dict, Optional, cast
 
+from workflow.consts.engine.value_type import ValueType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.entities.history import History
 from workflow.engine.entities.node_entities import NodeType
@@ -341,7 +342,7 @@ class VariablePool:
                 json_input_type = input_schema.type
                 python_input_type_list = schema_type_map_python.get(json_input_type, [])
                 input_content: Any = ""
-                if input_value.type == "literal":
+                if input_value.type == ValueType.LITERAL.value:
                     input_content = input_value.content
                     input_content_org = input_content
                     type_match = any(
@@ -633,11 +634,13 @@ class VariablePool:
             input_schema: InputSchema = input_value.get("schema")
             ref_var_type = input_schema.value.type
             ref_content = input_schema.value.content
-            if ref_var_type == "literal":
+            if ref_var_type == ValueType.LITERAL.value:
                 ref_node_id = node_id
                 ref_var_name = input_value.get("name")
                 literal_var_value = str(ref_content)
-            elif ref_var_type == "ref" and isinstance(ref_content, NodeRef):
+            elif ref_var_type == ValueType.REF.value and isinstance(
+                ref_content, NodeRef
+            ):
                 ref_node_id = ref_content.nodeId
                 ref_var_name = ref_content.name
                 if ref_node_id.split(":")[0] == NodeType.LLM.value:
@@ -671,7 +674,7 @@ class VariablePool:
             if mapping_key in self.input_variable_mapping:
                 input_value = self.input_variable_mapping[mapping_key]
                 input_schema: InputSchema = input_value.get("schema")
-                if input_schema.value.type == "literal":
+                if input_schema.value.type == ValueType.LITERAL.value:
                     return input_value.get("value")
                 else:
                     ref_content = input_schema.value.content

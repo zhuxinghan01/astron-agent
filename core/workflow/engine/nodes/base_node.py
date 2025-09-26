@@ -6,9 +6,9 @@ from asyncio import Event
 from typing import Any, AsyncIterator, Dict, List, Literal, Optional, Tuple
 
 from pydantic import BaseModel, Field
-from workflow.consts.flow import XFLLMStatus
-from workflow.consts.model_provider import ModelProviderEnum
-from workflow.consts.template import TemplateSplitType, TemplateType
+from workflow.consts.engine.chat_status import ChatStatus, SparkLLMStatus
+from workflow.consts.engine.model_provider import ModelProviderEnum
+from workflow.consts.engine.template import TemplateSplitType, TemplateType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
@@ -45,16 +45,10 @@ from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
 from workflow.infra.providers.llm.chat_ai import ChatAI
 from workflow.infra.providers.llm.chat_ai_factory import ChatAIFactory
-from workflow.infra.providers.llm.iflytek_spark.const import (
-    LLM_END_FRAME as SPARK_LLM_END_FRAME,
-)
 from workflow.infra.providers.llm.iflytek_spark.const import RespFormatEnum
 from workflow.infra.providers.llm.iflytek_spark.schemas import (
     SparkAiMessage,
     StreamOutputMsg,
-)
-from workflow.infra.providers.llm.openai.const import (
-    LLM_END_FRAME as OPENAI_LLM_END_FRAME,
 )
 from workflow.infra.providers.llm.types import SystemUserMsg
 from workflow.utils.file_util import url_to_base64
@@ -170,7 +164,7 @@ class BaseNode(BaseModel):
 
         :return: Dictionary with finish_reason set to "stop"
         """
-        return {"finish_reason": "stop"}
+        return {"finish_reason": ChatStatus.FINISH_REASON.value}
 
     def success(
         self,
@@ -814,7 +808,7 @@ class BaseOutputNode(BaseNode):
             llm_reasoning_content[dep_node_id].append(OutputNodeFrameData(is_end=True))
             llm_output_cache[dep_node_id].append(
                 OutputNodeFrameData(
-                    content=content, is_end=(status == XFLLMStatus.END.value)
+                    content=content, is_end=(status == SparkLLMStatus.END.value)
                 )
             )
             if is_reasoning:
@@ -840,7 +834,7 @@ class BaseOutputNode(BaseNode):
                     ),
                     content=(content if template_type == TemplateType.NORMAL else ""),
                     data_type="text",
-                    is_end=(status == XFLLMStatus.END.value),
+                    is_end=(status == SparkLLMStatus.END.value),
                 )
 
     async def _process_queue_output(
@@ -892,7 +886,7 @@ class BaseOutputNode(BaseNode):
 
                 llm_output_status[dep_node_id] = (
                     True
-                    if status == XFLLMStatus.END.value
+                    if status == SparkLLMStatus.END.value
                     else llm_output_status[dep_node_id]
                 )
 
@@ -925,7 +919,7 @@ class BaseOutputNode(BaseNode):
                     is_reasoning,
                 ):
                     yield data
-                if status == XFLLMStatus.END.value or (
+                if status == SparkLLMStatus.END.value or (
                     template_type == TemplateType.REASONING
                     and reasoning_content == ""
                     and is_reasoning
@@ -1293,13 +1287,20 @@ class BaseLLMNode(BaseNode):
                             llm_content=msg,
                         )
                     texts.append(content)
-                    if status in [SPARK_LLM_END_FRAME, OPENAI_LLM_END_FRAME]:
+                    if status in [
+                        SparkLLMStatus.END.value,
+                        ChatStatus.FINISH_REASON.value,
+                    ]:
                         token_usage = token_usage
                         break
                     if (
                         self.source == ModelProviderEnum.OPENAI.value
                         and status
-                        and status not in [SPARK_LLM_END_FRAME, OPENAI_LLM_END_FRAME]
+                        and status
+                        not in [
+                            SparkLLMStatus.END.value,
+                            ChatStatus.FINISH_REASON.value,
+                        ]
                     ):
                         # Exception case: finish_reason has value but not "stop", report the issue
                         # For example, openai-gpt-4o gives "length" when max_token is very small

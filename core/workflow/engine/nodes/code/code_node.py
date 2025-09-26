@@ -13,11 +13,6 @@ from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
 
-# Reference type for variable binding
-REF = "ref"
-# Literal type for direct value assignment
-LITERAL = "literal"
-
 # Python code execution template that wraps user code with main function call
 PYTHON_RUNNER = """{{code}}
 

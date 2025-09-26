@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Literal, Optional, cast
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 from workflow.cache.event_registry import EventRegistry
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.entities.workflow_dsl import OutputItem
@@ -374,7 +375,7 @@ class QuestionAnswerNode(BaseLLMNode):
             code=0,
             node_id=self.node_id,
             alias_name=self.alias_name,
-            finish_reason="interrupt",
+            finish_reason=ChatStatus.INTERRUPT.value,
         )
 
     async def handle_static_option_response(
