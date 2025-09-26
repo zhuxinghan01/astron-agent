@@ -13,17 +13,14 @@ from typing import Any, AsyncIterator, Dict, Tuple
 
 import websockets
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
+from workflow.consts.engine.chat_status import SparkLLMStatus
 from workflow.engine.nodes.entities.llm_response import LLMResponse
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
 from workflow.infra.providers.llm.chat_ai import ChatAI
-from workflow.infra.providers.llm.iflytek_spark.const import (
-    LLM_END_FRAME,
-    RETRY_CNT,
-    spark_mapping,
-)
+from workflow.infra.providers.llm.iflytek_spark.const import RETRY_CNT, spark_mapping
 from workflow.infra.providers.llm.iflytek_spark.spark_chat_auth import SparkChatHmacAuth
 
 
@@ -156,7 +153,11 @@ class SparkChatAi(ChatAI):
         text = resp_payload["choices"]["text"][0]
         content = text.get("content", "")
         reasoning_content = text.get("reasoning_content", "")
-        token_usage = {} if status != LLM_END_FRAME else msg["payload"]["usage"]["text"]
+        token_usage = (
+            {}
+            if status != SparkLLMStatus.END.value
+            else msg["payload"]["usage"]["text"]
+        )
         return code, status, content, reasoning_content, token_usage
 
     async def _recv_messages(

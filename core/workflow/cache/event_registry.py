@@ -8,10 +8,10 @@ and resume data management.
 
 import asyncio
 import time
-from enum import Enum
 from typing import Any, Dict
 
 from pydantic import BaseModel
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.graceful_shutdown.base_shutdown_event import BaseShutdownEvent
@@ -28,16 +28,6 @@ EVENT_AUDIT_STRATEGY: Dict[str, AuditStrategy] = {}
 EVENT_AUDIT_QUESTION_NO_IDX: Dict[str, int] = {}
 
 
-class Status(str, Enum):
-    """
-    Workflow execution status enumeration.
-    """
-
-    RUNNING = "running"
-    FINISHED = "finished"
-    INTERRUPTED = "interrupt"
-
-
 class Event(BaseModel):
     """
     Event model for storing workflow execution information.
@@ -49,7 +39,7 @@ class Event(BaseModel):
     flow_id: str = ""
     chat_id: str = ""
     is_stream: bool = True
-    status: str = Status.RUNNING.value
+    status: str = ChatStatus.RUNNING.value
     timeout: int = 180
     interrupt_node: str = ""
 
@@ -195,7 +185,7 @@ class EventRegistry(BaseShutdownEvent):
         """
         event = cls.get_event(event_id)
         if event:
-            event.status = Status.INTERRUPTED.value
+            event.status = ChatStatus.INTERRUPT.value
             cls.save_event(event)
 
     @classmethod
