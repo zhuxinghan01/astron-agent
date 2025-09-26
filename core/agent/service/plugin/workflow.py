@@ -132,6 +132,8 @@ class WorkflowPluginRunner(BaseModel):
 
                     if ctx.code != 0:
                         yield self._create_error_response(ctx, chunk_data)
+                    elif not chunk.choices:
+                        continue
                     else:
                         content = chunk.choices[0].delta.content
                         reasoning_content = (
