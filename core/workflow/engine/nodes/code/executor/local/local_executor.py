@@ -1,4 +1,5 @@
 import asyncio
+import json
 import multiprocessing
 import traceback
 import warnings
@@ -139,5 +140,6 @@ class LocalExecutor(BaseExecutor):
             "map": map,
             "type": type,
             "sum": sum,
+            "json": json,
         }
         return restricted_globals

@@ -21,6 +21,13 @@ from exceptions.agent_exc import AgentInternalExc, AgentNormalExc
 from infra import agent_config
 
 
+def json_serializer(obj: Any) -> Any:
+    """Custom JSON serializer to handle set objects."""
+    if isinstance(obj, set):
+        return list(obj)
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
 @dataclass
 class RunContext:
     """Runtime context parameters"""
@@ -55,7 +62,7 @@ class CompletionBase(BaseModel, ABC):
                 sub="Agent",
                 caller=self.inputs.meta_data.caller,
                 log_caller=self.log_caller,
-                question=self.inputs.messages[-1].content,
+                question=self.inputs.get_last_message_content(),
             )
             node_trace.record_start()
 
@@ -108,7 +115,7 @@ class CompletionBase(BaseModel, ABC):
         yield await self.create_chunk(stop_chunk)
         yield await self.create_done()
 
-        if agent_config.upload_metrics:
+        if agent_config.UPLOAD_METRICS:
             context.meter.in_error_count(context.error.c)
             # context.meter.in_error_count(
             #     context.error.c, lables={"msg": context.error.m}
@@ -118,14 +125,18 @@ class CompletionBase(BaseModel, ABC):
         context.span.add_info_events({"message": context.error.m})
 
         context.node_trace.record_end()
-        if agent_config.upload_node_trace:
+        if agent_config.UPLOAD_NODE_TRACE:
             node_trace_log = context.node_trace.upload(
                 status=TraceStatus(code=context.error.c, message=context.error.m),
                 log_caller=self.log_caller,
                 span=context.span,
             )
             context.span.add_info_events(
-                {"node-trace": json.dumps(node_trace_log, ensure_ascii=False)}
+                {
+                    "node-trace": json.dumps(
+                        node_trace_log, ensure_ascii=False, default=json_serializer
+                    )
+                }
             )
 
     async def run_runner(

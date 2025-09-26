@@ -6,7 +6,6 @@ from typing import Any, Dict
 from jsonschema import ValidationError, validate  # type: ignore
 from loguru import logger
 from pydantic import BaseModel, Field
-from workflow.consts.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import History
@@ -20,8 +19,7 @@ from workflow.engine.nodes.entities.node_run_result import (
     NodeRunResult,
     WorkflowNodeExecutionStatus,
 )
-from workflow.engine.nodes.util.prompt import process_prompt, replace_variables
-from workflow.engine.nodes.util.string_parse import get_need_find_var_name
+from workflow.engine.nodes.util.prompt import PromptUtils, process_prompt
 from workflow.exception.e import CustomException
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
@@ -111,57 +109,6 @@ class DecisionNode(BaseLLMNode):
         ..., default_factory=list
     )  # List of intent chain configurations
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the complete configuration for this decision node.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "promptPrefix": self.promptPrefix,
-            "reasonMode": self.reasonMode,
-            "template": self.template,
-            "patch_id": self.patch_id,
-            "topK": self.topK,
-            "enableChatHistory": self.enableChatHistory,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "intentChains": [item.dict() for item in self.intentChains],
-            "source": (
-                ModelProviderEnum.XINGHUO.value
-                if not hasattr(self, "source")
-                else self.source
-            ),
-            "extraParams": self.extraParams,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        :param variable_pool: Pool of variables available to the node
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional event logging for node execution
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises: NotImplementedError as synchronous execution is not supported
-        """
-        raise NotImplementedError("Synchronous execution not implemented")
-
     async def async_execute_fc(
         self,
         variable_pool: VariablePool,
@@ -229,16 +176,13 @@ class DecisionNode(BaseLLMNode):
         span.add_info_events({"user_input_prompt_prefix": prompt_prefix})
 
         # Find variables that need to be replaced in the prompt
-        need_find_var_name = get_need_find_var_name(
-            node_id=self.node_id,
-            variable_pool=variable_pool,
-            prompt_template=prompt_prefix,
-            span_context=span,
+        available_placeholders = PromptUtils.get_available_placeholders(
+            self.node_id, prompt_prefix, variable_pool, span
         )
         replacements = {}
         # Replace variables in prompt with actual values
         try:
-            for var_name in need_find_var_name:
+            for var_name in available_placeholders:
                 var_name_list = re.split(r"[\[.\]]", var_name)
                 # Only process variables that are in input identifiers
                 if var_name_list[0].strip() in self.input_identifier:
@@ -269,7 +213,7 @@ class DecisionNode(BaseLLMNode):
         replacements_str = {
             k: (lambda v: (str(v) or " "))(v) for k, v in replacements.items()
         }
-        prompt_prefix = replace_variables(prompt_prefix, replacements_str)
+        prompt_prefix = PromptUtils.replace_variables(prompt_prefix, replacements_str)
         span.add_info_events({"finally_prompt_prefix": prompt_prefix})
         # Execute function call with Spark AI
         try:
@@ -429,18 +373,14 @@ class DecisionNode(BaseLLMNode):
             # Attach processed chat history to inputs for front-end debugging
             if processed_history:
                 input_dict.update({"chatHistory": processed_history})
-            # print("raw_output:",res)
 
             # Persist raw_output for downstream use and debugging
             raw_output = res
-            # print("res before process:", res)
             match = re.search(r"```(json)?(.*)```", res, re.DOTALL)
             json_str = res if match is None else match.group(2)
             json_str = _custom_parser(json_str.strip())
             span.add_info_event(f"json_str: {json_str}")
             result = json.loads(json_str)
-
-            # print("res after process:", res)
 
             schema = {
                 "type": "object",
@@ -481,7 +421,6 @@ class DecisionNode(BaseLLMNode):
                 ),
             )
         except Exception as err:
-            # print("err:", err)
             span.record_exception(err)
             return NodeRunResult(
                 node_id=self.node_id,
@@ -560,9 +499,7 @@ class DecisionNode(BaseLLMNode):
             router_template = router_template.replace("{{__input__}}", str(input))
 
             # 3. Prepend the custom promptPrefix if provided
-            # print("self.promptPrefix:", self.promptPrefix)
             user_input_template = self.promptPrefix + "\n" + router_template
-            # print("user_input_template:", user_input_template)
 
             # Send the constructed prompt to the LLM
             history_v2 = None
@@ -601,18 +538,14 @@ class DecisionNode(BaseLLMNode):
             # Attach processed chat history to inputs for front-end debugging
             if processed_history:
                 input_dict.update({"chatHistory": processed_history})
-            # print("raw_output:",res)
 
             # Persist raw_output for downstream use and debugging
             raw_output = res
-            # print("res before process:", res)
             match = re.search(r"```(json)?(.*)```", res, re.DOTALL)
             json_str = res if match is None else match.group(2)
             json_str = json_str.strip()
             json_str = _custom_parser(json_str)
             result = json.loads(json_str)
-
-            # print("res after process:", res)
 
             schema = {
                 "type": "object",

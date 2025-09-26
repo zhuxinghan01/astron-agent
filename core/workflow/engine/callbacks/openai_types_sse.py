@@ -9,6 +9,7 @@ import time
 from typing import List, Literal, Optional, cast
 
 from pydantic import BaseModel, Field
+from workflow.consts.engine.chat_status import ChatStatus
 
 
 def current_time() -> int:
@@ -149,7 +150,7 @@ class InterruptData(BaseModel):
     event_id: str
     """Unique identifier for the interrupt event."""
 
-    event_type: str = "interrupt"
+    event_type: str = ChatStatus.INTERRUPT.value
     """Type of the event, defaults to 'interrupt'."""
 
     need_reply: bool = True
@@ -231,7 +232,14 @@ class LLMGenerate(BaseModel):
             index=0,
             finish_reason=cast(
                 Literal["interrupt", "stop", None],
-                (finish_reason if (finish_reason in ["interrupt", "stop"]) else None),
+                (
+                    finish_reason
+                    if (
+                        finish_reason
+                        in [ChatStatus.INTERRUPT.value, ChatStatus.FINISH_REASON.value]
+                    )
+                    else None
+                ),
             ),
         )
         resp = LLMGenerate(
@@ -305,7 +313,7 @@ class LLMGenerate(BaseModel):
             sid=sid,
             node_info=NodeInfo(
                 id="flow_obj",
-                finish_reason="stop",
+                finish_reason=ChatStatus.FINISH_REASON.value,
                 inputs={},
                 outputs={},
                 executed_time=0,
@@ -340,7 +348,7 @@ class LLMGenerate(BaseModel):
             workflow_usage=workflow_usage,
             node_info=NodeInfo(
                 id="flow_obj",
-                finish_reason="stop",
+                finish_reason=ChatStatus.FINISH_REASON.value,
                 inputs={},
                 outputs={},
                 executed_time=0,
@@ -351,7 +359,7 @@ class LLMGenerate(BaseModel):
             progress=1,
             content="",
             reasoning_content="",
-            finish_reason="stop",
+            finish_reason=ChatStatus.FINISH_REASON.value,
         )
 
     @staticmethod
@@ -533,7 +541,7 @@ class LLMGenerate(BaseModel):
         )
         event_data = InterruptData(
             event_id=event_id,
-            event_type="interrupt",
+            event_type=ChatStatus.INTERRUPT.value,
             need_reply=need_reply,
             value=value,
         )

@@ -6,9 +6,9 @@ import uuid
 from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode  # type: ignore[import-untyped]
 
-import aiohttp
+import aiohttp  # type: ignore[import-not-found]
 
 from common.audit_system.audit_api.base import AuditAPI, Stage
 from common.audit_system.base import ContextList
@@ -52,7 +52,7 @@ class ActionEnum:
 class IFlyAuditAPI(AuditAPI):
     audit_name = "IFlyAuditAPI"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.app_id = os.getenv("IFLYTEK_AUDIT_APP_ID", "")
         self.access_key_id = os.getenv("IFLYTEK_AUDIT_ACCESS_KEY_ID", "")
         self.access_key_secret = os.getenv("IFLYTEK_AUDIT_ACCESS_KEY_SECRET", "")
@@ -191,8 +191,8 @@ class IFlyAuditAPI(AuditAPI):
         uid: str = "",
         template_id: str = "",
         context_list: List[ContextList] = [],
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
 
         payload: Dict[str, Any] = {
             "intention": "dialog",
@@ -210,7 +210,7 @@ class IFlyAuditAPI(AuditAPI):
             for ctx in context_list:
                 if ctx.resource_list:
                     payload_resource_list.append(
-                        res.dict() for res in ctx.resource_list
+                        res.dict() for res in ctx.resource_list  # type: ignore[attr-defined]
                     )
                 payload_context_list.append(ctx.dict())
 
@@ -237,8 +237,8 @@ class IFlyAuditAPI(AuditAPI):
         chat_sid: str,
         chat_app_id: str = "",
         uid: str = "",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         payload = {
             "intention": "dialog",
             "stage": stage.value,
@@ -255,7 +255,7 @@ class IFlyAuditAPI(AuditAPI):
         if resp.get("data", {}).get("action") != ActionEnum.NONE:
             raise AuditServiceException(*c9023)(f"审核结果异常: {resp}")
 
-    async def input_media(self, text: str, **kwargs):
+    async def input_media(self, text: str, **kwargs: Any) -> None:
         """
         大模型内容安全场景中，对用户输入的文本、图片、视频、文档等进行过滤、检测和识别，并根据安全策略进行相应的处理和响应。
         :param text:
@@ -266,7 +266,7 @@ class IFlyAuditAPI(AuditAPI):
 
         raise NotImplementedError("IFlyAuditAPI.input_media is not implemented yet")
 
-    async def output_media(self, text: str, **kwargs):
+    async def output_media(self, text: str, **kwargs: Any) -> None:
         """
         大模型内容安全场景中，对大模型输出的图片、视频、音频等进行过滤、检测和识别，并根据安全策略进行相应的处理和响应。
         :param text:
@@ -276,7 +276,7 @@ class IFlyAuditAPI(AuditAPI):
         # path = f"/audit/v3/aichat/outputMedia"
         raise NotImplementedError("IFlyAuditAPI.output_media is not implemented yet")
 
-    async def know_ref(self, text: str, **kwargs):
+    async def know_ref(self, text: str, **kwargs: Any) -> None:
         """
         大模型内容安全场景中，对大模型答复过程中引用的网站、知识库等数据进行过滤、检测和识别，并根据安全策略进行相应的处理和响应。
         :param text:

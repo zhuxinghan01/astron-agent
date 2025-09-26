@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 from workflow.engine.entities.variable_pool import VariablePool
@@ -71,35 +71,6 @@ class IFElseNode(BaseNode):
     """
 
     cases: List[IfElseNodeData] = Field(min_length=2)
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration as a dictionary.
-
-        :return: Dictionary containing branch list configuration
-        """
-        branches = []
-        for branch in self.cases:
-            branches.append(branch.dict())
-        return {"cases": branches}
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for this node).
-
-        :param variable_pool: Variable pool containing runtime variables
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional parameters including callback methods
-        :return: Node execution result
-        """
-        raise NotImplementedError
 
     async def do_one_branch(
         self,
@@ -403,7 +374,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, str | list):
-            # raise ValueError('Invalid actual value type: string or array')
             return False
 
         if expected_value not in actual_value:
@@ -426,7 +396,6 @@ class IFElseNode(BaseNode):
             return True
 
         if not isinstance(actual_value, str | list):
-            # raise ValueError('Invalid actual value type: string or array')
             return False
 
         if expected_value in actual_value:
@@ -447,7 +416,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, str):
-            # raise ValueError('Invalid actual value type: string')
             return False
 
         if not actual_value.startswith(expected_value):
@@ -468,7 +436,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, str):
-            # raise ValueError('Invalid actual value type: string')
             return False
 
         if not actual_value.endswith(expected_value):
@@ -487,7 +454,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, str):
-            # raise ValueError('Invalid actual value type: string')
             if isinstance(actual_value, int | float):
                 return self._assert_equal(actual_value, expected_value)
             else:
@@ -509,7 +475,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, str):
-            # raise ValueError('Invalid actual value type: string')
             if isinstance(actual_value, int | float):
                 return self._assert_not_equal(actual_value, expected_value)
             else:
@@ -569,7 +534,6 @@ class IFElseNode(BaseNode):
 
         if not isinstance(actual_value, int | float):
             if isinstance(actual_value, str):
-                # raise ValueError('Invalid actual value type: number')
                 return self._assert_is(actual_value, expected_value)
             else:
                 return False
@@ -597,7 +561,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, int | float):
-            # raise ValueError('Invalid actual value type: number')
             if isinstance(actual_value, str):
                 return self._assert_is_not(actual_value, expected_value)
             else:
@@ -626,7 +589,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, int | float):
-            # raise ValueError('Invalid actual value type: number')
             return False
 
         if isinstance(actual_value, int):
@@ -652,7 +614,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, int | float):
-            # raise ValueError('Invalid actual value type: number')
             return False
 
         if isinstance(actual_value, int):
@@ -678,7 +639,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, int | float):
-            # raise ValueError('Invalid actual value type: number')
             return False
 
         if isinstance(actual_value, int):
@@ -704,7 +664,6 @@ class IFElseNode(BaseNode):
             return False
 
         if not isinstance(actual_value, int | float):
-            # raise ValueError('Invalid actual value type: number')
             return False
 
         if isinstance(actual_value, int):

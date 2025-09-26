@@ -10,6 +10,7 @@ import os
 import time
 
 from loguru import logger
+from plugin.link.consts import const
 from plugin.link.utils.otlp.metric import metric
 from plugin.link.utils.otlp.metric.atomic_int import AtomicCounter
 from plugin.link.utils.sid.sid_generator2 import get_host_ip
@@ -51,9 +52,9 @@ class Meter:
 
     def _get_default_attr(self):
         return {
-            "dc": os.getenv("OTLP_DC"),
+            "dc": os.getenv(const.OTLP_DC_KEY),
             "server_host": get_host_ip(),
-            "server_name": os.getenv("OTLP_SERVICE_NAME"),
+            "server_name": os.getenv(const.OTLP_SERVICE_NAME_KEY),
             "app_id": self.app_id,
             "func": self.func,
             "pid": os.getpid(),
