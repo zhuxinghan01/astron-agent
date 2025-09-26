@@ -26,4 +26,4 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco });
 
-export default monaco
+export default monaco;

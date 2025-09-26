@@ -78,7 +78,7 @@ const Prologue = ({
                         type: 'string',
                         default: item,
                         description: t(
-                          "workflow.nodes.chatDebugger.userCurrentRoundInput",
+                          'workflow.nodes.chatDebugger.userCurrentRoundInput'
                         ),
                         required: true,
                         validationSchema: null,
@@ -331,7 +331,7 @@ const MessageSuggestions = ({
                       type: 'string',
                       default: item,
                       description: t(
-                        "workflow.nodes.chatDebugger.userCurrentRoundInput",
+                        'workflow.nodes.chatDebugger.userCurrentRoundInput'
                       ),
                       required: true,
                       validationSchema: null,
@@ -556,8 +556,8 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
   const advancedConfig = useMemo<ChatContentAdvancedConfig>(() => {
     if (currentFlow?.advancedConfig && isJSON(currentFlow.advancedConfig)) {
       const parsedConfig = JSON.parse(currentFlow.advancedConfig);
-      const newInputExampleList = ["", "", ""].map(
-        (item, index) => parsedConfig?.prologue?.inputExample?.[index] || item,
+      const newInputExampleList = ['', '', ''].map(
+        (item, index) => parsedConfig?.prologue?.inputExample?.[index] || item
       );
       return {
         prologue: {
@@ -621,7 +621,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
       setSid(sid);
       setModalType('good');
       setModalVisible(true);
-    },
+    }
   );
 
   const badFeedback = useMemoizedFn(
@@ -630,7 +630,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
       setSid(sid);
       setModalType('bad');
       setModalVisible(true);
-    },
+    }
   );
 
   const handleActiveStyle = useMemoizedFn((): void => {
@@ -708,7 +708,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
           </div>
         </div>
       );
-    },
+    }
   );
   return {
     advancedConfig,
@@ -850,7 +850,7 @@ function ChatContent({
             handleStopConversation={handleStopConversation}
             setChatList={setChatList}
           />
-        ),
+        )
       )}
       <FeedbackDialog
         visible={visible}

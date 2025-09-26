@@ -29,7 +29,7 @@ const ModeSelector = ({
       <div className="rounded-md px-[18px] pb-3 pointer-events-auto">
         <div className="flex items-center gap-2 bg-[#E7EAF3] p-1 rounded-md">
           <div
-            className={`flex-1 rounded-md text-center p-1 ${nodeParam?.mode === 0 || nodeParam?.mode === undefined ? "bg-[#fff]" : ""}`}
+            className={`flex-1 rounded-md text-center p-1 ${nodeParam?.mode === 0 || nodeParam?.mode === undefined ? 'bg-[#fff]' : ''}`}
             onClick={() => {
               handleChangeNodeParam('mode', 0);
               updateNodeRef(id);
@@ -92,13 +92,11 @@ const SeparatorSection = ({
   const { t } = useTranslation();
   const addTextNodeConfig = useFlowsManager(state => state.addTextNodeConfig);
   const removeTextNodeConfig = useFlowsManager(
-    (state) => state.removeTextNodeConfig
+    state => state.removeTextNodeConfig
   );
-  const textNodeConfigList = useFlowsManager(
-    (state) => state.textNodeConfigList
-  );
-  const currentStore = useFlowsManager((state) => state.getCurrentStore());
-  const delayCheckNode = currentStore((state) => state.delayCheckNode);
+  const textNodeConfigList = useFlowsManager(state => state.textNodeConfigList);
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const delayCheckNode = currentStore(state => state.delayCheckNode);
   const [showSeparatorAddInput, setShowSeparatorAddInput] = useState(false);
   const [separatorValue, setSeparatorValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -150,7 +148,7 @@ const SeparatorSection = ({
                             removeTextNodeConfig(item?.id).then(list => {
                               if (
                                 !list.some(
-                                  (i) => i.separator === nodeParam?.separator
+                                  i => i.separator === nodeParam?.separator
                                 )
                               ) {
                                 handleChangeNodeParam('separator', '');
@@ -234,10 +232,10 @@ const OutputTree = ({ nodeParam }): React.ReactElement => {
     () => [
       {
         title: renderTitle(
-          "output",
-          nodeParam?.mode === 1 ? "Array<String>" : "String"
+          'output',
+          nodeParam?.mode === 1 ? 'Array<String>' : 'String'
         ),
-        key: "0-0",
+        key: '0-0',
       },
     ],
     [nodeParam]
@@ -272,7 +270,7 @@ export const TextHandleDetail = memo(({ id, data }): React.ReactElement => {
   const updateNodeRef = currentStore(state => state.updateNodeRef);
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    state => state.autoSaveCurrentFlow
   );
 
   const handleChangeNodeParam = useCallback(

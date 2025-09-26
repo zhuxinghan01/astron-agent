@@ -47,13 +47,11 @@ import addItemIcon from '@/assets/imgs/workflow/add-item-icon.png';
 import remove from '@/assets/imgs/workflow/input-remove-icon.png';
 
 const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
-  const currentStore = useFlowsManager((state) => state.getCurrentStore());
-  const showIterativeModal = useFlowsManager(
-    (state) => state.showIterativeModal
-  );
-  const nodeList = useFlowsManager((state) => state.nodeList);
-  const nodes = currentStore((state) => state.nodes);
-  const edges = currentStore((state) => state.edges);
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const showIterativeModal = useFlowsManager(state => state.showIterativeModal);
+  const nodeList = useFlowsManager(state => state.nodeList);
+  const nodes = currentStore(state => state.nodes);
+  const edges = currentStore(state => state.edges);
 
   const nodeType = useMemo(() => {
     return id?.split('::')[0] || '';
@@ -153,17 +151,17 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   }, [data]);
 
   const nodeIcon = useMemo(() => {
-    let nodeFinallyType = "";
-    if (nodeType === "iteration-node-start") {
-      nodeFinallyType = "node-start";
-    } else if (nodeType === "iteration-node-end") {
-      nodeFinallyType = "node-end";
+    let nodeFinallyType = '';
+    if (nodeType === 'iteration-node-start') {
+      nodeFinallyType = 'node-start';
+    } else if (nodeType === 'iteration-node-end') {
+      nodeFinallyType = 'node-end';
     } else {
       nodeFinallyType = nodeType;
     }
     const currentNode = nodeList
-      ?.flatMap((item) => item?.nodes)
-      ?.find((item) => item?.idType === nodeFinallyType);
+      ?.flatMap(item => item?.nodes)
+      ?.find(item => item?.idType === nodeFinallyType);
     return currentNode?.data?.icon;
   }, [nodeList, nodeType]);
 
@@ -210,22 +208,22 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
 const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
   const { isIteratorNode } = useNodeInfo({ id, data });
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    (state) => state.setNodeInfoEditDrawerlInfo
+    state => state.setNodeInfoEditDrawerlInfo
   );
   const setChatDebuggerResult = useFlowsManager(
-    (state) => state.setChatDebuggerResult
+    state => state.setChatDebuggerResult
   );
   const setVersionManagement = useFlowsManager(
-    (state) => state.setVersionManagement
+    state => state.setVersionManagement
   );
   const setAdvancedConfiguration = useFlowsManager(
-    (state) => state.setAdvancedConfiguration
+    state => state.setAdvancedConfiguration
   );
   const setOpenOperationResult = useFlowsManager(
-    (state) => state.setOpenOperationResult
+    state => state.setOpenOperationResult
   );
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    state => state.autoSaveCurrentFlow
   );
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
@@ -290,7 +288,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
     ) => {
       if (isIteratorNode) {
         const outputIndex = currentNode?.data?.outputs?.findIndex(
-          (output) => output?.id === outputId
+          output => output?.id === outputId
         );
         const currentIteratorInput = {
           id: uuid(),
@@ -304,7 +302,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
           },
         };
         const iteratorStartEnd = nodes?.find(
-          (node) => node?.data?.parentId === id && node?.nodeType === "node-end"
+          node => node?.data?.parentId === id && node?.nodeType === 'node-end'
         );
         setNode(iteratorStartEnd?.id, old => {
           if (type === 'add') {
@@ -502,7 +500,7 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
   const delayUpdateNodeRef = currentStore(state => state.delayUpdateNodeRef);
   const setNode = currentStore(state => state.setNode);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    state => state.autoSaveCurrentFlow
   );
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
 
@@ -601,7 +599,7 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
         },
       ];
     return originOutputTypeList.filter(
-      (item) => item?.value !== "file" && item?.value !== "fileList"
+      item => item?.value !== 'file' && item?.value !== 'fileList'
     );
   }, [originOutputTypeList, isStartNode, isIteratorNode]);
 
@@ -616,13 +614,13 @@ const useNodeModels = ({ id, data }): UseNodeModelsReturn => {
   const agentModels = useFlowsManager(state => state.agentModels);
   const sparkLlmModels = useFlowsManager(state => state.sparkLlmModels);
   const questionAnswerModels = useFlowsManager(
-    (state) => state.questionAnswerModels
+    state => state.questionAnswerModels
   );
   const decisionMakingModels = useFlowsManager(
-    (state) => state.decisionMakingModels
+    state => state.decisionMakingModels
   );
   const extractorParameterModels = useFlowsManager(
-    (state) => state.extractorParameterModels
+    state => state.extractorParameterModels
   );
   const models = useMemo(() => {
     if (id?.startsWith('agent')) {
@@ -743,11 +741,11 @@ export const OutputActions = ({
     id,
     data,
   });
-  const currentStore = useFlowsManager((state) => state.getCurrentStore());
-  const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
-  const takeSnapshot = currentStore((state) => state.takeSnapshot);
-  const setNode = currentStore((state) => state.setNode);
-  const checkNode = currentStore((state) => state.checkNode);
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
+  const takeSnapshot = currentStore(state => state.takeSnapshot);
+  const setNode = currentStore(state => state.setNode);
+  const checkNode = currentStore(state => state.checkNode);
 
   const handleAddItem = useMemoizedFn((output: OutputItem) => {
     takeSnapshot();
@@ -880,7 +878,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
   const delayCheckNode = currentStore(state => state.delayCheckNode);
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    state => state.autoSaveCurrentFlow
   );
   const nodes = currentStore(state => state.nodes);
   const setNode = currentStore(state => state.setNode);
@@ -928,7 +926,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
     ) => {
       setNode(id, old => {
         const currentInput = old?.data?.inputs?.find(
-          (item) => item?.id === inputId
+          item => item?.id === inputId
         );
         if (currentInput) {
           fn(currentInput, value);
@@ -943,8 +941,8 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
             },
           }));
           const iteratorStartNode = nodes?.find(
-            (node) =>
-              node?.data?.parentId === id && node?.nodeType === "node-start"
+            node =>
+              node?.data?.parentId === id && node?.nodeType === 'node-start'
           );
           setNode(iteratorStartNode?.id, old => {
             old.data.outputs = outputs;

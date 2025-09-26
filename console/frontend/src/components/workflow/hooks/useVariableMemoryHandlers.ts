@@ -110,10 +110,10 @@ export function useVariableMemoryHandlers({
               node.nodeType === 'node-variable' &&
               node.data.nodeParam.method === 'get'
             ) {
-              node?.data?.outputs?.forEach((output) => {
+              node?.data?.outputs?.forEach(output => {
                 const currentInput = nodes
-                  ?.find((node) => node?.id === id)
-                  ?.data?.inputs.find((item) => item?.id === output?.refId);
+                  ?.find(node => node?.id === id)
+                  ?.data?.inputs.find(item => item?.id === output?.refId);
                 if (currentInput) {
                   updateOutputFromInput(output, currentInput);
                 }

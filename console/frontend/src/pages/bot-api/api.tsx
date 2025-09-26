@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, message, Modal } from 'antd';
+import { Button, Form, message, Modal, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 // import config from '@/config';
 import {
-  getApiCertInfo,
   getApiList,
   getApiInfo,
   getApiUsage,
@@ -91,13 +90,13 @@ const Divider = () => {
 
 export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
   const { t } = useTranslation();
+  const [createAppForm] = Form.useForm(); //创建应用表单
   // 新增状态，标记是否已经获取过 API 列表
   const [hasFetchedApiList, setHasFetchedApiList] = useState<boolean>(false);
   const [searchParams] = useSearchParams();
   const [botId, setBotId]: any = useState('');
   // const [version, setVersion]:any = useState('');
   const navigate = useNavigate();
-  const [isApiCertInfo, setIsApiCertInfo] = useState<boolean>(false);
   const [apiList, setApiList] = useState<any[]>([]);
   const [apiId, setApiId] = useState<any>(''); //appid
   const [apiInfo, setApiInfo] = useState<any>(null);
@@ -112,8 +111,9 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
   const [publishBindIdLoading, setPublishBindIdLoading] = useState(false);
   const [SkipBindLoading, setSkipBindLoading] = useState(false);
   const [selectError, setSelectError] = useState(false); // Select 错误状态
+  const [isShowCeateAppModal, setIsShowCeateAppModal] =
+    useState<boolean>(false); // 是否显示创建应用弹框
   const [docUrl, setDocUrl] = useState<string>(); // 文档地址
-  const [isShowOperateBtn, setIsShowOperateBtn] = useState<boolean>(false); // 是否显示操作按钮
 
   const createApiFn = async (publishBindId?: any, appId?: any) => {
     try {
@@ -131,11 +131,6 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
       setPublishBindIdLoading(false);
       setSkipBindLoading(false);
     }
-  };
-  //获取是否有权限在api页面进行修改
-  const getHasEditorFn = async () => {
-    const res: any = await getHasEditor();
-    setIsShowOperateBtn(res);
   };
   const handleSkipBind = async () => {
     setSkipBindLoading(true);
@@ -167,10 +162,6 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
 
   //更新 or 绑定
   const handleBandApi = async () => {
-    if (!isShowOperateBtn) {
-      message.warning('您当前没有权限，请联系管理员！');
-      return;
-    }
     if (!apiId) return message.warning('请先绑定您的应用');
     //获取是否有未绑定的套餐
     operateApi(apiId);
@@ -223,21 +214,6 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
     setApiUsage(res);
   };
 
-  //检测是否实名认证
-  const getApiCertInfoFn = async () => {
-    const res = await getApiCertInfo();
-    setIsApiCertInfo(res);
-  };
-
-  // 🎯 根据环境打开不同的控制台网址 -- NOTE: 开源应该不需要打开控制台吧
-  // const getConsoleUrl = () => {
-  //   const consoleBase = config.CONSOLE;
-  //   const baseUrl = consoleBase.startsWith('//')
-  //     ? `https:${consoleBase}`
-  //     : consoleBase;
-  //   return `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}app/create`;
-  // };
-
   const getApiListFn = async () => {
     const res = await getApiList();
     const data = res.map((item: any) => {
@@ -253,10 +229,7 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
     setApiInfo(res);
   };
   // 是否认证
-  useEffect(() => {
-    getHasEditorFn();
-    getApiCertInfoFn();
-  }, []);
+  useEffect(() => {}, []);
 
   useEffect(() => {
     if (searchParams.get('id')) {
@@ -272,16 +245,14 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
   }, [searchParams]);
 
   useEffect(() => {
-    if (isApiCertInfo) {
-      if (apiList?.length) {
-        getAPiInfoFn(botId);
-        getApiUsageFn(botId);
-      } else if (!hasFetchedApiList) {
-        getApiListFn();
-        setHasFetchedApiList(true);
-      }
+    if (apiList?.length) {
+      getAPiInfoFn(botId);
+      getApiUsageFn(botId);
+    } else if (!hasFetchedApiList) {
+      getApiListFn();
+      setHasFetchedApiList(true);
     }
-  }, [isApiCertInfo, apiList, freshCount, hasFetchedApiList]);
+  }, [apiList, freshCount, hasFetchedApiList]);
   useEffect(() => {
     if (apiInfo) {
       getApiHistoryFn(botId, apiHistoryType);
@@ -305,7 +276,7 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
           </span>
         </div>
         <div className={styles.api_step}>
-          <div className={styles.step}>
+          {/* <div className={styles.step}>
             <img
               src="https://aixfyun-cn-bj.xfyun.cn/bbs/75713.75546409925/cir.svg"
               alt=""
@@ -328,10 +299,10 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
               </span>
             </div>
           </div>
-          <Divider />
+          <Divider /> */}
           <div className={styles.step}>
             <img
-              src="https://aixfyun-cn-bj.xfyun.cn/bbs/84687.53848944922/cir2.svg"
+              src="https://aixfyun-cn-bj.xfyun.cn/bbs/75713.75546409925/cir.svg"
               alt=""
               className={styles.step_index}
             />
@@ -341,11 +312,8 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
               <span
                 className={styles.fun}
                 onClick={() => {
-                  if (!isShowOperateBtn) {
-                    message.warning('您当前没有权限，请联系管理员！');
-                    return;
-                  }
-                  // window.open(getConsoleUrl());
+                  //TODO:打开创建弹框
+                  setIsShowCeateAppModal(true);
                 }}
               >
                 {t('botApi.createApi')} {' >'}
@@ -355,7 +323,7 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
           <Divider />
           <div className={styles.step}>
             <img
-              src="https://aixfyun-cn-bj.xfyun.cn/bbs/72624.64595654579/cir3.svg"
+              src="https://aixfyun-cn-bj.xfyun.cn/bbs/84687.53848944922/cir2.svg"
               alt=""
               className={styles.step_index}
             />
@@ -413,25 +381,24 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
                         ? apiInfo.appName
                         : t('botApi.unNamed')}
                     </span>
-                    {searchParams.get('version') !== '1' &&
-                      isShowOperateBtn && (
-                        <Button
-                          type="primary"
-                          ghost
-                          size="small"
-                          loading={loading}
-                          style={{
-                            marginLeft: 30,
-                            color: '#fff',
-                            height: '30px',
-                            lineHeight: '30px',
-                            fontSize: '12px',
-                          }}
-                          onClick={() => updateApiFn(botId, apiInfo.appId)}
-                        >
-                          {t('botApi.updateBind')}
-                        </Button>
-                      )}
+                    {searchParams.get('version') !== '1' && (
+                      <Button
+                        type="primary"
+                        ghost
+                        size="small"
+                        loading={loading}
+                        style={{
+                          marginLeft: 30,
+                          color: '#fff',
+                          height: '30px',
+                          lineHeight: '30px',
+                          fontSize: '12px',
+                        }}
+                        onClick={() => updateApiFn(botId, apiInfo.appId)}
+                      >
+                        {t('botApi.updateBind')}
+                      </Button>
+                    )}
                   </>
                 )}
                 {!apiInfo && (
@@ -444,7 +411,6 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
                         setApiId(e);
                       }}
                       options={apiList}
-                      disabled={!isApiCertInfo}
                       filterOption={(input, option) =>
                         (option?.label ?? '').includes(input)
                       }
@@ -454,24 +420,22 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
                           .localeCompare((optionB?.label ?? '').toLowerCase())
                       }
                     />
-                    {isApiCertInfo && (
-                      <Button
-                        type="primary"
-                        ghost
-                        size="small"
-                        loading={loading}
-                        style={{
-                          marginLeft: 10,
-                          color: '#fff',
-                          height: '30px',
-                          lineHeight: '30px',
-                          fontSize: '12px',
-                        }}
-                        onClick={() => handleBandApi()}
-                      >
-                        {t('botApi.bindAppBtn')}
-                      </Button>
-                    )}
+                    <Button
+                      type="primary"
+                      ghost
+                      size="small"
+                      loading={loading}
+                      style={{
+                        marginLeft: 10,
+                        color: '#fff',
+                        height: '30px',
+                        lineHeight: '30px',
+                        fontSize: '12px',
+                      }}
+                      onClick={() => handleBandApi()}
+                    >
+                      {t('botApi.bindAppBtn')}
+                    </Button>
                   </>
                 )}
               </div>
@@ -654,6 +618,61 @@ export default function BotApi({ isOpenapi = false }: { isOpenapi?: any }) {
           ></Select>
         </Modal>
       </section>
+      <Modal
+        open={isShowCeateAppModal}
+        onCancel={() => setIsShowCeateAppModal(false)}
+        title={t('botApi.createApp')}
+        width={500}
+        centered
+        closable={false}
+        footer={[
+          <Button onClick={() => setIsShowCeateAppModal(false)}>
+            {t('btnCancel')}
+          </Button>,
+          <Button type="primary" loading={loading} onClick={() => {}}>
+            {t('btnOk')}
+          </Button>,
+        ]}
+      >
+        <div className={styles.createAppModal}>
+          <Form
+            form={createAppForm}
+            name="promptForm"
+            initialValues={{ remember: true }}
+            // onFinish={handleFormFinish}
+            // onFinishFailed={onFinishFailed}
+            // onValuesChange={handleFormValuesChange} // 监听表单值变化
+            autoComplete="off"
+          >
+            <Form.Item
+              label={t('botApi.createAppName')}
+              name="name"
+              rules={[
+                { required: true, message: t('botApi.createAppNameRequired') },
+              ]}
+              colon={false}
+              labelCol={{ span: 24 }}
+              wrapperCol={{ span: 24 }}
+            >
+              <Input placeholder={t('botApi.createAppNamePlaceholder')} />
+            </Form.Item>
+            <Form.Item
+              label={t('botApi.createAppDesc')}
+              name="desc"
+              rules={[
+                { required: true, message: t('botApi.createAppDescRequired') },
+              ]}
+              labelCol={{ span: 24 }}
+              wrapperCol={{ span: 24 }}
+            >
+              <Input.TextArea
+                placeholder={t('botApi.createAppDescPlaceholder')}
+                rows={4}
+              />
+            </Form.Item>
+          </Form>
+        </div>
+      </Modal>
     </section>
   );
 }

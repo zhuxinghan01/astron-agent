@@ -333,17 +333,20 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
     onRefreshData();
   }, [onRefreshData]);
 
-  const handleTabChange = useCallback((index: number) => {
-    setActiveIndex(index);
-    // Refresh specific data based on the active tab
-    if (index === 0) {
-      // Recent Used tab - refresh recent chat data
-      onRefreshRecentData();
-    } else if (index === 1) {
-      // My Favorites tab - refresh favorite data
-      onRefreshFavoriteData();
-    }
-  }, [onRefreshRecentData, onRefreshFavoriteData]);
+  const handleTabChange = useCallback(
+    (index: number) => {
+      setActiveIndex(index);
+      // Refresh specific data based on the active tab
+      if (index === 0) {
+        // Recent Used tab - refresh recent chat data
+        onRefreshRecentData();
+      } else if (index === 1) {
+        // My Favorites tab - refresh favorite data
+        onRefreshFavoriteData();
+      }
+    },
+    [onRefreshRecentData, onRefreshFavoriteData]
+  );
 
   return (
     <Modal

@@ -168,10 +168,10 @@ function index(props): React.ReactElement {
   }
 
   const uploadProps = {
-    name: "file",
-    action: "http://172.29.201.92:8080/image/upload",
+    name: 'file',
+    action: 'http://172.29.201.92:8080/image/upload',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
     showUploadList: false,
     accept: '.png,.jpg,.jpeg,.gif,.webp,.bmp,.tiff',

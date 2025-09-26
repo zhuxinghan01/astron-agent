@@ -51,7 +51,7 @@ const routes = [
         ),
       },
       {
-        path: '/management/botApi',
+        path: '/management/bot-api',
         element: (
           <Suspense fallback={<Loading />}>
             <BotApi />
@@ -60,7 +60,7 @@ const routes = [
         ),
       },
       {
-        path: '/management/botApi/history',
+        path: '/management/bot-api/history',
         element: (
           <Suspense fallback={<Loading />}>
             <ApiHistory />
