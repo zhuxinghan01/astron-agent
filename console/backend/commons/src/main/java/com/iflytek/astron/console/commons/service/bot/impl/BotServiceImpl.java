@@ -182,6 +182,8 @@ public class BotServiceImpl implements BotService {
         log.info("copy old bot : {} , new bot : {}", detail, botBase);
         botBase.setId(null);
         // Set a new assistant name as differentiation
+        botBase.setVersion(Integer.valueOf(detail.getVersion()));
+        botBase.setIsDelete(0);
         botBase.setUid(uid);
         botBase.setSpaceId(spaceId);
         botBase.setBotName(detail.getBotName() + RandomUtil.randomString(6));
