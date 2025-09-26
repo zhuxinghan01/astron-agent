@@ -116,6 +116,7 @@ public class ChatListServiceImpl implements ChatListService {
         for (ChatBotListDto botListDto : botChatList) {
             ChatListResponseDto responseDto = new ChatListResponseDto();
             BeanUtils.copyProperties(botListDto, responseDto);
+            responseDto.setBotName(botListDto.getBotTitle());
             chatList.add(responseDto);
         }
 
