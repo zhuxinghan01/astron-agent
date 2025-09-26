@@ -129,17 +129,28 @@ export const ModalForm = forwardRef<
                 desc: string;
               }[];
 
-              return fields?.map(item => {
+              return fields?.map((item, index) => {
                 return (
                   <Form.Item
                     key={item.name}
                     name={item.name}
-                    label={item.key}
+                    label={<div className="w-full">{item.key}</div>}
                     required={item.required}
                   >
-                    <Input
-                      placeholder={`${t('rpa.pleaseEnter')} ${item.desc}`}
-                    />
+                    <div className="w-full relative">
+                      {index === 0 && platformInfo?.path && (
+                        <a
+                          className="absolute right-0 top-[-22px] text-[#275EFF]"
+                          href={platformInfo?.path}
+                          target="_blank"
+                        >
+                          {t('rpa.noAccount', { platform: platformInfo?.name })}
+                        </a>
+                      )}
+                      <Input
+                        placeholder={`${t('rpa.pleaseEnter')} ${item.desc}`}
+                      />
+                    </div>
                   </Form.Item>
                 );
               });

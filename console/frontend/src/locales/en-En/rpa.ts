@@ -28,6 +28,7 @@ const translation = {
   defaultValue: 'Default value',
   inputParameter: 'Input parameter',
   outputParameter: 'Output parameter',
+  noAccount: 'No {{platform}} account',
 };
 
 export default translation;
