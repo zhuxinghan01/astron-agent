@@ -1,11 +1,13 @@
 package com.iflytek.astron.console.hub.controller.bot;
 
 import com.iflytek.astron.console.commons.annotation.RateLimit;
+import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
 import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.BotTypeList;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.commons.service.bot.BotDatasetService;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
@@ -15,11 +17,13 @@ import com.iflytek.astron.console.commons.enums.bot.DefaultBotModelEnum;
 import com.iflytek.astron.console.hub.service.bot.BotAIService;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
 import com.iflytek.astron.console.toolkit.service.model.LLMService;
+import com.iflytek.astron.console.toolkit.service.repo.MassDatasetInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -44,6 +48,12 @@ public class BotCreateController {
     @Autowired
     private LLMService llmService;
 
+    @Autowired
+    private BotDatasetService botDatasetService;
+
+    @Autowired
+    private MassDatasetInfoService botDatasetMaasService;
+
     /**
      * Create workflow assistant
      *
@@ -51,13 +61,40 @@ public class BotCreateController {
      * @param bot Assistant creation form
      * @return Created assistant ID
      */
+    @SpacePreAuth(key = "BotCreateController_create_POST")
     @PostMapping("/create")
+    @RateLimit(dimension = "USER", window = 1, limit = 1)
+    @Transactional
     public ApiResult<Integer> createBot(HttpServletRequest request, @RequestBody BotCreateForm bot) {
         try {
             String uid = RequestContextUtil.getUID();
             Long spaceId = SpaceInfoUtil.getSpaceId();
+
+            // Validate dataset ownership before creating bot
+            List<Long> datasetList = bot.getDatasetList();
+            List<Long> maasDatasetList = bot.getMaasDatasetList();
+            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+                return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
+            }
+
+            // Create bot basic information
             BotInfoDto botInfo = botService.insertBotBasicInfo(uid, bot, spaceId);
-            return ApiResult.success(botInfo.getBotId());
+            Integer botId = botInfo.getBotId();
+
+            // Handle dataset associations
+            boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
+            boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
+            int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
+
+            if (selfDocumentExist) {
+                botDatasetService.botAssociateDataset(uid, botId, datasetList, supportDocument);
+            }
+
+            if (maasDocumentExist) {
+                botDatasetMaasService.botAssociateDataset(uid, botId, maasDatasetList, supportDocument);
+            }
+
+            return ApiResult.success(botId);
         } catch (Exception e) {
             log.error("Failed to create basic assistant: {}", e.getMessage(), e);
             return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
@@ -162,7 +199,10 @@ public class BotCreateController {
      * @param bot Assistant update form (must contain botId)
      * @return Update result
      */
+    @SpacePreAuth(key = "BotCreateController_update_POST")
     @PostMapping("/update")
+    @RateLimit(dimension = "USER", window = 1, limit = 1)
+    @Transactional
     public ApiResult<Boolean> updateBot(HttpServletRequest request, @RequestBody BotCreateForm bot) {
         try {
             // Validate botId is provided
@@ -176,8 +216,28 @@ public class BotCreateController {
             // Permission validation
             botPermissionUtil.checkBot(bot.getBotId());
 
-            // Update bot basic information only (simplified without MaaS sync)
+            // Validate dataset ownership before updating bot
+            List<Long> datasetList = bot.getDatasetList();
+            List<Long> maasDatasetList = bot.getMaasDatasetList();
+            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+                return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
+            }
+
+            // Update bot basic information
             Boolean result = botService.updateBotBasicInfo(uid, bot, spaceId);
+
+            // Handle dataset associations update
+            boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
+            boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
+            int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
+
+            if (selfDocumentExist) {
+                botDatasetService.updateDatasetByBot(uid, bot.getBotId(), datasetList, supportDocument);
+            }
+
+            if (maasDocumentExist) {
+                botDatasetMaasService.updateDatasetByBot(uid, bot.getBotId(), maasDatasetList, supportDocument);
+            }
 
             return ApiResult.success(result);
         } catch (Exception e) {

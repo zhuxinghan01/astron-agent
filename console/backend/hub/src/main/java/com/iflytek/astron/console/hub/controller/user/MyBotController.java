@@ -71,8 +71,7 @@ public class MyBotController {
     /**
      * Get bot detail information
      */
-    // todo 此处需要打开注解,为了方便测试暂时关闭
-    // @SpacePreAuth(key = "ChatBotController_botDetail_POST")
+    @SpacePreAuth(key = "ChatBotController_botDetail_POST")
     @PostMapping("/bot-detail")
     @Operation(summary = "Get bot detail information")
     public ApiResult<BotDetail> getBotDetail(HttpServletRequest request, @RequestParam("botId") Integer botId) {
