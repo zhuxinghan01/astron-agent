@@ -871,21 +871,21 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     private void fillHeatValue(ToolBoxVo toolBoxVo) {
         Long heatValue = 0L;
         String toolKey = toolBoxVo.getIsMcp() ? toolBoxVo.getMcpTooId() : toolBoxVo.getToolId();
-        
+
         if (toolKey != null) {
             try {
                 Object redisValue = redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolKey);
-                heatValue = parseToLong(redisValue,toolKey);
+                heatValue = parseToLong(redisValue, toolKey);
             } catch (Exception e) {
                 // Log the exception and use default value
                 log.warn("Failed to get heat value for tool: {}, error: {}", toolKey, e.getMessage());
                 heatValue = 0L;
             }
         }
-        
+
         toolBoxVo.setHeatValue(heatValue);
     }
-    
+
     /**
      * Safely parse object to Long, handle Integer, Long, String and null values
      */
@@ -893,15 +893,15 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         if (value == null) {
             return 0L;
         }
-        
+
         if (value instanceof Long) {
             return (Long) value;
         }
-        
+
         if (value instanceof Integer) {
             return ((Integer) value).longValue();
         }
-        
+
         if (value instanceof String) {
             try {
                 return Long.parseLong((String) value);
@@ -910,12 +910,12 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 return 0L;
             }
         }
-        
+
         // Handle other Number types
         if (value instanceof Number) {
             return ((Number) value).longValue();
         }
-        
+
         log.warn("Unexpected value type for heat value={}, type={}, toolKey={}", value, value.getClass().getSimpleName(), toolKey);
         return 0L;
     }
