@@ -34,11 +34,11 @@ public class WorkflowServiceImpl implements WorkflowBotService {
     @Override
     public Integer massCopySynchronize(CloneSynchronize synchronize) {
         String uid = synchronize.getUid();
-        String originId = synchronize.getOriginId();
+        Long originId = synchronize.getOriginId();
         Long maasId = synchronize.getCurrentId();
         String flowId = synchronize.getFlowId();
         Long spaceId = synchronize.getSpaceId();
-        UserLangChainInfo info = userLangChainDataService.selectByFlowId(originId);
+        UserLangChainInfo info = userLangChainDataService.selectByMaasId(originId);
         if (Objects.isNull(info)) {
             log.error("----- unable to find workflow: {}", JSONObject.toJSONString(synchronize));
             throw new BusinessException(ResponseEnum.DATA_NOT_FOUND);
