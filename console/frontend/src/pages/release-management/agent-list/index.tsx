@@ -2,9 +2,16 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, message, Popover, Modal, Select } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { getAgentList } from '@/services/agent';
 import {
-  getMyCreateBotList,
-  applyCancelUpload,
+  getAgentDetail,
+  handleAgentStatus,
+  getMCPServiceDetail,
+  getAgentInputParams,
+  getAgentTimeSeriesData,
+  getAgentSummaryData,
+} from '@/services/release-management';
+import {
   getBotInfo,
   cancelBindWx,
   publish,
@@ -13,7 +20,6 @@ import {
 } from '@/services/spark-common';
 import WxModal from '@/components/wx-modal';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
-import BotInfoModal from '@/components/bot-info-modal/bot-info-modal';
 import RetractableInput from '@/components/ui/global/retract-table-input';
 
 import useToggle from '@/hooks/use-toggle';
@@ -110,8 +116,8 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
         close && close();
       },
       onOk: (close: any) => {
-        if (releaseType == 1) {
-          applyCancelUpload({ botId, reason: '' })
+        if (releaseType == 1 && botId) {
+          handleAgentStatus(botId!, { action: 'OFFLINE', reason: '' })
             .then(() => {
               reasonRef.current = undefined;
               close && close();
@@ -123,16 +129,18 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
               err?.msg && message.error(err.msg);
             });
         } else {
-          cancelBindWx({ appid: botInfo?.wechatAppid, botId: botInfo.botId })
-            .then(res => {
-              getBotInfo({ botId: botInfo.botId }).then((res: any) => {
-                setBotDetailInfo(res);
-                message.success('解绑成功');
+          if (botInfo?.botId) {
+            cancelBindWx({ appid: botInfo?.wechatAppid, botId: botInfo.botId })
+              .then(res => {
+                getBotInfo({ botId: botInfo.botId }).then((res: any) => {
+                  setBotDetailInfo(res);
+                  message.success('解绑成功');
+                });
+              })
+              .catch(error => {
+                message.error(error.msg);
               });
-            })
-            .catch(error => {
-              message.error(error.msg);
-            });
+          }
         }
       },
     });
@@ -214,7 +222,7 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
         dataIndex: 'releaseType',
         title: t('releaseManagement.platform'),
         align: 'center',
-        render: data => {
+        render: (data: number | number[]) => {
           if (typeof data === 'number') {
             data = [data];
           }
@@ -312,8 +320,12 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
           {(pageInfo.botStatus === 0 || pageInfo.botStatus === -9) && (
             <span
               onClick={() => {
-                if (bot.version == 3) {
-                  getInputsType({ botId: bot.botId }).then((res: any) => {
+                /* 工作流：input -- chain 即工作流详情（获取多参数） -- 发布 -- baseInfo 即详情 
+                TODO: 工作流智能体的返回数据不满足，等后端完成
+                */
+                if (bot.version === 3) {
+                  console.log(bot, 'bot---------');
+                  getAgentInputParams(bot.botId).then((res: any) => {
                     if (
                       (res.length === 2 &&
                         res[1].fileType === 'file' &&
@@ -326,12 +338,8 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
                       setMoreParams(false);
                     }
                   });
-                }
-                if (bot.version !== 3) {
-                  getBotBaseInfo(bot?.botId);
-                  setFabuFlag(true);
-                  setOpenWxmol(true);
-                } else {
+
+                  /** ## 获取工作流智能体信息 */
                   getChainInfo(bot?.botId).then(res => {
                     setBotMultiFileParam(res.botMultiFileParam);
                     publish({
@@ -352,6 +360,10 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
                         message.error(err?.msg);
                       });
                   });
+                } else {
+                  getBotBaseInfo(bot?.botId);
+                  setFabuFlag(true);
+                  setOpenWxmol(true);
                 }
               }}
             >
@@ -423,12 +435,18 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
       // 已发布包含发布中状态-- 09.01改动
       params.botStatus = info?.botStatus === 2 ? [1, 2, 4] : [info?.botStatus];
     }
-    getMyCreateBotList(params)
+    getAgentList(params)
       .then((data: any) => {
-        const dataNow = data?.pageList?.map((itm: any) => ({
+        const dataNow = data?.pageData?.map((itm: any) => ({
           ...itm,
           action: itm,
         }));
+        console.log(
+          '🚀 ~ updateBotList ~ dataNow:',
+          dataNow,
+          'data-------',
+          data
+        );
         setBotList(dataNow ?? []);
         setTotal(data?.total ?? 0);
       })
@@ -459,7 +477,7 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
   // 获取助手基本信息
   const getBotBaseInfo = (newBotId?: any) => {
     const botId = newBotId || searchParams.get('botId');
-    getBotInfo({ botId })
+    getAgentDetail(botId)
       .then((data: any) => {
         setBotDetailInfo({
           ...data,
@@ -472,7 +490,7 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
       });
   };
 
-  const onChangeTypeSelect = e => {
+  const onChangeTypeSelect = (e: number | null) => {
     setPageInfo(pre => ({
       ...pre,
       botStatus: e === null ? 0 : e,
@@ -493,7 +511,7 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
     []
   );
 
-  const getRobotsDebounce = e => {
+  const getRobotsDebounce = (e: { target: { value: any } }) => {
     const value = e.target.value;
     setSearchInput(value);
     debouncedSearch(value);
@@ -545,15 +563,6 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
         </div>
       </div>
       <div className={styles.tableArea}>
-        <BotInfoModal
-          show={editV2Visible}
-          onCancel={hide}
-          getBotBaseInfo={getBotBaseInfo}
-          getBotChainInfo={() => null}
-          qufabuFlag={true}
-          disjump={true}
-          setPageInfo={setPageInfo}
-        />
         <WxModal
           botMultiFileParam={botMultiFileParam}
           moreParams={moreParams}

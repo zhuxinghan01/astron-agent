@@ -103,13 +103,13 @@ export const createMenuList = (): {
       //   activeTab: 'evaluation',
       //   path: '/management/evaluation',
       // },
-      // {
-      //   icon: releaseManagement,
-      //   iconAct: releaseManagementAct,
-      //   subTitle: getTranslation('sidebar.releaseManagement'),
-      //   activeTab: 'release',
-      //   path: '/management/release',
-      // },
+      {
+        icon: releaseManagement,
+        iconAct: releaseManagementAct,
+        subTitle: getTranslation('sidebar.releaseManagement'),
+        activeTab: 'release',
+        path: '/management/release',
+      },
       {
         icon: modelManagement,
         iconAct: modelManagementAct,

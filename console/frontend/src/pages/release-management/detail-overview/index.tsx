@@ -18,7 +18,6 @@ import iflytekIcon from '@/assets/imgs/workflow/iflytek-icon.png';
 import { useTranslation } from 'react-i18next';
 
 import styles from './index.module.scss';
-import { number } from 'echarts';
 
 const DetailOverview = () => {
   const [botMultiFileParam, setBotMultiFileParam] = useState<any>(false);
@@ -100,7 +99,7 @@ const DetailOverview = () => {
       dataIndex: 'publishChannel',
       title: t('releaseDetail.DetailOverviewPage.releasedChannel'),
       align: 'left',
-      render: (text: string) => {
+      render: (text: number) => {
         return renderPlatformLogo(text);
       },
     },
