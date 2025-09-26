@@ -1,13 +1,11 @@
 """Test task processing module."""
 
-import asyncio
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 from fastapi import HTTPException
-
 from plugin.rpa.api.schemas.execution_schema import RPAExecutionResponse
 from plugin.rpa.errors.error_code import ErrorCode
 from plugin.rpa.exceptions.config_exceptions import InvalidConfigException
@@ -21,7 +19,8 @@ class TestTaskMonitoring:
     @patch("service.xiaowu.process.create_task")
     @patch("service.xiaowu.process.query_task_status")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_success(
         self, mock_query_task: MagicMock, mock_create_task: MagicMock
@@ -68,7 +67,8 @@ class TestTaskMonitoring:
     @pytest.mark.asyncio
     @patch("service.xiaowu.process.create_task")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_create_task_error(
         self, mock_create_task: MagicMock
@@ -100,7 +100,8 @@ class TestTaskMonitoring:
     @pytest.mark.asyncio
     @patch("service.xiaowu.process.create_task")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_invalid_config_error(
         self, mock_create_task: MagicMock
@@ -130,7 +131,8 @@ class TestTaskMonitoring:
     @patch("service.xiaowu.process.create_task")
     @patch("service.xiaowu.process.query_task_status")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "2", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "2", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_timeout(
         self, mock_query_task: MagicMock, mock_create_task: MagicMock
@@ -164,7 +166,8 @@ class TestTaskMonitoring:
     @patch("service.xiaowu.process.create_task")
     @patch("service.xiaowu.process.query_task_status")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_query_error(
         self, mock_query_task: MagicMock, mock_create_task: MagicMock
@@ -201,7 +204,8 @@ class TestTaskMonitoring:
     @pytest.mark.asyncio
     @patch("service.xiaowu.process.create_task")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_httpx_error(
         self, mock_create_task: MagicMock
@@ -231,7 +235,8 @@ class TestTaskMonitoring:
     @pytest.mark.asyncio
     @patch("service.xiaowu.process.create_task")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_request_error(
         self, mock_create_task: MagicMock
@@ -260,7 +265,8 @@ class TestTaskMonitoring:
     @patch("service.xiaowu.process.create_task")
     @patch("service.xiaowu.process.query_task_status")
     @patch.dict(
-        os.environ, {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"}
+        os.environ,
+        {"XIAOWU_RPA_TIMEOUT_KEY": "300", "XIAOWU_RPA_TASK_QUERY_INTERVAL_KEY": "1"},
     )
     async def test_task_monitoring_with_none_params(
         self, mock_query_task: MagicMock, mock_create_task: MagicMock

@@ -6,8 +6,7 @@ from typing import Optional, Tuple
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-
-from consts import const
+from plugin.rpa.consts import const
 from plugin.rpa.errors.error_code import ErrorCode
 from plugin.rpa.exceptions.config_exceptions import InvalidConfigException
 from plugin.rpa.utils.urls.utl_util import is_valid_url
@@ -49,7 +48,9 @@ async def create_task(
 
             if code != "0000" or not data:
                 logger.error(f"Task creation failed: {msg}")
-                raise HTTPException(status_code=500, detail=f"Task creation failed: {msg}")
+                raise HTTPException(
+                    status_code=500, detail=f"Task creation failed: {msg}"
+                )
 
             task_id = data.get("executionId", None)
             if not task_id:
@@ -68,7 +69,9 @@ async def create_task(
             ) from e
         except httpx.RequestError as e:
             logger.error(f"Task creation failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Task creation failed: {e}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Task creation failed: {e}"
+            ) from e
 
 
 # Query task status
@@ -109,7 +112,8 @@ async def query_task_status(
             if not execution:
                 logger.error("Task status query failed: No task information returned")
                 raise HTTPException(
-                    status_code=500, detail="Task status query failed: No task information returned"
+                    status_code=500,
+                    detail="Task status query failed: No task information returned",
                 )
 
             status = execution.get("status", "")
@@ -128,8 +132,12 @@ async def query_task_status(
             if status in ["PENDING"]:
                 return None
 
-            raise HTTPException(status_code=500, detail=f"Unknown task status: {status}")
+            raise HTTPException(
+                status_code=500, detail=f"Unknown task status: {status}"
+            )
 
         except httpx.RequestError as e:
             logger.error(f"Task status query failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Task status query failed: {e}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Task status query failed: {e}"
+            ) from e

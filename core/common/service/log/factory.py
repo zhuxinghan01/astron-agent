@@ -7,10 +7,10 @@ from common.service.log.logger_service import LogService
 
 
 class LogServiceFactory(ServiceFactory):
-    def __init__(self):
-        super().__init__(LogService)
+    def __init__(self) -> None:
+        super().__init__(LogService)  # type: ignore[arg-type]
 
-    def create(self):
+    def create(self) -> LogService:  # type: ignore[override, no-untyped-def]
         """
         Initialize log instance.
         :return:

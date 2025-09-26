@@ -1,9 +1,11 @@
 """Test API schemas (DTO) module."""
 
 import pytest
+from plugin.rpa.api.schemas.execution_schema import (
+    RPAExecutionRequest,
+    RPAExecutionResponse,
+)
 from pydantic import ValidationError
-
-from plugin.rpa.api.schemas.execution_schema import RPAExecutionRequest, RPAExecutionResponse
 
 
 class TestRPAExecutionRequest:
@@ -47,7 +49,7 @@ class TestRPAExecutionRequest:
         """Test request with empty params dictionary."""
         request_data = {"project_id": "test_project_456", "params": {}}
         request = RPAExecutionRequest(**request_data)  # type: ignore[arg-type]
-        assert request.params == {}
+        assert not request.params
 
     def test_request_with_none_params(self) -> None:
         """Test request with None params."""

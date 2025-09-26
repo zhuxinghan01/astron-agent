@@ -9,8 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-
-from plugin.rpa.api.app import xingchen_rap_server_app
+from plugin.rpa.api.app import rpa_server_app
 
 
 class TestRPAIntegration:
@@ -19,7 +18,7 @@ class TestRPAIntegration:
     @pytest.fixture
     def integration_client(self) -> TestClient:
         """Create integration test client."""
-        app = xingchen_rap_server_app()
+        app = rpa_server_app()
         return TestClient(app)
 
     @pytest.mark.integration
@@ -323,7 +322,7 @@ class TestRPAIntegration:
     @pytest.mark.integration
     def test_integration_app_creation(self) -> None:
         """Test application creation integration."""
-        app = xingchen_rap_server_app()
+        app = rpa_server_app()
 
         # Verify application creation success
         assert app is not None

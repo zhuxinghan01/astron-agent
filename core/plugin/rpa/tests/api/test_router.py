@@ -17,7 +17,7 @@ def test_router_includes_execution_routes() -> None:
         if hasattr(route, "path_regex") and "/exec" in str(route.path_regex.pattern):
             found_exec_route = True
             break
-        elif hasattr(route, "path") and "/exec" in route.path:
+        if hasattr(route, "path") and "/exec" in route.path:
             found_exec_route = True
             break
 
