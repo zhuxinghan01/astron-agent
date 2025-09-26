@@ -81,11 +81,11 @@ public class BotMaasServiceImpl implements BotMaasService {
     public Integer massCopySynchronize(CloneSynchronize synchronize) {
         log.info("------ Astron workflow copy synchronization: {}", JSONObject.toJSONString(synchronize));
         String uid = synchronize.getUid();
-        String originId = synchronize.getOriginId();
+        Long originId = synchronize.getOriginId();
         Long maasId = synchronize.getCurrentId();
         String flowId = synchronize.getFlowId();
         Long spaceId = synchronize.getSpaceId();
-        UserLangChainInfo userLangChainInfo = userLangChainDataService.selectByMaasId(maasId);
+        UserLangChainInfo userLangChainInfo = userLangChainDataService.selectByMaasId(originId);
         if (Objects.isNull(userLangChainInfo)) {
             log.info("----- Xinghuo did not find Astron workflow: {}", JSONObject.toJSONString(synchronize));
             throw new BusinessException(ResponseEnum.BOT_NOT_EXIST);

@@ -23,8 +23,11 @@ import java.util.Map;
 public record RpaAssistantResp(
         Long id,
         Long platformId,
+        String platform,
         String assistantName,
         String remarks,
+        String userName,
+        String icon,
         Integer status,
         Map<String, String> fields,
         JSONArray robots,
