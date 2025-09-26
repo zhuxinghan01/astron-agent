@@ -402,7 +402,7 @@ class TestReasonChatCompletionChunk:
                 index=0, delta=content_delta, finish_reason=None
             )
             content_chunk_data: Dict[str, Any] = {
-                "id": f"stream-{i+2}",
+                "id": f"stream-{i + 2}",
                 "object": "chat.completion.chunk",
                 "created": 1234567890 + i,
                 "model": "stream-model",
