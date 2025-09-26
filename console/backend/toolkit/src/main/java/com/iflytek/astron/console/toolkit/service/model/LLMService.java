@@ -220,10 +220,17 @@ public class LLMService {
         if (CollUtil.isNotEmpty(valueList) && !valueList.contains(nodeType)) {
             return;
         }
-        List<Model> models = modelMapper.selectList(new LambdaQueryWrapper<Model>()
-                .eq(Model::getUid, userId)
+        LambdaQueryWrapper<Model> lambdaQueryWrapper = new LambdaQueryWrapper<Model>()
                 .eq(Model::getEnable, 1)
-                .eq(Model::getIsDeleted, 0));
+                .eq(Model::getIsDeleted, 0);
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        if(spaceId != null){
+            lambdaQueryWrapper.eq(Model::getSpaceId,spaceId);
+        }else{
+            lambdaQueryWrapper.eq(Model::getUid, userId);
+        }
+        List<Model> models = modelMapper.selectList(lambdaQueryWrapper);
+
         for (Model model : models) {
             LLMInfoVo llmInfoVo = new LLMInfoVo();
             llmInfoVo.setId(model.getId());

@@ -339,11 +339,11 @@ public class WorkflowExportService {
      */
     private void cleanLlmNode(JSONObject param, Set<Long> allowedLlmSet, String uid) {
         String source = param.getString("source");
-        Long paramUid = param.getLong("uid");
+        String paramUid = param.getString("uid");
         Long llmId = param.getLong("llmId");
 
         // If it's openai and uid matches, allow it to pass
-        if ("openai".equals(source) && Objects.equals(paramUid.toString(), uid)) {
+        if ("openai".equals(source) && Objects.equals(paramUid, uid)) {
             return;
         }
 
