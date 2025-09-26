@@ -9,15 +9,17 @@ function index(props): React.ReactElement {
 
   const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
   const currentStore = getCurrentStore();
-  const iteratorId = useFlowsManager(state => state.iteratorId);
-  const setIteratorId = useFlowsManager(state => state.setIteratorId);
-  const showIterativeModal = useFlowsManager(state => state.showIterativeModal);
+  const iteratorId = useFlowsManager((state) => state.iteratorId);
+  const setIteratorId = useFlowsManager((state) => state.setIteratorId);
+  const showIterativeModal = useFlowsManager(
+    (state) => state.showIterativeModal,
+  );
   const setShowIterativeModal = useFlowsManager(
-    state => state.setShowIterativeModal
+    (state) => state.setShowIterativeModal,
   );
   const setCurrentStore = useFlowsManager(state => state.setCurrentStore);
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    state => state.setNodeInfoEditDrawerlInfo
+    (state) => state.setNodeInfoEditDrawerlInfo,
   );
   const nodes = currentStore(state => state.nodes);
   const [style, setStyle] = useState({
@@ -59,7 +61,7 @@ function index(props): React.ReactElement {
   useEffect(() => {
     if (iteratorId === id && !showIterativeModal) {
       const iterationNodes = nodes?.filter(
-        node => node?.data?.parentId === iteratorId
+        (node) => node?.data?.parentId === iteratorId,
       );
       const { width, height } = getDimensions(iterationNodes);
       setStyle({

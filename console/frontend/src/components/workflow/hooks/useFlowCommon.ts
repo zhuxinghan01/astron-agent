@@ -235,7 +235,7 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
         return null;
       } else {
         const currentTypeList = nodes.filter(
-          node => node.type === addNode?.data?.nodeMeta?.aliasName
+          node => node?.nodeType === nodeType
         );
         addNode.data.nodeParam.appId = currentFlow?.appId;
         addNode.data.nodeParam.uid = user?.uid?.toString();

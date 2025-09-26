@@ -38,10 +38,6 @@ export async function addComparisons(params): Promise<unknown> {
   return http.post("/workflow/add-comparisons", params);
 }
 
-export async function nodeDebug(nodeId, params): Promise<unknown> {
-  return http.post(`/workflow/node/debug/${nodeId}`, params);
-}
-
 export async function saveDialogueAPI(params): Promise<unknown> {
   return http.post("/workflow/dialog", params);
 }

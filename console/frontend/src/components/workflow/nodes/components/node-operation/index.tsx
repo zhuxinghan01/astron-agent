@@ -10,6 +10,7 @@ import { useMemoizedFn } from 'ahooks';
 import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
 import { UseNodeDebuggerReturn } from '@/components/workflow/types/nodes';
 import { Icons } from '@/components/workflow/icons';
+import { getFixedUrl, getAuthorization } from '@/components/workflow/utils';
 
 const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
   const { currentNode } = useNodeCommon({ id, data });
@@ -39,13 +40,14 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
         edges: [],
       },
     };
-    const latestAccessToken = localStorage.getItem('accessToken');
-    fetch(`http://172.29.201.92:8080/workflow/node/debug/${id}`, {
+    const latestAccessToken = localStorage.getItem("accessToken");
+    //@ts-ignore
+    fetch(getFixedUrl(`/workflow/node/debug/${id}`), {
       method: 'POST',
       body: JSON.stringify(params),
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${latestAccessToken}`,
+        Authorization: getAuthorization(),
       },
     })
       .then(async response => {
@@ -77,9 +79,8 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
     }
     const currentNode = nodes.find(node => node.id === id);
     const refInputs = currentNode.data.inputs
-      .filter(input => input.schema.value.type === 'ref')
-      ?.map(input => {
-        console.log('input@@', input);
+      .filter((input) => input.schema.value.type === "ref")
+      ?.map((input) => {
         return {
           id: input.id,
           name: input.name,

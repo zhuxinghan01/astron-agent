@@ -34,12 +34,12 @@ const QuestionSection = memo(
               value={data?.nodeParam?.question}
               onChange={value =>
                 handleChangeNodeParam(
-                  d => (d.nodeParam.question = value),
-                  value
+                  (d) => (d.nodeParam.question = value),
+                  value,
                 )
               }
               placeholder={t(
-                'workflow.nodes.questionAnswerNode.questionPlaceholder'
+                "workflow.nodes.questionAnswerNode.questionPlaceholder",
               )}
             />
             <p className="text-xs text-[#F74E43]">
@@ -49,7 +49,7 @@ const QuestionSection = memo(
         }
       />
     );
-  }
+  },
 );
 
 const AnswerModeSection = memo(
@@ -168,7 +168,7 @@ const AnswerModeSection = memo(
         )}
       </>
     );
-  }
+  },
 );
 
 const OutputSection = memo(
@@ -215,7 +215,7 @@ const OutputSection = memo(
                 <Checkbox checked={nodeParam?.directAnswer?.handleResponse} />
                 <span>
                   {t(
-                    'workflow.nodes.questionAnswerNode.extractFieldsFromUserReply'
+                    "workflow.nodes.questionAnswerNode.extractFieldsFromUserReply",
                   )}
                 </span>
               </div>
@@ -225,7 +225,7 @@ const OutputSection = memo(
         content={<OutputParams id={id} data={data} />}
       />
     );
-  }
+  },
 );
 
 export const QuestionAnswerDetail = memo(props => {
@@ -348,13 +348,13 @@ export const QuestionAnswer = memo(({ id, data }): React.ReactElement => {
   const { isConnectable } = useNodeCommon({ id, data });
 
   const optionAnswer = useMemo(
-    () => data?.nodeParam?.optionAnswer?.filter(item => item.type === 2),
-    [data?.nodeParam?.optionAnswer]
+    () => data?.nodeParam?.optionAnswer?.filter((item) => item.type === 2),
+    [data?.nodeParam?.optionAnswer],
   );
 
   const optionDefaultAnswer = useMemo(
-    () => data?.nodeParam?.optionAnswer?.find(item => item.type === 1),
-    [data?.nodeParam?.optionAnswer]
+    () => data?.nodeParam?.optionAnswer?.find((item) => item.type === 1),
+    [data?.nodeParam?.optionAnswer],
   );
 
   return (
