@@ -40,6 +40,7 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
       },
     };
     const latestAccessToken = localStorage.getItem("accessToken");
+    //@ts-ignore
     fetch(`http://172.29.201.92:8080/workflow/node/debug/${id}`, {
       method: "POST",
       body: JSON.stringify(params),
@@ -79,7 +80,6 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
     const refInputs = currentNode.data.inputs
       .filter((input) => input.schema.value.type === "ref")
       ?.map((input) => {
-        console.log("input@@", input);
         return {
           id: input.id,
           name: input.name,

@@ -92,10 +92,10 @@ const SeparatorSection = ({
   const { t } = useTranslation();
   const addTextNodeConfig = useFlowsManager((state) => state.addTextNodeConfig);
   const removeTextNodeConfig = useFlowsManager(
-    (state) => state.removeTextNodeConfig
+    (state) => state.removeTextNodeConfig,
   );
   const textNodeConfigList = useFlowsManager(
-    (state) => state.textNodeConfigList
+    (state) => state.textNodeConfigList,
   );
   const currentStore = useFlowsManager((state) => state.getCurrentStore());
   const delayCheckNode = currentStore((state) => state.delayCheckNode);
@@ -150,7 +150,7 @@ const SeparatorSection = ({
                             removeTextNodeConfig(item?.id).then((list) => {
                               if (
                                 !list.some(
-                                  (i) => i.separator === nodeParam?.separator
+                                  (i) => i.separator === nodeParam?.separator,
                                 )
                               ) {
                                 handleChangeNodeParam("separator", "");
@@ -235,12 +235,12 @@ const OutputTree = ({ nodeParam }): React.ReactElement => {
       {
         title: renderTitle(
           "output",
-          nodeParam?.mode === 1 ? "Array<String>" : "String"
+          nodeParam?.mode === 1 ? "Array<String>" : "String",
         ),
         key: "0-0",
       },
     ],
-    [nodeParam]
+    [nodeParam],
   );
 
   return (
@@ -272,7 +272,7 @@ export const TextHandleDetail = memo(({ id, data }): React.ReactElement => {
   const updateNodeRef = currentStore((state) => state.updateNodeRef);
   const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    (state) => state.autoSaveCurrentFlow,
   );
 
   const handleChangeNodeParam = useCallback(
@@ -296,7 +296,7 @@ export const TextHandleDetail = memo(({ id, data }): React.ReactElement => {
       autoSaveCurrentFlow();
       canPublishSetNot();
     },
-    [id, setNode, autoSaveCurrentFlow, canPublishSetNot]
+    [id, setNode, autoSaveCurrentFlow, canPublishSetNot],
   );
 
   return (

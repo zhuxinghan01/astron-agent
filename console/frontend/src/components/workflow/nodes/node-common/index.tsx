@@ -250,13 +250,13 @@ export const Label = memo(
     const { isStartOrEndNode } = useNodeCommon({ id, data });
     const getCurrentStore = useFlowsManager((state) => state.getCurrentStore);
     const autoSaveCurrentFlow = useFlowsManager(
-      (state) => state.autoSaveCurrentFlow
+      (state) => state.autoSaveCurrentFlow,
     );
     const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
     const currentStore = getCurrentStore();
     const setNode = currentStore((state) => state.setNode);
     const updateNodeNameStatus = currentStore(
-      (state) => state.updateNodeNameStatus
+      (state) => state.updateNodeNameStatus,
     );
 
     const handleChangeNodeParam = useCallback(
@@ -270,7 +270,7 @@ export const Label = memo(
         autoSaveCurrentFlow();
         canPublishSetNot();
       },
-      [id, autoSaveCurrentFlow]
+      [id, autoSaveCurrentFlow],
     );
 
     const labelInputId = useMemo(() => {
@@ -287,7 +287,7 @@ export const Label = memo(
             onChange={(value) =>
               handleChangeNodeParam(
                 (data, value) => (data.label = value),
-                value
+                value,
               )
             }
             onBlur={() => {
@@ -314,7 +314,7 @@ export const Label = memo(
         )}
       </>
     );
-  }
+  },
 );
 
 export const ExceptionContent = memo(({ id, data }) => {
@@ -376,7 +376,7 @@ export const IteratorChildNode = memo<IteratorChildNodeProps>(
         />
       </div>
     );
-  }
+  },
 );
 
 interface NodeHeaderProps {
@@ -561,7 +561,7 @@ const renderFileUpload = (
   index,
   uploadComplete,
   handleFileUpload,
-  handleDeleteFile
+  handleDeleteFile,
 ): React.ReactElement => {
   const multiple = params?.schema?.type === "array-string";
   return (
@@ -597,7 +597,7 @@ const renderString = (params, index, handleChangeParam): React.ReactElement => (
       handleChangeParam(
         index,
         (d) => (d.default = e.target.value),
-        e.target.value
+        e.target.value,
       )
     }
   />
@@ -606,7 +606,7 @@ const renderString = (params, index, handleChangeParam): React.ReactElement => (
 const renderInteger = (
   params,
   index,
-  handleChangeParam
+  handleChangeParam,
 ): React.ReactElement => (
   <FlowInputNumber
     step={1}
@@ -632,7 +632,7 @@ const renderNumber = (params, index, handleChangeParam): React.ReactElement => (
 const renderBoolean = (
   params,
   index,
-  handleChangeParam
+  handleChangeParam,
 ): React.ReactElement => (
   <FlowSelect
     value={params?.default}
@@ -649,7 +649,7 @@ const renderBoolean = (
 const renderJsonEditor = (
   params,
   index,
-  handleChangeParam
+  handleChangeParam,
 ): React.ReactElement => (
   <JsonMonacoEditor
     value={params?.default}
@@ -662,7 +662,7 @@ const renderJsonEditor = (
 export const renderParamInput = (
   params: unknown,
   index: number,
-  fnc
+  fnc,
 ): React.ReactElement | null => {
   const {
     handleChangeParam,
@@ -677,7 +677,7 @@ export const renderParamInput = (
       index,
       uploadComplete,
       handleFileUpload,
-      handleDeleteFile
+      handleDeleteFile,
     );
 
   switch (type) {

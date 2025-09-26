@@ -34,6 +34,7 @@ export default [
         clearTimeout: 'readonly',
         clearInterval: 'readonly',
         IFlyCollector: 'readonly',
+        fetch: 'readonly',
       },
     },
     plugins: {

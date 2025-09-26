@@ -64,7 +64,7 @@ export function TypeSelector({ id, data, item }: unknown): React.ReactElement {
               data.schema.value.content = {};
             }
           },
-          value
+          value,
         )
       }
     />
@@ -109,7 +109,7 @@ export function LiteralField({
         handleChangeInputParam(
           item.id,
           (data, val) => (data.schema.value.content = val),
-          value
+          value,
         )
       }
     />
@@ -146,7 +146,7 @@ function ReferenceField({
   const currentStore = useFlowsManager((state) => state.getCurrentStore());
   const checkNode = currentStore((state) => state.checkNode);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    (state) => state.autoSaveCurrentFlow,
   );
   const cascaderValue = item?.schema?.value?.content?.nodeId
     ? [item?.schema?.value?.content?.nodeId, item?.schema?.value?.content?.name]
@@ -168,7 +168,7 @@ function ReferenceField({
         },
         type: node.type,
         fileType: node?.fileType,
-      }
+      },
     );
 
   return (

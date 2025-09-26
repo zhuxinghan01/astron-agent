@@ -49,7 +49,7 @@ import remove from "@/assets/imgs/workflow/input-remove-icon.png";
 const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   const currentStore = useFlowsManager((state) => state.getCurrentStore());
   const showIterativeModal = useFlowsManager(
-    (state) => state.showIterativeModal
+    (state) => state.showIterativeModal,
   );
   const nodeList = useFlowsManager((state) => state.nodeList);
   const nodes = currentStore((state) => state.nodes);
@@ -210,22 +210,22 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
 const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
   const { isIteratorNode } = useNodeInfo({ id, data });
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    (state) => state.setNodeInfoEditDrawerlInfo
+    (state) => state.setNodeInfoEditDrawerlInfo,
   );
   const setChatDebuggerResult = useFlowsManager(
-    (state) => state.setChatDebuggerResult
+    (state) => state.setChatDebuggerResult,
   );
   const setVersionManagement = useFlowsManager(
-    (state) => state.setVersionManagement
+    (state) => state.setVersionManagement,
   );
   const setAdvancedConfiguration = useFlowsManager(
-    (state) => state.setAdvancedConfiguration
+    (state) => state.setAdvancedConfiguration,
   );
   const setOpenOperationResult = useFlowsManager(
-    (state) => state.setOpenOperationResult
+    (state) => state.setOpenOperationResult,
   );
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    (state) => state.autoSaveCurrentFlow,
   );
   const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
   const currentStore = useFlowsManager((state) => state.getCurrentStore());
@@ -257,13 +257,13 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       autoSaveCurrentFlow();
       canPublishSetNot();
       checkNode(id);
-    }
+    },
   );
   const handleChangeOutputParam = useMemoizedFn(
     (
       outputId: string,
       fn: (data: OutputItem, value: unknown) => void,
-      value: unknown
+      value: unknown,
     ): void => {
       setNode(id, (old) => {
         const currentOutput = findItemById(old.data.outputs, outputId);
@@ -278,7 +278,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       updateNodeRef(id);
       autoSaveCurrentFlow();
       canPublishSetNot();
-    }
+    },
   );
 
   const handleIteratorEndChange = useMemoizedFn(
@@ -286,11 +286,11 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       type: "add" | "remove" | "replace",
       outputId: string,
       value?: unknown,
-      currentNode?: NodeDataType
+      currentNode?: NodeDataType,
     ) => {
       if (isIteratorNode) {
         const outputIndex = currentNode?.data?.outputs?.findIndex(
-          (output) => output?.id === outputId
+          (output) => output?.id === outputId,
         );
         const currentIteratorInput = {
           id: uuid(),
@@ -304,7 +304,8 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
           },
         };
         const iteratorStartEnd = nodes?.find(
-          (node) => node?.data?.parentId === id && node?.nodeType === "node-end"
+          (node) =>
+            node?.data?.parentId === id && node?.nodeType === "node-end",
         );
         setNode(iteratorStartEnd?.id, (old) => {
           if (type === "add") {
@@ -313,7 +314,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
             old.data.inputs = old.data.inputs.splice(outputIndex, 1, 0);
           } else {
             const currentInput = old.data.inputs?.find(
-              (_, index) => index === outputIndex
+              (_, index) => index === outputIndex,
             );
             if (currentInput) {
               currentInput.name = value;
@@ -322,7 +323,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
           return cloneDeep(old);
         });
       }
-    }
+    },
   );
   const handleAddOutputLine = useMemoizedFn(() => {
     takeSnapshot();
@@ -349,7 +350,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       if (path && isJSON(old?.data?.retryConfig?.customOutput)) {
         const updatedObj = deleteFieldByPath(
           cloneDeep(JSON.parse(old?.data?.retryConfig?.customOutput)),
-          path
+          path,
         );
         old.data.retryConfig.customOutput = JSON.stringify(updatedObj, null, 2);
       }
@@ -379,7 +380,7 @@ const OutputNameInput = ({ id, data, output }): React.ReactElement => {
     handleChangeOutputParam(
       output.id,
       (data, value) => (data.name = value),
-      value
+      value,
     );
   });
 
@@ -442,7 +443,7 @@ const OutputTypeSelector = ({ id, data, output }): React.ReactElement => {
           }
         }
       },
-      value
+      value,
     );
 
     delayUpdateNodeRef(id);
@@ -502,7 +503,7 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
   const delayUpdateNodeRef = currentStore((state) => state.delayUpdateNodeRef);
   const setNode = currentStore((state) => state.setNode);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    (state) => state.autoSaveCurrentFlow,
   );
   const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
 
@@ -526,10 +527,10 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
               old?.data.outputs,
               isJSON(old?.data?.retryConfig?.customOutput)
                 ? JSON.parse(old?.data?.retryConfig?.customOutput)
-                : null
+                : null,
             ),
             null,
-            2
+            2,
           );
           old.data.retryConfig.customOutput = newSetAnswerContent;
           old.data.nodeParam.setAnswerContentErrMsg = "";
@@ -587,7 +588,7 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
           <OutputErrors output={output} />
         </div>
       );
-    }
+    },
   );
 
   const outputTypeList = useMemo(() => {
@@ -601,7 +602,7 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
         },
       ];
     return originOutputTypeList.filter(
-      (item) => item?.value !== "file" && item?.value !== "fileList"
+      (item) => item?.value !== "file" && item?.value !== "fileList",
     );
   }, [originOutputTypeList, isStartNode, isIteratorNode]);
 
@@ -616,13 +617,13 @@ const useNodeModels = ({ id, data }): UseNodeModelsReturn => {
   const agentModels = useFlowsManager((state) => state.agentModels);
   const sparkLlmModels = useFlowsManager((state) => state.sparkLlmModels);
   const questionAnswerModels = useFlowsManager(
-    (state) => state.questionAnswerModels
+    (state) => state.questionAnswerModels,
   );
   const decisionMakingModels = useFlowsManager(
-    (state) => state.decisionMakingModels
+    (state) => state.decisionMakingModels,
   );
   const extractorParameterModels = useFlowsManager(
-    (state) => state.extractorParameterModels
+    (state) => state.extractorParameterModels,
   );
   const models = useMemo(() => {
     if (id?.startsWith("agent")) {
@@ -786,7 +787,7 @@ export const OutputActions = ({
     handleChangeOutputParam(
       output.id,
       (data, value) => (data.required = value),
-      e.target.checked
+      e.target.checked,
     );
   });
 
@@ -880,7 +881,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
   const delayCheckNode = currentStore((state) => state.delayCheckNode);
   const canPublishSetNot = useFlowsManager((state) => state.canPublishSetNot);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    (state) => state.autoSaveCurrentFlow,
   );
   const nodes = currentStore((state) => state.nodes);
   const setNode = currentStore((state) => state.setNode);
@@ -909,7 +910,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
                 data.default = value;
               }
             },
-            value
+            value,
           )
         }
         onBlur={() => {
@@ -924,11 +925,11 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
     (
       inputId: string,
       fn: (data: InputItem, value: unknown) => void,
-      value: unknown
+      value: unknown,
     ) => {
       setNode(id, (old) => {
         const currentInput = old?.data?.inputs?.find(
-          (item) => item?.id === inputId
+          (item) => item?.id === inputId,
         );
         if (currentInput) {
           fn(currentInput, value);
@@ -944,7 +945,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
           }));
           const iteratorStartNode = nodes?.find(
             (node) =>
-              node?.data?.parentId === id && node?.nodeType === "node-start"
+              node?.data?.parentId === id && node?.nodeType === "node-start",
           );
           setNode(iteratorStartNode?.id, (old) => {
             old.data.outputs = outputs;
@@ -958,7 +959,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
       });
       autoSaveCurrentFlow();
       canPublishSetNot();
-    }
+    },
   );
   const handleAddInputLine = useMemoizedFn(() => {
     takeSnapshot();
@@ -1055,7 +1056,7 @@ export const useNodeCommon = ({
         newSchema.properties = newSchema.schema.properties;
         return newSchema;
       });
-    }
+    },
   );
 
   const renderTypeOneClickUpdate = (): React.ReactElement | null => {
