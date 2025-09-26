@@ -132,7 +132,11 @@ class CompletionBase(BaseModel, ABC):
                 span=context.span,
             )
             context.span.add_info_events(
-                {"node-trace": json.dumps(node_trace_log, ensure_ascii=False, default=json_serializer)}
+                {
+                    "node-trace": json.dumps(
+                        node_trace_log, ensure_ascii=False, default=json_serializer
+                    )
+                }
             )
 
     async def run_runner(
