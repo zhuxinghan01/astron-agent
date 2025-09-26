@@ -1036,7 +1036,6 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         List<ToolBoxVo> toolBoxVoList = new ArrayList<>();
         // MCP tools
         List<McpServerTool> mcpToolList = workflowService.getMcpServerListLocally(null, 1, 1000, dto.getAuthorized(), null);
-        // List<McpServerTool> mcpToolList = mcpServerHandler.getMcpToolList(null, 1, 10000, null);
         if (mcpToolList == null || mcpToolList.isEmpty()) {
             return toolBoxVoList;
         }

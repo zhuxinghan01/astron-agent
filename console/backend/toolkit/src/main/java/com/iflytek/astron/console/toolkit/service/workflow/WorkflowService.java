@@ -3657,6 +3657,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             mcpServerTool.setCreator(mcpObject.getString("creator"));
             mcpServerTool.setCreateTime(mcpObject.getString("createTime"));
             mcpServerTool.setLogoUrl(mcpObject.getString("logo"));
+            mcpServerTool.setName(mcpObject.getString("name"));
             mcpServerTool.setMcpType(mcpObject.getString("mcpType"));
             mcpServerTool.setContent(mcpObject.getString("content"));
             mcpServerTool.setTools(mcpObject.getJSONArray("tools"));
