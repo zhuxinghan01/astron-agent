@@ -857,9 +857,29 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         boolean isFavorite = toolBoxVo.getIsMcp() ? favoritesId.contains(toolBoxVo.getMcpTooId()) : favoritesId.contains(toolBoxVo.getToolId());
         toolBoxVo.setIsFavorite(isFavorite);
 
+        // Set heat value from Redis
+        fillHeatValue(toolBoxVo);
+
         // Set tags
         fillToolTags(toolBoxVo, configInfoList);
 
+    }
+
+    /**
+     * Fill heat value from Redis
+     */
+    private void fillHeatValue(ToolBoxVo toolBoxVo) {
+        Long heatValue = 0L;
+        if (toolBoxVo.getIsMcp()) {
+            if (redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolBoxVo.getMcpTooId()) != null) {
+                heatValue = (Long) redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolBoxVo.getMcpTooId());
+            }
+        } else {
+            if (redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolBoxVo.getToolId()) != null) {
+                heatValue = (Long) redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolBoxVo.getToolId());
+            }
+        }
+        toolBoxVo.setHeatValue(heatValue);
     }
 
     /**
@@ -899,7 +919,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
      */
     private List<ToolBoxVo> sortByHeatValueAndPaginate(List<ToolBoxVo> toolBoxVoList, Integer pageNo, Integer pageSize) {
         return toolBoxVoList.stream()
-                .sorted(Comparator.comparing(ToolBoxVo::getHeatValue).reversed())
+                .sorted(Comparator.comparing(ToolBoxVo::getHeatValue, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .skip((long) (pageNo - 1) * pageSize)
                 .limit(pageSize)
                 .collect(Collectors.toList());
