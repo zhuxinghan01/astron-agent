@@ -7,6 +7,7 @@ import java.util.*;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
+import com.iflytek.astron.console.toolkit.entity.enumVo.VarType;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +87,16 @@ public class RpaHandler {
                     log.warn("getRpaList data is null, treat as empty list. resp: {}", abbreviate(resp, 1000));
                     return new JSONObject();
                 }
+                JSONArray records = data.getJSONArray("records");
+                if (records != null && !records.isEmpty()) {
+                    for (Object item : records) {
+                        if (!(item instanceof JSONObject record)) {
+                            continue;
+                        }
+                        JSONArray parameters = record.getJSONArray("parameters");
+                        convertParameterTypes(parameters);
+                    }
+                }
                 return data;
             }
             String message = obj.getString("message");
@@ -98,6 +109,22 @@ public class RpaHandler {
             log.warn("getRpaList parse error, resp: {}", abbreviate(resp, 1000), parseEx);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to parse RPA response", parseEx);
         }
+    }
+    private static void convertParameterTypes(JSONArray parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            return;
+        }
+        int converted = 0;
+        for (Object param : parameters) {
+            if (!(param instanceof JSONObject pm)) {
+                continue;
+            }
+            String varTypeStr = pm.getString("varType");
+            VarType varType = VarType.fromCode(varTypeStr);
+            pm.put("type", varType.getJsonType());
+            converted++;
+        }
+        log.debug("Converted {} parameter types.", converted);
     }
 
     /**
