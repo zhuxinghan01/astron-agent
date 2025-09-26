@@ -139,7 +139,7 @@ export const getAgentList = async (
 
 /** 复制bot */
 export const copyBot = async (params: any) => {
-  const response = await api.post(`/u/bot/v2/copyBot`, qs.stringify(params), {
+  const response = await api.post(`/workflow/copy-bot`, qs.stringify(params), {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
