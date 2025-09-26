@@ -96,6 +96,15 @@ public class BotChatServiceImpl implements BotChatService {
     @Autowired
     private ReqKnowledgeRecordsDataService reqKnowledgeRecordsDataService;
 
+    /**
+     * Function to handle chat messages
+     *
+     * @param chatBotReqDto Chat bot request data object
+     * @param sseEmitter Server-sent events emitter
+     * @param sseId Server-sent events ID
+     * @param workflowOperation Workflow operation
+     * @param workflowVersion Workflow version
+     */
     @Override
     public void chatMessageBot(ChatBotReqDto chatBotReqDto, SseEmitter sseEmitter, String sseId, String workflowOperation, String workflowVersion) {
         try {
@@ -359,12 +368,12 @@ public class BotChatServiceImpl implements BotChatService {
         systemMessage.setRole("system");
         systemMessage.setContent(prompt);
 
-        // 最后拼接当前提问
+        // Finally concatenate the current question
         StringBuilder promptBuilder = new StringBuilder();
         promptBuilder.append(LOOSE_PREFIX_PROMPT);
         promptBuilder.append(prompt);
         List<String> knowledgeList = knowledgeService.getChuncksByBotId(chatBotReqDto.getBotId(), chatBotReqDto.getAsk(), 3);
-        // 把检索到的知识条目存到库里, 下轮对话用
+        // Store retrieved knowledge entries in the database for next round of conversation
         String knowledgeStr = knowledgeList.toString();
         ReqKnowledgeRecords reqKnowledgeRecords = ReqKnowledgeRecords.builder()
                 .uid(chatBotReqDto.getUid())
