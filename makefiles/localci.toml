@@ -50,3 +50,8 @@ enabled = true
 name = "core-workflow"
 dir = "core/workflow"
 enabled = true
+
+[[python.apps]]
+name = "core-common"
+dir = "core/common"
+enabled = true
