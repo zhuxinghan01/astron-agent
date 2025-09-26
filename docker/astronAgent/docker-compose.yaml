@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spark123}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./pgsql/:/docker-entrypoint-initdb.d/
@@ -35,7 +35,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${EXPOSE_MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/:/docker-entrypoint-initdb.d/
@@ -53,7 +53,7 @@ services:
     image: redis:7
     container_name: astron-agent-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${EXPOSE_REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -76,8 +76,8 @@ services:
       - xpack.security.enabled=${ELASTICSEARCH_SECURITY_ENABLED:-false}
       - cluster.name=astron-agent-cluster
     ports:
-      - "${ELASTICSEARCH_PORT:-9200}:9200"
-      - "${ELASTICSEARCH_TRANSPORT_PORT:-9300}:9300"
+      - "${EXPOSE_ELASTICSEARCH_PORT:-9200}:9200"
+      - "${EXPOSE_ELASTICSEARCH_TRANSPORT_PORT:-9300}:9300"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
@@ -96,8 +96,8 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_PORT:-9092}
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:${KAFKA_PORT:-9092}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${EXPOSE_KAFKA_PORT:-9092}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:${EXPOSE_KAFKA_PORT:-9092}
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:29093
@@ -107,7 +107,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR:-1}
       CLUSTER_ID: ${KAFKA_CLUSTER_ID:-MkU3OEVBNTcwNTJENDM2Qk}
     ports:
-      - "${KAFKA_PORT:-9092}:${KAFKA_PORT:-9092}"
+      - "${EXPOSE_KAFKA_PORT:-9092}:9092"
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
@@ -127,8 +127,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
     ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "${EXPOSE_MINIO_PORT:-9000}:9000"
+      - "${EXPOSE_MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     networks:
@@ -189,7 +189,7 @@ services:
     container_name: astron-agent-core-memory
     environment:
       SERVICE_PORT: "${CORE_MEMORY_PORT:-7990}"
-      PGSQL_HOST: "${POSTGRES_HOST:-127.0.0.1}"
+      PGSQL_HOST: "${POSTGRES_HOST:-postgres}"
       PGSQL_PORT: "${POSTGRES_PORT:-5432}"
       PGSQL_USER: "${POSTGRES_USER:-spark}"
       PGSQL_PASSWORD: "${POSTGRES_PASSWORD:-spark123}"
@@ -245,7 +245,7 @@ services:
     image: ghcr.io/lyj715824/astron-agent/astron-agent-core-link:latest
     container_name: astron-agent-core-link
     environment:
-      MYSQL_HOST: "${MYSQL_HOST:-127.0.0.1}"
+      MYSQL_HOST: "${MYSQL_HOST:-mysql}"
       MYSQL_PORT: "${MYSQL_PORT:-3306}"
       MYSQL_USER: "${MYSQL_USER:-root}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-root123}"
@@ -342,8 +342,8 @@ services:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
       REDIS_EXPIRE: "${REDIS_EXPIRE:-3600}"
       # MySQL 配置
-      MYSQL_HOST: "${MYSQL_HOST}"
-      MYSQL_PORT: "${MYSQL_PORT}"
+      MYSQL_HOST: "${MYSQL_HOST:-mysql}"
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
       MYSQL_DB: "${AGENT_MYSQL_DB:-agent}"
@@ -445,7 +445,7 @@ services:
       # 服务信息
       SERVICE_PORT: "${CORE_WORKFLOW_PORT:-7880}"
       # 数据库配置
-      MYSQL_HOST: "${MYSQL_HOST:-127.0.0.1}"
+      MYSQL_HOST: "${MYSQL_HOST:-mysql}"
       MYSQL_PORT: "${MYSQL_PORT:-3306}"
       MYSQL_USER: "${MYSQL_USER:-admin}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-admin}"
