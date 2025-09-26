@@ -10,6 +10,7 @@ import os
 from typing import Annotated, Optional, Union
 
 from fastapi import APIRouter, Depends, Header
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.consts.runtime_env import RuntimeEnv
 
 try:
@@ -18,7 +19,7 @@ except ImportError:
     from sqlalchemy.orm import Session  # type: ignore[assignment]
 
 from starlette.responses import JSONResponse, StreamingResponse
-from workflow.cache.event_registry import Event, EventRegistry, Status
+from workflow.cache.event_registry import Event, EventRegistry
 from workflow.consts.app_audit import AppAuditPolicy
 from workflow.consts.tenant_publish_matrix import Platform, TenantPublishMatrix
 from workflow.domain.entities.chat import ChatVo, ResumeVo
@@ -187,7 +188,7 @@ async def resume_open(request: ResumeVo) -> Union[StreamingResponse, JSONRespons
                 {"resume_event": json.dumps(event.dict(), ensure_ascii=False)}
             )
 
-            if not event.status == Status.INTERRUPTED.value:
+            if not event.status == ChatStatus.INTERRUPT.value:
                 raise CustomException(
                     CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                     "Current event is not paused",

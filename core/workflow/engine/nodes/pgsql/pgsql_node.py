@@ -509,7 +509,7 @@ class PGSqlNode(BaseNode):
             apiKey=self.apiKey,
             database_id=self.dbId,
             uid=self.uid,
-            spaceId=str(self.spaceId),
+            spaceId=str(self.spaceId) if self.spaceId else "",
             dml="",
         )
         # Set environment based on release status

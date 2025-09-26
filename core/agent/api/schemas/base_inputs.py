@@ -93,10 +93,10 @@ class BaseInputs(BaseModel):
     def get_last_message_content(self) -> str:
         """
         Safely get the content of the last message.
-        
+
         Returns:
             str: Content of the last message
-            
+
         Raises:
             AgentInternalExc: If messages list is empty
         """
@@ -109,10 +109,10 @@ class BaseInputs(BaseModel):
     def get_last_message_content_safe(self, default: str = "") -> str:
         """
         Safely get the content of the last message with a default value.
-        
+
         Args:
             default: Default value to return if messages list is empty
-            
+
         Returns:
             str: Content of the last message or default value
         """
@@ -123,7 +123,7 @@ class BaseInputs(BaseModel):
     def get_chat_history(self) -> list[LLMMessage]:
         """
         Safely get chat history (all messages except the last one).
-        
+
         Returns:
             list[LLMMessage]: Chat history messages, empty list if no history
         """
@@ -134,7 +134,7 @@ class BaseInputs(BaseModel):
     def get_chat_history_safe(self) -> list[LLMMessage]:
         """
         Safely get chat history with additional safety checks.
-        
+
         Returns:
             list[LLMMessage]: Chat history messages, always returns a list
         """

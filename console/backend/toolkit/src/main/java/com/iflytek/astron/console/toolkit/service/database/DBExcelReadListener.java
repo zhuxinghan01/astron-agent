@@ -16,7 +16,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 读取 Excel -> 产出结构化行数据（每行 Map<列名, 值>），避免 SQL 拼接。 - 校验表头与必填 - 空值回落到字段默认值/类型默认值 - 可设置最大行数上限
+ * Read Excel -> Generate structured row data (each row Map<column name, value>), avoid SQL
+ * concatenation. - Validate headers and required fields - Null values fall back to field default
+ * values/type default values - Can set maximum row limit
  */
 public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, String>> {
 
@@ -24,9 +26,9 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final List<DbTableField> tableFields;
-    private final List<Map<String, Object>> rowsSink; // 产出容器
-    private final String uid; // 每行自动补 uid
-    private final int maxRows; // 读取上限（防炸）
+    private final List<Map<String, Object>> rowsSink; // Output container
+    private final String uid; // Automatically add uid to each row
+    private final int maxRows; // Read limit (prevent explosion)
 
     private List<String> expectedHeaders;
     private List<String> notNullFieldsList;
@@ -34,7 +36,7 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
     private int accepted = 0;
     private boolean headerValidated = false;
 
-    /** 推荐使用：一次性装入 rowsSink */
+    /** Recommended usage: load into rowsSink at once */
     public DBExcelReadListener(List<DbTableField> tableFields,
             List<Map<String, Object>> rowsSink,
             String uid,
@@ -60,9 +62,9 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
                 .map(DbTableField::getName)
                 .collect(Collectors.toList());
 
-        // 这里要求顺序一致：和你原逻辑保持一致
+        // Here requires consistent order: maintain consistency with your original logic
         if (!CollectionUtils.isEqualCollection(expectedHeaders, actualHeaders)) {
-            throw new IllegalArgumentException("表头不匹配！预期表头：" + expectedHeaders + "，实际表头：" + actualHeaders);
+            throw new IllegalArgumentException("Header mismatch! Expected headers: " + expectedHeaders + ", Actual headers: " + actualHeaders);
         } else {
             expectedHeaders = actualHeaders;
         }
@@ -72,10 +74,10 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
     @Override
     public void invoke(Map<Integer, String> row, AnalysisContext context) {
         if (!headerValidated) {
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "表头尚未校验，请检查 Excel 文件。");
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Headers not yet validated, please check Excel file.");
         }
         if (accepted >= maxRows) {
-            return; // 超过上限直接忽略后续行，保证可用性
+            return; // Exceed limit, directly ignore subsequent rows to ensure availability
         }
 
         Map<String, Object> out = new LinkedHashMap<>();
@@ -83,15 +85,15 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
 
         for (int i = 0; i < expectedHeaders.size(); i++) {
             String header = expectedHeaders.get(i);
-            String raw = row.get(i); // 单元格原始值（可能为 null）
+            String raw = row.get(i); // Cell raw value (may be null)
             DbTableField meta = tableFields.stream()
                     .filter(f -> f.getName().equals(header))
                     .findFirst()
-                    .orElseThrow(() -> new BusinessException(ResponseEnum.RESPONSE_FAILED, "字段 " + header + " 不存在！"));
+                    .orElseThrow(() -> new BusinessException(ResponseEnum.RESPONSE_FAILED, "Field " + header + " does not exist!"));
 
             Object v;
             if (StringUtils.isBlank(raw)) {
-                // 空值：必填 -> 用字段默认值；非必填 -> 类型默认值（或 null）
+                // Null value: required -> use field default value; not required -> type default value (or null)
                 v = chooseDefault(meta, notNullFieldsList.contains(header));
             } else {
                 v = parseByType(raw, meta.getType());
@@ -106,11 +108,11 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
     @Override
     public void doAfterAllAnalysed(AnalysisContext analysisContext) {
         if (accepted == 0) {
-            throw new IllegalArgumentException("文件中没有任何有效数据，请检查excel数据是否正确！");
+            throw new IllegalArgumentException("No valid data in file, please check if excel data is correct!");
         }
     }
 
-    // —— 辅助：解析与默认值 —— //
+    // —— Helper: Parse and default values —— //
 
     private Object parseByType(String s, String type) {
         String t = StringUtils.lowerCase(type);
@@ -122,10 +124,10 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
             case CommonConst.DBFieldType.BOOLEAN:
                 return parseBoolean(s);
             case CommonConst.DBFieldType.TIME:
-                // 要求标准格式，避免智能解析的歧义
+                // Require standard format to avoid ambiguity in smart parsing
                 return LocalDateTime.parse(s.trim(), TS);
             default:
-                return s; // 字符串原样
+                return s; // String as is
         }
     }
 
@@ -134,18 +136,18 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
         String def = f.getDefaultValue();
 
         if (StringUtils.isNotBlank(def)) {
-            // 用户有配置默认值：按字段类型尝试解析
+            // User has configured default value: try to parse by field type
             try {
                 return parseByType(def, t);
             } catch (Exception ignore) {
-                // 兜底：作为字符串
+                // Fallback: as string
                 return def;
             }
         }
 
-        // 没配默认值
+        // No default value configured
         if (required) {
-            // 必填但空：给出类型默认值
+            // Required but empty: give type default value
             switch (t) {
                 case CommonConst.DBFieldType.INTEGER:
                     return 0L;
@@ -156,10 +158,10 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
                 case CommonConst.DBFieldType.TIME:
                     return LocalDateTime.now();
                 default:
-                    return ""; // 字符串给空串
+                    return ""; // String gives empty string
             }
         } else {
-            // 非必填：可以为 null（由写入层决定是否允许）
+            // Not required: can be null (determined by write layer whether to allow)
             switch (t) {
                 case CommonConst.DBFieldType.INTEGER:
                     return null;
@@ -170,7 +172,7 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
                 case CommonConst.DBFieldType.TIME:
                     return null;
                 default:
-                    return ""; // 字符串给空串更友好
+                    return ""; // String gives empty string more friendly
             }
         }
     }
@@ -181,6 +183,6 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
             return Boolean.TRUE;
         if (x.equals("0") || x.equals("false") || x.equals("f") || x.equals("no") || x.equals("n"))
             return Boolean.FALSE;
-        throw new IllegalArgumentException("无法解析布尔值: " + s);
+        throw new IllegalArgumentException("Unable to parse boolean value: " + s);
     }
 }

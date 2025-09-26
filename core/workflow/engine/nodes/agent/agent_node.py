@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Tuple
 import aiohttp
 from aiohttp import ClientResponse, ClientTimeout
 from pydantic import BaseModel, Field, model_validator
-from workflow.consts.flow import FLOW_FINISH_REASON
-from workflow.consts.model_provider import ModelProviderEnum
+from workflow.consts.engine.chat_status import ChatStatus
+from workflow.consts.engine.model_provider import ModelProviderEnum
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import EnableChatHistoryV2
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
@@ -353,7 +353,7 @@ class AgentNode(BaseNode):
                 tool_calls_optimize = extract_tool_calls_content(tool_calls)
                 reasoning_content_list.append(tool_calls_optimize)
 
-            finish_reason = choices[0].get("finish_reason", FLOW_FINISH_REASON)
+            finish_reason = choices[0].get("finish_reason", ChatStatus.FINISH_REASON)
             # Put frame content into msg_or_end_node_deps for streaming
             # await self.put_agent_content(self.node_id, variable_pool, msg_or_end_node_deps, msg)
             await self.put_stream_content(
@@ -363,7 +363,7 @@ class AgentNode(BaseNode):
                 self.modelConfig.domain,
                 msg,
             )
-            if finish_reason == FLOW_FINISH_REASON:
+            if finish_reason == ChatStatus.FINISH_REASON.value:
                 token_usage = msg.get("usage", {})
                 token_usage = token_usage if token_usage else {}
                 break
