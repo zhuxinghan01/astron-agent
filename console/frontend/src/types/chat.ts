@@ -22,6 +22,92 @@ export interface SupportUploadConfig {
   type: string;
 }
 
+// 收藏列表相关类型定义
+export interface FavoriteBot {
+  version: number | null;
+  marketBotId: number;
+  botId: number;
+  uid: string | null;
+  chatId: string | number | null;
+  title: string | null;
+  botName: string;
+  botType: number;
+  avatar: string;
+  prompt: string | null;
+  botDesc: string;
+  botNameEn: string | null;
+  botStatus: number;
+  isDelete: number | null;
+  blockReason: string | null;
+  hotNum: string | number | null;
+  showIndex: number | null;
+  supportContext: number | boolean; // 支持 1/0 和 boolean
+  mine: boolean;
+  isFavorite: number | boolean; // 支持 1/0 和 boolean
+  enable: number | null;
+  hasTemplate: boolean;
+  action: unknown | null;
+  extra: unknown | null;
+  logo: string | null;
+  clientHide: string | null;
+  tags: unknown[] | null;
+  creatorName: string | null;
+  auditTime: string | null;
+  createTime: string;
+  updateTime: string | null;
+}
+
+export interface FavoriteEntry {
+  addStatus: number | null;
+  creator: string;
+  chatId: number | string | null;
+  enableStatus: number | null;
+  bot: FavoriteBot;
+}
+
+export interface FavoriteListResponse {
+  total: number;
+  pageList: FavoriteEntry[];
+}
+
+// 聊天列表项类型定义
+export interface PostChatItem {
+  id: number;
+  uid: string;
+  title: string;
+  isDelete: number | null;
+  enable: number;
+  chatId: string | number | null;
+  enabledPluginIds: string;
+  botDesc: string;
+  botDescEn: string | null;
+  hotNum: number | string | null;
+  botType: string; // 注意：为 string
+  botName: string;
+  botNameEn: string | null;
+  botId: number;
+  botStatus: number | null;
+  marketBotId: number | null;
+  botAvatar: string;
+  marketBotUid: string | null;
+  botUid: string | null;
+  clientHide: string;
+  creatorName: string | null;
+  createTime: string;
+  updateTime: string;
+  albumVisible: number | null;
+  supportContext: number; // 0/1
+  sticky: number; // 0/1
+  isFavorite: number; // 0/1
+  action: unknown | null;
+  extra: unknown | null;
+  blockReason: string | null;
+  version: number;
+  tags: unknown[] | null;
+  recommend: unknown | null;
+  virtualAgentId: number | null;
+}
+
 export interface BotInfoType {
   pc_background: string;
   botStatus: number;

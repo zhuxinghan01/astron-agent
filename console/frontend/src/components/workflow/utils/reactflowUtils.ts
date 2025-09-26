@@ -54,7 +54,7 @@ export function customStringify(obj: unknown): string {
 
   const keys = Object.keys(obj).sort();
   const keyValuePairs = keys.map(
-    (key) => `"${key}":${customStringify(obj[key])}`
+    key => `"${key}":${customStringify(obj[key])}`
   );
   return `{${keyValuePairs.join(',')}}`;
 }
@@ -124,12 +124,12 @@ function validateInputName(
   data.forEach(item => {
     if (!item?.name?.trim()) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty"
+        'workflow.nodes.validation.valueCannotBeEmpty'
       );
       passFlag = false;
     } else if (!checkNameConventions(item.name)) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.canOnlyContainLettersNumbersHyphensOrUnderscores"
+        'workflow.nodes.validation.canOnlyContainLettersNumbersHyphensOrUnderscores'
       );
       passFlag = false;
     } else {
@@ -161,7 +161,7 @@ function validateInputContent(
       (type === 'literal' && !content?.trim())
     ) {
       item.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty"
+        'workflow.nodes.validation.valueCannotBeEmpty'
       );
       passFlag = false;
     } else if (
@@ -170,7 +170,7 @@ function validateInputContent(
       !isValidURL(content)
     ) {
       item.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.pleaseEnterValidURL"
+        'workflow.nodes.validation.pleaseEnterValidURL'
       );
       passFlag = false;
     } else {
@@ -195,7 +195,7 @@ export const checkedNodeInputData = (
   data.forEach(item => {
     if (nameCount[item.name] > 1 && !item.nameErrMsg) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated"
+        'workflow.nodes.validation.valueCannotBeRepeated'
       );
       passFlag = false;
     }
@@ -206,7 +206,7 @@ export const checkedNodeInputData = (
       !item.nameErrMsg
     ) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated"
+        'workflow.nodes.validation.valueCannotBeRepeated'
       );
       passFlag = false;
     }
@@ -216,12 +216,12 @@ export const checkedNodeInputData = (
   const noNeedCheckIfElseInputs =
     currentCheckNode?.data?.nodeParam?.cases?.flatMap(item =>
       item.conditions
-        ?.filter((condition) =>
-          ["not_null", "null", "empty", "not_empty", "not null"].includes(
+        ?.filter(condition =>
+          ['not_null', 'null', 'empty', 'not_empty', 'not null'].includes(
             condition?.compareOperator || condition?.selectCondition
           )
         )
-        ?.map((condition) => condition?.rightVarIndex || condition?.varIndex)
+        ?.map(condition => condition?.rightVarIndex || condition?.varIndex)
     ) || [];
 
   const noNeedCheckToolInputs =
@@ -252,7 +252,7 @@ export const checkedNodeRepeatedInputData = (
   inputs.forEach(input => {
     if (variableNodesName?.includes(input.name)) {
       input.schema.value.contentErrMsg = i18next.t(
-        "workflow.nodes.validation.variableMemoryNamingConflict"
+        'workflow.nodes.validation.variableMemoryNamingConflict'
       );
       passFlag = false;
     } else {
@@ -266,7 +266,7 @@ export const checkedNodeRepeatedInputData = (
 // ==================== 输出数据验证 ====================
 function validateProperties(
   items: unknown[],
-  parentPath = "",
+  parentPath = '',
   parentType: string
 ): { validatedItems: unknown[]; flag: boolean } {
   let flag = true;
@@ -277,12 +277,12 @@ function validateProperties(
     .map(item => {
       if (!item?.name?.trim()) {
         item.nameErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty"
+          'workflow.nodes.validation.valueCannotBeEmpty'
         );
         flag = false;
       } else if (!checkNameConventions(item.name)) {
         item.nameErrMsg = i18next.t(
-          "workflow.nodes.validation.canOnlyContainLettersNumbersOrUnderscores"
+          'workflow.nodes.validation.canOnlyContainLettersNumbersOrUnderscores'
         );
         flag = false;
       } else {
@@ -295,7 +295,7 @@ function validateProperties(
   newItems.forEach(item => {
     if (nameCount[item.name] > 1 && !item.nameErrMsg) {
       item.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeRepeated"
+        'workflow.nodes.validation.valueCannotBeRepeated'
       );
       flag = false;
     }
@@ -348,7 +348,7 @@ export const checkedNodeOutputData = (
     data.forEach(item => {
       if (!item?.schema?.description?.trim() && !item?.schema?.default) {
         item.schema.descriptionErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty"
+          'workflow.nodes.validation.valueCannotBeEmpty'
         );
         passFlag = false;
       } else {
@@ -363,7 +363,7 @@ export const checkedNodeOutputData = (
 // ==================== 节点参数验证 ====================
 function validateTemplateParams(currentCheckNode: unknown): boolean {
   if (
-    !['spark-llm', 'message'].includes(currentCheckNode?.type) &&
+    !['spark-llm', 'message'].includes(currentCheckNode?.nodeType) &&
     !(
       currentCheckNode?.nodeType === 'node-end' &&
       currentCheckNode?.data?.nodeParam?.outputMode === 1
@@ -374,7 +374,7 @@ function validateTemplateParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.template?.trim()) {
     currentCheckNode.data.nodeParam.templateErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty"
+      'workflow.nodes.validation.valueCannotBeEmpty'
     );
     return false;
   }
@@ -390,7 +390,7 @@ function validateQuestionAnswerParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.question?.trim()) {
     currentCheckNode.data.nodeParam.questionErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty"
+      'workflow.nodes.validation.valueCannotBeEmpty'
     );
     return false;
   }
@@ -409,7 +409,7 @@ function validateDecisionMakingParams(currentCheckNode: unknown): boolean {
   currentCheckNode.data.nodeParam.intentChains.forEach((chain: unknown) => {
     if (!chain?.name?.trim()) {
       chain.nameErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty"
+        'workflow.nodes.validation.valueCannotBeEmpty'
       );
       passFlag = false;
     } else {
@@ -418,7 +418,7 @@ function validateDecisionMakingParams(currentCheckNode: unknown): boolean {
 
     if (!chain?.description?.trim()) {
       chain.descriptionErrMsg = i18next.t(
-        "workflow.nodes.validation.valueCannotBeEmpty"
+        'workflow.nodes.validation.valueCannotBeEmpty'
       );
       passFlag = false;
     } else {
@@ -438,7 +438,7 @@ function validateKnowledgeBaseParams(currentCheckNode: unknown): boolean {
   if (currentCheckNode?.nodeType === 'knowledge-base') {
     if (currentCheckNode.data.nodeParam?.repoId?.length === 0) {
       currentCheckNode.data.nodeParam.repoIdErrMsg = i18next.t(
-        "workflow.nodes.validation.knowledgeCannotBeEmpty"
+        'workflow.nodes.validation.knowledgeCannotBeEmpty'
       );
       return false;
     }
@@ -448,7 +448,7 @@ function validateKnowledgeBaseParams(currentCheckNode: unknown): boolean {
   if (currentCheckNode?.nodeType === 'knowledge-pro-base') {
     if (currentCheckNode.data.nodeParam?.repoIds?.length === 0) {
       currentCheckNode.data.nodeParam.repoIdErrMsg = i18next.t(
-        "workflow.nodes.validation.knowledgeCannotBeEmpty"
+        'workflow.nodes.validation.knowledgeCannotBeEmpty'
       );
       return false;
     }
@@ -465,7 +465,7 @@ function validateIflyCodeParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode.data.nodeParam?.code) {
     currentCheckNode.data.nodeParam.codeErrMsg = i18next.t(
-      "workflow.nodes.validation.codeCannotBeEmpty"
+      'workflow.nodes.validation.codeCannotBeEmpty'
     );
     return false;
   }
@@ -486,7 +486,7 @@ function validateIfElseParams(currentCheckNode: unknown): boolean {
       if (!condition.compareOperator) {
         passFlag = false;
         condition.compareOperatorErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty"
+          'workflow.nodes.validation.valueCannotBeEmpty'
         );
       } else {
         condition.compareOperatorErrMsg = '';
@@ -507,7 +507,7 @@ function validateTextJoinerParams(currentCheckNode: unknown): boolean {
     !currentCheckNode?.data?.nodeParam?.separator
   ) {
     currentCheckNode.data.nodeParam.separatorErrMsg = i18next.t(
-      "workflow.nodes.validation.separatorCannotBeEmpty"
+      'workflow.nodes.validation.separatorCannotBeEmpty'
     );
     return false;
   }
@@ -523,7 +523,7 @@ function validateAgentParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data.nodeParam.instruction?.query?.trim()) {
     currentCheckNode.data.nodeParam.instruction.queryErrMsg = i18next.t(
-      "workflow.nodes.validation.valueCannotBeEmpty"
+      'workflow.nodes.validation.valueCannotBeEmpty'
     );
     return false;
   }
@@ -554,7 +554,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
       if (!item?.content) {
         passFlag = false;
         item.contentErrMsg = i18next.t(
-          "workflow.nodes.validation.valueCannotBeEmpty"
+          'workflow.nodes.validation.valueCannotBeEmpty'
         );
       } else if (
         item?.['content_type'] === 'image' &&
@@ -562,7 +562,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
       ) {
         passFlag = false;
         item.contentErrMsg = i18next.t(
-          "workflow.nodes.validation.pleaseEnterValidURL"
+          'workflow.nodes.validation.pleaseEnterValidURL'
         );
       } else {
         item.contentErrMsg = '';
@@ -575,7 +575,7 @@ function validateQuestionAnswerOptions(currentCheckNode: unknown): boolean {
 function validateDbId(nodeParam: unknown): boolean {
   if (!nodeParam?.dbId) {
     nodeParam.dbErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty"
+      'workflow.nodes.databaseNode.valueCannotBeEmpty'
     );
     return false;
   }
@@ -586,7 +586,7 @@ function validateDbId(nodeParam: unknown): boolean {
 function validateTableName(nodeParam: unknown): boolean {
   if (!nodeParam?.tableName) {
     nodeParam.tableNameErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty"
+      'workflow.nodes.databaseNode.valueCannotBeEmpty'
     );
     return false;
   }
@@ -597,7 +597,7 @@ function validateTableName(nodeParam: unknown): boolean {
 function validateAssignmentList(nodeParam: unknown): boolean {
   if (!nodeParam?.assignmentList?.length) {
     nodeParam.fieldNameErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty"
+      'workflow.nodes.databaseNode.valueCannotBeEmpty'
     );
     return false;
   }
@@ -611,7 +611,7 @@ function validateCases(nodeParam: unknown): boolean {
     item.conditions?.forEach((condition: unknown) => {
       if (!condition.selectCondition) {
         condition.compareOperatorErrMsg = i18next.t(
-          "workflow.nodes.databaseNode.valueCannotBeEmpty"
+          'workflow.nodes.databaseNode.valueCannotBeEmpty'
         );
         pass = false;
       } else {
@@ -620,7 +620,7 @@ function validateCases(nodeParam: unknown): boolean {
 
       if (!condition.fieldName) {
         condition.fieldErrMsg = i18next.t(
-          "workflow.nodes.databaseNode.valueCannotBeEmpty"
+          'workflow.nodes.databaseNode.valueCannotBeEmpty'
         );
         pass = false;
       } else {
@@ -634,7 +634,7 @@ function validateCases(nodeParam: unknown): boolean {
 function validateSql(nodeParam: unknown): boolean {
   if (!nodeParam?.sql?.trim()) {
     nodeParam.sqlErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.valueCannotBeEmpty"
+      'workflow.nodes.databaseNode.valueCannotBeEmpty'
     );
     return false;
   }
@@ -682,7 +682,7 @@ function validateServiceIdParams(currentCheckNode: unknown): boolean {
 
   if (!currentCheckNode?.data?.nodeParam?.serviceId) {
     currentCheckNode.data.nodeParam.llmIdErrMsg = i18next.t(
-      "workflow.nodes.databaseNode.modelCannotBeEmpty"
+      'workflow.nodes.databaseNode.modelCannotBeEmpty'
     );
     return false;
   }
@@ -873,19 +873,19 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
 }
 
 export function renderType(params): string {
-  console.log("params@@", params);
-  if (params.fileType && params?.type === "array-string") {
+  console.log('params@@', params);
+  if (params.fileType && params?.type === 'array-string') {
     return `Array<${
       (params?.fileType?.slice(0, 1).toUpperCase() || '') +
       (params?.fileType?.slice(1) || '')
     }>`;
   }
-  if (params.fileType && params?.type === "string") {
+  if (params.fileType && params?.type === 'string') {
     return params?.fileType;
   }
-  const type = params?.type || params?.schema?.type || "";
-  if (type?.includes("array")) {
-    const baseType = type.split("-")[1];
+  const type = params?.type || params?.schema?.type || '';
+  if (type?.includes('array')) {
+    const baseType = type.split('-')[1];
     const capitalized = baseType.charAt(0).toUpperCase() + baseType.slice(1);
     return `Array<${capitalized}>`;
   }
@@ -971,8 +971,8 @@ export function isOldVersionFlow(inputTime: string): boolean {
 
 export function hasDecisionMakingNode(nodes: unknown[]): boolean {
   return nodes?.some(
-    (node) =>
-      node?.id?.startsWith("decision-making") &&
+    node =>
+      node?.id?.startsWith('decision-making') &&
       node?.data?.nodeParam?.reasonMode !== 1
   );
 }
@@ -984,8 +984,8 @@ export const handleReplaceNodeId = (
   const childNodesString = JSON.stringify(childNodes);
   return JSON.parse(
     childNodesString.replace(
-      new RegExp(Object.keys(replacements).join("|"), "g"),
-      (match) => replacements[match]
+      new RegExp(Object.keys(replacements).join('|'), 'g'),
+      match => replacements[match]
     )
   );
 };
@@ -1558,7 +1558,7 @@ function buildOwnReferences(
   const outputs =
     targetNode?.nodeType === 'iteration'
       ? sourceNode?.data?.outputs?.filter((output: unknown) =>
-          output?.schema?.type?.includes("array")
+          output?.schema?.type?.includes('array')
         )
       : [...(sourceNode?.data?.outputs || []), ...errorOutputs];
 
@@ -1569,7 +1569,7 @@ function buildOwnReferences(
       label: output.name,
       type: output.schema?.type || 'string',
       value: output.name,
-      fileType: output.allowedFileType?.[0] || "",
+      fileType: output.allowedFileType?.[0] || '',
     })) || []
   );
 }

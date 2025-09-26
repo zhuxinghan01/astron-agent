@@ -73,7 +73,6 @@ const ChatPage = (): ReactElement => {
       if (botInfo?.pc_background) {
         getBotNameColor(botInfo?.pc_background);
       }
-
       const workflowBotInfo = await getWorkflowBotInfoApi(botId);
       setBotInfo({
         ...botInfo,
@@ -86,12 +85,10 @@ const ChatPage = (): ReactElement => {
       setIsDataLoading(false);
     } catch (error) {
       console.error('初始化聊天页面失败:', error);
-      setBotInfo({});
     } finally {
       setIsDataLoading(false);
     }
   };
-
   // 获取对话历史
   const getChatHistoryData = async (chatId: number): Promise<void> => {
     const res = await getChatHistory(chatId);

@@ -3,18 +3,18 @@ export interface UseSingleNodeDebuggingReturn {
   handleChangeParam: (
     index: number,
     fn: (data: unknown, value: unknown) => void,
-    value: unknown,
+    value: unknown
   ) => void;
   uploadComplete: (
     event: ProgressEvent<EventTarget>,
     index: number,
-    fileId: string,
+    fileId: string
   ) => void;
   handleFileUpload: (
     file: File,
     index: number,
     multiple: boolean,
-    fileId: string,
+    fileId: string
   ) => void;
   handleDeleteFile: (index: number, fileId: string) => void;
   canRunDebugger: boolean;

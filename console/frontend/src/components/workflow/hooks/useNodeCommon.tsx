@@ -151,9 +151,17 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   }, [data]);
 
   const nodeIcon = useMemo(() => {
+    let nodeFinallyType = '';
+    if (nodeType === 'iteration-node-start') {
+      nodeFinallyType = 'node-start';
+    } else if (nodeType === 'iteration-node-end') {
+      nodeFinallyType = 'node-end';
+    } else {
+      nodeFinallyType = nodeType;
+    }
     const currentNode = nodeList
       ?.flatMap(item => item?.nodes)
-      ?.find(item => item?.idType === nodeType);
+      ?.find(item => item?.idType === nodeFinallyType);
     return currentNode?.data?.icon;
   }, [nodeList, nodeType]);
 
@@ -741,6 +749,7 @@ export const OutputActions = ({
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const setNode = currentStore(state => state.setNode);
+  const checkNode = currentStore(state => state.checkNode);
 
   const handleAddItem = useMemoizedFn((output: OutputItem) => {
     takeSnapshot();
@@ -789,6 +798,7 @@ export const OutputActions = ({
       output?.customParameterType !== 'deepseekr1'
     ) {
       handleRemoveOutputLine(output.id);
+      checkNode(id);
     }
   });
 
@@ -982,6 +992,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
       };
     });
     canPublishSetNot();
+    checkNode(id);
   });
   const allowNoInputParams = useMemo(() => {
     return (
