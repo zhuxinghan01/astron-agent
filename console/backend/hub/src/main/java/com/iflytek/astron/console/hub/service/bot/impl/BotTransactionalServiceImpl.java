@@ -36,6 +36,7 @@ public class BotTransactionalServiceImpl implements BotTransactionalService {
     @Override
     public void copyBot(String uid, Integer botId, HttpServletRequest request, Long spaceId) {
         ChatBotBase base = botService.copyBot(uid, botId, spaceId);
+        log.info("copy bot : new bot : {}", base);
         // 新助手的botId就是target id
         Long targetId = Long.valueOf(base.getId());
         if (base.getVersion() == 2) {
