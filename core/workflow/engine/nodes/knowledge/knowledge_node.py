@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 from pydantic import Field
+from workflow.engine.entities.history import EnableChatHistoryV2, History
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
 from workflow.engine.nodes.entities.node_run_result import (
@@ -37,6 +38,9 @@ class KnowledgeNode(BaseNode):
     )  # Optional list of specific document IDs to search
     flowId: str = Field(default="")  # Optional flow ID for context
     score: float = Field(default=0.1)  # Minimum similarity threshold for results
+    enableChatHistoryV2: EnableChatHistoryV2 = Field(
+        default_factory=EnableChatHistoryV2
+    )
 
     @property
     def run_s(self) -> WorkflowNodeExecutionStatus:
@@ -80,6 +84,16 @@ class KnowledgeNode(BaseNode):
             if not isinstance(query, str):
                 query = str(query)
             status = self.run_s
+            # Process chat history if enabled
+            history = []
+            if self.enableChatHistoryV2.is_enabled:
+                rounds = self.enableChatHistoryV2.rounds
+                if variable_pool.history_v2:
+                    history_v2 = History(
+                        origin_history=variable_pool.history_v2.origin_history,
+                        rounds=rounds,
+                    )
+                    history = history_v2.origin_history
 
             # Get knowledge base URL from environment variables
             knowledge_recall_url = os.getenv("KNOWLEDGE_URL", "")
@@ -92,6 +106,7 @@ class KnowledgeNode(BaseNode):
                 flow_id=self.flowId,
                 doc_ids=self.docIds,
                 threshold=self.score,
+                history=history,
             )
             # Perform knowledge base search
             search_result = await KnowledgeClient(config=knowledge_config).top_k(

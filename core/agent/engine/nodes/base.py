@@ -57,6 +57,8 @@ class RunnerBase(BaseModel):
             node_data_config: dict[str, Any] = {}
             node_data_usage = NodeDataUsage()
             async for chunk in self.model.stream(messages, True, sp):
+                if not chunk.choices:
+                    continue
                 delta = chunk.choices[0].delta.model_dump()
                 reasoning_content = delta.get("reasoning_content")
                 content = delta.get("content")

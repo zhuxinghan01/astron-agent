@@ -166,7 +166,6 @@ class File(BaseModel):
 
             file_extension = ""
             # Regular expression to match file extensions (e.g., .jpg, .png, .pdf, etc.)
-            # pattern = rf"{os.getenv('FILE_REGEX_PATTERN')}"
             if os.getenv("FILE_REGEX_PATTERN"):
                 pattern = rf"{os.getenv('FILE_REGEX_PATTERN')}"
             else:
@@ -177,7 +176,6 @@ class File(BaseModel):
                     '{"image":["jpg","jpeg","png","bmp"],"pdf":["pdf"],"doc":["docx","doc"],"ppt":["ppt","pptx"],"excel":["xls","xlsx","csv"],"txt":["txt"]}',
                 )
             )
-            # ALLOWED_FILE_TYPE=json.loads(os.getenv("ALLOWED_FILE_TYPE"))
             # Find file extension
             match = re.search(pattern, input_file_url)
             if match:

@@ -6,7 +6,7 @@ from common.service.base import ServiceFactory, ServiceType
 from common.service.otlp.sid.sid_service import OtlpSidService
 
 
-def init_otlp_sid():
+def init_otlp_sid() -> None:
 
     # global global_otlp_sid_args
 
@@ -19,7 +19,7 @@ def init_otlp_sid():
 
     global_otlp_sid_args.sid_sub = os.getenv("SERVICE_SUB", "svc")
     global_otlp_sid_args.sid_location = os.getenv("SERVICE_LOCATION", "src")
-    global_otlp_sid_args.sid_local_port = os.getenv("SERVICE_PORT")
+    global_otlp_sid_args.sid_local_port = os.getenv("SERVICE_PORT")  # type: ignore[assignment]
     init_sid(
         SidInfo(
             sub=global_otlp_sid_args.sid_sub,
@@ -34,9 +34,9 @@ def init_otlp_sid():
 class OtlpSidFactory(ServiceFactory):
     name = ServiceType.OTLP_SID_SERVICE
 
-    def __init__(self):
-        super().__init__(OtlpSidService)
+    def __init__(self) -> None:
+        super().__init__(OtlpSidService)  # type: ignore[arg-type]
 
-    def create(self):
+    def create(self) -> OtlpSidService:  # type: ignore[override, no-untyped-def]
         init_otlp_sid()
         return OtlpSidService()

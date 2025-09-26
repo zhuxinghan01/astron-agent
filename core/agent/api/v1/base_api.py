@@ -62,7 +62,7 @@ class CompletionBase(BaseModel, ABC):
                 sub="Agent",
                 caller=self.inputs.meta_data.caller,
                 log_caller=self.log_caller,
-                question=self.inputs.messages[-1].content,
+                question=self.inputs.get_last_message_content(),
             )
             node_trace.record_start()
 
@@ -132,7 +132,11 @@ class CompletionBase(BaseModel, ABC):
                 span=context.span,
             )
             context.span.add_info_events(
-                {"node-trace": json.dumps(node_trace_log, ensure_ascii=False, default=json_serializer)}
+                {
+                    "node-trace": json.dumps(
+                        node_trace_log, ensure_ascii=False, default=json_serializer
+                    )
+                }
             )
 
     async def run_runner(

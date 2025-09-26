@@ -8,6 +8,7 @@ against schemas and automatically fix common data type issues.
 from typing import Any
 
 import jsonschema  # type: ignore[import-untyped]
+from loguru import logger
 
 
 class JsonSchemaValidator:
@@ -37,7 +38,7 @@ class JsonSchemaValidator:
             jsonschema.validate(instance=data, schema=self.schema)
             return True
         except jsonschema.ValidationError as e:
-            print(f"Validation error: {e.message}")
+            logger.error(f"Validation error: {e.message}")
             return False
 
     def preprocess_data(self, data: dict) -> dict:
@@ -103,12 +104,6 @@ class JsonSchemaValidator:
                 # Fix to boolean value
                 if isinstance(value, bool):
                     return value
-                # if isinstance(value, (int, float)):
-                #     return value != 0  # Non-zero numbers are True
-                # if isinstance(value, str):
-                #     return value.strip() != ""  # Non-empty strings are True
-                # if isinstance(value, list):
-                #     return len(value) > 0  # Non-empty arrays are True
                 return False  # Return False for other cases
 
             case "object":

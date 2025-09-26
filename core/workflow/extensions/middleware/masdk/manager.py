@@ -74,8 +74,6 @@ class MASDKService(Service):
         :param log: Error log message from MASDK
         :return: LLMGenerate error response with appropriate error code and message
         """
-        print(log)
-
         # Handle empty or None log messages
         if log == "" or log is None:
             return LLMGenerate.workflow_end_error(

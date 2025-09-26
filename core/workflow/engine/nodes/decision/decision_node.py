@@ -19,8 +19,7 @@ from workflow.engine.nodes.entities.node_run_result import (
     NodeRunResult,
     WorkflowNodeExecutionStatus,
 )
-from workflow.engine.nodes.util.prompt import process_prompt, replace_variables
-from workflow.engine.nodes.util.string_parse import get_need_find_var_name
+from workflow.engine.nodes.util.prompt import PromptUtils, process_prompt
 from workflow.exception.e import CustomException
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
@@ -177,16 +176,13 @@ class DecisionNode(BaseLLMNode):
         span.add_info_events({"user_input_prompt_prefix": prompt_prefix})
 
         # Find variables that need to be replaced in the prompt
-        need_find_var_name = get_need_find_var_name(
-            node_id=self.node_id,
-            variable_pool=variable_pool,
-            prompt_template=prompt_prefix,
-            span_context=span,
+        available_placeholders = PromptUtils.get_available_placeholders(
+            self.node_id, prompt_prefix, variable_pool, span
         )
         replacements = {}
         # Replace variables in prompt with actual values
         try:
-            for var_name in need_find_var_name:
+            for var_name in available_placeholders:
                 var_name_list = re.split(r"[\[.\]]", var_name)
                 # Only process variables that are in input identifiers
                 if var_name_list[0].strip() in self.input_identifier:
@@ -217,7 +213,7 @@ class DecisionNode(BaseLLMNode):
         replacements_str = {
             k: (lambda v: (str(v) or " "))(v) for k, v in replacements.items()
         }
-        prompt_prefix = replace_variables(prompt_prefix, replacements_str)
+        prompt_prefix = PromptUtils.replace_variables(prompt_prefix, replacements_str)
         span.add_info_events({"finally_prompt_prefix": prompt_prefix})
         # Execute function call with Spark AI
         try:
@@ -377,18 +373,14 @@ class DecisionNode(BaseLLMNode):
             # Attach processed chat history to inputs for front-end debugging
             if processed_history:
                 input_dict.update({"chatHistory": processed_history})
-            # print("raw_output:",res)
 
             # Persist raw_output for downstream use and debugging
             raw_output = res
-            # print("res before process:", res)
             match = re.search(r"```(json)?(.*)```", res, re.DOTALL)
             json_str = res if match is None else match.group(2)
             json_str = _custom_parser(json_str.strip())
             span.add_info_event(f"json_str: {json_str}")
             result = json.loads(json_str)
-
-            # print("res after process:", res)
 
             schema = {
                 "type": "object",
@@ -429,7 +421,6 @@ class DecisionNode(BaseLLMNode):
                 ),
             )
         except Exception as err:
-            # print("err:", err)
             span.record_exception(err)
             return NodeRunResult(
                 node_id=self.node_id,
@@ -508,9 +499,7 @@ class DecisionNode(BaseLLMNode):
             router_template = router_template.replace("{{__input__}}", str(input))
 
             # 3. Prepend the custom promptPrefix if provided
-            # print("self.promptPrefix:", self.promptPrefix)
             user_input_template = self.promptPrefix + "\n" + router_template
-            # print("user_input_template:", user_input_template)
 
             # Send the constructed prompt to the LLM
             history_v2 = None
@@ -549,18 +538,14 @@ class DecisionNode(BaseLLMNode):
             # Attach processed chat history to inputs for front-end debugging
             if processed_history:
                 input_dict.update({"chatHistory": processed_history})
-            # print("raw_output:",res)
 
             # Persist raw_output for downstream use and debugging
             raw_output = res
-            # print("res before process:", res)
             match = re.search(r"```(json)?(.*)```", res, re.DOTALL)
             json_str = res if match is None else match.group(2)
             json_str = json_str.strip()
             json_str = _custom_parser(json_str)
             result = json.loads(json_str)
-
-            # print("res after process:", res)
 
             schema = {
                 "type": "object",
