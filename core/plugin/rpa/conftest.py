@@ -8,8 +8,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
-from plugin.rpa.api.app import xingchen_rap_server_app
+from plugin.rpa.api.app import rpa_server_app
 
 
 @pytest.fixture(scope="session")
@@ -62,13 +61,13 @@ def mock_env_vars() -> Generator[Dict[str, str], None, None]:
 
 
 @pytest.fixture
-def app() -> FastAPI:
+def rpa_app() -> FastAPI:
     """Create FastAPI application instance."""
-    return xingchen_rap_server_app()
+    return rpa_server_app()
 
 
 @pytest.fixture
-def client(app: FastAPI) -> TestClient:
+def test_client(app: FastAPI) -> TestClient:
     """Create test client."""
     return TestClient(app)
 

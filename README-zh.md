@@ -1,6 +1,8 @@
-# Astron Agent - 智能代理平台
+# 星辰Agent - 智能体开发平台
 
 <div align="center">
+
+![Logo](docs/logo.svg)
 
 **企业级 AI 智能代理开发平台，结合智能 RPA，让代理不仅能思考，更能行动——跨数字和桌面环境自动化工作流程。**
 

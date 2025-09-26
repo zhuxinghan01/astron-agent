@@ -1,7 +1,7 @@
 import json
 import time
 import uuid
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -43,29 +43,29 @@ class NodeTraceLog(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def add_q(self, question: str):
+    def add_q(self, question: str) -> None:
         """
         description: add q
         """
         self.question = question
 
-    def add_a(self, answer: str):
+    def add_a(self, answer: str) -> None:
         """
         description: add a
         """
         self.answer = answer
 
-    def add_first_frame_duration(self, first_frame_duration: int):
+    def add_first_frame_duration(self, first_frame_duration: int) -> None:
         """
         description: add first frame duration
         """
         self.first_frame_duration = first_frame_duration
 
-    def add_srv(self, key: str, value: str):
+    def add_srv(self, key: str, value: str) -> None:
         self.srv[key] = value
         self.srv_tag[key] = value
 
-    def set_end(self):
+    def set_end(self) -> None:
         """
         日志结束
         :return:
@@ -78,16 +78,16 @@ class NodeTraceLog(BaseModel):
             self.usage.question_tokens += node_log.data.usage.question_tokens
             self.usage.completion_tokens += node_log.data.usage.completion_tokens
 
-    def set_status(self, code: int, message: str):
+    def set_status(self, code: int, message: str) -> None:
         self.status.code = code
         self.status.message = message
 
-    def add_node_log(self, node_logs: list[NodeLog]):
+    def add_node_log(self, node_logs: list[NodeLog]) -> None:
         if not node_logs:
             return
         self.trace.extend(node_logs)
 
-    def add_func_log(self, node_logs: list[NodeLog]):
+    def add_func_log(self, node_logs: list[NodeLog]) -> None:
         self.add_node_log(node_logs)
 
     def to_json(self, large_field_save_service: Optional[BaseOSSService] = None) -> str:
@@ -98,10 +98,10 @@ class NodeTraceLog(BaseModel):
 
         import sys
 
-        def is_large_string(s: str, limit=5 * 1024) -> bool:
+        def is_large_string(s: str, limit: int = 5 * 1024) -> bool:
             return isinstance(s, str) and sys.getsizeof(s.encode("utf-8")) > limit
 
-        def process_data(data):
+        def process_data(data: Any) -> Any:
             if isinstance(data, dict):
                 return {k: process_data(v) for k, v in data.items()}
             elif isinstance(data, list):
@@ -120,7 +120,7 @@ class NodeTraceLog(BaseModel):
 
         result = process_data(self.model_dump())
 
-        def json_fallback(obj):
+        def json_fallback(obj: Any) -> Any:
             if isinstance(obj, set):
                 return list(obj)
 

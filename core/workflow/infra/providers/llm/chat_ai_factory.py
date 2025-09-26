@@ -7,7 +7,7 @@ It supports multiple AI providers including Xinghuo (Spark) and OpenAI.
 
 from typing import Any
 
-from workflow.consts.model_provider import ModelProviderEnum
+from workflow.consts.engine.model_provider import ModelProviderEnum
 from workflow.infra.providers.llm.iflytek_spark.spark_chat_llm import SparkChatAi
 from workflow.infra.providers.llm.openai.openai_chat_llm import OpenAIChatAI
 

@@ -1,7 +1,5 @@
 """Test URL utility module."""
 
-import pytest
-
 from plugin.rpa.utils.urls.utl_util import is_valid_url
 
 
@@ -80,7 +78,7 @@ class TestIsValidUrl:
                 result = is_valid_url(url)
                 # If no exception is thrown, result should be False
                 assert result is False, f"URL '{url}' should be invalid"
-            except (ValueError, Exception):
+            except (ValueError, TypeError, AttributeError):
                 # If exception is thrown, also consider it invalid, which is expected
                 pass
 
