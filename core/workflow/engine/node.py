@@ -594,10 +594,6 @@ class SparkFlowEngineNode(BaseModel):
         if result.token_cost:
             self.node_log.append_usage_data(result.token_cost.dict())
 
-        # Record node configuration (exclude Agent nodes)
-        # if self.node_id.split(":")[0] != NodeType.AGENT.value:
-        #     self.node_log.append_config_data(self.node_instance.dict())
-
         # Record LLM output
         if self.node_id.split(":")[0] in self.llm_nodes:
             self.node_log.llm_output = result.raw_output

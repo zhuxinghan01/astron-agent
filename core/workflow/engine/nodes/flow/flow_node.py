@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 import aiohttp
 from aiohttp import ClientTimeout
 from pydantic import Field
-from workflow.consts.flow import FLOW_FINISH_REASON
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.domain.models.ai_app import App
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import EnableChatHistoryV2, History
@@ -295,7 +295,10 @@ class FlowNode(BaseNode):
                             )
 
                         # Check for completion
-                        if choices[0].get("finish_reason") == FLOW_FINISH_REASON:
+                        if (
+                            choices[0].get("finish_reason")
+                            == ChatStatus.FINISH_REASON.value
+                        ):
                             token_usage = msg.get("usage", {})
                             break
         except asyncio.TimeoutError as e:

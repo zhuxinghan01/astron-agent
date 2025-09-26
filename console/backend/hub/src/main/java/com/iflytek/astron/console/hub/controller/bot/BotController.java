@@ -4,21 +4,21 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
+import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.TakeoffList;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
+import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
-import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
-import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
-import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.hub.dto.bot.MaasDuplicate;
 import com.iflytek.astron.console.hub.service.bot.BotTransactionalService;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
-import com.iflytek.astron.console.commons.util.MaasUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -167,7 +167,7 @@ public class BotController {
      * 把助手复制到指定助手
      */
     @SpacePreAuth(key = "BotV2Controller_copyBot2_POST")
-    @PostMapping("/copyBot")
+    @PostMapping("/copy-bot")
     public ApiResult<Void> copyBot2(HttpServletRequest request, @RequestParam Long botId) {
         botPermissionUtil.checkBot(Math.toIntExact(botId));
         String uid = RequestContextUtil.getUID();

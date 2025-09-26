@@ -18,7 +18,7 @@ class TextAuditStrategy(AuditStrategy):
     文本送审策略实现，包括帧送审和首句送审。
     """
 
-    async def input_review(self, input_frame: InputFrameAudit, span: Span):
+    async def input_review(self, input_frame: InputFrameAudit, span: Span) -> None:
         """
         输入内容审核逻辑。
         :param input_frame:
@@ -39,7 +39,7 @@ class TextAuditStrategy(AuditStrategy):
         else:
             raise ValueError("Unsupported content type for input review")
 
-    async def output_review(self, output_frame: OutputFrameAudit, span: Span):
+    async def output_review(self, output_frame: OutputFrameAudit, span: Span) -> None:
         """
         文本送审逻辑，分为首句送审和分句送审。
         :param output_frame
@@ -63,7 +63,9 @@ class TextAuditStrategy(AuditStrategy):
             span.add_info_event("↓↓↓↓↓↓↓↓↓↓↓ 分句送审 ↓↓↓↓↓↓↓↓↓↓↓")
             await self._sentence_audit(output_frame, span)
 
-    async def _first_sentence_audit(self, output_frame: OutputFrameAudit, span: Span):
+    async def _first_sentence_audit(
+        self, output_frame: OutputFrameAudit, span: Span
+    ) -> None:
         """
         首句送审逻辑。
 
@@ -135,7 +137,7 @@ class TextAuditStrategy(AuditStrategy):
 
     async def __first_sentence_audit(
         self, output_frame: OutputFrameAudit, span: Span, fallback_length: int
-    ):
+    ) -> None:
         span.add_info_event("首句送审条件满足，进行首句送审")
         if output_frame.not_need_submit:
             sentences = [self.context.remaining_content]
@@ -166,7 +168,7 @@ class TextAuditStrategy(AuditStrategy):
         await self._audit_api_output_text_async(sentences, output_frame, span)
         self.context.first_sentence_audited = True
 
-    async def _sentence_audit(self, output_frame: OutputFrameAudit, span: Span):
+    async def _sentence_audit(self, output_frame: OutputFrameAudit, span: Span) -> None:
         """
         分句送审。
         :param output_frame:
@@ -222,7 +224,7 @@ class TextAuditStrategy(AuditStrategy):
 
     async def _audit_api_output_text_async(
         self, sentences: list[str], output_frame: OutputFrameAudit, span: Span
-    ):
+    ) -> None:
         """
         异步文本输出审核API调用
         :param sentences:       分句
@@ -264,7 +266,7 @@ class TextAuditStrategy(AuditStrategy):
         span: Span,
         pindex: int,
         current_status: Status = Status.NONE,
-    ):
+    ) -> None:
         """
         文本输出审核API调用
         :param current_stage:

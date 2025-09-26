@@ -14,8 +14,10 @@ from asyncio.tasks import Task
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field
-from workflow.consts.flow import ErrorHandler, XFLLMStatus
-from workflow.consts.model_provider import ModelProviderEnum
+from workflow.consts.engine.chat_status import ChatStatus, SparkLLMStatus
+from workflow.consts.engine.error_handler import ErrorHandler
+from workflow.consts.engine.model_provider import ModelProviderEnum
+from workflow.consts.engine.value_type import ValueType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.chains import Chains, SimplePath
@@ -496,17 +498,17 @@ class RetryableErrorHandler(ExceptionHandlerBase):
         if node_type == NodeType.AGENT.value:
             return {
                 "code": -1,
-                "choices": [{"finish_reason": "stop"}],
+                "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
             }
         elif node_type == NodeType.KNOWLEDGE_PRO.value:
             return {
                 "code": -1,
-                "finish_reason": "stop",
+                "finish_reason": ChatStatus.FINISH_REASON.value,
             }
         elif node_type == NodeType.FLOW.value:
             return {
                 "code": -1,
-                "choices": [{"finish_reason": "stop"}],
+                "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
             }
         elif node_type == NodeType.LLM.value:
             model_source = (
@@ -519,14 +521,14 @@ class RetryableErrorHandler(ExceptionHandlerBase):
                 return {
                     "header": {
                         "code": -1,
-                        "status": XFLLMStatus.END.value,
+                        "status": SparkLLMStatus.END.value,
                     },
                     "payload": {"choices": {"text": [{}]}},
                 }
             elif model_source == ModelProviderEnum.OPENAI.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
 
         return {"code": -1}
@@ -1505,17 +1507,17 @@ class WorkflowEngine(BaseModel):
             case NodeType.AGENT.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
             case NodeType.KNOWLEDGE_PRO.value:
                 return {
                     "code": -1,
-                    "finish_reason": "stop",
+                    "finish_reason": ChatStatus.FINISH_REASON.value,
                 }
             case NodeType.FLOW.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
             case NodeType.LLM.value:
                 model_source = (
@@ -1528,14 +1530,16 @@ class WorkflowEngine(BaseModel):
                         return {
                             "header": {
                                 "code": -1,
-                                "status": XFLLMStatus.END.value,
+                                "status": SparkLLMStatus.END.value,
                             },
                             "payload": {"choices": {"text": [{}]}},
                         }
                     case ModelProviderEnum.OPENAI.value:
                         return {
                             "code": -1,
-                            "choices": [{"finish_reason": "stop"}],
+                            "choices": [
+                                {"finish_reason": ChatStatus.FINISH_REASON.value}
+                            ],
                         }
             case _:
                 return {"code": -1}
@@ -2212,7 +2216,7 @@ class WorkflowEngineBuilder:
             inputs = node.data.inputs
             for input_item in inputs:
                 var_type = input_item.input_schema.value.type
-                if var_type == "literal":
+                if var_type == ValueType.LITERAL.value:
                     continue
 
                 content = input_item.input_schema.value.content

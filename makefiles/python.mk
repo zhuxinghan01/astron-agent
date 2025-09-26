@@ -5,10 +5,10 @@
 # Python project variables - use dynamic directories from config
 PYTHON := $(shell which python3 || which python)
 BLACK := black
-ISORT := isort
-FLAKE8 := flake8
-MYPY := mypy
-PYLINT := pylint
+ISORT := isort --profile black
+FLAKE8 := flake8 --max-line-length 88 --ignore=E203,W503,E501 --max-complexity 10
+MYPY := mypy --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs --no-implicit-optional
+PYLINT := pylint --max-line-length=88 --max-args=7 --max-locals=15 --max-returns=6 --max-branches=12 --max-statements=50
 
 # Get all Python directories from config
 PYTHON_DIRS := $(shell \
@@ -89,15 +89,16 @@ check-python: ## 🔍 Check Python code quality
 			if [ -d "$$dir" ]; then \
 				echo "$(YELLOW)  Processing $$dir...$(RESET)"; \
 				if (cd $$dir && \
-				echo "$(YELLOW)    Checking format compliance...$(RESET)" && \
-				$(PYTHON) -m $(ISORT) --check-only . && \
-				$(PYTHON) -m $(BLACK) --check . && \
-				echo "$(YELLOW)    Running flake8...$(RESET)" && \
+				echo "$(YELLOW)    1. Running flake8 code style check...$(RESET)" && \
 				$(PYTHON) -m $(FLAKE8) . && \
-				echo "$(YELLOW)    Running mypy...$(RESET)" && \
+				echo "$(YELLOW)    2. Running isort import formatting...$(RESET)" && \
+				$(PYTHON) -m $(ISORT) . && \
+				echo "$(YELLOW)    3. Running black code formatting...$(RESET)" && \
+				$(PYTHON) -m $(BLACK) . && \
+				echo "$(YELLOW)    4. Running mypy type checking...$(RESET)" && \
 				$(PYTHON) -m $(MYPY) . && \
-				echo "$(YELLOW)    Running pylint...$(RESET)" && \
-				$(PYTHON) -m $(PYLINT) --fail-under=8.0 *.py); then \
+				echo "$(YELLOW)    5. Running pylint code analysis...$(RESET)" && \
+				$(PYTHON) -m $(PYLINT) --max-line-length=88 --max-args=7 --max-locals=15 --max-returns=6 --max-branches=12 --max-statements=50 *.py); then \
 					echo "$(GREEN)    ✅ $$dir passed all checks$(RESET)"; \
 				else \
 					echo "$(RED)    ❌ $$dir failed quality checks$(RESET)"; \
