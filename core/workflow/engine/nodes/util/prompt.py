@@ -3,7 +3,8 @@ import re
 from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
-from workflow.consts.template import TemplateSplitType
+from workflow.consts.engine.template import TemplateSplitType
+from workflow.consts.engine.value_type import ValueType
 from workflow.engine.entities.variable_pool import RefNodeInfo, VariablePool
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -282,13 +283,13 @@ class PromptUtils:
                     ref_node_info=ref_node_info,
                 )
 
-                if ref_node_info.ref_var_type == "literal":
+                if ref_node_info.ref_var_type == ValueType.LITERAL.value:
                     template_unit.key_type = TemplateSplitType.CONSTS.value
                     template_unit.value = ref_node_info.literal_var_value
 
                 if (
                     template_unit.ref_node_info
-                    and template_unit.ref_node_info.ref_var_type == "ref"
+                    and template_unit.ref_node_info.ref_var_type == ValueType.REF.value
                     and template_unit.ref_node_info.llm_resp_format
                     == RespFormatEnum.JSON.value
                 ):

@@ -14,7 +14,7 @@ from asyncio import Queue
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Set
 
-from workflow.consts.flow import FLOW_FINISH_REASON
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.callbacks.openai_types_sse import (
     Choice,
     Delta,
@@ -220,7 +220,7 @@ class ChatCallBacks:
         node_id: str,
         alias_name: str,
         code: int = 0,
-        finish_reason: str = "interrupt",
+        finish_reason: str = ChatStatus.INTERRUPT.value,
         need_reply: bool = True,
     ) -> None:
         """
@@ -322,7 +322,7 @@ class ChatCallBacks:
                 node=NodeInfo(
                     id=node_id,
                     alias_name=alias_name,
-                    finish_reason="stop",
+                    finish_reason=ChatStatus.FINISH_REASON.value,
                     inputs=message.inputs,
                     outputs=message.outputs,
                     error_outputs=message.error_outputs,
@@ -346,7 +346,7 @@ class ChatCallBacks:
             ],
         )
         await self._put_frame_into_queue(
-            node_id, resp, finish_reason=FLOW_FINISH_REASON
+            node_id, resp, finish_reason=ChatStatus.FINISH_REASON.value
         )
 
     async def _on_node_end_error(
@@ -370,7 +370,7 @@ class ChatCallBacks:
                 node=NodeInfo(
                     id=node_id,
                     alias_name=alias_name,
-                    finish_reason="stop",
+                    finish_reason=ChatStatus.FINISH_REASON.value,
                     executed_time=round(
                         time.time() - self.node_execute_start_time.get(node_id, 0), 3
                     ),
@@ -390,7 +390,7 @@ class ChatCallBacks:
             ],
         )
         await self._put_frame_into_queue(
-            node_id, resp, finish_reason=FLOW_FINISH_REASON
+            node_id, resp, finish_reason=ChatStatus.FINISH_REASON.value
         )
 
     async def _put_frame_into_queue(
@@ -472,9 +472,9 @@ class ChatCallBackConsumer:
                 # Workflow execution completed
                 if (
                     result.node_id.split("::")[0] == NodeType.END.value
-                    and result.finish_reason == FLOW_FINISH_REASON
+                    and result.finish_reason == ChatStatus.FINISH_REASON.value
                 ):
-                    await self._add_node_in_q(FLOW_FINISH_REASON)
+                    await self._add_node_in_q(ChatStatus.FINISH_REASON.value)
                     break
 
             except asyncio.CancelledError:
@@ -547,7 +547,7 @@ class StructuredConsumer:
                 node_id = await self.support_stream_node_id_queue.get()
                 is_get = True
                 # Check if queue consumption is complete
-                if node_id == FLOW_FINISH_REASON:
+                if node_id == ChatStatus.FINISH_REASON.value:
                     break
                 await self.order_stream_output(node_id)
             except Exception as e:
@@ -576,7 +576,7 @@ class StructuredConsumer:
                 result = await q.get()
                 if isinstance(result, ChatCallBackStreamResult):
                     await self.stream_queue.put(result.node_answer_content)
-                    if result.finish_reason == FLOW_FINISH_REASON:
+                    if result.finish_reason == ChatStatus.FINISH_REASON.value:
                         self.support_stream_node_id_set.remove(node_id)
                         self.structured_data.pop(node_id)
                         break
