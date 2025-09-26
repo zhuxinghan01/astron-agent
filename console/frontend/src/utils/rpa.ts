@@ -4,7 +4,7 @@ export const transRpaParameters = (parameters: RpaParameter[]): unknown[] => {
   return parameters.map(item => ({
     id: uuid(),
     name: item.varName,
-    type: item.varType,
+    type: item.type,
     disabled: false,
     required: false,
     description: item.varDescribe,

@@ -46,7 +46,7 @@ export const ModalDetail = forwardRef<{
     },
     {
       title: t('rpa.parameterType'),
-      dataIndex: 'varType',
+      dataIndex: 'type',
     },
   ];
 

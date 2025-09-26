@@ -20,6 +20,7 @@ export interface RpaParameter {
   varDirection: number;
   varName: string;
   varType: string;
+  type: string;
   varValue: string;
   varDescribe: string;
   processId: string;
