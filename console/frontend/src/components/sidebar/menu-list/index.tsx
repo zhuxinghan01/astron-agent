@@ -255,7 +255,7 @@ const RecentList: FC<RecentListProps> = ({
                     className="w-[18px] h-[18px] rounded-full flex-shrink-0"
                   />
                   <span className="ml-2 text-sm text-[#333] flex-1 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                    {item?.botTitle}
+                    {item?.botName}
                   </span>
                   <div
                     className="hidden group-hover:block w-2 h-2 bg-[url('@/assets/imgs/sidebar/close.svg')] bg-no-repeat bg-center hover:bg-[url('@/assets/imgs/sidebar/close-hover.svg')] flex-shrink-0 ml-1"
@@ -276,7 +276,11 @@ interface MenuListProps {
   onRefreshData?: () => void;
 }
 
-const MenuList: FC<MenuListProps> = ({ mixedChatList, favoriteBotList, onRefreshData }) => {
+const MenuList: FC<MenuListProps> = ({
+  mixedChatList,
+  favoriteBotList,
+  onRefreshData,
+}) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
