@@ -779,7 +779,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         // Get regular tools
         List<ToolBox> toolBoxList = toolBoxMapper.getModelListSquareByCondition(
                 uid, content, null, null, favorites, dto.getOrderFlag(),
-                dto.getTagFlag(), dto.getTags(), bizConfig.getAdminUid(), CommonConst.Platform.COMMON);
+                dto.getTagFlag(), dto.getTags(), bizConfig.getAdminUid(), String.valueOf(CommonConst.PlatformCode.COMMON));
 
         toolBoxVoList.addAll(toolBoxList.stream()
                 .map(this::convert2ToolBoxVo)
