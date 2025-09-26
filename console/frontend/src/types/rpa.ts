@@ -13,6 +13,7 @@ export interface RpaInfo {
   status?: number;
   userName?: string;
   robotCount?: number;
+  path?: string;
 }
 
 export interface RpaParameter {
