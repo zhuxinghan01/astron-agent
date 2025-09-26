@@ -15,7 +15,7 @@ import java.sql.SQLException;
 @MappedJdbcTypes(JdbcType.VARCHAR)
 public class MySqlJsonHandler extends BaseTypeHandler<JSONObject> {
     /**
-     * 设置非空参数
+     * Set non-null parameters
      *
      * @param ps
      * @param i
@@ -29,7 +29,7 @@ public class MySqlJsonHandler extends BaseTypeHandler<JSONObject> {
     }
 
     /**
-     * 根据列名，获取可以为空的结果
+     * Get the nullable result based on the column name
      *
      * @param rs
      * @param columnName
@@ -46,7 +46,7 @@ public class MySqlJsonHandler extends BaseTypeHandler<JSONObject> {
     }
 
     /**
-     * 根据列索引，获取可以为内控的接口
+     * Obtain the interface that can be used for internal control based on the column index
      *
      * @param rs
      * @param columnIndex
