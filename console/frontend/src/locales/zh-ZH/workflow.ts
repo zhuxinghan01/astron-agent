@@ -64,6 +64,14 @@ const translation = {
       knowledgeBase: '知识库',
       mcpServer: 'MCP',
     },
+    rpaNode: {
+      selectRpa: '选择RPA',
+      searchRobot: '搜索机器人',
+      parameters: '参数',
+      add: '添加',
+      noRobot: '暂无机器人',
+      noRpaTool: '暂无RPA工具',
+    },
     toolNode: {
       type: '工具',
       addTool: '添加',

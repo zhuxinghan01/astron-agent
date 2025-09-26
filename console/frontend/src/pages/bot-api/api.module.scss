@@ -45,8 +45,8 @@
     }
   }
   .api_step {
-    margin-top: 12px;
-    height: 103px;
+    margin-top: 24px;
+    height: 123px;
     background: #f2f8ff;
     border-radius: 9px;
     box-shadow: 0px 4px 8px 0px rgba(112, 153, 208, 0.16);
@@ -71,13 +71,14 @@
         color: #43436b;
       }
       .subtitle {
-        font-size: 10px;
+        margin-top: 4px;
+        font-size: 12px;
         font-weight: 400;
         color: #9295bf;
       }
       .fun {
         cursor: pointer;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 500;
         color: #7487fe;
       }
@@ -85,19 +86,20 @@
   }
 
   .statistic {
-    margin-top: 24px;
+    margin-top: 32px;
     margin-bottom: 24px;
     display: flex;
     // height: 207px;
     overflow: hidden;
     justify-content: space-between;
     .certified_card {
+    
       width: max(48%, 570px);
       // height: 207px;
       background: #ffffff;
       border-radius: 10px;
       box-shadow: 0px 4px 8px 0px rgba(112, 153, 208, 0.1);
-      padding: 10px 14px;
+      padding:24px;
       &_title {
         display: flex;
         align-items: center;
@@ -125,16 +127,20 @@
       .appid_box {
         display: flex;
         justify-content: space-between;
+        margin: 12px 0;
         .appid_download {
-          display: block;
+          // display: block;
           font-size: 10px;
           font-weight: 500;
           color: #7487fe;
           min-width: 93px;
-          // margin-right: 10px;
+          margin-right: 10px;
           line-height: normal;
           text-align: center;
           text-decoration: revert;
+          &:last-child{
+            margin-right: 0;
+          }
         }
       }
       .appid_select {
@@ -180,15 +186,14 @@
         font-size: 10px;
         font-weight: 400;
         color: #9191a7;
-        margin-top: 6px;
+        margin-top: 8px;
       }
       .cer_divide {
-        margin-top: 12px;
-        margin-bottom: 12px;
+        margin: 24px 0;
         width: 100%;
       }
       .cer_info {
-        margin-top: 6px;
+        margin-bottom: 10px;
         display: flex;
         .info_label {
           font-size: 12px;
@@ -205,91 +210,96 @@
           text-overflow: ellipsis;
           max-width: 80%;
         }
+        &:last-child{
+          margin-bottom: 0;
+        }
       }
     }
     .right {
       margin-left: 10px;
       width: max(48%, 600px);
-    }
-    .statistic_card {
-      width: 100%;
-      height: 142px;
-      background: #ffffff;
-      border-radius: 9px;
-      box-shadow: 0px 4px 8px 0px rgba(112, 153, 208, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      .statistic_divide {
-        width: 1px;
-        height: 77px;
-        opacity: 0.2;
-        border: 1px solid #6ea5d2;
-      }
-      .statistic_data {
+      .statistic_card {
+        padding: 0 32px;
+        width: 100%;
+        height: 260px;
+        background: #ffffff;
+        border-radius: 9px;
+        box-shadow: 0px 4px 8px 0px rgba(112, 153, 208, 0.1);
         display: flex;
-        flex-direction: column;
         align-items: center;
-        .data_img {
-          height: 50px;
+        justify-content: space-around;
+        .statistic_divide {
+          width: 1px;
+          height: 77px;
+          opacity: 0.2;
+          border: 1px solid #6ea5d2;
         }
-        .data_used_num {
-          font-size: 28px;
-          font-family: DINAlternate, DINAlternate-Bold;
-          font-weight: 700;
-          color: #597dff;
-        }
-        .data_title {
-          font-size: 14px;
-          font-weight: 500;
-          color: #9295bf;
-        }
-      }
-    }
-    .statistic_tips {
-      display: flex;
-      margin-top: 20px;
-      &_title {
-        width: 60px;
-        height: 17px;
-        font-size: 12px;
-        font-family: PingFangSC, PingFangSC-Regular;
-        font-weight: 400;
-        text-align: right;
-        color: #e88839;
-        line-height: 17px;
-        margin-right: 10px;
-      }
-      &_lists {
-        li {
-          font-size: 12px;
-          font-family: PingFangSC, PingFangSC-Semibold;
-          font-weight: 600;
-          text-align: justify;
-          color: #9295bf;
-          line-height: 17px;
-          margin-bottom: 3px;
-          img {
-            width: 23px;
+        .statistic_data {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          .data_img {
+            height: 50px;
           }
-          span {
-            cursor: pointer;
+          .data_used_num {
+            font-size: 28px;
+            font-family: DINAlternate, DINAlternate-Bold;
+            font-weight: 700;
             color: #597dff;
           }
+          .data_title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #9295bf;
+          }
         }
-        li::before {
-          width: 6px;
-          height: 6px;
-          background: #ffb679;
-          border: 1px solid #ffa458;
-          border-radius: 50%;
-          content: "";
-          display: inline-block;
-          margin-right: 6px;
-          transform: translateY(-2.5px);
+      }
+      .statistic_tips {
+        display: flex;
+        margin-top: 20px;
+        &_title {
+          width: 60px;
+          height: 17px;
+          font-size: 12px;
+          font-family: PingFangSC, PingFangSC-Regular;
+          font-weight: 400;
+          text-align: right;
+          color: #e88839;
+          line-height: 17px;
+          margin-right: 10px;
+        }
+        &_lists {
+          li {
+            font-size: 12px;
+            font-family: PingFangSC, PingFangSC-Semibold;
+            font-weight: 600;
+            text-align: justify;
+            color: #9295bf;
+            line-height: 17px;
+            margin-bottom: 3px;
+            img {
+              width: 23px;
+            }
+            span {
+              cursor: pointer;
+              color: #597dff;
+            }
+          }
+          li::before {
+            width: 6px;
+            height: 6px;
+            background: #ffb679;
+            border: 1px solid #ffa458;
+            border-radius: 50%;
+            content: "";
+            display: inline-block;
+            margin-right: 6px;
+            transform: translateY(-2.5px);
+          }
         }
       }
     }
+   
   }
   .chart_con {
     // margin-top: 24px;

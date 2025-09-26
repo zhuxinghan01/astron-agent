@@ -83,8 +83,8 @@ export interface PostChatItem {
   botDescEn: string | null;
   hotNum: number | string | null;
   botType: string; // 注意：为 string
-  botTitle: string;
-  botTitleEn: string | null;
+  botName: string;
+  botNameEn: string | null;
   botId: number;
   botStatus: number | null;
   marketBotId: number | null;

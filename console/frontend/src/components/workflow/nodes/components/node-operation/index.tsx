@@ -16,7 +16,7 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
   const { t } = useTranslation();
   const setShowNodeList = useFlowsManager(state => state.setShowNodeList);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow,
+    state => state.autoSaveCurrentFlow
   );
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const currentFlow = useFlowsManager(state => state.currentFlow);
@@ -77,9 +77,9 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
     }
     const currentNode = nodes.find(node => node.id === id);
     const refInputs = currentNode.data.inputs
-      .filter((input) => input.schema.value.type === "ref")
-      ?.map((input) => {
-        console.log("input@@", input);
+      .filter(input => input.schema.value.type === 'ref')
+      ?.map(input => {
+        console.log('input@@', input);
         return {
           id: input.id,
           name: input.name,
@@ -98,7 +98,7 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
     if (refInputs.length === 0) {
       const debuggerNode = cloneDeep(currentNode);
       debuggerNode.data.inputs = debuggerNode.data.inputs?.filter(
-        (input) => input?.schema?.value?.content,
+        input => input?.schema?.value?.content
       );
       nodeDebugExect(currentNode, debuggerNode);
     } else {
@@ -153,7 +153,7 @@ const NodeMenu = ({ id, remarkStatus, remarkClick }): React.ReactElement => {
   const deleteNode = currentStore(state => state.deleteNode);
   const copyNode = currentStore(state => state.copyNode);
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    (state) => state.setNodeInfoEditDrawerlInfo,
+    state => state.setNodeInfoEditDrawerlInfo
   );
   const items = [
     {
@@ -242,7 +242,7 @@ function index({ data, id, labelInput = 'labelInput' }): React.ReactElement {
   const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
   const currentStore = getCurrentStore();
   const updateNodeNameStatus = currentStore(
-    (state) => state.updateNodeNameStatus,
+    state => state.updateNodeNameStatus
   );
   const canvasesDisabled = useFlowsManager(state => state.canvasesDisabled);
 
@@ -258,8 +258,8 @@ function index({ data, id, labelInput = 'labelInput' }): React.ReactElement {
             setRefInputs={setRefInputs}
             nodeDebugExect={nodeDebugExect}
           />
-          {!["if-else", "message", "iteration", "question-answer"].includes(
-            nodeType as string,
+          {!['if-else', 'message', 'iteration', 'question-answer'].includes(
+            nodeType as string
           ) && (
             <Tooltip title="测试该节点" overlayClassName="black-tooltip">
               <img

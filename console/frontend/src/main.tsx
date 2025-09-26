@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client';
-// import monaco from '@/config/monaco-config';
-// monaco.editor.setTheme('custom-light-theme');
+import monaco from '@/config/monaco-config';
+monaco.editor.setTheme('custom-light-theme');
 import App from './app';
 
 import 'github-markdown-css/github-markdown.css';

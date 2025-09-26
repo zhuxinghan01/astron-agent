@@ -111,7 +111,7 @@ export const Inputs = memo(({ label = '输入', inputs }) => {
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  "linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 23%)",
+                  'linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))',
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -226,7 +226,7 @@ export const Outputs = memo(({ data, label = '输出', outputs }) => {
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  "linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))",
+                  'linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))',
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -250,13 +250,13 @@ export const Label = memo(
     const { isStartOrEndNode } = useNodeCommon({ id, data });
     const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
     const autoSaveCurrentFlow = useFlowsManager(
-      (state) => state.autoSaveCurrentFlow
+      state => state.autoSaveCurrentFlow
     );
     const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
     const currentStore = getCurrentStore();
     const setNode = currentStore(state => state.setNode);
     const updateNodeNameStatus = currentStore(
-      (state) => state.updateNodeNameStatus
+      state => state.updateNodeNameStatus
     );
 
     const handleChangeNodeParam = useCallback(
@@ -438,6 +438,7 @@ export const NodeContent = memo<NodeContentProps>(({ id, data }) => {
     showInputs,
     showOutputs,
     showExceptionFlow,
+    isRpaNode,
   } = useNodeCommon({
     id,
     data,
@@ -479,10 +480,17 @@ interface NodeWrapperProps {
 
 // 节点包装器组件
 export const NodeWrapper = memo<NodeWrapperProps>(({ id, data, children }) => {
-  const { handleNodeClick } = useNodeCommon({ id, data });
+  const { handleNodeClick, isIteratorNode } = useNodeCommon({ id, data });
 
   return (
-    <div id={id} className="w-[360px] pb-[14px]" onClick={handleNodeClick}>
+    <div
+      id={id}
+      className="min-w-[360px] pb-[14px]"
+      onClick={handleNodeClick}
+      style={{
+        maxWidth: isIteratorNode ? '' : '360px',
+      }}
+    >
       {data?.nodeParam?.remarkVisible && <Remark id={id} data={data} />}
       {data.status && (
         <NodeDebuggingStatus
@@ -567,7 +575,7 @@ const renderFileUpload = (
             uploadComplete(event, index, fileId),
           handleFileUpload: (file, fileId) =>
             handleFileUpload(file, index, multiple, fileId),
-          maxSize: params?.fileType === "image" ? 3 : 50,
+          maxSize: params?.fileType === 'image' ? 3 : 50,
         } as unknown)}
       />
       {params?.default?.map(file => (
@@ -589,7 +597,7 @@ const renderString = (params, index, handleChangeParam): React.ReactElement => (
     onChange={e =>
       handleChangeParam(
         index,
-        (d) => (d.default = e.target.value),
+        d => (d.default = e.target.value),
         e.target.value
       )
     }
@@ -684,7 +692,7 @@ export const renderParamInput = (
       return renderBoolean(params, index, handleChangeParam);
     case 'object':
     default:
-      if (type?.includes("array") || type === "object")
+      if (type?.includes('array') || type === 'object')
         return renderJsonEditor(params, index, handleChangeParam);
       return null;
   }

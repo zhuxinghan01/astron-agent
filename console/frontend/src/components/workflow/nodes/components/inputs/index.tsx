@@ -146,7 +146,7 @@ function ReferenceField({
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const checkNode = currentStore(state => state.checkNode);
   const autoSaveCurrentFlow = useFlowsManager(
-    (state) => state.autoSaveCurrentFlow
+    state => state.autoSaveCurrentFlow
   );
   const cascaderValue = item?.schema?.value?.content?.nodeId
     ? [item?.schema?.value?.content?.nodeId, item?.schema?.value?.content?.name]

@@ -108,8 +108,8 @@ const RecentUsedList: FC<{
           >
             <div className={styles.itemHead}>
               <img className={styles.headImg} src={item.botAvatar} alt="" />
-              <div title={item.botTitle} className={styles.headTitle}>
-                {item.botTitle}
+              <div title={item.botName} className={styles.headTitle}>
+                {item.botName}
               </div>
             </div>
             <div title={item.botDesc} className={styles.headDesc}>
@@ -333,17 +333,20 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
     onRefreshData();
   }, [onRefreshData]);
 
-  const handleTabChange = useCallback((index: number) => {
-    setActiveIndex(index);
-    // Refresh specific data based on the active tab
-    if (index === 0) {
-      // Recent Used tab - refresh recent chat data
-      onRefreshRecentData();
-    } else if (index === 1) {
-      // My Favorites tab - refresh favorite data
-      onRefreshFavoriteData();
-    }
-  }, [onRefreshRecentData, onRefreshFavoriteData]);
+  const handleTabChange = useCallback(
+    (index: number) => {
+      setActiveIndex(index);
+      // Refresh specific data based on the active tab
+      if (index === 0) {
+        // Recent Used tab - refresh recent chat data
+        onRefreshRecentData();
+      } else if (index === 1) {
+        // My Favorites tab - refresh favorite data
+        onRefreshFavoriteData();
+      }
+    },
+    [onRefreshRecentData, onRefreshFavoriteData]
+  );
 
   return (
     <Modal

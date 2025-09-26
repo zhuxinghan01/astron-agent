@@ -14,7 +14,7 @@ import {
   UploadFileItem,
   UploadResponse,
   UseSingleNodeDebuggingReturn,
-} from "@/components/workflow/types";
+} from '@/components/workflow/types';
 
 // 从统一的图标管理中导入
 import { Icons } from '@/components/workflow/icons';
@@ -27,7 +27,7 @@ const useSingleNodeDebugging = (
   refInputs,
   setRefInputs,
   nodeDebugExect,
-  clearData,
+  clearData
 ): UseSingleNodeDebuggingReturn => {
   const { currentNode } = useNodeCommon({ id });
 

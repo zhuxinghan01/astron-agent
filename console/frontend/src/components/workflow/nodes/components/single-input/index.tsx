@@ -95,8 +95,8 @@ function index({ id, data }): React.ReactElement {
               <div key={item.id} className="flex flex-col gap-1">
                 <div className="flex items-start gap-3 overflow-hidden">
                   <div className="flex flex-col w-1/4 flex-shrink-0 relative">
-                    <span>{item.name}</span>
-                    <span className="text-[#F74E43] absolute left-9 top-0">
+                    <span className="pl-[10px]">{item.name}</span>
+                    <span className="text-[#F74E43] absolute left-0 top-0">
                       *
                     </span>
                   </div>
