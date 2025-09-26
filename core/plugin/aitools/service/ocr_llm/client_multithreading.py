@@ -22,13 +22,12 @@ from plugin.aitools.service.ase_sdk.util.pdf_convert import pdf_convert_png
 class OcrLLMClientMultithreading(Power):
     """
     AI Service_通用OCR大模型，多线程版本，支持多张照片同时识别
-    接口地址：https://in.iflyaicloud.com/doc/detail?id=se75df311
     """
 
     def __init__(
         self,
         url: str = os.getenv(
-            "OCR_LLM_WS_URL", "wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75df311"
+            "OCR_LLM_WS_URL", "https://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75ocrbm"
         ),
         method: str = "GET",
     ):

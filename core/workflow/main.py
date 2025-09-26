@@ -141,7 +141,7 @@ def set_env() -> None:
     """
     try:
         # Determine the runtime environment (defaults to Local)
-        running_env = os.getenv("RUNTIME_ENV", RuntimeEnv.Local.value)
+        running_env = os.getenv("RUNTIME_ENV", "")
 
         # Select the appropriate configuration file based on environment
         if running_env == RuntimeEnv.Local.value:

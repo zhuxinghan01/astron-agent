@@ -3,8 +3,9 @@ from typing import Annotated, Optional, Union
 
 from fastapi import APIRouter, Header
 from starlette.responses import JSONResponse, StreamingResponse
-from workflow.cache.event_registry import Event, EventRegistry, Status
+from workflow.cache.event_registry import Event, EventRegistry
 from workflow.consts.app_audit import AppAuditPolicy
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.domain.entities.chat import ChatVo, ResumeVo
 from workflow.domain.entities.response import Streaming
 from workflow.engine.callbacks.openai_types_sse import LLMGenerate
@@ -136,7 +137,7 @@ async def resume_debug(request: ResumeVo) -> Union[StreamingResponse, JSONRespon
                 {"resume_event": json.dumps(event.dict(), ensure_ascii=False)}
             )
 
-            if not event.status == Status.INTERRUPTED.value:
+            if not event.status == ChatStatus.INTERRUPT.value:
                 raise CustomException(
                     CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                     "Current event is not paused",

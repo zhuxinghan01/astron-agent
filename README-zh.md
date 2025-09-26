@@ -1,4 +1,4 @@
-# Astron Agent - 智能代理平台
+# 星辰Agent - 智能体开发平台
 
 <div align="center">
 

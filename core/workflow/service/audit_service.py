@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable
 
 from workflow.cache import event_registry
 from workflow.cache.event_registry import Event, EventRegistry
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.callbacks.openai_types_sse import LLMGenerate, WorkflowStep
 from workflow.exception.e import CustomException, CustomExceptionCM
 from workflow.exception.errors.err_code import CodeEnum
@@ -47,7 +48,8 @@ def parse_frame_audit(response: LLMGenerate) -> OutputFrameAudit:
         if (
             response.workflow_step
             and response.workflow_step.node
-            and response.workflow_step.node.finish_reason == "stop"
+            and response.workflow_step.node.finish_reason
+            == ChatStatus.FINISH_REASON.value
         ):
             none_need_audit = True
     return OutputFrameAudit(
