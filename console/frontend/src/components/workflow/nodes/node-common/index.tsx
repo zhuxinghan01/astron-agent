@@ -106,12 +106,12 @@ export const Inputs = memo(({ label = '输入', inputs }) => {
           <ItemBadge item={item} />
         ))}
         {showDropdown && (
-          <div className="absolute right-0 top-0 flex items-center">
+          <div className="absolute right-0 top-1 flex items-center">
             <div
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  'linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 78%)',
+                  'linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))',
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -221,12 +221,12 @@ export const Outputs = memo(({ data, label = '输出', outputs }) => {
           <ItemBadge item={item} />
         ))}
         {showDropdown && (
-          <div className="absolute right-0 top-0 flex items-center">
+          <div className="absolute right-0 top-1 flex items-center">
             <div
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  'linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 78%)',
+                  'linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))',
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -406,7 +406,7 @@ export const NodeHeader = memo<NodeHeaderProps>(({ id, data }) => {
         {renderTypeOneClickUpdate()}
       </div>
       {showNodeOperation && (
-        <NodeOperation id={id} data={data} labelInput="labelInput1" />
+        <NodeOperation id={id} data={data} labelInput="labelInput" />
       )}
       {hasTargetHandle && <TargetHandle isConnectable={isConnectable} />}
       {hasSourceHandle && (
@@ -438,6 +438,7 @@ export const NodeContent = memo<NodeContentProps>(({ id, data }) => {
     showInputs,
     showOutputs,
     showExceptionFlow,
+    isRpaNode,
   } = useNodeCommon({
     id,
     data,
@@ -479,10 +480,17 @@ interface NodeWrapperProps {
 
 // 节点包装器组件
 export const NodeWrapper = memo<NodeWrapperProps>(({ id, data, children }) => {
-  const { handleNodeClick } = useNodeCommon({ id, data });
+  const { handleNodeClick, isIteratorNode } = useNodeCommon({ id, data });
 
   return (
-    <div id={id} className="w-[360px] pb-[14px]" onClick={handleNodeClick}>
+    <div
+      id={id}
+      className="min-w-[360px] pb-[14px]"
+      onClick={handleNodeClick}
+      style={{
+        maxWidth: isIteratorNode ? '' : '360px',
+      }}
+    >
       {data?.nodeParam?.remarkVisible && <Remark id={id} data={data} />}
       {data.status && (
         <NodeDebuggingStatus
@@ -567,7 +575,7 @@ const renderFileUpload = (
             uploadComplete(event, index, fileId),
           handleFileUpload: (file, fileId) =>
             handleFileUpload(file, index, multiple, fileId),
-          maxSize: params?.fileType === 'image' ? 3 : 20,
+          maxSize: params?.fileType === 'image' ? 3 : 50,
         } as unknown)}
       />
       {params?.default?.map(file => (
@@ -684,7 +692,7 @@ export const renderParamInput = (
       return renderBoolean(params, index, handleChangeParam);
     case 'object':
     default:
-      if (type?.includes('array'))
+      if (type?.includes('array') || type === 'object')
         return renderJsonEditor(params, index, handleChangeParam);
       return null;
   }

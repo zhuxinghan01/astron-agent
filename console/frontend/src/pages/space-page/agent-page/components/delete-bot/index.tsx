@@ -4,6 +4,7 @@ import { Button, message } from 'antd';
 import { deleteBotAPI, deleteAgent } from '@/services/agent';
 import dialogDel from '@/assets/imgs/main/icon_dialog_del.png';
 import { applyCancelUpload } from '@/services/spark-common';
+import { handleAgentStatus } from '@/services/release-management';
 import eventBus from '@/utils/event-bus';
 
 type BotDetail = {
@@ -35,6 +36,8 @@ function index({
     setLoading(true);
     if (botDetail?.botStatus === 2) {
       await applyCancelUpload({ botId: botDetail.botId, reason: '' });
+      // await handleAgentStatus(botDetail.botId as number, { action: 'OFFLINE', reason: '' })
+      // TODO: 更新接口, 以及删除接口看要不要换
     }
     if (type) {
       deleteAgent({ botId: botDetail.botId })

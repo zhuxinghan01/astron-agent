@@ -14,6 +14,13 @@ export const useTableDataSource = (): {
     key: string,
     value: string | number | boolean | string[] | null | undefined
   ) => void;
+  handleBatchInputParamsChange: (
+    id: number | null,
+    updates: Record<
+      string,
+      string | number | boolean | string[] | null | undefined
+    >
+  ) => void;
   handleDeleteField: (record: TableField) => void;
   handleUpdateSheet: (data?: DatabaseItem[]) => void;
   mergeAndDiscardDuplicates: (
@@ -69,8 +76,10 @@ export const useTableDataSource = (): {
   }, [state.dataSource.length, actions.setDataSource, t]);
 
   const handleAddField = useCallback((): void => {
+    const newId =
+      state.dataSource.reduce((maxId, item) => Math.max(maxId, item.id), 0) + 1;
     const newField: TableField = {
-      id: 0,
+      id: newId,
       name: '',
       type: 'String',
       description: '',
@@ -104,6 +113,26 @@ export const useTableDataSource = (): {
     [state.dataSource, actions.setDataSource]
   );
 
+  // 批量更新字段，解决同时更新多个字段时的竞争条件问题
+  const handleBatchInputParamsChange = useCallback(
+    (
+      id: number | null,
+      updates: Record<
+        string,
+        string | number | boolean | string[] | null | undefined
+      >
+    ): void => {
+      const newDataSource = state.dataSource.map(item => {
+        if (item.id === id) {
+          return { ...item, ...updates };
+        }
+        return item;
+      });
+      actions.setDataSource(newDataSource);
+    },
+    [state.dataSource, actions.setDataSource]
+  );
+
   const handleDeleteField = useCallback(
     (record: TableField): void => {
       const newData = state.dataSource.filter(it => it.id !== record.id);
@@ -122,6 +151,7 @@ export const useTableDataSource = (): {
   return {
     handleAddField,
     handleInputParamsChange,
+    handleBatchInputParamsChange,
     handleDeleteField,
     ...importOps,
   };

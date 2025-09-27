@@ -363,7 +363,7 @@ export const checkedNodeOutputData = (
 // ==================== 节点参数验证 ====================
 function validateTemplateParams(currentCheckNode: unknown): boolean {
   if (
-    !['spark-llm', 'message'].includes(currentCheckNode?.type) &&
+    !['spark-llm', 'message'].includes(currentCheckNode?.nodeType) &&
     !(
       currentCheckNode?.nodeType === 'node-end' &&
       currentCheckNode?.data?.nodeParam?.outputMode === 1
@@ -860,8 +860,10 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
       return item;
     }
 
-    if (item.children) {
-      const found = findItemById(item.children, id);
+    const properties = item.schema?.properties || item.properties;
+
+    if (properties) {
+      const found = findItemById(properties, id);
       if (found) {
         return found;
       }
@@ -871,11 +873,15 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
 }
 
 export function renderType(params): string {
+  console.log('params@@', params);
   if (params.fileType && params?.type === 'array-string') {
     return `Array<${
       (params?.fileType?.slice(0, 1).toUpperCase() || '') +
       (params?.fileType?.slice(1) || '')
     }>`;
+  }
+  if (params.fileType && params?.type === 'string') {
+    return params?.fileType;
   }
   const type = params?.type || params?.schema?.type || '';
   if (type?.includes('array')) {
@@ -1563,7 +1569,7 @@ function buildOwnReferences(
       label: output.name,
       type: output.schema?.type || 'string',
       value: output.name,
-      fileType: output.fileType || '',
+      fileType: output.allowedFileType?.[0] || '',
     })) || []
   );
 }

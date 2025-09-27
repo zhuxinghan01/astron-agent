@@ -112,6 +112,9 @@ export const initialStatus = {
   flowModalInfo: {
     open: false,
   },
+  rpaModalInfo: {
+    open: false,
+  },
   knowledgeParameterModalInfo: {
     open: false,
     nodeId: '',

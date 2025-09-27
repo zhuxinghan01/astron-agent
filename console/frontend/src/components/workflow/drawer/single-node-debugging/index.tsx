@@ -13,6 +13,7 @@ import {
   RefInput,
   UploadFileItem,
   UploadResponse,
+  UseSingleNodeDebuggingReturn,
 } from '@/components/workflow/types';
 
 // 从统一的图标管理中导入
@@ -27,7 +28,7 @@ const useSingleNodeDebugging = (
   setRefInputs,
   nodeDebugExect,
   clearData
-) => {
+): UseSingleNodeDebuggingReturn => {
   const { currentNode } = useNodeCommon({ id });
 
   const handleRun = useMemoizedFn((): void => {

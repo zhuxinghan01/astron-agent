@@ -18,6 +18,9 @@ const translation = {
   knowledgeName: '知识库名称：',
   knowledgeDescription: '知识库描述：',
   knowledgeVersion: '知识库版本：',
+  ragflowRAG: 'Ragflow-RAG',
+  ragflowRAGDescription:
+    '可整合多源异构知识数据自动采编，提供问答式检索，支持答案追溯，适用于轻量检索场景。',
   xinghuoKnowledge: '星火知识库',
   xingpuDescription:
     '可整合多源异构知识数据自动采编，提供问答式检索，支持答案追溯，适用于企业场景。',

@@ -131,6 +131,9 @@ const translation = {
   publishPending: '发布中',
   publishFailed: '发布失败',
   republish: '重新发布',
+  republishSuccess: '重新发布成功',
+  republishFailed: '重新发布失败',
+  localUploadModel: '本地上传模型',
 };
 
 export default translation;

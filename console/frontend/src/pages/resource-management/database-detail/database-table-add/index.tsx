@@ -45,6 +45,7 @@ const DataBaseTableAddContent: React.FC<{ handleUpdate?: () => void }> = memo(
     const {
       handleAddField,
       handleInputParamsChange,
+      handleBatchInputParamsChange,
       handleDeleteField,
       handleValidateInput,
       handleOk,
@@ -82,6 +83,7 @@ const DataBaseTableAddContent: React.FC<{ handleUpdate?: () => void }> = memo(
               ref={databaseRef}
               dataSource={state.dataSource}
               handleInputParamsChange={handleInputParamsChange}
+              handleBatchInputParamsChange={handleBatchInputParamsChange}
               handleCheckInput={handleValidateInput}
               onDel={handleDeleteField}
             />
@@ -136,7 +138,7 @@ const DataBaseTableAddInitializer: React.FC<{
 DataBaseTableAddInitializer.displayName = 'DataBaseTableAddInitializer';
 
 /**
- * 表格添加主组件 - 完全优化版本
+ * 表格添加主组件
  */
 function DataBaseTableAdd(props: DataBaseTableAddProps): React.JSX.Element {
   const { isModule = false, info, handleUpdate } = props;

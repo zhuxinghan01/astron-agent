@@ -815,7 +815,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     if (multiModelDebugging) {
       flag = false;
     }
-    for (let key in growOrShrinkConfig) {
+    for (const key in growOrShrinkConfig) {
       growOrShrinkConfig[key] = flag;
     }
     setGrowOrShrinkConfig(JSON.parse(JSON.stringify(growOrShrinkConfig)));
@@ -913,7 +913,7 @@ const BaseConfig: React.FC<ChatProps> = ({
       { model: 'spark', promptAnswerCompleted: true },
     ]);
   };
-
+  console.log(modelList, 'modelList');
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden">
       <ConfigHeader

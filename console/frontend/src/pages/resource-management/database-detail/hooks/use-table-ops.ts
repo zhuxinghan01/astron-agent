@@ -42,26 +42,22 @@ export const useTableOps = (): {
       Modal.confirm({
         title: t('database.confirmDeleteTable'),
         centered: true,
-        onOk: async () => {
-          try {
-            actions.setTables(state.tables, true);
-            await deleteTable({ id: tableId });
-            actions.setCurrentSheet(null);
-            fetchTableList();
-            message.success(t('database.deleteSuccess'));
-          } catch (error) {
-            actions.setTables(state.tables, false);
-          }
+        onOk: () => {
+          actions.setTables(state.tables, true);
+          deleteTable({ id: tableId })
+            .then(() => {
+              actions.setCurrentSheet(null);
+              fetchTableList();
+              message.success(t('database.deleteSuccess'));
+            })
+            .catch(error => {
+              message.error(error.message);
+              actions.setTables(state.tables, false);
+            });
         },
       });
     },
-    [
-      actions.setTables,
-      actions.setCurrentSheet,
-      state.tables,
-      fetchTableList,
-      t,
-    ]
+    [actions.setTables, actions.setCurrentSheet, state.tables, fetchTableList]
   );
 
   const copyTableById = useCallback(

@@ -23,7 +23,7 @@ import SpaceModal from '@/components/space/space-modal';
 import { useSpaceI18n } from '@/pages/space/hooks/use-space-i18n';
 import useUserStore from '@/store/user-store';
 import useSpaceStore from '@/store/space-store';
-import { SpaceType, RoleType } from '@/permissions/permission-type';
+import { SpaceType, RoleType } from '@/types/permission';
 import { roleToRoleType } from '@/pages/space/config';
 import { useSpaceType } from '@/hooks/use-space-type';
 import { useEnterprise } from '@/hooks/use-enterprise';

@@ -108,7 +108,10 @@ export const useUploadPage = ({
   useEffect(() => {
     if (importType === 'web' && uploadList.length > 0) {
       setSaveDisabled(false);
-    } else if (failedList.length === fileIds.length) {
+    } else if (
+      failedList.length === fileIds.length ||
+      uploadList.length !== fileIds.length
+    ) {
       setSaveDisabled(true);
     } else {
       setSaveDisabled(false);

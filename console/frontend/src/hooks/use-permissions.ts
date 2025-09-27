@@ -5,7 +5,7 @@ import {
   ModuleType,
   OperationType,
   RolePermissionConfig,
-} from '@/permissions/permission-type';
+} from '@/types/permission';
 import {
   getRoleConfig,
   hasModulePermission,

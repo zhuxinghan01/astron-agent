@@ -1,21 +1,23 @@
 import { Input, Modal, Spin, message, Form, Row, Col, Select } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import {
+  handleAgentStatus,
+  getMCPServiceDetail,
+  getAgentInputParams,
+} from '@/services/release-management';
 import {
   cancelBindWx,
   getBotInfo,
   getWechatAuthUrl,
   sendApplyBot,
-  applyCancelUpload,
   publishMCP,
   getMcpContent,
   getChainInfo,
 } from '@/services/spark-common';
-
+import { getInputsType } from '@/services/flow';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { getLanguageCode } from '@/utils/http';
 import eventBus from '@/utils/event-bus';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
 
@@ -26,7 +28,6 @@ import xinghuoImg from '@/assets/imgs/workflow/iflytek-icon.png';
 
 import styles from './index.module.scss';
 import cls from 'classnames';
-import { getInputsType } from '@/services/flow';
 
 interface MultiModeCpnProps {
   promptbot?: any;
@@ -188,7 +189,7 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
     setIsMcpOpen(false);
   };
 
-  //发布 or 更新发布
+  //发布 or 更新发布 -- 至星火
   const handlePublish = async () => {
     if (promptbot) {
       return eventBus.emit('releaseFn');
@@ -201,13 +202,16 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
       setQufabuFlag(true);
     }
 
-    //先下架助手
-    await applyCancelUpload({
-      botId: botInfo?.botId,
-      reason: '',
-    });
+    //先下架助手 -- NOTE: 用新接口后应该不需要先下架的操作了，会有报错
+    // await handleAgentStatus(botInfo?.botId as number, {
+    //   action: 'OFFLINE',
+    //   reason: '',
+    // });
     // 提交审核
-    sendApplyBot({ botId: botInfo?.botId })
+    handleAgentStatus(botInfo?.botId as number, {
+      action: 'PUBLISH',
+      reason: '',
+    })
       .then(() => {
         // onCancel();
         setIsClickFabu(true);
@@ -227,6 +231,54 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
 
     return;
   };
+
+  /** ## 发布为mcp 逻辑 */
+  const handleMcpPublish = async () => {
+    if (moreParams) {
+      return;
+    }
+
+    getMCPServiceDetail(botInfo?.botId as number).then((resp: any) => {
+      setReleased(resp?.released);
+
+      // MARK: 这里外部已经调用了一次吧? 怎么又调用了
+      getAgentInputParams(botInfo?.botId as number).then((res: any) => {
+        // console.log('getAgentInputParams--------', res);
+        const arr: any = [...res];
+        arr.forEach((item: unknown, index: number) => {
+          if (Object.prototype.hasOwnProperty.call(item, 'allowedFileType')) {
+            i = index;
+            return (flag = true);
+          }
+          return;
+        });
+        if (flag) {
+          setArgs(arr);
+          setEditData({
+            botName: resp ? resp.serverName : botInfo?.botName,
+            botDesc: resp ? resp.description : botInfo?.botDesc,
+            name: arr[i].name,
+            type: arr[i].allowedFileType[0],
+            default: arr[i].schema.default ? arr[i].schema.default : '',
+            content: resp?.content,
+          });
+        } else {
+          setArgs(arr);
+          setEditData({
+            botName: resp ? resp.serverName : botInfo?.botName,
+            botDesc: resp ? resp.description : botInfo?.botDesc,
+            name: arr[0].name,
+            type: arr[0].schema.type,
+            default: arr[0].schema.default,
+            content: resp?.content,
+          });
+        }
+        setIsMcpOpen(true);
+        // onCancel();
+      });
+    });
+  };
+
   useEffect(() => {
     setIsClickFabu(false);
   }, [show]);
@@ -525,6 +577,7 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
                                   if (moreParams) {
                                     return;
                                   }
+                                  // TODO: 绑定微信还没提供接口
                                   handleBind();
                                 }}
                               >
@@ -621,67 +674,7 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
                         className={cls(styles.peizhiApi, {
                           [styles.disableButton as string]: moreParams,
                         })}
-                        onClick={() => {
-                          if (moreParams) {
-                            return;
-                          }
-                          getMcpContent({ botId: +(botInfo?.botId || 0) }).then(
-                            (resp: any) => {
-                              setReleased(resp?.released);
-
-                              getInputsType({
-                                botId: +(botInfo?.botId || 0),
-                              }).then((res: any) => {
-                                const arr: any = [...res];
-                                arr.forEach((item: unknown, index: number) => {
-                                  if (
-                                    Object.prototype.hasOwnProperty.call(
-                                      item,
-                                      'allowedFileType'
-                                    )
-                                  ) {
-                                    i = index;
-                                    return (flag = true);
-                                  }
-                                  return;
-                                });
-                                if (flag) {
-                                  setArgs(arr);
-                                  setEditData({
-                                    botName: resp
-                                      ? resp.serverName
-                                      : botInfo?.botName,
-                                    botDesc: resp
-                                      ? resp.description
-                                      : botInfo?.botDesc,
-                                    name: arr[i].name,
-                                    type: arr[i].allowedFileType[0],
-                                    default: arr[i].schema.default
-                                      ? arr[i].schema.default
-                                      : '',
-                                    content: resp?.content,
-                                  });
-                                } else {
-                                  setArgs(arr);
-                                  setEditData({
-                                    botName: resp
-                                      ? resp.serverName
-                                      : botInfo?.botName,
-                                    botDesc: resp
-                                      ? resp.description
-                                      : botInfo?.botDesc,
-                                    name: arr[0].name,
-                                    type: arr[0].schema.type,
-                                    default: arr[0].schema.default,
-                                    content: resp?.content,
-                                  });
-                                }
-                                setIsMcpOpen(true);
-                                // onCancel();
-                              });
-                            }
-                          );
-                        }}
+                        onClick={handleMcpPublish}
                       >
                         {(Array.isArray(botInfo?.releaseType) &&
                           botInfo.releaseType.includes(4)) ||

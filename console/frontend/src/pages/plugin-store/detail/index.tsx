@@ -1,3 +1,10 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:08:50
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:08:59
+ * @Description: 插件广场详情页
+ */
 import React, { ReactElement, useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, message } from 'antd';
