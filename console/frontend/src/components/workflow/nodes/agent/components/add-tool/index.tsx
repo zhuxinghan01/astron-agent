@@ -852,7 +852,7 @@ function AddTools({
   handleAddTool,
   toolsList,
   id,
-}): React.ReactElement => {
+}): React.ReactElement {
   const loader = useRef<null | HTMLDivElement>(null);
   const loadingRef = useRef<boolean>(false);
   const contentRef = useRef<string>('');

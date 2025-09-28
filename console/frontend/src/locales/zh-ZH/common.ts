@@ -84,10 +84,10 @@ const translation = {
     notFavorited: "未收藏",
   },
   header: {
-    plugin: "插件",
-    knowledge: "知识库",
-    database: "数据库",
-    rpa: "RPA",
+    plugin: '插件',
+    knowledge: '知识库',
+    database: '数据库',
+    rpa: 'RPA',
   },
   // ToolInputParameters component translations
   pleaseEnterDefaultValue: "请输入默认值",

@@ -8,11 +8,11 @@ and resume data management.
 
 import asyncio
 import time
-from enum import Enum
 from typing import Any, Dict
 
 from pydantic import BaseModel
 
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.graceful_shutdown.base_shutdown_event import BaseShutdownEvent
@@ -29,16 +29,6 @@ EVENT_AUDIT_STRATEGY: Dict[str, AuditStrategy] = {}
 EVENT_AUDIT_QUESTION_NO_IDX: Dict[str, int] = {}
 
 
-class Status(str, Enum):
-    """
-    Workflow execution status enumeration.
-    """
-
-    RUNNING = "running"
-    FINISHED = "finished"
-    INTERRUPTED = "interrupt"
-
-
 class Event(BaseModel):
     """
     Event model for storing workflow execution information.
@@ -50,7 +40,7 @@ class Event(BaseModel):
     flow_id: str = ""
     chat_id: str = ""
     is_stream: bool = True
-    status: str = Status.RUNNING.value
+    status: str = ChatStatus.RUNNING.value
     timeout: int = 180
     interrupt_node: str = ""
 
@@ -104,15 +94,12 @@ class EventRegistry(BaseShutdownEvent):
         :param cls: Class itself
         :param event: Event object to save
         """
-        try:
-            get_cache_service().hash_set_ex(
-                name=cls._event_key(),
-                key=event.event_id,
-                value=cls._encode(event),
-                expire_time=event.timeout,
-            )
-        except Exception:
-            pass
+        get_cache_service().hash_set_ex(
+            name=cls._event_key(),
+            key=event.event_id,
+            value=cls._encode(event),
+            expire_time=event.timeout,
+        )
 
     @classmethod
     def init_event(cls, event: Event) -> None:
@@ -139,7 +126,7 @@ class EventRegistry(BaseShutdownEvent):
         """
         data = get_cache_service().hash_get(name=cls._event_key(), key=event_id)
         if not data:
-            raise CustomException(err_code=CodeEnum.EventRegistryNotFoundError)
+            raise CustomException(err_code=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR)
         return cls._decode(data)
 
     @classmethod
@@ -150,10 +137,7 @@ class EventRegistry(BaseShutdownEvent):
         :param cls: Class itself for accessing class variables and methods
         :param event_id: ID of the event to delete
         """
-        try:
-            get_cache_service().hash_del(cls._event_key(), event_id)
-        except Exception:
-            pass
+        get_cache_service().hash_del(cls._event_key(), event_id)
 
     @classmethod
     def get_all_event_ids(cls) -> dict:
@@ -162,10 +146,7 @@ class EventRegistry(BaseShutdownEvent):
 
         :return: Dictionary containing all event IDs
         """
-        try:
-            return get_cache_service().hash_get_all(cls._event_key())
-        except Exception:
-            return {}
+        return get_cache_service().hash_get_all(cls._event_key())
 
     @classmethod
     def update_event(cls, event_id: str, key: str, value: Any) -> None:
@@ -190,13 +171,14 @@ class EventRegistry(BaseShutdownEvent):
         """
         Handle event interruption.
 
-        Get event by given event ID, if event exists, set its status to "interrupted" and save the event.
+        Get event by given event ID, if event exists,
+        set its status to "interrupted" and save the event.
 
         :param event_id: Unique identifier of the event
         """
         event = cls.get_event(event_id)
         if event:
-            event.status = Status.INTERRUPTED.value
+            event.status = ChatStatus.INTERRUPT.value
             cls.save_event(event)
 
     @classmethod
@@ -241,7 +223,7 @@ class EventRegistry(BaseShutdownEvent):
     @classmethod
     async def write_resume_data(
         cls, queue_name: str, data: str, expire_time: int = 180
-    ) -> bool:
+    ) -> None:
         """
         Asynchronously write resume data to specified queue.
 
@@ -275,11 +257,8 @@ class EventRegistry(BaseShutdownEvent):
                 pipe.expire(metadata_key, expire_time)
 
                 pipe.execute()
-
-            return True
         except Exception as e:
-            print(f"Error writing to queue {queue_name}: {e}")
-            return False
+            raise e
 
     @classmethod
     async def fetch_resume_data(cls, queue_name: str, timeout: int = 180) -> dict:
@@ -308,7 +287,7 @@ class EventRegistry(BaseShutdownEvent):
 
             err_msg = "Timeout while waiting for user response"
             raise CustomException(
-                err_code=CodeEnum.EventRegistryNotFoundError,
+                err_code=CodeEnum.EVENT_REGISTRY_NOT_FOUND_ERROR,
                 err_msg=err_msg,
             )
         except Exception as e:

@@ -52,7 +52,11 @@ export const RpaDetail = () => {
         <div className="flex flex-col mx-6 flex-1  my-[24px] bg-[#fff] rounded-2xl px-[24px] py-[24px]">
           <div className="w-full flex justify-between items-center">
             <div className="flex">
-              <img className="w-[62px] h-[62px]" src="" alt="rpa" />
+              <img
+                className="w-[62px] h-[62px]"
+                src={rpaDetail?.icon}
+                alt="rpa"
+              />
               <div className="pl-[24px]">
                 <div className="text-2xl font-medium">
                   {rpaDetail?.assistantName}

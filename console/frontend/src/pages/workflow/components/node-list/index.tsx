@@ -59,7 +59,7 @@ const NodeList: React.FC<NodeListProps> = ({
   const filterNodeList = useMemo<NodeCategory[]>(() => {
     return nodeList?.filter((node) => node?.name !== "固定节点") || [];
   }, [nodeList]);
-  console.log(filterNodeList, "nodeList");
+  console.log(filterNodeList, 'nodeList');
 
   return (
     <>

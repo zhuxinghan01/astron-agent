@@ -88,7 +88,7 @@ export interface UseAgentReturn {
   handleRemoveAddress: (id: string) => void;
 }
 
-export interface useAddPluginType {
+export interface useAddAgentPluginType {
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   renderParamsTooltip: (params: string) => React.ReactNode;
   handleCheckTool: (tool: ToolItem) => void;

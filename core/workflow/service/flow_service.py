@@ -29,7 +29,7 @@ from workflow.engine.nodes.entities.node_run_result import (
     WorkflowNodeExecutionStatus,
 )
 from workflow.engine.nodes.flow.flow_node import FlowNode
-from workflow.exception.e import CustomException, CustomExceptionCM
+from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.middleware.cache.base import BaseCacheService
 from workflow.extensions.middleware.database.utils import session_getter
@@ -82,7 +82,8 @@ def update(
     :param flow: The flow update object containing new values
     :param flow_id: The ID of the flow being updated
     :param current_span: Tracing span for logging operations
-    :raises Exception: If update fails, transaction is rolled back and exception is re-raised
+    :raises Exception: If update fails, transaction is rolled back and exception
+                       is re-raised
     """
     try:
         # Update flow properties if provided
@@ -107,7 +108,8 @@ def update(
         cache_service = get_cache_service()
         cache_service.delete(key=f"{ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}")
         current_span.add_info_event(
-            f"Cleared engine instance from redis: {ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}"
+            f"Cleared engine instance from redis: "
+            f"{ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}"
         )
     except Exception as e:
         current_span.record_exception(e)
@@ -125,10 +127,13 @@ def get(flow_id: str, session: Session, span: Span) -> Flow:
     :return: The flow object if found
     :raises CustomException: If flow with the given ID is not found
     """
-    # TODO: Implement caching mechanism for better performance
+    db_flow = flow_cache.get_flow_by_id(flow_id)
+    if db_flow:
+        return db_flow
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
-        raise CustomException(CodeEnum.FlowIDNotFound)
+        raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
+    flow_cache.set_flow_by_id(flow_id, db_flow)
     return db_flow
 
 
@@ -160,22 +165,22 @@ def get_latest_published_flow_by(
     # Query database if not found in cache
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
-        raise CustomException(CodeEnum.FlowIDNotFound)
+        raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
 
     # Validate license permissions
     lic = license_dao.get_by(db_flow.group_id, app_alias_id, session)
     if not lic:
-        raise CustomException(CodeEnum.AppFlowNotAuthBondErr)
+        raise CustomException(CodeEnum.APP_FLOW_NOT_AUTH_BOND_ERROR)
 
     if not lic.status:
-        raise CustomException(CodeEnum.AppFlowNoLicenseErr)
+        raise CustomException(CodeEnum.APP_FLOW_NO_LICENSE_ERROR)
 
     # Get the latest published version of the flow
     published_flow = flow_dao.get_latest_published_flow_by(
         db_flow.group_id, session, version
     )
     if not published_flow:
-        raise CustomException(CodeEnum.FlowNotPublish)
+        raise CustomException(CodeEnum.FLOW_NOT_PUBLISH_ERROR)
 
     # Cache the result for future requests
     if not version:
@@ -194,7 +199,8 @@ def gen_mcp_input_schema(flow: Flow) -> dict:
     and generates a JSON schema that can be used for MCP integration.
 
     :param flow: The flow object containing workflow definition
-    :return: Dictionary containing MCP input schema with name, description, and inputSchema
+    :return: Dictionary containing MCP input schema with name, description,
+             and inputSchema
     """
     # Extract basic flow information
     flow_name = flow.name
@@ -276,8 +282,8 @@ async def node_debug(workflow_dsl: WorkflowDSL, span: Span) -> NodeDebugRespVo:
     res: NodeRunResult = await node_instance.async_execute(variable_pool, span=span)
 
     # Check execution status and raise exception if failed
-    if res.status != WorkflowNodeExecutionStatus.SUCCEEDED:
-        raise CustomExceptionCM(res.error_code or 500, res.error or "Unknown error")
+    if res.status != WorkflowNodeExecutionStatus.SUCCEEDED and res.error:
+        raise res.error
 
     # Calculate execution time
     time_cost = time.time() * 1000 - time_start
@@ -355,7 +361,7 @@ def build(
     except Exception as err:
         # Handle unexpected exceptions
         workflow_trace.set_status(
-            CodeEnum.ProtocolBuildError.code, CodeEnum.ProtocolBuildError.msg
+            CodeEnum.PROTOCOL_BUILD_ERROR.code, CodeEnum.PROTOCOL_BUILD_ERROR.msg
         )
         raise err
     finally:
