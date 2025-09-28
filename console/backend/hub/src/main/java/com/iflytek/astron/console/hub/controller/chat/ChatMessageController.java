@@ -369,7 +369,7 @@ public class ChatMessageController {
         if (debugRequest.getMultiTurn() && StringUtils.isNotBlank(debugRequest.getArr())) {
             messageList = JSON.parseArray(debugRequest.getArr(), String.class);
         }
-        // 解析前端传来的数组
+        // Parse array from frontend
         List<String> maasDatasetList;
         String maasDatasetListStr = debugRequest.getMaasDatasetListStr();
         if (Objects.nonNull(maasDatasetListStr) && StringUtils.isNotBlank(maasDatasetListStr)) {
