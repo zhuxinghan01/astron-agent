@@ -81,6 +81,7 @@ const useNodeDebugger = (id, data, labelInput): UseNodeDebuggerReturn => {
     const refInputs = currentNode.data.inputs
       .filter(input => input.schema.value.type === 'ref')
       ?.map(input => {
+        console.log('input@@', input);
         return {
           id: input.id,
           name: input.name,

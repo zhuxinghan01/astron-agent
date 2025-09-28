@@ -10,6 +10,8 @@ from typing import List, Literal, Optional, cast
 
 from pydantic import BaseModel, Field
 
+from workflow.consts.engine.chat_status import ChatStatus
+
 
 def current_time() -> int:
     """
@@ -149,7 +151,7 @@ class InterruptData(BaseModel):
     event_id: str
     """Unique identifier for the interrupt event."""
 
-    event_type: str = "interrupt"
+    event_type: str = ChatStatus.INTERRUPT.value
     """Type of the event, defaults to 'interrupt'."""
 
     need_reply: bool = True
@@ -220,7 +222,9 @@ class LLMGenerate(BaseModel):
         :return: LLMGenerate instance with the specified parameters
         """
         workflow_step = WorkflowStep(
-            node=node_info, seq=0, progress=progress  # 帧序号在队列出队时重新赋值
+            node=node_info,
+            seq=0,
+            progress=progress,  # Frame sequence number is reassigned when dequeued
         )
         choice = Choice(
             delta=Delta(
@@ -229,7 +233,14 @@ class LLMGenerate(BaseModel):
             index=0,
             finish_reason=cast(
                 Literal["interrupt", "stop", None],
-                (finish_reason if (finish_reason in ["interrupt", "stop"]) else None),
+                (
+                    finish_reason
+                    if (
+                        finish_reason
+                        in [ChatStatus.INTERRUPT.value, ChatStatus.FINISH_REASON.value]
+                    )
+                    else None
+                ),
             ),
         )
         resp = LLMGenerate(
@@ -268,7 +279,9 @@ class LLMGenerate(BaseModel):
         :return: LLMGenerate instance for the interrupt event
         """
         workflow_step = WorkflowStep(
-            node=node_info, seq=0, progress=progress  # 帧序号在队列出队时重新赋值
+            node=node_info,
+            seq=0,
+            progress=progress,  # Frame sequence number is reassigned when dequeued
         )
         choice = Choice(
             delta=Delta(role="assistant", content="", reasoning_content=""),
@@ -301,7 +314,7 @@ class LLMGenerate(BaseModel):
             sid=sid,
             node_info=NodeInfo(
                 id="flow_obj",
-                finish_reason="stop",
+                finish_reason=ChatStatus.FINISH_REASON.value,
                 inputs={},
                 outputs={},
                 executed_time=0,
@@ -336,7 +349,7 @@ class LLMGenerate(BaseModel):
             workflow_usage=workflow_usage,
             node_info=NodeInfo(
                 id="flow_obj",
-                finish_reason="stop",
+                finish_reason=ChatStatus.FINISH_REASON.value,
                 inputs={},
                 outputs={},
                 executed_time=0,
@@ -347,7 +360,7 @@ class LLMGenerate(BaseModel):
             progress=1,
             content="",
             reasoning_content="",
-            finish_reason="stop",
+            finish_reason=ChatStatus.FINISH_REASON.value,
         )
 
     @staticmethod
@@ -529,7 +542,7 @@ class LLMGenerate(BaseModel):
         )
         event_data = InterruptData(
             event_id=event_id,
-            event_type="interrupt",
+            event_type=ChatStatus.INTERRUPT.value,
             need_reply=need_reply,
             value=value,
         )

@@ -39,6 +39,7 @@ export default [
         fetch: 'readonly',
       },
     },
+    extends: [eslintConfigPrettier],
     plugins: {
       '@typescript-eslint': tseslint,
       prettier: prettier,
