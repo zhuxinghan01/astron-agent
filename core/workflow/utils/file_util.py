@@ -1,8 +1,9 @@
 """
-File utility functions for handling file operations, image processing, and URL conversions.
+File utility functions for handling file operations, image processing,
+and URL conversions.
 
-This module provides utilities for generating unique filenames, extracting image extensions,
-and converting image URLs to Base64 encoded strings.
+This module provides utilities for generating unique filenames, extracting
+image extensions,and converting image URLs to Base64 encoded strings.
 """
 
 import base64
@@ -91,10 +92,3 @@ def url_to_base64(url: str, delete_file: bool = True) -> str:
         os.remove(temp_file_path)
 
     return encoded_string
-
-
-# Example usage
-if __name__ == "__main__":
-    url = "https://oss-beijing-m8.openstorage.cn/SparkBotDev/xinchen/0f63b004-c11c-11ef-a8b9-7e4181828133.jpg"  # Replace with your image URL
-    base64_string = url_to_base64(url)
-    print(base64_string)

@@ -6,6 +6,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
+  eslintConfigPrettier,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -34,6 +35,8 @@ export default [
         setInterval: 'readonly',
         clearTimeout: 'readonly',
         clearInterval: 'readonly',
+        IFlyCollector: 'readonly',
+        fetch: 'readonly',
       },
     },
     extends: [eslintConfigPrettier],

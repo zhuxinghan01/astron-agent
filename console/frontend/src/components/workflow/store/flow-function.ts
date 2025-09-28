@@ -236,9 +236,7 @@ const copyNode = (
   get()?.takeSnapshot();
   const currentNode = get().nodes.find(item => item.id === nodeId);
   const currentTypeList = get().nodes.filter(
-    node =>
-      node.data?.label?.split('_')?.[0] ===
-      currentNode.data?.label?.split('_')?.[0]
+    node => node.nodeType === currentNode.nodeType
   );
   currentNode.selected = false;
   const copyNode = cloneDeep(currentNode);

@@ -13,8 +13,8 @@ const DataBaseDetail = React.lazy(() => import("./database-detail"));
 const DataBaseTableAdd = React.lazy(
   () => import("./database-detail/database-table-add")
 );
-const RpaPage = React.lazy(() => import("./rpa-page"));
-const RpaDetail = React.lazy(() => import("./rpa-detail"));
+const RpaPage = React.lazy(() => import('./rpa-page'));
+const RpaDetail = React.lazy(() => import('./rpa-detail'));
 
 function ResourceManagement(): JSX.Element {
   return (

@@ -18,7 +18,8 @@ def _gen_app_auth_header(url: str) -> dict[str, str]:
     Generate authentication headers for the application management platform.
 
     :param url: The request URL for which to generate authentication headers
-    :return: Dictionary containing authentication headers, empty dict if credentials are missing
+    :return: Dictionary containing authentication headers,
+             empty dict if credentials are missing
     """
     # Retrieve API credentials from environment variables
     api_key = os.getenv("APP_MANAGE_PLAT_KEY", "")
@@ -37,7 +38,8 @@ def _gen_app_auth_header(url: str) -> dict[str, str]:
 
 def get_app_source_id(app_id: str, span: Span) -> str:
     """
-    Retrieve the source ID for a given application from the application management platform.
+    Retrieve the source ID for a given application from the application management
+    platform.
 
     :param app_id: The application ID to query
     :param span: Tracing span for logging and monitoring
@@ -48,7 +50,7 @@ def get_app_source_id(app_id: str, span: Span) -> str:
     url = os.getenv("APP_MANAGE_PLAT_APP_LIST")
     if not url:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed,
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR,
             err_msg="APP_MANAGE_PLAT_APP_LIST not configured",
         )
 
@@ -59,13 +61,15 @@ def get_app_source_id(app_id: str, span: Span) -> str:
 
     # Check HTTP response status
     if resp.status_code != 200:
-        raise CustomException(CodeEnum.AppGetWithRemoteFailed, cause_error=resp.text)
+        raise CustomException(
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR, cause_error=resp.text
+        )
 
     # Check API response code
     code = resp.json().get("code")
     if code != 0:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed,
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR,
             cause_error=json.dumps(resp.json(), ensure_ascii=False),
         )
 
@@ -81,7 +85,8 @@ def get_app_source_id(app_id: str, span: Span) -> str:
 
 def get_app_source_detail(app_id: str, span: Span) -> tuple[str, str, str, str]:
     """
-    Retrieve detailed application information including name, description, and API credentials.
+    Retrieve detailed application information including name, description,
+    and API credentials.
 
     :param app_id: The application ID to query
     :param span: Tracing span for logging and monitoring
@@ -92,7 +97,7 @@ def get_app_source_detail(app_id: str, span: Span) -> tuple[str, str, str, str]:
     url = os.getenv("APP_MANAGE_PLAT_APP_DETAILS")
     if not url:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed,
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR,
             err_msg="APP_MANAGE_PLAT_APP_DETAILS not configured",
         )
 
@@ -103,13 +108,15 @@ def get_app_source_detail(app_id: str, span: Span) -> tuple[str, str, str, str]:
 
     # Check HTTP response status
     if resp.status_code != 200:
-        raise CustomException(CodeEnum.AppGetWithRemoteFailed, cause_error=resp.text)
+        raise CustomException(
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR, cause_error=resp.text
+        )
 
     # Check API response code
     code = resp.json().get("code")
     if code != 0:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed,
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR,
             cause_error=json.dumps(resp.json(), ensure_ascii=False),
         )
 
@@ -117,7 +124,7 @@ def get_app_source_detail(app_id: str, span: Span) -> tuple[str, str, str, str]:
     data = resp.json().get("data", [{}])
     if not data:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed, cause_error="data is null"
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR, cause_error="data is null"
         )
 
     # Log the response data for debugging
@@ -137,7 +144,8 @@ def get_app_source_detail(app_id: str, span: Span) -> tuple[str, str, str, str]:
     # Validate that API credentials are present
     if not api_key or not api_secret:
         raise CustomException(
-            CodeEnum.AppGetWithRemoteFailed, cause_error="api_key or api_secret is null"
+            CodeEnum.APP_GET_WITH_REMOTE_FAILED_ERROR,
+            cause_error="api_key or api_secret is null",
         )
 
     return name, desc, api_key, api_secret
@@ -171,16 +179,16 @@ def get_info(app_id: str, session: Session, span: Span) -> App:
             source_id = get_app_source_id(app_id, span)
             if not source_id:
                 raise CustomException(
-                    CodeEnum.AppTenantNotFound,
-                    err_msg=f"{CodeEnum.AppTenantNotFound.msg}. source_id not found",
+                    CodeEnum.APP_TENANT_NOT_FOUND_ERROR,
+                    err_msg="source_id not found",
                 )
 
             # Find the corresponding app source in database
             app_source = session.query(AppSource).filter_by(source_id=source_id).first()
             if not app_source:
                 raise CustomException(
-                    CodeEnum.AppTenantNotFound,
-                    err_msg=f"{CodeEnum.AppTenantNotFound.msg}. app_source not found",
+                    CodeEnum.APP_TENANT_NOT_FOUND_ERROR,
+                    err_msg="app_source not found",
                 )
 
             # Get detailed application information from external API

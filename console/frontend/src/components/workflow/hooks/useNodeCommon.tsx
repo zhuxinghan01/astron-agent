@@ -111,7 +111,9 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
 
   const showInputs = useMemo(() => {
     return (
-      data?.inputs?.length > 0 && !isIfElseNode && data?.nodeParam?.mode !== 1
+      data?.inputs?.length > 0 &&
+      !isIfElseNode &&
+      (data?.nodeParam?.mode === 0 || data?.nodeParam?.mode === undefined)
     );
   }, [data, isIfElseNode]);
 
@@ -278,7 +280,6 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
         };
       });
       updateNodeRef(id);
-      autoSaveCurrentFlow();
       canPublishSetNot();
     }
   );

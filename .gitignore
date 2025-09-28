@@ -76,11 +76,15 @@ tmp/
 # IDEs
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 
 # Claude Code (user-specific)
 .claude/
+
+# Serena MCP cache
+.serena/
 
 # =============================================================================
 # Operating Systems
@@ -171,3 +175,6 @@ core/.serena/project.yml
 
 
 *.venv*
+
+# local ci
+.localci.toml

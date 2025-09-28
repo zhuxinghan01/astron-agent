@@ -24,7 +24,8 @@ def handle(
     :param auth_input: Authentication input containing app_id and flow_id
     :param span: Distributed tracing span for monitoring
     :return: None
-    :raises CustomException: When tenant not found, flow not found, or flow not published
+    :raises CustomException: When tenant not found, flow not found,
+            or flow not published
     """
     user_app_id = auth_input.app_id
 
@@ -33,8 +34,8 @@ def handle(
     if not db_tenant_app.is_tenant:
         span.add_info_event(f"Tenant app ID: {tenant_app_id}")
         raise CustomException(
-            CodeEnum.AppTenantNotFound,
-            err_msg=f"{CodeEnum.AppTenantNotFound.msg}: {tenant_app_id} is not a tenant",
+            CodeEnum.APP_TENANT_NOT_FOUND_ERROR,
+            err_msg=f"{tenant_app_id} is not a tenant",
         )
 
     # Get user application information
@@ -44,7 +45,7 @@ def handle(
     db_flow = session.query(Flow).filter_by(id=auth_input.flow_id).first()
     if not db_flow:
         span.add_info_event(f"Flow ID: {auth_input.flow_id}")
-        raise CustomException(CodeEnum.FlowIDNotFound)
+        raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
 
     group_id = db_flow.group_id
     release_status = (
@@ -61,14 +62,15 @@ def handle(
     span.add_info_event(f"Current platform publish permission value: {rs}")
 
     # Check if workflow is published or not taken off from all platforms
-    # Bottom line: Workflow should not be bindable if unpublished or taken off from all three platforms
+    # Bottom line: Workflow should not be bindable if unpublished
+    # or taken off from all three platforms
     if (release_status == 0) or (
         (release_status & TenantPublishMatrix(Platform.XINGCHEN).get_take_off)
         and (release_status & TenantPublishMatrix(Platform.KAI_FANG).get_take_off)
         and (release_status & TenantPublishMatrix(Platform.AI_UI).get_take_off)
     ):
         raise CustomException(
-            CodeEnum.FlowNotPublish,
+            CodeEnum.FLOW_NOT_PUBLISH_ERROR,
         )
 
     # Register group_id and app_id binding in license table

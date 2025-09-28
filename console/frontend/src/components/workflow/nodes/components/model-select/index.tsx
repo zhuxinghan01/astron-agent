@@ -25,7 +25,7 @@ import inputErrorMsg from '@/assets/imgs/plugin/input_error_msg.svg';
 
 // 模型标签
 const ModelTags = ({ tags = [] }): React.ReactElement => {
-  if (!tags.length) return null;
+  if (!tags?.length) return null;
   return (
     <div className="text-sm flex items-center gap-2">
       {tags.slice(0, 2).map((item, index) => (

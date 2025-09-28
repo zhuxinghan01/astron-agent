@@ -1632,21 +1632,7 @@ export function generateReferences(
 
   // 如果没有任何上游节点，返回目标节点自身的一条两层结构（保持结果格式统一）
   if (result.length === 0) {
-    const references = buildOwnReferences(targetNode, targetNode) || [];
-    return [
-      {
-        label: targetNode.data?.label ?? '',
-        value: targetNode.id,
-        parentNode: true,
-        children: [
-          {
-            label: '',
-            value: '',
-            references,
-          },
-        ],
-      },
-    ];
+    return [];
   }
 
   return result;

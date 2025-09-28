@@ -331,7 +331,7 @@ const SegmentationSettings: React.FC<{
               />
             </div>
             <div className="mt-6 text-sm font-medium text-second">
-              {t("knowledge.segmentLength")}
+              {t('knowledge.segmentLength')}
               <span className="text-xs text-desc">
                 {t("knowledge.supportSegmentLength", {
                   min: lengthRange[0],

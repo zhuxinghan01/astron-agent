@@ -78,7 +78,9 @@ class S3Service(BaseOSSService, Service):
             )
             return f"{self.oss_download_host}/{bucket_name}/{filename}"
         except Exception as e:
-            raise CustomException(CodeEnum.FileStorageError, cause_error=str(e)) from e
+            raise CustomException(
+                CodeEnum.FILE_STORAGE_ERROR, cause_error=str(e)
+            ) from e
 
 
 class IFlyGatewayStorageClient(BaseOSSService, Service):
@@ -147,7 +149,7 @@ class IFlyGatewayStorageClient(BaseOSSService, Service):
             return ""
         if resp.status_code != 200:
             raise CustomException(
-                CodeEnum.FileStorageError,
+                CodeEnum.FILE_STORAGE_ERROR,
                 cause_error=(
                     f"invoke oss error, "
                     f"status_code: {resp.status_code}, "
@@ -158,7 +160,7 @@ class IFlyGatewayStorageClient(BaseOSSService, Service):
         ret = resp.json()
         if ret["code"] != 0:
             raise CustomException(
-                CodeEnum.FileStorageError,
+                CodeEnum.FILE_STORAGE_ERROR,
                 cause_error=(
                     f"invoke oss error, "
                     f"status_code: {resp.status_code}, "
@@ -169,7 +171,7 @@ class IFlyGatewayStorageClient(BaseOSSService, Service):
             link = ret["data"]["link"]
         except Exception as e:
             raise CustomException(
-                CodeEnum.FileStorageError,
+                CodeEnum.FILE_STORAGE_ERROR,
                 cause_error=(
                     f"invoke oss error, "
                     f"status_code: {resp.status_code}, "
