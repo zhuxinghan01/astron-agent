@@ -83,7 +83,7 @@ public class CommonTool {
     public static Object checkSystemCallResponse(String resp) {
         JSONObject jsonObject = JSON.parseObject(resp);
         if (jsonObject.getInteger("code") != 0) {
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, jsonObject.getInteger("code"), jsonObject.getString("message"));
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, String.valueOf(jsonObject.getInteger("code")), jsonObject.getString("message"));
         }
         return jsonObject.get("data");
     }

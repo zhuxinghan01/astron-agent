@@ -3,13 +3,14 @@
 import asyncio
 import os
 import time
-from typing import AsyncGenerator, Optional, Tuple
+from typing import AsyncGenerator, Optional, Tuple, cast
 
 import httpx
 from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
 from common.otlp.metrics.meter import Meter
 from common.otlp.trace.span import Span
 from common.service import get_kafka_producer_service
+from common.service.kafka.kafka_service import KafkaProducerService
 from fastapi import HTTPException
 from loguru import logger
 from plugin.rpa.api.schemas.execution_schema import RPAExecutionResponse
@@ -157,7 +158,9 @@ def setup_logging_and_metrics(span_context: Span, req: str, product_id: str) -> 
     return Meter(app_id=span_context.app_id, func="task_monitoring")
 
 
-def otlp_handle(meter: Meter, node_trace: NodeTraceLog, code: int, message: str) -> None:
+def otlp_handle(
+    meter: Meter, node_trace: NodeTraceLog, code: int, message: str
+) -> None:
     if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "false":
         return
 
@@ -172,6 +175,8 @@ def otlp_handle(meter: Meter, node_trace: NodeTraceLog, code: int, message: str)
         message=message,
     )
 
-    kafka_service = get_kafka_producer_service()
+    kafka_service = cast(KafkaProducerService, get_kafka_producer_service())
     node_trace.start_time = int(round(time.time() * 1000))
-    kafka_service.send(topic=os.getenv(const.KAFKA_TOPIC_KEY, ""), value=node_trace.to_json())
+    kafka_service.send(
+        topic=os.getenv(const.KAFKA_TOPIC_KEY, ""), value=node_trace.to_json()
+    )
