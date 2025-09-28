@@ -1,3 +1,4 @@
+import { RpaInfo, RpaNodeParam } from '@/types/rpa';
 import {
   AddNodeType,
   ToolType,
@@ -241,6 +242,7 @@ export interface UseNodeCommonReturn {
   isIteratorChildNode: boolean;
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
+  isRpaNode: boolean;
   isCodeNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;
@@ -277,6 +279,7 @@ export interface UseFlowCommonReturn {
   ) => NewNodeType[] | null;
   handleAddToolNode: (tool: ToolType) => void;
   handleAddFlowNode: (flow: FlowType) => void;
+  handleAddRpaNode: (rpa: RpaNodeParam) => void;
   handleEdgeAddNode: (
     addNode: AddNodeType,
     position: PositionType,

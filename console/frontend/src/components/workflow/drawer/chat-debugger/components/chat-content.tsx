@@ -655,7 +655,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
           {input?.name}
         </div>
       );
-      if (input?.allowedFileType === 'image' && input?.type === 'string') {
+      if (input?.fileType === 'image' && input?.type === 'string') {
         return (
           <div>
             {inputName}
@@ -671,7 +671,7 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
           </div>
         );
       }
-      if (input?.allowedFileType) {
+      if (input?.fileType) {
         return (
           <div>
             {inputName}

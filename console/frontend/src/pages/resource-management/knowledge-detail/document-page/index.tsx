@@ -83,7 +83,6 @@ const DocumentPage: FC<{
     statusMap,
     setDeleteModal,
   });
-
   return (
     <div
       className="w-full h-full flex flex-col p-6 pb-2 bg-[#fff] border border-[#E2E8FF] overflow-hidden"

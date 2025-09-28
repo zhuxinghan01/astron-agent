@@ -29,6 +29,14 @@ const translation = {
       newVersionUpdate: 'New version update',
       modelThinkingProcess: 'Model thinking process',
     },
+    rpaNode: {
+      selectRpa: 'select RPA',
+      searchRobot: 'Search Robot',
+      parameters: 'Parameters',
+      add: 'Add',
+      noRobot: 'No Robot',
+      noRpaTool: 'No Rpa tool',
+    },
     agentNode: {
       type: 'Large Model',
       prompt: 'Prompt',

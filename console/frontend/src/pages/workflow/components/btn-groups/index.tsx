@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
 import { workflowExport } from '@/services/flow';
+import { getFixedUrl, getAuthorization } from '@/components/workflow/utils';
 
 import publishModalIcon from '@/assets/imgs/workflow/publish-modal-icon.png';
 
@@ -108,10 +109,10 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
 
   const handleFlowExport = useMemoizedFn(() => {
     const latestAccessToken = localStorage.getItem('accessToken');
-    fetch(`http://172.29.201.92:8080/workflow/export/${currentFlow?.id}`, {
+    fetch(getFixedUrl(`/workflow/export/${currentFlow?.id}`), {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${latestAccessToken}`,
+        Authorization: getAuthorization(),
       },
     }).then(async res => {
       const blob = await res.blob();

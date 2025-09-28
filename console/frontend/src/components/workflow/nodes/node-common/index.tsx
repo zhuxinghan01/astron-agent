@@ -111,7 +111,7 @@ export const Inputs = memo(({ label = '输入', inputs }) => {
               className="w-[93px] h-[20px]"
               style={{
                 background:
-                  'linear-gradient(90deg, rgba(255, 255, 255, 0) 0px, rgb(252, 252, 255) 23%)',
+                  'linear-gradient(to bottom right,  rgba(255, 255, 255, 0.6),rgba(240, 240, 240, 0.3))',
               }}
             ></div>
             <div className="bg-[#F2F5FE] flex items-center justify-center rounded overflow-hidden absolute right-0 top-[2px]">
@@ -438,6 +438,7 @@ export const NodeContent = memo<NodeContentProps>(({ id, data }) => {
     showInputs,
     showOutputs,
     showExceptionFlow,
+    isRpaNode,
   } = useNodeCommon({
     id,
     data,
@@ -479,10 +480,17 @@ interface NodeWrapperProps {
 
 // 节点包装器组件
 export const NodeWrapper = memo<NodeWrapperProps>(({ id, data, children }) => {
-  const { handleNodeClick } = useNodeCommon({ id, data });
+  const { handleNodeClick, isIteratorNode } = useNodeCommon({ id, data });
 
   return (
-    <div id={id} className="w-[360px] pb-[14px]" onClick={handleNodeClick}>
+    <div
+      id={id}
+      className="min-w-[360px] pb-[14px]"
+      onClick={handleNodeClick}
+      style={{
+        maxWidth: isIteratorNode ? '' : '360px',
+      }}
+    >
       {data?.nodeParam?.remarkVisible && <Remark id={id} data={data} />}
       {data.status && (
         <NodeDebuggingStatus

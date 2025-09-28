@@ -28,7 +28,15 @@ const spaceRole = {
   '3': '成员',
 } as const;
 
-const ControlModal = ({ onClose }: { onClose?: () => void }) => {
+const ControlModal = ({
+  onClose,
+  isPersonCenterOpen,
+  setIsPersonCenterOpen,
+}: {
+  onClose?: () => void;
+  isPersonCenterOpen: boolean;
+  setIsPersonCenterOpen: (visible: boolean) => void;
+}) => {
   const { joinedEnterpriseList, info, setEnterpriseInfo } =
     useEnterpriseStore();
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
@@ -176,7 +184,7 @@ const ControlModal = ({ onClose }: { onClose?: () => void }) => {
   );
   //个人中心点击
   const handlePersonalCenter = () => {
-    // setPersonCenterVisible(true);
+    setIsPersonCenterOpen(true);
     onClose?.();
   };
 
@@ -265,10 +273,10 @@ const ControlModal = ({ onClose }: { onClose?: () => void }) => {
       </Popover>
 
       <div className={styles.content}>
-        {/* <div className={styles.content_item} onClick={handlePersonalCenter}>
+        <div className={styles.content_item} onClick={handlePersonalCenter}>
           <img src={personalCenterIcon} alt="" />
           <div>{t('sidebar.personalCenter')}</div>
-        </div> */}
+        </div>
         {/* <div className={styles.content_item} onClick={handleOrder}>
           <img src={orderIcon} alt="" />
           <div>{t('sidebar.orderManagement')}</div>

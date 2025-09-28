@@ -423,7 +423,6 @@ const getBaseURL = (): string => {
 
   // 通过import.meta.env.MODE获取构建时的环境模式
   const mode = import.meta.env.MODE;
-
   switch (mode) {
     case 'development':
       return 'http://172.29.202.54:8080/';

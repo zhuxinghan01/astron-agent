@@ -14,7 +14,7 @@ import flowIdCopyIcon from '@/assets/imgs/workflow/flowId-copy-icon.svg';
 
 const { TextArea } = Input;
 
-function EditModal({ currentFlow, setEditModal }): void {
+function EditModal({ currentFlow, setEditModal }): React.ReactElement {
   const { t } = useTranslation();
   const setCurrentFlow = useFlowsManager(state => state.setCurrentFlow);
   const avatarIcon = globalStore(state => state.avatarIcon);
@@ -74,7 +74,12 @@ function EditModal({ currentFlow, setEditModal }): void {
   return (
     <>
       {createPortal(
-        <div className="mask">
+        <div
+          className="mask"
+          style={{
+            zIndex: 1001,
+          }}
+        >
           {showModal && (
             <MoreIcons
               icons={avatarIcon}

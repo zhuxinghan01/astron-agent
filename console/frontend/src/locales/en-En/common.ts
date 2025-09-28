@@ -90,6 +90,7 @@ const translation = {
     plugin: 'Plugin',
     knowledge: 'Knowledge Base',
     database: 'Database',
+    rpa: 'RPA',
   },
   // ToolInputParameters component translations
   pleaseEnterDefaultValue: 'Please enter default value',

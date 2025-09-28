@@ -363,7 +363,7 @@ export const checkedNodeOutputData = (
 // ==================== 节点参数验证 ====================
 function validateTemplateParams(currentCheckNode: unknown): boolean {
   if (
-    !['spark-llm', 'message'].includes(currentCheckNode?.type) &&
+    !['spark-llm', 'message'].includes(currentCheckNode?.nodeType) &&
     !(
       currentCheckNode?.nodeType === 'node-end' &&
       currentCheckNode?.data?.nodeParam?.outputMode === 1
@@ -873,7 +873,6 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
 }
 
 export function renderType(params): string {
-  console.log('params@@', params);
   if (params.fileType && params?.type === 'array-string') {
     return `Array<${
       (params?.fileType?.slice(0, 1).toUpperCase() || '') +
@@ -1632,21 +1631,7 @@ export function generateReferences(
 
   // 如果没有任何上游节点，返回目标节点自身的一条两层结构（保持结果格式统一）
   if (result.length === 0) {
-    const references = buildOwnReferences(targetNode, targetNode) || [];
-    return [
-      {
-        label: targetNode.data?.label ?? '',
-        value: targetNode.id,
-        parentNode: true,
-        children: [
-          {
-            label: '',
-            value: '',
-            references,
-          },
-        ],
-      },
-    ];
+    return [];
   }
 
   return result;

@@ -60,7 +60,9 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
     }));
   },
   addMessage: (message: MessageListType): void =>
-    set(state => ({ messageList: [...state.messageList, message] })),
+    set(state => {
+      return { messageList: [...state.messageList, message] };
+    }),
 
   // 流式消息管理 - 性能优化版：直接在messageList中操作
   startStreamingMessage: (message: MessageListType): void =>
@@ -140,14 +142,6 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
   clearStreamingMessage: (): void =>
     set(state => {
       const updatedMessageList = [...state.messageList];
-
-      // 移除最后一条未完成的流式消息（没有sid的消息）
-      if (
-        updatedMessageList.length > 0 &&
-        !updatedMessageList[updatedMessageList.length - 1]?.sid
-      ) {
-        updatedMessageList.pop();
-      }
 
       return {
         messageList: updatedMessageList,
