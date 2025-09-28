@@ -11,6 +11,7 @@ import logging
 import os
 import time
 import uuid
+from typing import Any, Union
 
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
 from plugin.aitools.common.sid_generator2 import new_sid
@@ -29,7 +30,7 @@ from common.service import get_kafka_producer_service
 
 
 # 图片理解 - 开放平台
-def image_understanding_main(question: str, image_url: str, request):
+def image_understanding_main(question: str, image_url: str, request: Any) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
@@ -123,8 +124,8 @@ def image_understanding_main(question: str, image_url: str, request):
 
 # 智能语音评测 - ISE
 async def ise_evaluate_main(
-    audio_data: str, text: str, language: str, category: str, group: str, _request
-):
+    audio_data: str, text: str, language: str, category: str, group: str, _request: Any
+) -> Union[SuccessDataResponse, ErrorResponse]:
     sid = new_sid()
     logging.info(f"ise_evaluate_main sid: {sid}")
     app_id = os.getenv("AI_APP_ID")
@@ -227,8 +228,8 @@ async def ise_evaluate_main(
 
 # Text Translation Service
 def translation_main(
-    text: str, target_language: str, source_language: str = "cn", request=None
-):
+    text: str, target_language: str, source_language: str = "cn", request: Any = None
+) -> Union[SuccessDataResponse, ErrorResponse]:
     """
     Text translation service main function
 
