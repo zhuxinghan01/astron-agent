@@ -73,18 +73,6 @@ def add_history(
         )
         session.add(db_history)
         session.commit()
-        # TODO: Implement history size management
-        # Query flow_id and node_id corresponding data count
-        # query = select(History).where(History.flow_id == flow_id, History.node_id == node_id).order_by(
-        #     History.create_time)
-        # results = session.exec(query).all()
-        #
-        # # If data exceeds MAX_HISTORY_SIZE, delete the oldest entry
-        # if len(results) > MAX_HISTORY_SIZE:
-        #     # The oldest entry is the first in the result set (sorted by create_time)
-        #     oldest_entry = results[0]
-        #     session.delete(oldest_entry)
-        #     session.commit()
 
         session.refresh(db_history)
     except Exception as e:

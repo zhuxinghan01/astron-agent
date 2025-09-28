@@ -106,7 +106,7 @@ class IFlyAuditAPI(AuditAPI):
         if not self.access_key_secret:
             missing.append("IFLYTEK_AUDIT_ACCESS_KEY_SECRET")
 
-        if missing:
+        if missing and int(os.getenv("AUDIT_ENABLE", "0")) == 1:
             raise ValueError(
                 f"Missing required environment variables: {', '.join(missing)}"
             )

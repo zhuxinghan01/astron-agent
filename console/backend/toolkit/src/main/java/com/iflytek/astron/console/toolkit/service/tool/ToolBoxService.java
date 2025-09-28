@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- * 服务实现类
+ * Service implementation class
  * </p>
  *
  * @author xxzhang23
@@ -155,7 +155,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         if (toolBoxDto.getId() != null) {
             toolBox = getById(toolBoxDto.getId());
             if (toolBox != null) {
-                // 添加越权校验
+                // Add permission validation
                 dataPermissionCheckTool.checkToolBelong(toolBox);
             } else {
                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_EXIST_MODIFY);
@@ -163,7 +163,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         } else {
             toolBox = new ToolBox();
         }
-        // 校验endpoint地址合法性
+        // Validate endpoint URL legality
         if (StringUtils.isNotBlank(toolBox.getEndPoint())) {
             urlCheckTool.checkUrl(toolBox.getEndPoint());
         }
@@ -174,14 +174,14 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         toolServiceCallHandler.dealResult(toolCreateResp);
         String toolId = ((JSONObject) toolCreateResp.getData()).getJSONArray("tools").getObject(0, Tool.class).getId();
         toolBox.setToolId(toolId);
-        // 清除暂存数据
+        // Clear temporary data
         toolBox.setTemporaryData(StringUtils.EMPTY);
         if (toolBoxDto.getId() != null) {
             updateById(toolBox);
         } else {
             save(toolBox);
         }
-        // tool鉴权数据写入redis
+        // Write tool authentication data to redis
         if (toolBoxDto.getAuthType() != ToolConst.AuthType.NONE) {
             writeAuthInfoToRedis(toolId, toolBoxDto);
         }
@@ -190,7 +190,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     private ToolProtocolDto buildToolRequest(ToolBoxDto toolBoxDto, String schemaString) {
-        // 构建请求
+        // Build request
         ToolProtocolDto request = new ToolProtocolDto();
 
         ToolHeader header = new ToolHeader();
@@ -258,7 +258,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         toolBox.setSpaceId(SpaceInfoUtil.getSpaceId());
         toolBox.setAppId(commonConfig.getAppId());
         toolBox.setDeleted(false);
-        // 生成临时toolId
+        // Generate temporary toolId
         if (StringUtils.isBlank(toolBox.getToolId())) {
             toolBox.setToolId("temp_tool_" + RandomUtil.randomString(10));
         }
@@ -270,14 +270,14 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         toolBox.setVisibility(0);
 
         if (ToolboxStatusEnum.FORMAL.getCode().equals(toolBox.getStatus())) {
-            // 正式工具存到缓存字段
+            // Store formal tool to cache field
             String temporary = JSONObject.toJSONString(toolBox);
             toolBoxMapper.update(null, new UpdateWrapper<ToolBox>().lambda()
                     .set(ToolBox::getTemporaryData, temporary)
                     .set(ToolBox::getUpdateTime, new Timestamp(System.currentTimeMillis()))
                     .eq(ToolBox::getId, toolBox.getId()));
         } else {
-            // 草稿态直接更新
+            // Update draft directly
             toolBox.setStatus(ToolboxStatusEnum.DRAFT.getCode());
             if (toolBoxDto.getId() != null) {
                 updateById(toolBox);
@@ -304,7 +304,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             if (toolBox == null) {
                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_EXIST_MODIFY);
             }
-            // 添加越权校验
+            // Add permission validation
             dataPermissionCheckTool.checkToolBelong(toolBox);
 
             ToolBoxDto originToolBoxDto = new ToolBoxDto();
@@ -328,7 +328,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             BeanUtils.copyProperties(toolBox, originToolBoxDto);
             originToolBoxDto.setAvatarIcon(toolBox.getIcon());
 
-            // 比较插件协议是否发生更新
+            // Compare if plugin protocol has been updated
             if (isEqual(toolBoxDto, originToolBoxDto, "creationMethod", "version", "temporaryData", "isPublic")) {
                 return toolBox;
             } else {
@@ -339,21 +339,21 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 toolBoxDto.setIsPublic(toolBox.getIsPublic());
                 ToolBox newToolBox = new ToolBox();
                 String schemaString = buildToolBox(newToolBox, toolBoxDto);
-                // 清除暂存数据
+                // Clear temporary data
                 newToolBox.setTemporaryData(StringUtils.EMPTY);
-                // 校验endpoint地址合法性
+                // Validate endpoint URL legality
                 if (StringUtils.isNotBlank(newToolBox.getEndPoint())) {
                     urlCheckTool.checkUrl(newToolBox.getEndPoint());
                 }
                 save(newToolBox);
-                // 工具侧新增版本接口
+                // Tool side add version interface
                 ToolProtocolDto toolProtocolDto = buildToolRequest(toolBoxDto, schemaString);
                 ToolResp toolCreateResp = toolServiceCallHandler.toolUpdate(toolProtocolDto);
                 toolServiceCallHandler.dealResult(toolCreateResp);
                 return newToolBox;
             }
         } catch (BusinessException e) {
-            log.error("插件新增版本失败: toolId:{}", toolBoxDto.getId(), e);
+            log.error("Plugin add version failed: toolId:{}", toolBoxDto.getId(), e);
             throw new BusinessException(ResponseEnum.TOOLBOX_ADD_VERSION_FAILED);
         }
     }
@@ -419,7 +419,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             throw new BusinessException(ResponseEnum.TOOLBOX_NOT_EXIST_DELETE);
         }
         dataPermissionCheckTool.checkToolBelong(toolBox);
-        // 草稿态工具直接删除
+        // Delete draft tools directly
         if (toolBox.getStatus().equals(0)) {
             toolBox.setDeleted(true);
             toolBox.setUpdateTime(new Timestamp(System.currentTimeMillis()));
@@ -454,7 +454,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             throw new BusinessException(ResponseEnum.TOOLBOX_NOT_EXIST);
         }
 
-        // 添加越权校验
+        // Add permission validation
         dataPermissionCheckTool.checkToolBelong(toolBox);
         ToolProtocolDto request = new ToolProtocolDto();
 
@@ -507,11 +507,11 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             if (toolBox == null) {
                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_EXIST);
             }
-            // 判断官方插件
+            // Determine official plugin
             if ((toolBox.getIsPublic() || toolBox.getUserId().equals(bizConfig.getAdminUid().toString())) && !toolBox.getUserId().equals(UserInfoManagerHandler.getUserId())) {
                 toolBoxDto.setWebSchema(buildDisPlaySchema(toolBoxDto.getId(), toolBoxDto.getWebSchema()));
             }
-            // 添加插件调试历史
+            // Add plugin debug history
             ToolBoxOperateHistory ToolBoxOperateHistory = new ToolBoxOperateHistory();
             ToolBoxOperateHistory.setToolId(toolBox.getToolId());
             ToolBoxOperateHistory.setUid(UserInfoManagerHandler.getUserId());
@@ -519,7 +519,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             toolBoxOperateHistoryMapper.insert(ToolBoxOperateHistory);
         }
 
-        // 参数校验
+        // Parameter validation
         urlCheckTool.checkUrl(toolBoxDto.getEndPoint());
 
 
@@ -595,7 +595,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 }
             }
             toolBoxVo.setCreator(creator);
-            // 暂存名称替换
+            // Replace temporary name
             if (status == null) {
                 if (StringUtils.isNotBlank(toolBox.getTemporaryData())) {
                     JSONObject jsonObject = JSONObject.parseObject(toolBox.getTemporaryData());
@@ -642,7 +642,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         String userId = UserInfoManagerHandler.getUserId();
         Set<String> favorites;
         favorites = getFavoritesId(userId);
-        // 是否被收藏
+        // Whether it is favorited
         boolean contains = favorites.contains(toolBox.getId().toString());
         toolBoxVo.setIsFavorite(contains);
         long count = botToolRelService.count(Wrappers.lambdaQuery(BotToolRel.class).eq(BotToolRel::getToolId, toolBox.getToolId()));
@@ -656,7 +656,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             }
             toolBoxVo.setCreator(creator);
         }
-        // 官方工具不可见参数隐藏
+        // Hide invisible parameters for official tools
         if ((toolBoxVo.getIsPublic() || toolBoxVo.getUserId().equals(bizConfig.getAdminUid())) && !toolBoxVo.getUserId().equals(UserInfoManagerHandler.getUserId())) {
             toolBoxVo.setWebSchema(filterDisPlaySchema(toolBox.getWebSchema()));
             toolBoxVo.setSchema(StringUtils.EMPTY);
@@ -715,7 +715,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 工具广场查询列表
+     * Query tool square list
      *
      * @param dto
      * @return
@@ -725,13 +725,13 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         String uid = "3";
         String content = dealHtmlXss(dto.getContent());
 
-        // 处理收藏筛选
+        // Handle favorite filtering
         Set<String> favorites = handleFavoriteFilter(uid, dto.getFavoriteFlag());
         if (dto.getFavoriteFlag() != null && dto.getFavoriteFlag() == 1 && CollUtil.isEmpty(favorites)) {
             return createEmptyPageData();
         }
 
-        // 获取工具列表
+        // Get tool list
         List<ToolBoxVo> toolBoxVoList = getToolBoxList(uid, content, favorites, dto);
         if (CollUtil.isEmpty(toolBoxVoList)) {
             return createEmptyPageData();
@@ -739,18 +739,18 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
         long totalSize = toolBoxVoList.size();
 
-        // 填充元数据信息
+        // Fill metadata information
         fillToolBoxMetadata(uid, toolBoxVoList);
 
-        // 排序和分页
+        // Sort and paginate
         List<ToolBoxVo> sortedAndPagedList = sortAndPaginate(toolBoxVoList, dto, uid);
 
-        // 构建分页结果
+        // Build pagination result
         return buildPageData(sortedAndPagedList, dto.getPage(), dto.getPageSize(), totalSize);
     }
 
     /**
-     * 处理收藏筛选逻辑
+     * Handle favorite filter logic
      */
     private Set<String> handleFavoriteFilter(String uid, Integer favoriteFlag) {
         Set<String> favorites = new HashSet<>();
@@ -761,7 +761,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建空的分页数据
+     * Create empty page data
      */
     private PageData<ToolBoxVo> createEmptyPageData() {
         PageData<ToolBoxVo> pageData = new PageData<>();
@@ -771,12 +771,12 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 获取工具列表（包含普通工具和MCP工具）
+     * Get tool list (including regular tools and MCP tools)
      */
     private List<ToolBoxVo> getToolBoxList(String uid, String content, Set<String> favorites, ToolSquareDto dto) {
         List<ToolBoxVo> toolBoxVoList = new ArrayList<>();
 
-        // 获取普通工具
+        // Get regular tools
         List<ToolBox> toolBoxList = toolBoxMapper.getModelListSquareByCondition(
                 uid, content, null, null, favorites, dto.getOrderFlag(),
                 dto.getTagFlag(), dto.getTags(), bizConfig.getAdminUid(), CommonConst.Platform.COMMON);
@@ -785,7 +785,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 .map(this::convert2ToolBoxVo)
                 .collect(Collectors.toList()));
 
-        // 处理MCP工具
+        // Handle MCP tools
         if (shouldIncludeMcpTools(dto)) {
             List<ToolBoxVo> mcpTools = getMcpTools(dto);
             if (!CollectionUtils.isEmpty(mcpTools)) {
@@ -797,7 +797,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 判断是否需要包含MCP工具
+     * Determine whether to include MCP tools
      */
     private boolean shouldIncludeMcpTools(ToolSquareDto dto) {
         if (dto.getTagFlag() != null && dto.getTagFlag() == 0) {
@@ -805,13 +805,13 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         }
         if (dto.getTags() != null) {
             ConfigInfo config = configInfoService.getById(dto.getTags());
-            return config != null && Arrays.asList("MCP工具", "MCP Tools").contains(config.getName());
+            return config != null && Arrays.asList("MCP Tools", "MCP Tools").contains(config.getName());
         }
         return false;
     }
 
     /**
-     * 转换ToolBox为ToolBoxVo
+     * Convert ToolBox to ToolBoxVo
      */
     private ToolBoxVo convert2ToolBoxVo(ToolBox toolBox) {
         ToolBoxVo toolBoxVo = new ToolBoxVo();
@@ -823,7 +823,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 填充工具元数据信息
+     * Fill tool metadata information
      */
     private void fillToolBoxMetadata(String uid, List<ToolBoxVo> toolBoxVoList) {
         Set<String> favoritesId = getFavoritesId(uid);
@@ -835,7 +835,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 获取标签配置列表
+     * Get tag configuration list
      */
     private List<ConfigInfo> getTagConfigList() {
         return configInfoService.list(Wrappers.lambdaQuery(ConfigInfo.class)
@@ -845,25 +845,25 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 填充单个工具的元数据
+     * Fill metadata for a single tool
      */
     private void fillSingleToolMetadata(ToolBoxVo toolBoxVo, Set<String> favoritesId, List<ConfigInfo> configInfoList) {
-        // 设置地址前缀
+        // Set address prefix
         if (!toolBoxVo.getIsMcp()) {
             toolBoxVo.setAddress(s3UtilClient.getS3Prefix());
         }
 
-        // 设置收藏状态
+        // Set favorite status
         boolean isFavorite = toolBoxVo.getIsMcp() ? favoritesId.contains(toolBoxVo.getMcpTooId()) : favoritesId.contains(toolBoxVo.getToolId());
         toolBoxVo.setIsFavorite(isFavorite);
 
-        // 设置标签
+        // Set tags
         fillToolTags(toolBoxVo, configInfoList);
 
     }
 
     /**
-     * 填充工具标签
+     * Fill tool tags
      */
     private void fillToolTags(ToolBoxVo toolBoxVo, List<ConfigInfo> configInfoList) {
         if (!StringUtils.isEmpty(toolBoxVo.getToolTag())) {
@@ -878,7 +878,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
 
     /**
-     * 排序和分页处理
+     * Sort and paginate processing
      */
     private List<ToolBoxVo> sortAndPaginate(List<ToolBoxVo> toolBoxVoList, ToolSquareDto dto, String uid) {
         Integer orderFlag = dto.getOrderFlag();
@@ -895,7 +895,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 按热度值排序并分页
+     * Sort by heat value and paginate
      */
     private List<ToolBoxVo> sortByHeatValueAndPaginate(List<ToolBoxVo> toolBoxVoList, Integer pageNo, Integer pageSize) {
         return toolBoxVoList.stream()
@@ -906,7 +906,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 按最近使用排序并分页
+     * Sort by recent use and paginate
      */
     private List<ToolBoxVo> sortByRecentUseAndPaginate(List<ToolBoxVo> toolBoxVoList, Integer pageNo, Integer pageSize, String uid) {
         Map<String, Integer> orderMap = buildRecentUseOrderMap(uid);
@@ -920,7 +920,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 构建最近使用的顺序映射
+     * Build recent use order mapping
      */
     private Map<String, Integer> buildRecentUseOrderMap(String uid) {
         List<ToolBoxOperateHistory> operateHistories = toolBoxOperateHistoryMapper.selectList(
@@ -942,7 +942,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 仅分页处理
+     * Pagination processing only
      */
     private List<ToolBoxVo> paginateOnly(List<ToolBoxVo> toolBoxVoList, Integer pageNo, Integer pageSize) {
         return toolBoxVoList.stream()
@@ -952,7 +952,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 构建分页数据
+     * Build page data
      */
     private PageData<ToolBoxVo> buildPageData(List<ToolBoxVo> toolBoxVoList, Integer pageNo, Integer pageSize, long totalSize) {
         PageData<ToolBoxVo> pageData = new PageData<>();
@@ -964,7 +964,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         return pageData;
     }
 
-    // 每隔5分钟执行一次
+    // Execute every 5 minutes
     @Scheduled(fixedRate = 300000, initialDelay = 600000)
     public void executeToolHeatValueSelect() {
         LambdaQueryWrapper<ToolBox> queryWrapper = new LambdaQueryWrapper<>();
@@ -976,7 +976,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         List<String> tooIds = toolBoxes.stream().map(ToolBox::getToolId).collect(Collectors.toList());
         List<ToolUseDto> flowToolUseList = chatInfoMapper.selectWorkflowUseCount(tooIds);
         List<ToolUseDto> botToolUseList = chatInfoMapper.selectBotUseCount(tooIds);
-        // 收藏人数
+        // Number of favorites
         List<UserFavoriteTool> userFavoriteTools = userFavoriteToolMapper.selectAllList();
         for (ToolBox toolBox : toolBoxes) {
             Long workflowUseCount = flowToolUseList.stream()
@@ -990,7 +990,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             List<UserFavoriteTool> favoriteTools = userFavoriteTools.stream()
                     .filter(tool -> tool.getPluginToolId() != null && tool.getPluginToolId().equals(toolBox.getToolId()))
                     .collect(Collectors.toList());
-            // 收藏次数
+            // Number of favorites
             long favoriteToolCount = favoriteTools.size();
             long favoriteUserCount = favoriteTools.stream()
                     .filter(tool -> !tool.getDeleted() && tool.getUseFlag() == 1)
@@ -1001,11 +1001,11 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             }
             redisTemplate.opsForValue().set(TOOL_HEAT_VALUE_PREFIX + toolBox.getToolId(), heatValue);
         }
-        // mcp工具热度值
+        // MCP tool heat value
         List<ToolBoxVo> mcpTools = getMcpTools(new ToolSquareDto());
         for (ToolBoxVo mcpTool : mcpTools) {
-            // 查询同名插件
-            // 处理字符串：忽略大小写匹配 "-mcp"，并移除它
+            // Query plugins with same name
+            // Process string: ignore case match "-mcp" and remove it
             String mcpName = mcpTool.getName().replaceAll("(?i)-mcp", "");
             LambdaQueryWrapper<ToolBox> newQueryWrapper = new LambdaQueryWrapper<>();
             newQueryWrapper.eq(ToolBox::getDeleted, 0)
@@ -1015,14 +1015,14 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                             .eq(ToolBox::getUserId, bizConfig.getAdminUid()));
             List<ToolBox> toolBoxList = toolBoxMapper.selectList(newQueryWrapper);
             if (!toolBoxList.isEmpty()) {
-                // 查询同名插件的热度值
+                // Query heat value of plugins with same name
                 Long heatValue = (Long) redisTemplate.opsForValue().get(TOOL_HEAT_VALUE_PREFIX + toolBoxList.get(0).getToolId());
                 if (heatValue == null) {
                     heatValue = 0L;
                 }
                 redisTemplate.opsForValue().set(TOOL_HEAT_VALUE_PREFIX + mcpTool.getMcpTooId(), heatValue);
             } else {
-                // 查表-查询mcp工具热度
+                // Query table - query MCP tool heat value
                 Long mcpHeatValue = toolBoxMapper.getMcpHeatValueByName(mcpTool.getName());
                 if (mcpHeatValue == null) {
                     mcpHeatValue = 0L;
@@ -1035,7 +1035,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
     private List<ToolBoxVo> getMcpTools(ToolSquareDto dto) {
         List<ToolBoxVo> toolBoxVoList = new ArrayList<>();
-        // MCP工具
+        // MCP tools
         List<McpServerTool> mcpToolList = workflowService.getMcpServerListLocally(null, 1, 1000, dto.getAuthorized(), null);
         // List<McpServerTool> mcpToolList = mcpServerHandler.getMcpToolList(null, 1, 10000, null);
         if (mcpToolList == null || mcpToolList.isEmpty()) {
@@ -1045,7 +1045,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             ToolBoxVo toolBoxVo = new ToolBoxVo();
             List<String> tags = new ArrayList<>();
             if (LanguageContext.isZh()) {
-                tags.add("MCP工具");
+                tags.add("MCP Tools");
             } else {
                 tags.add("MCP Tools");
             }
@@ -1061,7 +1061,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             toolBoxVo.setAuthorized(mcp.getAuthorized());
             toolBoxVoList.add(toolBoxVo);
         }
-        // 手动筛选名称或描述
+        // Manually filter by name or description
         if (StringUtils.isNotBlank(dto.getContent())) {
             toolBoxVoList = toolBoxVoList.stream()
                     .filter(toolBoxVo -> toolBoxVo.getName().contains(dto.getContent()) || toolBoxVo.getDescription().contains(dto.getContent()))
@@ -1080,7 +1080,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 缓存获取用户收藏的工具id，缓存没有数据库获取
+     * Get user favorite tool IDs from cache, fetch from database if cache is empty
      *
      * @param userId
      * @return
@@ -1119,7 +1119,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
 
     /**
-     * 收藏工具
+     * Favorite tool
      *
      * @param toolId
      * @param favoriteFlag
@@ -1137,9 +1137,9 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         } else {
             existingFavorite = userFavoriteToolMapper.findByUserIdAndToolId(userId, toolId);
         }
-        // 0-收藏，1-取消收藏
+        // 0-favorite, 1-unfavorite
         if (favoriteFlag == 0) {
-            // 已被收藏
+            // Already favorited
             if (existingFavorite.isPresent()) {
                 throw new BusinessException(ResponseEnum.TOOLBOX_ALREADY_COLLECT);
             }
@@ -1152,7 +1152,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 userFavorite.setPluginToolId(toolId);
             }
             userFavorite.setCreatedTime(new Timestamp(System.currentTimeMillis()));
-            // 1-表示收藏
+            // 1-indicates favorite
             userFavorite.setUseFlag(1);
             userFavoriteToolMapper.save(userFavorite);
             redisTemplate.opsForSet().add(redisKey, toolId);
@@ -1162,7 +1162,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                 userFavorite.setDeleted(true);
                 userFavoriteToolMapper.updateFavoriteStatus(userFavorite);
                 redisTemplate.opsForSet().remove(redisKey, toolId);
-                // 检查集合是否为空
+                // Check if collection is empty
                 Set<Object> favorites = redisTemplate.opsForSet().members(redisKey);
                 if (favorites == null || favorites.isEmpty()) {
                     redisTemplate.delete(redisKey);
@@ -1288,7 +1288,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                                     try {
                                         array.add(Double.valueOf(String.valueOf(value)));
                                     } catch (Exception e) {
-                                        log.error(value + "不是Number类型");
+                                        log.error(value + " is not Number type");
                                         throw new BusinessException(ResponseEnum.TOOLBOX_NOT_NUMBER_TYPE);
                                     }
                                     break;
@@ -1296,7 +1296,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                                     try {
                                         array.add(Long.valueOf(String.valueOf(value)));
                                     } catch (Exception e) {
-                                        log.error(value + "不是Integer类型");
+                                        log.error(value + " is not Integer type");
                                         throw new BusinessException(ResponseEnum.TOOLBOX_NOT_INTEGER_TYPE);
                                     }
                                     break;
@@ -1304,7 +1304,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                                     try {
                                         array.add(Boolean.valueOf(String.valueOf(value)));
                                     } catch (Exception e) {
-                                        log.error(value + "不是Boolean类型");
+                                        log.error(value + " is not Boolean type");
                                         throw new BusinessException(ResponseEnum.TOOLBOX_NOT_BOOLEAN_TYPE);
                                     }
                                     break;
@@ -1323,7 +1323,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                             try {
                                 jsonObject.put(item.getName(), Double.valueOf(String.valueOf(value)));
                             } catch (Exception e) {
-                                log.error(value + "不是Number类型");
+                                log.error(value + " is not Number type");
                                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_NUMBER_TYPE);
                             }
                             break;
@@ -1331,7 +1331,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                             try {
                                 jsonObject.put(item.getName(), Long.valueOf(String.valueOf(value)));
                             } catch (Exception e) {
-                                log.error(value + "不是Integer类型");
+                                log.error(value + " is not Integer type");
                                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_INTEGER_TYPE);
                             }
                             break;
@@ -1339,7 +1339,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
                             try {
                                 jsonObject.put(item.getName(), Boolean.valueOf(String.valueOf(value)));
                             } catch (Exception e) {
-                                log.error(value + "不是Boolean类型");
+                                log.error(value + " is not Boolean type");
                                 throw new BusinessException(ResponseEnum.TOOLBOX_NOT_NUMBER_TYPE);
                             }
                             break;
@@ -1354,7 +1354,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
     private JSONObject convertWebSchemaTORequestJSON(JSONObject webSchemaObject) {
         JSONObject retObject = new JSONObject();
-        // 输入
+        // Input
         JSONArray toolUrlParams = webSchemaObject.getJSONArray("toolUrlParams");
         JSONObject toolUrlParamsTarget = new JSONObject();
         convertRequestParams(toolUrlParams, toolUrlParamsTarget);
@@ -1408,7 +1408,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     private JSONObject convertWebSchemaTOCoreProtocol(String webSchema) {
         JSONObject retObject = new JSONObject();
         JSONObject webSchemaObject = JSONObject.parseObject(webSchema);
-        // 输入
+        // Input
         JSONArray toolUrlParams = webSchemaObject.getJSONArray("toolUrlParams");
         JSONObject toolUrlParamsTarget = new JSONObject();
         convertParams(toolUrlParams, toolUrlParamsTarget, 0, true);
@@ -1429,7 +1429,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         convertParams(toolRequestBody, toolRequestBodyTarget, 0, true);
         retObject.put("toolRequestBody", toolRequestBodyTarget.isEmpty() ? null : toolRequestBodyTarget);
 
-        // 输出
+        // Output
         JSONArray toolRequestOutput = webSchemaObject.getJSONArray("toolRequestOutput");
         JSONObject toolRequestOutputTarget = new JSONObject();
         convertParams(toolRequestOutput, toolRequestOutputTarget, 0, false);
@@ -1449,10 +1449,10 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 处理单个参数
+     * Process single parameter
      */
     private void processParam(JSONObject jsonObject, JSONObject targetObject, Integer previewType, boolean input) {
-        // 验证参数基本信息
+        // Validate parameter basic information
         validateParamBasicInfo(jsonObject, previewType);
 
         String type = jsonObject.getString("type");
@@ -1470,7 +1470,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 验证参数基本信息
+     * Validate parameter basic information
      */
     private void validateParamBasicInfo(JSONObject jsonObject, Integer previewType) {
         String type = jsonObject.getString("type");
@@ -1491,21 +1491,21 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 判断是否为简单类型
+     * Determine if it is a simple type
      */
     private boolean isSimpleType(String type) {
         return STRING.equals(type) || NUMBER.equals(type) || BOOLEAN.equals(type);
     }
 
     /**
-     * 判断是否为复合类型
+     * Determine if it is a complex type
      */
     private boolean isComplexType(String type) {
         return OBJECT.equals(type) || ARRAY.equals(type);
     }
 
     /**
-     * 处理简单类型参数
+     * Process simple type parameters
      */
     private void processSimpleTypeParam(JSONObject jsonObject, JSONObject targetObject,
             String params, String title, String description, String type, boolean input) {
@@ -1525,7 +1525,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 验证from字段值
+     * Validate from field value
      */
     private void validateFromValue(Integer from) {
         if (from == null || (from != 0 && from != 1 && from != 2)) {
@@ -1534,7 +1534,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建基础参数对象
+     * Create base parameter object
      */
     private JSONObject createBaseParamObject(String title, String description, String type) {
         JSONObject paramObject = new JSONObject();
@@ -1545,7 +1545,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 添加输入特定字段
+     * Add input specific fields
      */
     private void addInputSpecificFields(JSONObject paramObject, Integer from, boolean required, JSONObject jsonObject) {
         paramObject.put("from", from);
@@ -1557,7 +1557,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 处理复合类型参数
+     * Process complex type parameters
      */
     private void processComplexTypeParam(JSONObject jsonObject, JSONObject targetObject, Integer previewType,
             String params, String title, String description, String type, boolean input) {
@@ -1577,7 +1577,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 处理对象类型
+     * Process object type
      */
     private void processObjectType(JSONObject multiParamObject, JSONObject targetObject,
             Integer previewType, JSONArray jsonArray, boolean input) {
@@ -1590,7 +1590,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 处理数组类型
+     * Process array type
      */
     private void processArrayType(JSONObject multiParamObject, JSONArray jsonArray, boolean input) {
         JSONObject items = new JSONObject();
@@ -1725,7 +1725,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
 
     /**
-     * 创建openapi schema
+     * Create openapi schema
      *
      * @param toolBoxDto
      * @param operationId
@@ -1734,40 +1734,40 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     private OpenApiSchema convertToolBoxVoToToolSchema(ToolBoxDto toolBoxDto, String operationId) {
         OpenApiSchema toolSchema = new OpenApiSchema();
 
-        // 设置基本信息
+        // Set basic information
         toolSchema.setInfo(createInfo());
         toolSchema.setServers(createServers(toolBoxDto.getEndPoint()));
 
-        // 解析WebSchema
+        // Parse WebSchema
         WebSchema webSchema = parseWebSchema(toolBoxDto.getWebSchema());
 
-        // 创建Operation
+        // Create Operation
         Operation operation = createOperation(toolBoxDto, operationId, webSchema);
 
-        // 设置安全配置
+        // Set security configuration
         if (hasAuthentication(toolBoxDto)) {
             setupAuthentication(toolSchema, operation, toolBoxDto);
         }
 
-        // 设置路径
+        // Set paths
         toolSchema.setPaths(createPaths(toolBoxDto, operation));
 
         return toolSchema;
     }
 
     /**
-     * 创建Info对象
+     * Create Info object
      */
     private Info createInfo() {
         Info info = new Info();
-        info.setTitle("agentBuilder工具集");
+        info.setTitle("agentBuilder toolset");
         info.setVersion("1.0.0");
         info.setXIsOfficial(false);
         return info;
     }
 
     /**
-     * 创建服务器列表
+     * Create server list
      */
     private List<Server> createServers(String endPoint) {
         URL url = URLUtil.toUrlForHttp(endPoint);
@@ -1777,14 +1777,14 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 解析WebSchema
+     * Parse WebSchema
      */
     private WebSchema parseWebSchema(String webSchemaJson) {
         return JSON.parseObject(webSchemaJson, WebSchema.class);
     }
 
     /**
-     * 创建Operation对象
+     * Create Operation object
      */
     private Operation createOperation(ToolBoxDto toolBoxDto, String operationId, WebSchema webSchema) {
         Operation operation = new Operation();
@@ -1792,44 +1792,44 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         operation.setOperationId(generateOperationId(toolBoxDto.getName(), operationId));
         operation.setDescription(toolBoxDto.getDescription());
 
-        // 设置参数
+        // Set parameters
         setupParameters(operation, webSchema.getToolRequestInput());
 
-        // 设置请求体
+        // Set request body
         setupRequestBody(operation, webSchema.getToolRequestInput());
 
-        // 设置响应
+        // Set response
         setupResponse(operation, webSchema.getToolRequestOutput());
 
         return operation;
     }
 
     /**
-     * 生成操作ID
+     * Generate operation ID
      */
     private String generateOperationId(String name, String operationId) {
         return operationId == null ? name + "-" + RandomUtil.randomString(8) : operationId;
     }
 
     /**
-     * 设置参数（Header、Query、Path）
+     * Set parameters (Header, Query, Path)
      */
     private void setupParameters(Operation operation, List<WebSchemaItem> toolRequestInput) {
         List<Parameter> allParameters = new ArrayList<>();
 
-        // 添加Header参数
+        // Add Header parameters
         List<WebSchemaItem> headers = filterByLocation(toolRequestInput, "header");
         if (!CollectionUtils.isEmpty(headers)) {
             allParameters.addAll(genOpenApiParameters(headers, OpenApiConst.PARAMETER_IN_HEADER));
         }
 
-        // 添加Query参数
+        // Add Query parameters
         List<WebSchemaItem> queryParams = filterByLocation(toolRequestInput, "query");
         if (!CollectionUtils.isEmpty(queryParams)) {
             allParameters.addAll(genOpenApiParameters(queryParams, OpenApiConst.PARAMETER_IN_QUERY));
         }
 
-        // 添加Path参数
+        // Add Path parameters
         List<WebSchemaItem> pathParams = filterByLocation(toolRequestInput, "path");
         if (!CollectionUtils.isEmpty(pathParams)) {
             allParameters.addAll(genOpenApiParameters(pathParams, OpenApiConst.PARAMETER_IN_PATH));
@@ -1841,7 +1841,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 根据位置过滤参数
+     * Filter parameters by location
      */
     private List<WebSchemaItem> filterByLocation(List<WebSchemaItem> items, String location) {
         return items.stream()
@@ -1850,7 +1850,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 设置请求体
+     * Set request body
      */
     private void setupRequestBody(Operation operation, List<WebSchemaItem> toolRequestInput) {
         List<WebSchemaItem> bodyParams = filterByLocation(toolRequestInput, "body");
@@ -1862,7 +1862,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 设置响应
+     * Set response
      */
     private void setupResponse(Operation operation, List<WebSchemaItem> toolRequestOutput) {
         if (CollectionUtils.isEmpty(toolRequestOutput)) {
@@ -1884,7 +1884,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建响应Schema
+     * Create response Schema
      */
     private Schema createResponseSchema(List<WebSchemaItem> toolRequestOutput) {
         Schema schema;
@@ -1899,7 +1899,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建数组类型的Schema
+     * Create array type Schema
      */
     private Schema createArraySchema(WebSchemaItem arrayItem) {
         Schema schema = new Schema();
@@ -1925,7 +1925,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建对象类型的Schema
+     * Create object type Schema
      */
     private Schema createObjectSchema(List<WebSchemaItem> items) {
         Schema schema = new Schema();
@@ -1943,14 +1943,14 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 判断是否有认证配置
+     * Determine if there is authentication configuration
      */
     private boolean hasAuthentication(ToolBoxDto toolBoxDto) {
         return toolBoxDto.getAuthType() != ToolConst.AuthType.NONE;
     }
 
     /**
-     * 设置认证配置
+     * Set authentication configuration
      */
     private void setupAuthentication(OpenApiSchema toolSchema, Operation operation, ToolBoxDto toolBoxDto) {
         if (toolBoxDto.getAuthType() != ToolConst.AuthType.SERVICE) {
@@ -1959,18 +1959,18 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
 
         ServiceAuthInfo serviceAuthInfo = JSON.parseObject(toolBoxDto.getAuthInfo(), ServiceAuthInfo.class);
 
-        // 设置Components
+        // Set Components
         Components components = createSecurityComponents(serviceAuthInfo);
         toolSchema.setComponents(components);
 
-        // 设置Operation的安全配置
+        // Set Operation security configuration
         Map<String, Object> securityMap = new HashMap<>();
         securityMap.put(serviceAuthInfo.getParameterName(), new ArrayList<>());
         operation.setSecurity(Collections.singletonList(securityMap));
     }
 
     /**
-     * 创建安全组件
+     * Create security components
      */
     private Components createSecurityComponents(ServiceAuthInfo serviceAuthInfo) {
         Components components = new Components();
@@ -1987,7 +1987,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建路径配置
+     * Create path configuration
      */
     private Map<String, Map<String, Operation>> createPaths(ToolBoxDto toolBoxDto, Operation operation) {
         Map<String, Operation> methodOperationMap = new HashMap<>();
@@ -2001,7 +2001,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
     }
 
     /**
-     * 创建MediaType映射
+     * Create MediaType mapping
      */
     private Map<String, MediaType> createMediaTypeMap(List<WebSchemaItem> toolRequestBody) {
         MediaType mediaType = new MediaType();
@@ -2035,7 +2035,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         ToolBox toolBox = toolBoxes.get(0);
         boolean flag = toolBox.getIsPublic() || bizConfig.getAdminUid().toString().equals(toolBox.getUserId());
         if (flag) {
-            // 官方工具
+            // Official tools
             return toolBoxes.stream().map(toolBoxItem -> {
                 ToolBoxVo toolBoxVo = new ToolBoxVo();
                 BeanUtils.copyProperties(toolBoxItem, toolBoxVo);
@@ -2095,7 +2095,7 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
         Long toolTagId = 0L;
         if (toolV2 != null && !toolV2.isEmpty()) {
             ConfigInfo configInfo = toolV2.get(0);
-            // 遍历 value 等于 tool 的
+            // Iterate through values equal to tool
             if ("tool".equals(configInfo.getValue())) {
                 toolTagId = configInfo.getId();
             }

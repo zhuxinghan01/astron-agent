@@ -10,13 +10,13 @@ import json
 from typing import Any, AsyncIterator, Dict, Tuple
 
 from openai import AsyncOpenAI  # type: ignore
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.nodes.entities.llm_response import LLMResponse
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
 from workflow.infra.providers.llm.chat_ai import ChatAI
-from workflow.infra.providers.llm.openai.const import LLM_END_FRAME
 
 
 class OpenAIChatAI(ChatAI):
@@ -152,7 +152,9 @@ class OpenAIChatAI(ChatAI):
                 )
             except StopAsyncIteration:
                 # Stream ended, mark as finished and yield final response
-                last_frame_data["choices"][0]["finish_reason"] = LLM_END_FRAME
+                last_frame_data["choices"][0][
+                    "finish_reason"
+                ] = ChatStatus.FINISH_REASON.value
                 yield LLMResponse(
                     msg=last_frame_data,
                 )

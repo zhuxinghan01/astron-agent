@@ -355,10 +355,6 @@ class IterationEndNode(BaseNode):
                     variable_pool=variable_pool,
                     span_context=span,
                 )
-                # Apply template variable replacement
-                # prompt_template = replace_variables(prompt_template, replacements_str)
-                # outputs.update({"res": prompt_template})
-            # elif self.outputMode == 0:
 
             return NodeRunResult(
                 status=WorkflowNodeExecutionStatus.SUCCEEDED,

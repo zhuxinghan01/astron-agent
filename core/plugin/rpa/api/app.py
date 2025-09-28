@@ -7,6 +7,7 @@ import os
 
 import uvicorn
 from common.initialize.initialize import initialize_services
+from common.settings.polaris import ConfigFilter, Polaris
 from fastapi import FastAPI
 from plugin.rpa.api.router import router
 from plugin.rpa.consts import const
@@ -40,6 +41,50 @@ class RPAServer:
             "kafka_producer_service",
         ]
         initialize_services(services=need_init_services)
+
+    @staticmethod
+    def load_polaris() -> None:
+        """
+        Load remote configuration and override environment variables
+        """
+        use_polaris = os.getenv("USE_POLARIS", "false").lower()
+        print(f"🔧 Config: USE_POLARIS :{use_polaris}")
+        if use_polaris == "false":
+            return
+
+        base_url = os.getenv("POLARIS_URL")
+        project_name = os.getenv("PROJECT_NAME", "hy-spark-agent-builder")
+        cluster_group = os.getenv("POLARIS_CLUSTER", "")
+        service_name = os.getenv("SERVICE_NAME", "rpa-server")
+        version = os.getenv("VERSION", "1.0.0")
+        config_file = os.getenv("CONFIG_FILE", "config.env")
+        config_filter = ConfigFilter(
+            project_name=project_name,
+            cluster_group=cluster_group,
+            service_name=service_name,
+            version=version,
+            config_file=config_file,
+        )
+        username = os.getenv("POLARIS_USERNAME")
+        password = os.getenv("POLARIS_PASSWORD")
+
+        # Ensure required parameters are not None
+        if not base_url or not username or not password or not cluster_group:
+            return  # Skip polaris config if required params are missing
+
+        polaris = Polaris(base_url=base_url, username=username, password=password)
+        try:
+            _ = polaris.pull(
+                config_filter=config_filter,
+                retry_count=3,
+                retry_interval=5,
+                set_env=True,
+            )
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            print(
+                f"⚠️ Polaris configuration loading failed, "
+                f"continuing with local configuration: {e}"
+            )
 
     @staticmethod
     def check_env() -> None:
