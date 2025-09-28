@@ -53,6 +53,10 @@ public class RpaInfo implements Serializable {
      */
     private String remarks;
     /**
+     * Official website address
+     */
+    private String path;
+    /**
      * icon
      */
     private String icon;

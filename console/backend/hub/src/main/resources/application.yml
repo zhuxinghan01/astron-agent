@@ -28,6 +28,10 @@ spring:
           jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://auth-server:8000/.well-known/jwks}
           audiences:
             - ${OAUTH2_AUDIENCE:your-oauth2-client-id}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   # Disable static resource mapping
   web:
@@ -54,6 +58,12 @@ mybatis-plus:
     com.iflytek.astron.console.hub.entity,
     com.iflytek.astron.console.commons.entity,
     com.iflytek.astron.console.toolkit.entity.table
+  type-enums-package:
+    com.iflytek.astron.console.commons.enums,
+    com.iflytek.astron.console.hub.enums,
+    com.iflytek.astron.console.toolkit.enums
+  configuration:
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
 
 # S3(MinIO) basic configuration
 s3:
