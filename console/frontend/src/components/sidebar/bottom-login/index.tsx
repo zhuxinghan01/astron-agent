@@ -6,6 +6,7 @@ import useUserStore from '@/store/user-store';
 import { parseCurrentUserFromToken } from '@/config/casdoor';
 import { handleLoginRedirect } from '@/utils/auth';
 import ControlModal from '../control-modal';
+import OrderTypeDisplay from '../order-type-display';
 import { Popover } from 'antd';
 import styles from './index.module.scss';
 
@@ -245,6 +246,7 @@ const BottomLogin = ({
                       />
                     </div>
                   </div>
+                  <OrderTypeDisplay />
                 </>
               )}
             </>

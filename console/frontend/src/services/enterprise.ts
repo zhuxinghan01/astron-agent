@@ -110,3 +110,8 @@ export const batchImportEnterpriseUser = (
 export const visitEnterprise = (enterpriseId: string) => {
   return http.get(`/enterprise/visit-enterprise?enterpriseId=${enterpriseId}`);
 };
+
+// 开源 升级套餐
+export const upgradeCombo = () => {
+  return http.post('/space/oss-version-user-upgrade'); // todo 替换为后端接口地址
+};
