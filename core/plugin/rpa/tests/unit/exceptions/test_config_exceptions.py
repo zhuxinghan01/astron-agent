@@ -25,17 +25,16 @@ class TestConfigNotFoundException:
         test_path = "/path/to/config.env"
 
         # Act
-        exception = ConfigNotFoundException(test_path)
+        exception: ConfigNotFoundException = ConfigNotFoundException(test_path)
 
         # Assert
-        assert isinstance(exception, Exception)
         assert exception.message == f"Configuration file not found at path: {test_path}"
 
     def test_config_not_found_exception_str_representation(self) -> None:
         """Test ConfigNotFoundException string representation."""
         # Arrange
         test_path = "/nonexistent/config.yaml"
-        exception = ConfigNotFoundException(test_path)
+        exception: ConfigNotFoundException = ConfigNotFoundException(test_path)
 
         # Act
         str_repr = str(exception)
@@ -47,7 +46,7 @@ class TestConfigNotFoundException:
     def test_config_not_found_exception_with_empty_path(self) -> None:
         """Test ConfigNotFoundException with empty path."""
         # Arrange & Act
-        exception = ConfigNotFoundException("")
+        exception: ConfigNotFoundException = ConfigNotFoundException("")
 
         # Assert
         assert exception.message == "Configuration file not found at path: "
@@ -57,7 +56,7 @@ class TestConfigNotFoundException:
         """Test ConfigNotFoundException with special characters in path."""
         # Arrange
         test_path = "/path/with spaces/config-file_v2.env"
-        exception = ConfigNotFoundException(test_path)
+        exception: ConfigNotFoundException = ConfigNotFoundException(test_path)
 
         # Act
         str_repr = str(exception)
@@ -69,10 +68,9 @@ class TestConfigNotFoundException:
     def test_config_not_found_exception_inheritance(self) -> None:
         """Test that ConfigNotFoundException inherits from Exception."""
         # Arrange & Act
-        exception = ConfigNotFoundException("/test/path")
+        exception: ConfigNotFoundException = ConfigNotFoundException("/test/path")
 
         # Assert
-        assert isinstance(exception, Exception)
         assert issubclass(ConfigNotFoundException, Exception)
 
 
@@ -85,17 +83,16 @@ class TestEnvNotFoundException:
         test_env_key = "MISSING_ENV_VAR"
 
         # Act
-        exception = EnvNotFoundException(test_env_key)
+        exception: EnvNotFoundException = EnvNotFoundException(test_env_key)
 
         # Assert
-        assert isinstance(exception, Exception)
         assert exception.message == f"Environment not found at key: {test_env_key}"
 
     def test_env_not_found_exception_str_representation(self) -> None:
         """Test EnvNotFoundException string representation."""
         # Arrange
         test_env_key = "DATABASE_URL"
-        exception = EnvNotFoundException(test_env_key)
+        exception: EnvNotFoundException = EnvNotFoundException(test_env_key)
 
         # Act
         str_repr = str(exception)
@@ -107,7 +104,7 @@ class TestEnvNotFoundException:
     def test_env_not_found_exception_with_empty_key(self) -> None:
         """Test EnvNotFoundException with empty environment key."""
         # Arrange & Act
-        exception = EnvNotFoundException("")
+        exception: EnvNotFoundException = EnvNotFoundException("")
 
         # Assert
         assert exception.message == "Environment not found at key: "
@@ -117,7 +114,7 @@ class TestEnvNotFoundException:
         """Test EnvNotFoundException with complex environment key."""
         # Arrange
         test_env_key = "COMPLEX_ENV_VAR_WITH_UNDERSCORES_AND_NUMBERS_123"
-        exception = EnvNotFoundException(test_env_key)
+        exception: EnvNotFoundException = EnvNotFoundException(test_env_key)
 
         # Act
         str_repr = str(exception)
@@ -129,10 +126,9 @@ class TestEnvNotFoundException:
     def test_env_not_found_exception_inheritance(self) -> None:
         """Test that EnvNotFoundException inherits from Exception."""
         # Arrange & Act
-        exception = EnvNotFoundException("TEST_VAR")
+        exception: EnvNotFoundException = EnvNotFoundException("TEST_VAR")
 
         # Assert
-        assert isinstance(exception, Exception)
         assert issubclass(EnvNotFoundException, Exception)
 
 
@@ -145,17 +141,16 @@ class TestInvalidConfigException:
         test_details = "Invalid timeout value: must be positive integer"
 
         # Act
-        exception = InvalidConfigException(test_details)
+        exception: InvalidConfigException = InvalidConfigException(test_details)
 
         # Assert
-        assert isinstance(exception, Exception)
         assert exception.message == f"Invalid configuration: {test_details}"
 
     def test_invalid_config_exception_str_representation(self) -> None:
         """Test InvalidConfigException string representation."""
         # Arrange
         test_details = "Port number out of range"
-        exception = InvalidConfigException(test_details)
+        exception: InvalidConfigException = InvalidConfigException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -167,7 +162,7 @@ class TestInvalidConfigException:
     def test_invalid_config_exception_with_empty_details(self) -> None:
         """Test InvalidConfigException with empty details."""
         # Arrange & Act
-        exception = InvalidConfigException("")
+        exception: InvalidConfigException = InvalidConfigException("")
 
         # Assert
         assert exception.message == "Invalid configuration: "
@@ -179,7 +174,7 @@ class TestInvalidConfigException:
         test_details = (
             "Multiple errors found:\n- Missing required field\n- Invalid format"
         )
-        exception = InvalidConfigException(test_details)
+        exception: InvalidConfigException = InvalidConfigException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -191,10 +186,9 @@ class TestInvalidConfigException:
     def test_invalid_config_exception_inheritance(self) -> None:
         """Test that InvalidConfigException inherits from Exception."""
         # Arrange & Act
-        exception = InvalidConfigException("Test details")
+        exception: InvalidConfigException = InvalidConfigException("Test details")
 
         # Assert
-        assert isinstance(exception, Exception)
         assert issubclass(InvalidConfigException, Exception)
 
 
@@ -207,17 +201,16 @@ class TestCreatTaskException:
         test_details = "API endpoint returned 500 error"
 
         # Act
-        exception = CreatTaskException(test_details)
+        exception: CreatTaskException = CreatTaskException(test_details)
 
         # Assert
-        assert isinstance(exception, Exception)
         assert exception.message == f"Task creation failed: {test_details}"
 
     def test_creat_task_exception_str_representation(self) -> None:
         """Test CreatTaskException string representation."""
         # Arrange
         test_details = "Network timeout occurred"
-        exception = CreatTaskException(test_details)
+        exception: CreatTaskException = CreatTaskException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -229,7 +222,7 @@ class TestCreatTaskException:
     def test_creat_task_exception_with_empty_details(self) -> None:
         """Test CreatTaskException with empty details."""
         # Arrange & Act
-        exception = CreatTaskException("")
+        exception: CreatTaskException = CreatTaskException("")
 
         # Assert
         assert exception.message == "Task creation failed: "
@@ -239,7 +232,7 @@ class TestCreatTaskException:
         """Test CreatTaskException with JSON error details."""
         # Arrange
         test_details = '{"error": "invalid_request", "message": "Missing project_id"}'
-        exception = CreatTaskException(test_details)
+        exception: CreatTaskException = CreatTaskException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -251,10 +244,9 @@ class TestCreatTaskException:
     def test_creat_task_exception_inheritance(self) -> None:
         """Test that CreatTaskException inherits from Exception."""
         # Arrange & Act
-        exception = CreatTaskException("Test details")
+        exception: CreatTaskException = CreatTaskException("Test details")
 
         # Assert
-        assert isinstance(exception, Exception)
         assert issubclass(CreatTaskException, Exception)
 
 
@@ -267,17 +259,16 @@ class TestQueryTaskException:
         test_details = "Task ID not found in database"
 
         # Act
-        exception = QueryTaskException(test_details)
+        exception: QueryTaskException = QueryTaskException(test_details)
 
         # Assert
-        assert isinstance(exception, Exception)
         assert exception.message == f"Querying task status failed: {test_details}"
 
     def test_query_task_exception_str_representation(self) -> None:
         """Test QueryTaskException string representation."""
         # Arrange
         test_details = "Database connection lost"
-        exception = QueryTaskException(test_details)
+        exception: QueryTaskException = QueryTaskException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -289,7 +280,7 @@ class TestQueryTaskException:
     def test_query_task_exception_with_empty_details(self) -> None:
         """Test QueryTaskException with empty details."""
         # Arrange & Act
-        exception = QueryTaskException("")
+        exception: QueryTaskException = QueryTaskException("")
 
         # Assert
         assert exception.message == "Querying task status failed: "
@@ -299,7 +290,7 @@ class TestQueryTaskException:
         """Test QueryTaskException with HTTP status code details."""
         # Arrange
         test_details = "HTTP 404: Task not found"
-        exception = QueryTaskException(test_details)
+        exception: QueryTaskException = QueryTaskException(test_details)
 
         # Act
         str_repr = str(exception)
@@ -311,10 +302,9 @@ class TestQueryTaskException:
     def test_query_task_exception_inheritance(self) -> None:
         """Test that QueryTaskException inherits from Exception."""
         # Arrange & Act
-        exception = QueryTaskException("Test details")
+        exception: QueryTaskException = QueryTaskException("Test details")
 
         # Assert
-        assert isinstance(exception, Exception)
         assert issubclass(QueryTaskException, Exception)
 
 
@@ -352,7 +342,7 @@ class TestExceptionInteroperability:
         ]
 
         for unicode_text in unicode_test_cases:
-            exception = InvalidConfigException(unicode_text)
+            exception: InvalidConfigException = InvalidConfigException(unicode_text)
             str_repr = str(exception)
             assert unicode_text in str_repr
             assert "[Exception]" in str_repr
