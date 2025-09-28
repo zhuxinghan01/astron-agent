@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Input, Button, Select, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { saveFlowAPI, workflowCategories } from '@/services/flow';
+import { saveFlowAPI } from '@/services/flow';
+import { getAgentType } from '@/services/agent-square';
 import MoreIcons from './more-icons';
 import globalStore from '@/store/global-store';
 import useFlowsManager from '@/components/workflow/store/useFlowsManager';
@@ -31,11 +32,9 @@ function EditModal({ currentFlow, setEditModal }): React.ReactElement {
 
   useEffect(() => {
     getAvatarConfig();
-    workflowCategories().then(data =>
+    getAgentType().then(data =>
       setTypeList(
-        data
-          ?.filter(item => item.name !== '发现' && item?.name !== '活动')
-          ?.map(item => ({ label: item.name, value: item.key }))
+        data?.map(item => ({ label: item.typeName, value: item.typeKey }))
       )
     );
   }, []);
@@ -74,10 +73,11 @@ function EditModal({ currentFlow, setEditModal }): React.ReactElement {
   return (
     <>
       {createPortal(
-        <div className="mask"
-        style={{
-          zIndex: 1001,
-        }}
+        <div
+          className="mask"
+          style={{
+            zIndex: 1001,
+          }}
         >
           {showModal && (
             <MoreIcons

@@ -38,7 +38,6 @@ export default [
         fetch: 'readonly',
       },
     },
-    extends: [eslintConfigPrettier],
     plugins: {
       '@typescript-eslint': tseslint,
       prettier: prettier,
@@ -87,6 +86,7 @@ export default [
       'no-var': 'warn',
     },
   },
+  eslintConfigPrettier,
   {
     ignores: [
       'node_modules/',
