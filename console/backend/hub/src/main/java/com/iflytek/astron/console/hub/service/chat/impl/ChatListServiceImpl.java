@@ -6,6 +6,7 @@ import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatListResponseDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatTreeIndex;
 import com.iflytek.astron.console.commons.enums.bot.DefaultBotModelEnum;
+import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
 import com.iflytek.astron.console.toolkit.service.model.ModelService;
@@ -116,6 +117,7 @@ public class ChatListServiceImpl implements ChatListService {
         for (ChatBotListDto botListDto : botChatList) {
             ChatListResponseDto responseDto = new ChatListResponseDto();
             BeanUtils.copyProperties(botListDto, responseDto);
+            responseDto.setBotName(botListDto.getBotTitle());
             chatList.add(responseDto);
         }
 
@@ -270,13 +272,16 @@ public class ChatListServiceImpl implements ChatListService {
             }
         } else {
             // Return custom model
-            LLMInfoVo llmInfoVo = (LLMInfoVo) modelService.getDetail(0, modelId, request).data();
-            if (llmInfoVo != null) {
-                modelDto.setModelDomain(llmInfoVo.getDomain());
-                modelDto.setModelIcon(llmInfoVo.getIcon());
-                modelDto.setModelName(llmInfoVo.getName());
-                modelDto.setModelId(llmInfoVo.getId());
-                modelDto.setIsCustom(true);
+            ApiResult<LLMInfoVo> llmInfoVoObject = modelService.getDetail(0, modelId, request);
+            if (llmInfoVoObject != null) {
+                LLMInfoVo llmInfoVo = llmInfoVoObject.data();
+                if (llmInfoVo != null) {
+                    modelDto.setModelDomain(llmInfoVo.getDomain());
+                    modelDto.setModelIcon(llmInfoVo.getIcon());
+                    modelDto.setModelName(llmInfoVo.getName());
+                    modelDto.setModelId(llmInfoVo.getId());
+                    modelDto.setIsCustom(true);
+                }
             }
         }
         return modelDto;

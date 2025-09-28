@@ -212,8 +212,6 @@ public class BotAIServiceImpl implements BotAIService {
             String fileName = "avatar/" + uid + "/" + System.currentTimeMillis() + ".jpg";
             String avatarUrl = s3ClientUtil.uploadObject(fileName, "image/jpeg", compressImageInput);
 
-            // Ensure HTTPS and add size parameters
-            avatarUrl = avatarUrl.replace("http://", "https://");
             avatarUrl = avatarUrl + (avatarUrl.contains("?") ? "&" : "?") +
                     "width=" + compressedWidth + "&height=" + compressedHeight;
 

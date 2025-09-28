@@ -7,8 +7,7 @@ import java.util.List;
  */
 public interface KnowledgeService {
 
-    /**
-     * Only retrieve knowledge search content
-     */
-    List<String> getKnowledge(Long uid, Integer botId, String text, Double threshold);
+    List<String> getChuncksByBotId(Integer botId, String ask, Integer topN);
+
+    List<String> getChuncks(List<String> maasDatasetList, String text, Integer topN, boolean isBelongLoginUser);
 }

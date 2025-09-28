@@ -4,20 +4,21 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
+import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.TakeoffList;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
+import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
-import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
-import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
-import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.hub.dto.bot.MaasDuplicate;
+import com.iflytek.astron.console.hub.service.bot.BotTransactionalService;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
-import com.iflytek.astron.console.commons.util.MaasUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +27,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +60,9 @@ public class BotController {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private BotTransactionalService botTransactionalService;
 
     @Value("${maas.appid:}")
     String tenantId;
@@ -160,5 +161,19 @@ public class BotController {
             return ApiResult.error(ResponseEnum.UPDATE_BOT_FAILED);
         }
         return ApiResult.success(maasId);
+    }
+
+    /**
+     * 把助手复制到指定助手
+     */
+    @SpacePreAuth(key = "BotV2Controller_copyBot2_POST")
+    @PostMapping("/copy-bot")
+    public ApiResult<Void> copyBot2(HttpServletRequest request, @RequestParam Long botId) {
+        botPermissionUtil.checkBot(Math.toIntExact(botId));
+        String uid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        log.info("***** uid: {} 复制助手: {}", uid, botId);
+        botTransactionalService.copyBot(uid, Math.toIntExact(botId), request, spaceId);
+        return ApiResult.success();
     }
 }

@@ -179,8 +179,11 @@ public class BotServiceImpl implements BotService {
         BotDetail detail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         ChatBotBase botBase = new ChatBotBase();
         BeanUtils.copyProperties(detail, botBase);
+        log.info("copy old bot : {} , new bot : {}", detail, botBase);
         botBase.setId(null);
         // Set a new assistant name as differentiation
+        botBase.setVersion(Integer.valueOf(detail.getVersion()));
+        botBase.setIsDelete(0);
         botBase.setUid(uid);
         botBase.setSpaceId(spaceId);
         botBase.setBotName(detail.getBotName() + RandomUtil.randomString(6));
@@ -488,7 +491,7 @@ public class BotServiceImpl implements BotService {
      * Set file upload configuration.
      *
      * @param botInfo Bot information data transfer object
-     * @param botId Bot ID
+     * @param botId   Bot ID
      */
     private void setupFileUploadConfig(BotInfoDto botInfo, Integer botId) {
         try {
@@ -506,7 +509,7 @@ public class BotServiceImpl implements BotService {
     /**
      * Function to handle file upload configuration
      *
-     * @param botInfo Bot information object
+     * @param botInfo           Bot information object
      * @param userLangChainInfo User language chain information object
      */
     private void processFileUploadConfig(BotInfoDto botInfo, UserLangChainInfo userLangChainInfo) {
@@ -629,7 +632,7 @@ public class BotServiceImpl implements BotService {
     }
 
     private void setupWorkflowInfo(BotInfoDto botInfo, ChatBotBase chatBotBase, HttpServletRequest request,
-            Integer botId, String workflowVersion, String uid) {
+                                   Integer botId, String workflowVersion, String uid) {
         Integer version = chatBotBase.getVersion();
         if (!version.equals(BotTypeEnum.WORKFLOW_BOT.getType())) {
             return;

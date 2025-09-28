@@ -3,6 +3,7 @@ package com.iflytek.astron.console.commons.service.data;
 import com.iflytek.astron.console.commons.entity.bot.BotDataset;
 import com.iflytek.astron.console.commons.entity.bot.DatasetFile;
 import com.iflytek.astron.console.commons.entity.bot.DatasetInfo;
+import com.iflytek.astron.console.commons.entity.dataset.BotDatasetMaas;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,4 +83,6 @@ public interface DatasetDataService {
      * @return Dataset information list
      */
     List<DatasetInfo> selectDatasetListByBotId(Integer botId);
+
+    List<BotDatasetMaas> findMaasDatasetsByBotIdAndIsAct(Integer botId, Integer isAct);
 }

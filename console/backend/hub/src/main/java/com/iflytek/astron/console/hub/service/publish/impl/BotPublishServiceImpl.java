@@ -11,17 +11,20 @@ import com.iflytek.astron.console.hub.dto.publish.BotSummaryStatsVO;
 import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesStatsVO;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
+import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
+import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotMarketMapper;
 import com.iflytek.astron.console.hub.mapper.BotConversationStatsMapper;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
+import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.hub.converter.BotPublishConverter;
 import com.iflytek.astron.console.hub.converter.WorkflowVersionConverter;
 import com.iflytek.astron.console.hub.service.publish.PublishChannelService;
 import com.iflytek.astron.console.hub.service.wechat.WechatThirdpartyService;
 import com.iflytek.astron.console.commons.entity.bot.BotPublishQueryResult;
-import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotMarket;
 import com.iflytek.astron.console.hub.entity.BotConversationStats;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
@@ -38,6 +41,7 @@ import com.iflytek.astron.console.hub.event.BotPublishStatusChangedEvent;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -57,10 +61,12 @@ import java.util.stream.Collectors;
 public class BotPublishServiceImpl implements BotPublishService {
 
     private final ChatBotMarketMapper chatBotMarketMapper;
+    private final ChatBotBaseMapper chatBotBaseMapper;
     private final BotPublishConverter botPublishConverter;
     private final PublishChannelService publishChannelService;
     private final WechatThirdpartyService wechatThirdpartyService;
     private final ApplicationEventPublisher eventPublisher;
+    private final WorkflowInputService workflowInputService;
 
     // Version management related
     private final WorkflowVersionMapper workflowVersionMapper;
@@ -68,7 +74,6 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     // Statistics data related
     private final BotConversationStatsMapper botConversationStatsMapper;
-    private final ChatBotBaseMapper chatBotBaseMapper;
 
     @Override
     public PageResponse<BotPublishInfoDto> getBotList(
@@ -495,5 +500,43 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         log.info("WeChat authorization URL generated successfully: botId={}, authUrl={}", botId, authUrl);
         return response;
+    }
+
+    // ==================== Trace Log Management ====================
+
+    @Override
+    public PageResponse<Object> getBotTrace(String uid, Integer botId, BotTraceRequestDto requestDto, Long spaceId) {
+        log.info("Getting trace logs for bot: botId={}, uid={}, spaceId={}, request={}",
+                botId, uid, spaceId, requestDto);
+
+        // TODO: Implement actual trace log retrieval logic when ElasticSearch is available
+        // This is a placeholder implementation until ES integration is ready
+        //
+        // When implementing:
+        // 1. Validate bot permissions (check if user has access to this bot)
+        // 2. Get bot flow ID from bot configuration
+        // 3. Query trace logs from ElasticSearch with time range and filters
+        // 4. Apply additional filters (logLevel, keyword, traceId, sessionId)
+        // 5. Return paginated results
+
+        log.warn("Trace log functionality not yet implemented - ElasticSearch integration pending");
+
+        // Return empty result for now
+        return PageResponse.of(requestDto.getPage(), requestDto.getPageSize(), 0L, new ArrayList<>());
+    }
+
+    // ==================== Workflow Input Management ====================
+
+    @Override
+    public WorkflowInputsResponseDto getInputsType(Integer botId, String uid, Long spaceId) {
+        log.info("Getting workflow input parameters: botId={}, uid={}, spaceId={}", botId, uid, spaceId);
+
+        // Delegate to WorkflowInputService
+        WorkflowInputsResponseDto result = workflowInputService.getInputsType(botId, uid, spaceId);
+
+        log.info("Workflow input parameters retrieved successfully: botId={}, paramCount={}",
+                botId, result.getParameters().size());
+
+        return result;
     }
 }
