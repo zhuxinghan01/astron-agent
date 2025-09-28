@@ -147,7 +147,7 @@ function Index({ zoom, setZoom }: IndexProps): React.ReactElement {
         <SelectNode lastSelection={lastSelection} />
       ) : null}
       <ReactFlow
-      nodeDragThreshold={10}
+        nodeDragThreshold={10}
         nodes={nodes?.filter(node => !node.hidden)}
         edges={edges}
         onInit={handleFlowInit}
