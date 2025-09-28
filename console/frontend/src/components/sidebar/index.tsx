@@ -189,6 +189,7 @@ const Sidebar = ({
         />
 
         <MenuList
+          isCollapsed={isCollapsed}
           mixedChatList={mixedChatList}
           favoriteBotList={favoriteBotList}
           onRefreshData={() => {
