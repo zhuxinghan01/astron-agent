@@ -130,7 +130,7 @@ public class ChatHistoryController {
         } else {
             responseDto.setHistoryList(new JSONArray());
         }
-        responseDto.setBusinessType(chatFileList.get("businessType").toString());
+        responseDto.setBusinessType(chatFileList.get("businessType") == null ? null : chatFileList.get("businessType").toString());
         responseDto.setExistChatFileSize((Integer) chatFileList.get("existChatFileSize"));
         responseDto.setExistChatImage((Boolean) chatFileList.get("existChatImage"));
         responseDto.setEnabledPluginIds(chatList.getEnabledPluginIds());

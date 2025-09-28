@@ -13,8 +13,8 @@
                cv.agent_id    as agentId,
                vcpa.image_url as avatar,
                cv.status
-        from xfyun_gpt.custom_vcn as cv
-                 left join xfyun_gpt.voice_chat_personality_agent as vcpa
+        from custom_vcn as cv
+                 left join voice_chat_personality_agent as vcpa
                            on cv.agent_id = vcpa.id
         where cv.vcn_code = #{vcnCode}
           and cv.status != 0 and cv.share = 0
