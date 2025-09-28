@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -479,6 +480,7 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         base.setBotName(base.getBotName() + RandomUtil.randomString(6));
         base.setUpdateTime(LocalDateTime.now());
         base.setCreateTime(LocalDateTime.now());
+        log.info("--------------------------------old bot is :{}, new bot is :{}", JSONObject.toJSONString(botDetail), base);
         chatBotBaseMapper.insert(base);
         return base;
     }
