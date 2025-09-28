@@ -3,7 +3,6 @@ package com.iflytek.astron.console.hub.service.chat.impl;
 import com.iflytek.astron.console.commons.dto.bot.BotModelDto;
 import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.chat.*;
-import com.iflytek.astron.console.commons.enums.bot.DefaultBotModelEnum;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.data.ChatDataService;
@@ -20,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -95,7 +93,7 @@ class ChatListServiceImplTest {
     private void setupCommonMocks() {
         // Mock for model service with ApiResult wrapper
         lenient().when(modelService.getDetail(anyInt(), anyLong(), any(HttpServletRequest.class)))
-            .thenReturn(ApiResult.success(createDefaultLLMInfoVo()));
+                .thenReturn(ApiResult.success(createDefaultLLMInfoVo()));
     }
 
     private LLMInfoVo createDefaultLLMInfoVo() {
@@ -247,8 +245,7 @@ class ChatListServiceImplTest {
         chatList.setIsDelete(1);
         List<ChatTreeIndex> indexList = Arrays.asList(
                 createChatTreeIndex(1L),
-                createChatTreeIndex(2L)
-        );
+                createChatTreeIndex(2L));
         when(chatListDataService.findLatestEnabledChatByUserAndBot(uid, botId)).thenReturn(chatList);
         when(chatListDataService.getListByRootChatId(chatList.getId(), uid)).thenReturn(indexList);
 
@@ -357,7 +354,7 @@ class ChatListServiceImplTest {
         assertNotNull(result);
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
+        verify(chatListDataService).addRootTree(isNull(), eq(uid));
     }
 
     @Test
@@ -381,8 +378,7 @@ class ChatListServiceImplTest {
         // Given
         List<ChatTreeIndex> childChats = Arrays.asList(
                 createChatTreeIndex(1L),
-                createChatTreeIndex(2L)
-        );
+                createChatTreeIndex(2L));
         when(chatListDataService.findByUidAndChatId(uid, chatId)).thenReturn(chatList);
         when(chatListDataService.getAllListByChildChatId(chatId, uid)).thenReturn(childChats);
         when(chatListDataService.deleteBatchIds(Arrays.asList(1L, 2L))).thenReturn(2);
@@ -500,7 +496,7 @@ class ChatListServiceImplTest {
         assertEquals(botId, result.getBotId());
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
+        verify(chatListDataService).addRootTree(isNull(), eq(uid)); // ID is null before database save
     }
 
     @Test
