@@ -50,7 +50,7 @@ public class ChatListResponseDto {
     private String botType;
 
     @Schema(description = "Bot title")
-    private String botTitle;
+    private String botName;
 
     @Schema(description = "Bot English title")
     private String botTitleEn;
