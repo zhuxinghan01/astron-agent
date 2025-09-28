@@ -17,7 +17,7 @@ from plugin.aitools.const.const import (
 sid_generator2: SidGenerator2 = None
 
 
-def new_sid():
+def new_sid() -> str:
     """
     description: 生成sid
     :return:
@@ -36,7 +36,7 @@ def get_sid_generate() -> SidGenerator2:
     return sid_generator2
 
 
-def get_host_ip():
+def get_host_ip() -> str:
     """
     description:查询本机ip
     """
@@ -55,7 +55,7 @@ def get_host_ip():
     return ip
 
 
-def init_sid(sub: str, location: str, local_ip: str, local_port: str):
+def init_sid(sub: str, location: str, local_ip: str, local_port: str) -> None:
     global sid_generator2
     sid_generator2 = SidGenerator2(sub, location, local_ip, local_port)
 
@@ -64,7 +64,7 @@ class SidGenerator2:
     # 2.0架构专用后缀
     sid2 = 2
 
-    def __init__(self, service_sub, service_location, host_ip, service_port):
+    def __init__(self, service_sub: str, service_location: str, host_ip: str, service_port: str) -> None:
         self.index = 0
         ip = socket.inet_aton(host_ip)
         if ip:
@@ -81,7 +81,7 @@ class SidGenerator2:
         self.location = service_location
         self.sub = service_sub
 
-    def gen(self):
+    def gen(self) -> str:
         if len(self.sub) == 0:
             self.sub = "src"
         pid = os.getpid() & 0xFF

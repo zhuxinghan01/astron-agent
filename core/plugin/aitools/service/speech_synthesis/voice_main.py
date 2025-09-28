@@ -7,6 +7,7 @@ import logging
 import os
 import time
 import uuid
+from typing import Any, Union
 
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
 from plugin.aitools.const.err_code.code import CodeEnum
@@ -21,7 +22,7 @@ from common.service import get_kafka_producer_service, get_oss_service
 
 
 # 超拟人
-def smarttts_main(text: str, vcn: str, speed: int, request):
+def smarttts_main(text: str, vcn: str, speed: int, request: Any) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
