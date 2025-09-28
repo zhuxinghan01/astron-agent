@@ -6,6 +6,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
+  eslintConfigPrettier,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -38,7 +39,6 @@ export default [
         fetch: 'readonly',
       },
     },
-    extends: [eslintConfigPrettier],
     plugins: {
       '@typescript-eslint': tseslint,
       prettier: prettier,
