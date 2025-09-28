@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.entity.user.UserInfo;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.toolkit.entity.table.tool.*;
@@ -68,8 +69,10 @@ public class RpaAssistantService {
         validate(specMap, req.fields());
 
         // 3. Insert main assistant record
+        String username = UserInfoManagerHandler.get().getUsername();
         RpaUserAssistant assistant = new RpaUserAssistant();
         assistant.setUserId(currentUserId);
+        assistant.setUserName(username);
         assistant.setPlatformId(req.platformId());
         assistant.setAssistantName(req.assistantName());
         assistant.setStatus(1);
@@ -100,8 +103,11 @@ public class RpaAssistantService {
         return new RpaAssistantResp(
                 assistant.getId(),
                 assistant.getPlatformId(),
+                "",
                 assistant.getAssistantName(),
                 assistant.getRemarks(),
+                assistant.getUserName(),
+                assistant.getIcon(),
                 assistant.getStatus(),
                 req.fields(),
                 new JSONArray(),
@@ -177,7 +183,10 @@ public class RpaAssistantService {
     public RpaAssistantResp detail(String currentUserId, Long assistantId, String name) {
         // 1) Basic info and ownership check
         RpaUserAssistant a = findByIdAndUser(assistantId, currentUserId);
-
+        UserInfo userInfo = UserInfoManagerHandler.get();
+        if (!Objects.equals(a.getUserName(), userInfo.getUsername())) {
+            a.setUserName(userInfo.getUsername());
+        }
         // 2) Retrieve authentication field (e.g., apiKey)
         RpaUserAssistantField field = fieldMapper.selectOne(
                 new LambdaQueryWrapper<RpaUserAssistantField>()
@@ -219,14 +228,18 @@ public class RpaAssistantService {
             }
             records = filtered;
         }
+        RpaInfo rpaInfo = rpaInfoMapper.selectById(a.getPlatformId());
 
         // 6) Return detail response
         Map<String, String> fields = loadFieldsAsMap(assistantId);
         return new RpaAssistantResp(
                 a.getId(),
                 a.getPlatformId(),
+                rpaInfo.getCategory(),
                 a.getAssistantName(),
                 a.getRemarks(),
+                a.getUserName(),
+                a.getIcon(),
                 a.getStatus(),
                 fields,
                 records,

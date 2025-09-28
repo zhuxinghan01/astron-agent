@@ -12,4 +12,136 @@
             #{botId}
         </foreach>
     </select>
+
+    <!-- ==================== 智能体查询相关 SQL ==================== -->
+    
+    <!-- 智能体查询基础条件 -->
+    <sql id="base_query_conditions">
+        FROM
+        `chat_bot_base` a
+        LEFT JOIN chat_bot_market b ON a.id = b.bot_id
+        WHERE
+        a.is_delete = 0
+        AND (b.is_delete IS NULL OR b.is_delete = 0)
+        AND a.virtual_agent_id IS NULL
+        
+        <!-- 空间权限控制 -->
+        <choose>
+            <when test="condition.spaceId != null">
+                AND a.space_id = #{condition.spaceId}
+            </when>
+            <otherwise>
+                AND a.uid = #{condition.uid}
+                AND a.space_id IS NULL
+            </otherwise>
+        </choose>
+        
+        <!-- 发布状态筛选 -->
+        <if test="condition.publishStatus != null and condition.publishStatus.size() > 0">
+            AND COALESCE(b.bot_status, 0) IN
+            <foreach collection="condition.publishStatus" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+        
+        <!-- 版本筛选 -->
+        <if test="condition.version != null">
+            AND a.version = #{condition.version}
+        </if>
+        
+        <!-- 关键词搜索 -->
+        <if test="condition.keyword != null and condition.keyword != ''">
+            AND a.bot_name LIKE CONCAT('%', #{condition.keyword}, '%')
+        </if>
+    </sql>
+
+    <!-- 分页查询智能体列表 -->
+    <select id="selectBotListByConditions" resultType="com.iflytek.astron.console.commons.entity.bot.BotPublishQueryResult">
+        SELECT
+        a.uid,
+        a.space_id AS spaceId,
+        a.id AS botId,
+        a.bot_name AS botName,
+        a.bot_desc AS botDesc,
+        a.version,
+        -- 智能体状态映射：0=下架，1=上架，NULL=未发布
+        COALESCE(b.bot_status, 0) AS botStatus,
+        a.create_time AS createTime,
+        a.update_time AS updateTime,
+        b.publish_channels AS publishChannels
+        <include refid="base_query_conditions"/>
+        
+        <!-- 排序 -->
+        <choose>
+            <when test="condition.sortField != null">
+                <choose>
+                    <when test="condition.sortField == 'createTime'">
+                        ORDER BY a.create_time ${condition.sortDirection != null ? condition.sortDirection : 'DESC'}
+                    </when>
+                    <when test="condition.sortField == 'updateTime'">
+                        ORDER BY a.update_time ${condition.sortDirection != null ? condition.sortDirection : 'DESC'}
+                    </when>
+                    <otherwise>
+                        ORDER BY a.create_time DESC
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY a.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 查询智能体详情 -->
+    <select id="selectBotDetail" resultType="com.iflytek.astron.console.commons.entity.bot.BotPublishQueryResult">
+        SELECT
+            a.uid,
+            a.space_id AS spaceId,
+            a.id AS botId,
+            a.bot_name AS botName,
+            a.bot_desc AS botDesc,
+            a.version,
+            COALESCE(b.bot_status, 0) AS botStatus,
+            a.create_time AS createTime,
+            a.update_time AS updateTime,
+            b.publish_channels AS publishChannels
+        FROM chat_bot_base a
+        LEFT JOIN chat_bot_market b ON a.id = b.bot_id AND b.is_delete = 0
+        WHERE a.is_delete = 0
+          AND a.id = #{botId}
+          <choose>
+              <when test="spaceId != null">
+                  AND a.space_id = #{spaceId}
+              </when>
+              <otherwise>
+                  AND a.uid = #{uid} AND a.space_id IS NULL
+              </otherwise>
+          </choose>
+    </select>
+
+    <!-- 更新智能体发布状态和发布渠道 -->
+    <update id="updatePublishStatus">
+        UPDATE chat_bot_market 
+        SET 
+            bot_status = #{botStatus},
+            publish_channels = #{publishChannels},
+            update_time = NOW()
+        WHERE 
+            bot_id = #{botId}
+            AND is_delete = 0
+            <choose>
+                <when test="spaceId != null">
+                    AND EXISTS (
+                        SELECT 1 FROM chat_bot_base 
+                        WHERE id = #{botId} AND space_id = #{spaceId} AND is_delete = 0
+                    )
+                </when>
+                <otherwise>
+                    AND EXISTS (
+                        SELECT 1 FROM chat_bot_base 
+                        WHERE id = #{botId} AND uid = #{uid} AND space_id IS NULL AND is_delete = 0
+                    )
+                </otherwise>
+            </choose>
+    </update>
 </mapper>

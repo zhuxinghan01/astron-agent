@@ -61,6 +61,7 @@ public class RpaUserAssistant {
      * Assistant icon URL (if any).
      */
     private String icon;
+    private String userName;
 
     /**
      * Cached number of robots/workflows associated with this assistant.

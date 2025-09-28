@@ -4206,7 +4206,6 @@ DROP TABLE IF EXISTS `xingchen_official_prompt`;
 CREATE TABLE `xingchen_official_prompt`
 (
     `id`             bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`     varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `name`           varchar(255) NOT NULL COMMENT 'Prompt name',
     `prompt_key`     varchar(255) NOT NULL COMMENT 'Prompt unique identifier key',
     `uid`            varchar(128) NOT NULL DEFAULT '0' COMMENT 'User ID',
@@ -4221,7 +4220,6 @@ CREATE TABLE `xingchen_official_prompt`
     `create_time`    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     UNIQUE KEY `uk_prompt_key` (`prompt_key`),
     KEY              `idx_uid` (`uid`),
     KEY              `idx_type` (`type`),
@@ -4236,7 +4234,6 @@ DROP TABLE IF EXISTS `xingchen_prompt_manage`;
 CREATE TABLE `xingchen_prompt_manage`
 (
     `id`              bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`      varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `name`            varchar(500) NOT NULL COMMENT 'Prompt name',
     `prompt_key`      varchar(255) NOT NULL COMMENT 'Prompt unique identifier key',
     `uid`             varchar(128) NOT NULL COMMENT 'User ID',
@@ -4252,7 +4249,6 @@ CREATE TABLE `xingchen_prompt_manage`
     `create_time`     datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`     datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     UNIQUE KEY `uk_prompt_key_uid` (`prompt_key`,`uid`),
     KEY               `idx_uid` (`uid`),
     KEY               `idx_type` (`type`),
@@ -4268,7 +4264,6 @@ DROP TABLE IF EXISTS `xingchen_prompt_version`;
 CREATE TABLE `xingchen_prompt_version`
 (
     `id`           bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`   varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `prompt_id`    varchar(50)  NOT NULL COMMENT 'Associated Prompt ID',
     `uid`          varchar(128) NOT NULL COMMENT 'User ID',
     `version`      varchar(50)  NOT NULL COMMENT 'Version number',
@@ -4282,7 +4277,6 @@ CREATE TABLE `xingchen_prompt_version`
     `create_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     KEY            `idx_prompt_id` (`prompt_id`),
     KEY            `idx_uid` (`uid`),
     KEY            `idx_version` (`version`),

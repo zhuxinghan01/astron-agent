@@ -1,12 +1,15 @@
 package com.iflytek.astron.console.commons.service.data.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.iflytek.astron.console.commons.entity.bot.BotDataset;
 import com.iflytek.astron.console.commons.entity.bot.DatasetFile;
 import com.iflytek.astron.console.commons.entity.bot.DatasetInfo;
+import com.iflytek.astron.console.commons.entity.dataset.BotDatasetMaas;
 import com.iflytek.astron.console.commons.mapper.bot.BotDatasetMapper;
 import com.iflytek.astron.console.commons.mapper.bot.DatasetFileMapper;
 import com.iflytek.astron.console.commons.mapper.bot.DatasetInfoMapper;
+import com.iflytek.astron.console.commons.mapper.dataset.BotDatasetMaasMapper;
 import com.iflytek.astron.console.commons.service.data.DatasetDataService;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +28,9 @@ public class DatasetDataServiceImpl implements DatasetDataService {
 
     @Autowired
     private BotDatasetMapper botDatasetMapper;
+
+    @Autowired
+    private BotDatasetMaasMapper botDatasetMaasMapper;
 
     @Override
     public Optional<DatasetInfo> findById(Long datasetId) {
@@ -217,5 +223,13 @@ public class DatasetDataServiceImpl implements DatasetDataService {
     @Override
     public List<DatasetInfo> selectDatasetListByBotId(Integer botId) {
         return botDatasetMapper.selectDatasetListByBotId(botId);
+    }
+
+    @Override
+    public List<BotDatasetMaas> findMaasDatasetsByBotIdAndIsAct(Integer botId, Integer isAct) {
+        return botDatasetMaasMapper.selectList(Wrappers.lambdaQuery(BotDatasetMaas.class)
+                // 这里没有判断uid, 因为如果该助手上架, 其他人也可使用该助手
+                .eq(BotDatasetMaas::getBotId, botId)
+                .eq(BotDatasetMaas::getIsAct, 1));
     }
 }
