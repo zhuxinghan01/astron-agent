@@ -262,7 +262,8 @@ class ChatHistoryServiceImplTest {
         assertFalse(result.getMessages().isEmpty());
 
         // Should contain multimodal content
-        boolean hasMultimodalResponse = result.getMessages().stream()
+        boolean hasMultimodalResponse = result.getMessages()
+                .stream()
                 .anyMatch(msg -> "assistant".equals(msg.getRole()));
         assertTrue(hasMultimodalResponse);
     }
@@ -460,9 +461,10 @@ class ChatHistoryServiceImplTest {
         assertFalse(result.getMessages().isEmpty());
 
         // Should contain textual assistant response
-        boolean hasTextualResponse = result.getMessages().stream()
+        boolean hasTextualResponse = result.getMessages()
+                .stream()
                 .anyMatch(msg -> "assistant".equals(msg.getRole()) &&
-                         "Text response".equals(msg.getContent()));
+                        "Text response".equals(msg.getContent()));
         assertTrue(hasTextualResponse);
     }
 

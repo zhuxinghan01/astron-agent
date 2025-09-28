@@ -95,7 +95,7 @@ class ChatListServiceImplTest {
     private void setupCommonMocks() {
         // Mock for model service with ApiResult wrapper
         lenient().when(modelService.getDetail(anyInt(), anyLong(), any(HttpServletRequest.class)))
-            .thenReturn(ApiResult.success(createDefaultLLMInfoVo()));
+                .thenReturn(ApiResult.success(createDefaultLLMInfoVo()));
     }
 
     private LLMInfoVo createDefaultLLMInfoVo() {
@@ -247,8 +247,7 @@ class ChatListServiceImplTest {
         chatList.setIsDelete(1);
         List<ChatTreeIndex> indexList = Arrays.asList(
                 createChatTreeIndex(1L),
-                createChatTreeIndex(2L)
-        );
+                createChatTreeIndex(2L));
         when(chatListDataService.findLatestEnabledChatByUserAndBot(uid, botId)).thenReturn(chatList);
         when(chatListDataService.getListByRootChatId(chatList.getId(), uid)).thenReturn(indexList);
 
@@ -381,8 +380,7 @@ class ChatListServiceImplTest {
         // Given
         List<ChatTreeIndex> childChats = Arrays.asList(
                 createChatTreeIndex(1L),
-                createChatTreeIndex(2L)
-        );
+                createChatTreeIndex(2L));
         when(chatListDataService.findByUidAndChatId(uid, chatId)).thenReturn(chatList);
         when(chatListDataService.getAllListByChildChatId(chatId, uid)).thenReturn(childChats);
         when(chatListDataService.deleteBatchIds(Arrays.asList(1L, 2L))).thenReturn(2);
