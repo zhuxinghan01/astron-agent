@@ -74,10 +74,11 @@ function EditModal({ currentFlow, setEditModal }): React.ReactElement {
   return (
     <>
       {createPortal(
-        <div className="mask"
-        style={{
-          zIndex: 1001,
-        }}
+        <div
+          className="mask"
+          style={{
+            zIndex: 1001,
+          }}
         >
           {showModal && (
             <MoreIcons

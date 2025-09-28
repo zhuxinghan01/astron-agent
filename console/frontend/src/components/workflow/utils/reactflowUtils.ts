@@ -873,7 +873,8 @@ export function findItemById(dataArray: unknown[], id: string): unknown | null {
 }
 
 export function renderType(params): string {
-  if (params.fileType && params?.type === "array-string") {
+  console.log('params@@', params);
+  if (params.fileType && params?.type === 'array-string') {
     return `Array<${
       (params?.fileType?.slice(0, 1).toUpperCase() || '') +
       (params?.fileType?.slice(1) || '')

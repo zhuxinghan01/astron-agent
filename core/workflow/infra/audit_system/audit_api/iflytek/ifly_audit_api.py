@@ -107,7 +107,7 @@ class IFlyAuditAPI(AuditAPI):
         if not self.access_key_secret:
             missing.append("IFLYTEK_AUDIT_ACCESS_KEY_SECRET")
 
-        if missing:
+        if missing and int(os.getenv("AUDIT_ENABLE", "0")) == 1:
             raise ValueError(
                 f"Missing required environment variables: {', '.join(missing)}"
             )
@@ -223,7 +223,7 @@ class IFlyAuditAPI(AuditAPI):
                                     continue
                                 else:
                                     raise CustomException(
-                                        CodeEnum.AuditServerError,
+                                        CodeEnum.AUDIT_SERVER_ERROR,
                                         cause_error=cause_error,
                                     )
 
@@ -231,10 +231,10 @@ class IFlyAuditAPI(AuditAPI):
                             span.add_info_event(f"Audit response body: {resp_json}")
 
                             code = resp_json.get("code", -1)
-                            if int(code) == ThirdApiCodeEnum.Success.code:
+                            if int(code) == ThirdApiCodeEnum.SUCCESS.code:
                                 return resp_json
                             if (
-                                int(code) == ThirdApiCodeEnum.AuditError.code
+                                int(code) == ThirdApiCodeEnum.AUDIT_ERROR.code
                                 and current_retry < RETRY_COUNT
                             ):
                                 continue
@@ -245,7 +245,7 @@ class IFlyAuditAPI(AuditAPI):
                                     f"Response body: {resp_json}"
                                 )
                                 raise CustomException(
-                                    CodeEnum.AuditServerError, cause_error=cause_error
+                                    CodeEnum.AUDIT_SERVER_ERROR, cause_error=cause_error
                                 )
 
                     except (aiohttp.ClientError, asyncio.TimeoutError, Exception) as e:
@@ -257,7 +257,7 @@ class IFlyAuditAPI(AuditAPI):
                             continue
                         else:
                             raise CustomException(
-                                CodeEnum.AuditServerError, cause_error=str(e)
+                                CodeEnum.AUDIT_SERVER_ERROR, cause_error=str(e)
                             ) from e
                     finally:
                         current_retry += 1
@@ -321,7 +321,7 @@ class IFlyAuditAPI(AuditAPI):
         )
         if resp.get("data", {}).get("action") != ActionEnum.NONE:
             raise CustomException(
-                CodeEnum.AuditInputError,
+                CodeEnum.AUDIT_INPUT_ERROR,
                 cause_error=f"Audit result abnormal: {resp}",
             )
 
@@ -373,7 +373,7 @@ class IFlyAuditAPI(AuditAPI):
         )
         if resp.get("data", {}).get("action") != ActionEnum.NONE:
             raise CustomException(
-                CodeEnum.AuditOutputError,
+                CodeEnum.AUDIT_OUTPUT_ERROR,
                 cause_error=f"Audit result abnormal: {resp}",
             )
 

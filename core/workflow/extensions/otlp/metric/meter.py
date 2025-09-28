@@ -63,9 +63,9 @@ class Meter:
         :return: Dictionary containing default labels including DC, server info, app_id, function name, and process ID
         """
         default_labels = {
-            "dc": os.getenv("OTLP_DC", "hf"),
+            "dc": os.getenv("SERVICE_LOCATION", "hf"),
             "server_host": ip,
-            "server_name": os.getenv("OTLP_SERVICE_NAME", "default"),
+            "server_name": os.getenv("SERVICE_NAME", "default"),
             "app_id": self.app_id,
             "func": self.func,
             "pid": os.getpid(),
