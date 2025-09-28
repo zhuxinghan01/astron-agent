@@ -6,11 +6,8 @@ import com.iflytek.astron.console.commons.response.ApiResult;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
-import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -29,40 +26,12 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    private final MessageSource messageSource;
-
-    public GlobalExceptionHandler(MessageSource messageSource) {
-        this.messageSource = messageSource;
-    }
-
     /** Handle business exceptions */
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> handleBusinessException(BusinessException e) {
-        Locale locale = LocaleContextHolder.getLocale();
-        String msg;
-        try {
-            msg = messageSource.getMessage(
-                    e.getResponseEnum().getMessageKey(),
-                    e.getArgs(),
-                    e.getResponseEnum().getMessageKey(),
-                    locale);
-        } catch (Exception ex) {
-            msg = fallbackFormat(e.getResponseEnum().getMessageKey(), e.getArgs());
-        }
-        log.error("Business exception: {}", msg, e);
-        return ApiResult.error(e.getCode(), msg);
-    }
-
-    private String fallbackFormat(String template, Object[] args) {
-        if (args == null || args.length == 0)
-            return template;
-        try {
-            return String.format(template, args);
-        } catch (Exception ignore) {
-            return template + " " + java.util.Arrays.toString(args);
-        }
+        log.error("Business exception: {}", e.getMessage(), e);
+        return ApiResult.error(e);
     }
 
     /** Handle parameter validation exceptions */
@@ -135,7 +104,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResult<Void> handleNoHandlerFoundException(NoHandlerFoundException e) {
-        String messageCode = "url.not.found";
+        String messageCode = "http.url.not.found";
         log.warn("Handler not found exception: {}", messageCode, e);
         return ApiResult.error(ResponseEnum.NOT_FOUND.getCode(), messageCode);
     }

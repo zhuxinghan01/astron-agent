@@ -220,10 +220,17 @@ public class LLMService {
         if (CollUtil.isNotEmpty(valueList) && !valueList.contains(nodeType)) {
             return;
         }
-        List<Model> models = modelMapper.selectList(new LambdaQueryWrapper<Model>()
-                .eq(Model::getUid, userId)
+        LambdaQueryWrapper<Model> lambdaQueryWrapper = new LambdaQueryWrapper<Model>()
                 .eq(Model::getEnable, 1)
-                .eq(Model::getIsDeleted, 0));
+                .eq(Model::getIsDeleted, 0);
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        if (spaceId != null) {
+            lambdaQueryWrapper.eq(Model::getSpaceId, spaceId);
+        } else {
+            lambdaQueryWrapper.eq(Model::getUid, userId);
+        }
+        List<Model> models = modelMapper.selectList(lambdaQueryWrapper);
+
         for (Model model : models) {
             LLMInfoVo llmInfoVo = new LLMInfoVo();
             llmInfoVo.setId(model.getId());
@@ -426,8 +433,12 @@ public class LLMService {
     public void switchFinetuneModel(Long modelId, Boolean enable) {
         final String enabledKey = MODEL_ENABLE_KEY.concat(UserInfoManagerHandler.getUserId());
         Map<String, Boolean> catchModelMap = getCatchModelMap(enabledKey);
-        Boolean b = catchModelMap.get(modelId);
-        if (b == null) {
+        if (catchModelMap == null) {
+            catchModelMap = new HashMap<>();
+        }
+        final String key = String.valueOf(modelId);
+        Boolean exists = catchModelMap.get(key);
+        if (exists == null) {
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Fine-tuning model does not exist");
         } else {
             catchModelMap.put(modelId.toString(), enable);

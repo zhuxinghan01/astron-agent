@@ -29,19 +29,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @ResponseBody
 public class GlobalExceptionHandler {
-
-
-    private final MessageSource messageSource;
-
-    public GlobalExceptionHandler(MessageSource messageSource) {
-        this.messageSource = messageSource;
-    }
-
     /** Handle business exceptions */
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> handleBusinessException(BusinessException e) {
-        log.error("Business exception: {}", messageSource.getMessage(e.getMessage(), null, LocaleContextHolder.getLocale()), e);
+        log.error("Business exception: {}", e.getMessage(), e);
         return ApiResult.error(e);
     }
 
@@ -115,7 +107,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResult<Void> handleNoHandlerFoundException(NoHandlerFoundException e) {
-        String messageCode = "url.not.found";
+        String messageCode = "http.url.not.found";
         log.warn("Handler not found exception: {}", messageCode, e);
         return ApiResult.error(ResponseEnum.NOT_FOUND.getCode(), messageCode);
     }
