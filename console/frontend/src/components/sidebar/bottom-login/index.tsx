@@ -227,10 +227,10 @@ const BottomLogin = ({
                 }}
               />
               {!isCollapsed && (
-                <>
+                <div className="flex items-center flex-1 overflow-hidden">
                   <div className="ml-2.5 cursor-pointer flex items-center relative flex-1 min-w-0">
                     <span
-                      className=" text-overflow text-[14px] text-[#333333]"
+                      className=" text-overflow text-[14px] text-[#333333] flex-1"
                       title={user?.username}
                     >
                       {user?.username}
@@ -246,8 +246,10 @@ const BottomLogin = ({
                       />
                     </div>
                   </div>
+
+                  {/* 升级入口 */}
                   <OrderTypeDisplay />
-                </>
+                </div>
               )}
             </>
           ) : (

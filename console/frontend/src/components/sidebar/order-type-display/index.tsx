@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import eventBus from '@/utils/event-bus';
 import { useTranslation } from 'react-i18next';
@@ -22,12 +22,17 @@ interface OrderTypeDisplayProps {
 /** ## 订单类型展示组件 */
 const OrderTypeDisplay: React.FC<OrderTypeDisplayProps> = ({ onClose }) => {
   const navigate = useNavigate();
-  const { joinedEnterpriseList } =useEnterpriseStore();
+  const { joinedEnterpriseList } = useEnterpriseStore();
   // 判断joinedEnterpriseList中是否有serviceType为3的企业
-  const hasServiceType3 = joinedEnterpriseList.some(enterprise => enterprise.serviceType === 3);
+  const hasServiceType3 = joinedEnterpriseList.some(
+    enterprise => enterprise.serviceType === 3
+  );
   /** ## 订单类型展示组件 */
   const { t } = useTranslation();
-  const { orderDerivedInfo: { orderTraceAndIcon }, isSpecialUser: isSpecial } = useOrderStore();
+  const {
+    orderDerivedInfo: { orderTraceAndIcon },
+    isSpecialUser: isSpecial,
+  } = useOrderStore();
   const { info } = useEnterpriseStore();
   const { spaceType } = useSpaceStore();
   // 使用函数生成 orderTypes 数组，确保每次渲染都使用最新的翻译
@@ -65,22 +70,27 @@ const OrderTypeDisplay: React.FC<OrderTypeDisplayProps> = ({ onClose }) => {
     orderTypes[0];
 
   // 套餐升级功能
-  const [upgradeComboModalVisible, setUpgradeComboModalVisible] = useState(false);
+  const [upgradeComboModalVisible, setUpgradeComboModalVisible] =
+    useState(false);
 
-  const handleUpgradeComboModalOk = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleUpgradeComboModalOk = async (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
     // TODO 升级团队版 需要调用后端接口，接口完成调用关闭弹窗，并跳转创建团队(默认为团队)页面
     try {
       await upgradeCombo();
       setUpgradeComboModalVisible(false);
       navigate('team/create/1');
-    } catch(err: unknown) {
+    } catch (err: unknown) {
       console.log(err, 'err');
       message.error(err instanceof Error ? err.message : '升级失败');
     }
   };
 
-  const handleUpgradeComboModalCancel = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleUpgradeComboModalCancel = (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
     setUpgradeComboModalVisible(false);
   };
@@ -95,10 +105,12 @@ const OrderTypeDisplay: React.FC<OrderTypeDisplayProps> = ({ onClose }) => {
       >
         <div className={styles.upgradeComboModalBox}>
           {/* <div className={styles.upgradeComboModalTitle}>确定升级为团队版吗？</div> */}
-          
+
           {/* footer */}
           <div className={styles.upgradeComboModalFooter}>
-            <Button type="primary" onClick={handleUpgradeComboModalOk}>确定</Button>
+            <Button type="primary" onClick={handleUpgradeComboModalOk}>
+              确定
+            </Button>
             <Button onClick={handleUpgradeComboModalCancel}>取消</Button>
           </div>
         </div>
@@ -106,38 +118,49 @@ const OrderTypeDisplay: React.FC<OrderTypeDisplayProps> = ({ onClose }) => {
     );
   };
 
+  // 如果已经创建或则加入了团队，不展示
+  if (joinedEnterpriseList?.length) return null;
+
   return (
-    <Tooltip title={currentOrder?.type === 'free' && hasServiceType3 && info.serviceType !== 3  ? '请在定制版中使用更多功能' : ''}>
+    <Tooltip
+      title={
+        currentOrder?.type === 'free' &&
+        hasServiceType3 &&
+        info.serviceType !== 3
+          ? '请在定制版中使用更多功能'
+          : ''
+      }
+    >
       <div
         className={styles.upCombo}
         onClick={(event: React.MouseEvent<HTMLDivElement>) => {
           event.stopPropagation();
-          if(currentOrder?.type === 'free' && hasServiceType3 ) {
+          if (currentOrder?.type === 'free' && hasServiceType3) {
             return;
           }
-          
+
           // !isSpecial && eventBus.emit('showComboModal');
           !isSpecial && setUpgradeComboModalVisible(true);
           // 手动关闭 Popover
           onClose?.();
         }}
       >
-      {info.serviceType === 3 && spaceType !== 'personal' ?
-        <>
-          <img src={traceEnterprise} alt={currentOrder?.alt} />
-          定制版
-        </>
-        :
-        <>
-          <img src={currentOrder?.icon} alt={currentOrder?.alt} />
-          {currentOrder?.text}     
-        </>
-      }
+        {info.serviceType === 3 && spaceType !== 'personal' ? (
+          <>
+            <img src={traceEnterprise} alt={currentOrder?.alt} />
+            定制版
+          </>
+        ) : (
+          <>
+            <img src={currentOrder?.icon} alt={currentOrder?.alt} />
+            {currentOrder?.text}
+          </>
+        )}
       </div>
 
       {/* 升级套餐确定弹窗 */}
       <UpgradeComboModal />
-   </Tooltip>
+    </Tooltip>
   );
 };
 
