@@ -19,7 +19,8 @@ def check(file: UploadFile, contents: bytes, span_context: Span) -> None:
     Validate uploaded file against supported file types and size limits.
 
     :param file: The uploaded file object containing metadata
-    :param contents: The file contents as bytes (currently unused but kept for future use)
+    :param contents: The file contents as bytes (currently unused but kept
+                     for future use)
     :param span_context: Tracing span for logging validation events
     :raises CustomException: If file type is not supported or file size exceeds limit
     """
@@ -40,7 +41,7 @@ def check(file: UploadFile, contents: bytes, span_context: Span) -> None:
     if extension not in support_file_type:
         span_context.add_info_event(f"Unsupported file type: {extension}")
         raise CustomException(
-            err_code=CodeEnum.FileInvalidError,
+            err_code=CodeEnum.FILE_INVALID_ERROR,
             err_msg=f"Unsupported file type: {extension}",
         )
 
@@ -50,6 +51,6 @@ def check(file: UploadFile, contents: bytes, span_context: Span) -> None:
             f"File size {file_size} exceeds limit {file_size_limit} bytes"
         )
         raise CustomException(
-            err_code=CodeEnum.FileInvalidError,
+            err_code=CodeEnum.FILE_INVALID_ERROR,
             err_msg="File size exceeds limit",
         )

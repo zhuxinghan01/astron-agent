@@ -118,7 +118,7 @@ export interface BotInfoType {
   creatorNickname: string;
   prologue: string;
   mine: boolean;
-  botName: string;
+  botTitle: string;
   avatar: string;
   botDesc: string;
   version: number;
