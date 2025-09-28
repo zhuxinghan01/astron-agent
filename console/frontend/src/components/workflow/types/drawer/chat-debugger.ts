@@ -660,18 +660,18 @@ export interface UseChatInputProps {
   uploadComplete: (
     event: ProgressEvent<EventTarget>,
     index: number,
-    fileId: string,
+    fileId: string
   ) => void;
   handleFileUpload: (
     file: File,
     index: number,
     multiple: boolean,
-    fileId: string,
+    fileId: string
   ) => void;
   handleDeleteFile: (index: number, fileId: string) => void;
   handleChangeParam: (
     index: number,
     fn: (data: StartNodeType, value: unknown) => void,
-    value: unknown,
+    value: unknown
   ) => void;
 }
