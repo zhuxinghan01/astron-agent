@@ -641,3 +641,37 @@ export interface IFlyCollectorType {
     category: string
   ) => void;
 }
+
+export interface UseChatContentProps {
+  advancedConfig: ChatContentAdvancedConfig;
+  goodFeedback: (id: string | undefined, sid: string) => void;
+  badFeedback: (id: string | undefined, sid: string) => void;
+  modalVisible: boolean;
+  sid: string | undefined;
+  modalType: 'good' | 'bad';
+  setModalVisible: (visible: boolean) => void;
+  handleActiveStyle: (style: string) => void;
+  renderInputElement: (input: unknown) => React.ReactElement;
+  setSid: (sid: string) => void;
+  copyData: (data: unknown) => void;
+}
+
+export interface UseChatInputProps {
+  uploadComplete: (
+    event: ProgressEvent<EventTarget>,
+    index: number,
+    fileId: string
+  ) => void;
+  handleFileUpload: (
+    file: File,
+    index: number,
+    multiple: boolean,
+    fileId: string
+  ) => void;
+  handleDeleteFile: (index: number, fileId: string) => void;
+  handleChangeParam: (
+    index: number,
+    fn: (data: StartNodeType, value: unknown) => void,
+    value: unknown
+  ) => void;
+}

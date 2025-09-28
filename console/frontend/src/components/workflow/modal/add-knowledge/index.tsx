@@ -15,23 +15,18 @@ import {
   NodeItem,
   OrderByType,
   VersionType,
-} from '@/components/workflow/types/modal';
+  useAddKnowledgeProps,
+} from '@/components/workflow/types';
 import { Icons } from '@/components/workflow/icons';
 
-const AddKnowledge = (): React.ReactElement => {
+const useAddKnowledge = (): useAddKnowledgeProps => {
   const { t } = useTranslation();
-  const setKnowledgeModalInfo = useFlowsManager(
-    state => state.setKnowledgeModalInfo
-  );
   const autoSaveCurrentFlow = useFlowsManager(
     state => state.autoSaveCurrentFlow
   );
   const knowledgeModalInfo = useFlowsManager(state => state.knowledgeModalInfo);
   const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
-  const setKnowledgeDetailModalInfo = useFlowsManager(
-    state => state.setKnowledgeDetailModalInfo
-  );
   const currentStore = getCurrentStore();
   const nodes = currentStore(state => state.nodes);
   const setNode = currentStore(state => state.setNode);
@@ -171,7 +166,163 @@ const AddKnowledge = (): React.ReactElement => {
       ? options.filter(item => item.value !== 'SparkDesk-RAG')
       : options;
   }, [isPro, t]);
+  return {
+    allData,
+    setAllData,
+    loading,
+    setLoading,
+    tag,
+    setTag,
+    orderBy,
+    versionList,
+    getKnowledgesDebounce,
+    setOrderBy,
+    handleKnowledgesChange,
+    ragType,
+    checkedIds,
+  };
+};
 
+const KnowledgeList = ({
+  loading,
+  allData,
+  ragType,
+  id,
+  handleKnowledgesChange,
+  checkedIds,
+  orderBy,
+}): React.ReactElement => {
+  const { t } = useTranslation();
+  const setKnowledgeDetailModalInfo = useFlowsManager(
+    state => state.setKnowledgeDetailModalInfo
+  );
+  if (loading) return <Spin spinning={loading} />;
+  if (allData.length === 0)
+    return (
+      <div className="mt-3 flex flex-col justify-center items-center gap-[30px] text-desc h-full">
+        <img
+          src={Icons.addKnowledge.listEmpty}
+          className="w-[124px] h-[122px]"
+          alt=""
+        />
+        <p>{t('workflow.nodes.relatedKnowledgeModal.noDocuments')}</p>
+      </div>
+    );
+  return (
+    <>
+      {allData.map((item: KnowledgeItem) => {
+        return (
+          <div
+            key={item.id}
+            className="flex flex-col bg-[#F7F7FA] p-4 rounded-lg"
+          >
+            <div className="flex items-center gap-2.5">
+              <img
+                src={Icons.addKnowledge.knowledge}
+                className="w-7 h-7"
+                alt=""
+              />
+              <div className="flex items-center flex-1 overflow-hidden gap-2">
+                <p
+                  className="max-w-[500px] text-overflow text-sm font-medium"
+                  title={item.name}
+                >
+                  {item.name}
+                </p>
+                <img src={item?.corner} className="w-[54px] h-[28px]" alt="" />
+              </div>
+              <div
+                className="border border-[#E5E5E5] py-1 px-6 rounded-lg cursor-pointer"
+                onClick={() => {
+                  setKnowledgeDetailModalInfo({
+                    ...item,
+                    open: true,
+                    nodeId: id,
+                    repoId: item.id,
+                  });
+                }}
+              >
+                {t('workflow.nodeList.details')}
+              </div>
+              <Tooltip
+                overlayClassName="black-tooltip"
+                title={t(
+                  'workflow.nodes.relatedKnowledgeModal.knowledgeTypeTip'
+                )}
+              >
+                <div
+                  style={{
+                    cursor:
+                      ragType && item?.tag !== ragType
+                        ? 'not-allowed'
+                        : 'pointer',
+                  }}
+                  onClick={() => {
+                    if (ragType && item?.tag !== ragType) return;
+                    handleKnowledgesChange(item);
+                  }}
+                >
+                  {checkedIds.includes(item.id) ? (
+                    <div
+                      className="bg-[#EBEBF1] py-1 px-6 rounded-lg"
+                      style={{
+                        border: '1px solid transparent',
+                      }}
+                    >
+                      {t('workflow.nodes.relatedKnowledgeModal.remove')}
+                    </div>
+                  ) : (
+                    <div className="border border-[#E5E5E5] py-1 px-6 rounded-lg">
+                      {t('workflow.nodes.relatedKnowledgeModal.add')}
+                    </div>
+                  )}
+                </div>
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0 pl-[38px]">
+              <img
+                src={Icons.chatResult.resultCopy}
+                className="w-3 h-3"
+                alt=""
+              />
+              <p className="text-[#757575] text-xs">
+                {orderBy === 'create_time'
+                  ? `${t(
+                      'workflow.nodes.relatedKnowledgeModal.createTimePrefix'
+                    )}${dayjs(item?.createTime)?.format('YYYY-MM-DD HH:mm:ss')}`
+                  : `${t(
+                      'workflow.nodes.relatedKnowledgeModal.updateTimePrefix'
+                    )}${dayjs(item?.updateTime)?.format(
+                      'YYYY-MM-DD HH:mm:ss'
+                    )}`}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+const AddKnowledge = (): React.ReactElement => {
+  const { t } = useTranslation();
+  const knowledgeModalInfo = useFlowsManager(state => state.knowledgeModalInfo);
+  const setKnowledgeModalInfo = useFlowsManager(
+    state => state.setKnowledgeModalInfo
+  );
+  const {
+    tag,
+    setTag,
+    orderBy,
+    versionList,
+    getKnowledgesDebounce,
+    loading,
+    handleKnowledgesChange,
+    ragType,
+    checkedIds,
+    allData,
+    setOrderBy,
+  } = useAddKnowledge();
   return (
     <>
       {knowledgeModalInfo.open
@@ -280,121 +431,15 @@ const AddKnowledge = (): React.ReactElement => {
                     overflow: 'auto',
                   }}
                 >
-                  {loading ? (
-                    <Spin spinning={loading} />
-                  ) : allData.length > 0 ? (
-                    allData.map((item: KnowledgeItem) => {
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex flex-col bg-[#F7F7FA] p-4 rounded-lg"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src={Icons.addKnowledge.knowledge}
-                              className="w-7 h-7"
-                              alt=""
-                            />
-                            <div className="flex items-center flex-1 overflow-hidden gap-2">
-                              <p
-                                className="max-w-[500px] text-overflow text-sm font-medium"
-                                title={item.name}
-                              >
-                                {item.name}
-                              </p>
-                              <img
-                                src={item?.corner}
-                                className="w-[54px] h-[28px]"
-                                alt=""
-                              />
-                            </div>
-                            <div
-                              className="border border-[#E5E5E5] py-1 px-6 rounded-lg cursor-pointer"
-                              onClick={() => {
-                                setKnowledgeDetailModalInfo({
-                                  ...item,
-                                  open: true,
-                                  nodeId: id,
-                                  repoId: item.id,
-                                });
-                              }}
-                            >
-                              {t('workflow.nodeList.details')}
-                            </div>
-                            <Tooltip
-                              overlayClassName="black-tooltip"
-                              title={t(
-                                'workflow.nodes.relatedKnowledgeModal.knowledgeTypeTip'
-                              )}
-                            >
-                              <div
-                                style={{
-                                  cursor:
-                                    ragType && item?.tag !== ragType
-                                      ? 'not-allowed'
-                                      : 'pointer',
-                                }}
-                                onClick={() => {
-                                  if (ragType && item?.tag !== ragType) return;
-                                  handleKnowledgesChange(item);
-                                }}
-                              >
-                                {checkedIds.includes(item.id) ? (
-                                  <div
-                                    className="bg-[#EBEBF1] py-1 px-6 rounded-lg"
-                                    style={{
-                                      border: '1px solid transparent',
-                                    }}
-                                  >
-                                    {t(
-                                      'workflow.nodes.relatedKnowledgeModal.remove'
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="border border-[#E5E5E5] py-1 px-6 rounded-lg">
-                                    {t(
-                                      'workflow.nodes.relatedKnowledgeModal.add'
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </Tooltip>
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0 pl-[38px]">
-                            <img
-                              src={Icons.chatResult.resultCopy}
-                              className="w-3 h-3"
-                              alt=""
-                            />
-                            <p className="text-[#757575] text-xs">
-                              {orderBy === 'create_time'
-                                ? `${t(
-                                    'workflow.nodes.relatedKnowledgeModal.createTimePrefix'
-                                  )}${dayjs(item?.createTime)?.format(
-                                    'YYYY-MM-DD HH:mm:ss'
-                                  )}`
-                                : `${t(
-                                    'workflow.nodes.relatedKnowledgeModal.updateTimePrefix'
-                                  )}${dayjs(item?.updateTime)?.format(
-                                    'YYYY-MM-DD HH:mm:ss'
-                                  )}`}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="mt-3 flex flex-col justify-center items-center gap-[30px] text-desc h-full">
-                      <img
-                        src={Icons.addKnowledge.listEmpty}
-                        className="w-[124px] h-[122px]"
-                        alt=""
-                      />
-                      <p>
-                        {t('workflow.nodes.relatedKnowledgeModal.noDocuments')}
-                      </p>
-                    </div>
-                  )}
+                  <KnowledgeList
+                    loading={loading}
+                    allData={allData}
+                    ragType={ragType}
+                    id={knowledgeModalInfo.nodeId}
+                    handleKnowledgesChange={handleKnowledgesChange}
+                    checkedIds={checkedIds}
+                    orderBy={orderBy}
+                  />
                 </div>
               </div>
             </div>,

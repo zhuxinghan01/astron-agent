@@ -138,3 +138,6 @@ export * from './modal';
 
 // 导出 Nodes 相关类型
 export * from './nodes';
+
+// 导出 Components 相关类型
+export * from './components';

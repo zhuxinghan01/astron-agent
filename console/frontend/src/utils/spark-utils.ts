@@ -67,6 +67,46 @@ const copyText = async (options: {
   }
 };
 
+/**
+ * 复制文本
+ * @param options
+ */
+const copyPureText = (options: {
+  text: string;
+  origin?: boolean;
+  successText?: string;
+}) => {
+  const props = { origin: true, ...options };
+  const typeList = [
+    'metadata',
+    'plugin_debug_param',
+    'plugin_debug_response',
+    'plugin_cards',
+    'plugin_chat_file',
+  ];
+  const regex = new RegExp(
+    '```(' + typeList.join('|') + ')\n(.*?)\n```\n',
+    'g'
+  );
+  const _text = props.text?.replace(regex, '');
+  let input: HTMLInputElement | HTMLTextAreaElement;
+  if (props.origin) input = document.createElement('textarea');
+  else input = document.createElement('input');
+
+  input.setAttribute('readonly', 'readonly');
+  input.value = _text;
+  document.body.appendChild(input);
+  input.select();
+  if (document.execCommand('copy')) document.execCommand('copy');
+  document.body.removeChild(input);
+  if (!props.successText) {
+    message.info('复制成功');
+  } else {
+    message.info('复制失败');
+  }
+  console.log('复制成功');
+};
+
 const getCookie = (cookieName: string) => {
   const name = cookieName + '=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -185,6 +225,70 @@ const transformMathThinkData = (deCodedData: string, ansContent: any) => {
     return tempContent;
   } catch (e) {
     return null;
+  }
+};
+
+// 将allTools加入
+const generateAllToolsInfo = (originMap: any, allToolStr: string) => {
+  try {
+    const allToolObj = JSON.parse(allToolStr?.replace(/```allTool|```/g, ''));
+    const type = allToolObj?.payload?.plugins?.text?.[0]?.name;
+    const deskToolName = allToolObj?.payload?.plugins?.text?.[0]?.deskToolName;
+    const index = originMap?.findIndex((item: any) => {
+      return item.name === type;
+    });
+    if (index > -1) {
+      originMap[index].tools.push(allToolObj);
+    } else {
+      originMap.push({ name: type, tools: [allToolObj], deskToolName });
+    }
+    return originMap;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+};
+
+// 转换原始的溯源数据
+const transformTraceSource = (originSource: any, traceSourceStr: any) => {
+  try {
+    // 确保 originSource 是数组
+    const safeOriginSource = Array.isArray(originSource) ? originSource : [];
+
+    const newTraceSource = JSON.parse(
+      traceSourceStr?.replace(
+        /```searchSource|```ragDoc|```zdmSource|```ragAudio|```ragVideo|```ragImage|```ragMultiTrace|```fileMultiTrace|```/g,
+        ''
+      )
+    );
+
+    switch (true) {
+      case traceSourceStr.startsWith('```zdmSource'): {
+        return [...safeOriginSource, ...newTraceSource];
+      }
+      case traceSourceStr.startsWith('```searchSource'): {
+        return [
+          ...safeOriginSource,
+          {
+            type: 'searchSource',
+            data: newTraceSource,
+            index: safeOriginSource?.length + 1,
+          },
+        ];
+      }
+      case traceSourceStr.startsWith('```ragMultiTrace'): {
+        return [...safeOriginSource, newTraceSource];
+      }
+      case traceSourceStr.startsWith('```fileMultiTrace'): {
+        return [...safeOriginSource, newTraceSource];
+      }
+      default: {
+        return traceSourceStr;
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return originSource || []; // 发生错误时返回原始源或空数组
   }
 };
 
@@ -338,7 +442,7 @@ export {
   // setQueryString,
   copyText,
   // copyCode,
-  // copyPureText,
+  copyPureText,
   // moveItemToFirst,
   getCookie,
   // isObjectEmpty,
@@ -364,9 +468,9 @@ export {
   // temporaryPptTrans,
   // jumpTologinDeskPassport,
   transformMathThinkData,
-  // generateAllToolsInfo,
+  generateAllToolsInfo,
   transformDeepthinkData,
-  // transformTraceSource,
+  transformTraceSource,
   // getSourceTypeFromStr,
   // handleMultiAudio,
   // base64ToUint8Array,

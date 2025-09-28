@@ -25,7 +25,7 @@ def init_metric(
     timeout: int = 5000,
     export_interval_millis: int = 1000,
     export_timeout_millis: int = 5000,
-):
+) -> None:
     """
     初始化metric
     :param endpoint:                open telemetry地址

@@ -24,7 +24,7 @@ const getEnvUrl = (): string => {
   const NODE_ENV = import.meta.env.MODE;
   return NODE_ENV === 'production'
     ? ''
-    : NODE_ENV === 'development'
+    : NODE_ENV === 'development' || NODE_ENV === 'test'
       ? 'test.'
       : 'pre.';
 };

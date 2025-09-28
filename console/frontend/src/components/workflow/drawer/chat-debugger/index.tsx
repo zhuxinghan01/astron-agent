@@ -83,7 +83,6 @@ export function ChatDebuggerContent({
 }: ChatDebuggerContentProps): React.ReactElement {
   const { t } = useTranslation();
   const versionId = useRef<string>('');
-  // const { handleFlowToChat } = useChat();
   const buildPassRef = useRef<boolean>(false);
   const textareRef = useRef<HTMLTextAreaElement>(null);
   const chatIdRef = useRef<string>(uuid().replace(/-/g, ''));
@@ -602,7 +601,7 @@ export function ChatDebuggerContent({
           description: currentFlow?.description,
           data: {
             nodes: nodes?.map(({ nodeType, ...reset }) => {
-              let node = {
+              const node = {
                 ...reset,
                 data: {
                   ...reset?.data,

@@ -155,16 +155,8 @@ class NodeExecutionTemplate:
 
             try:
                 parameters = self._build_execution_parameters(span_context, **kwargs)
-
                 # Execute node logic
-                span_context.add_info_events(
-                    {
-                        "config": json.dumps(
-                            self.node.node_instance.get_node_config(),
-                            ensure_ascii=False,
-                        )
-                    }
-                )
+                span_context.add_info_events({"config": str(self.node.node_instance)})
                 result = await self.node.node_instance.async_execute(**parameters)
                 self.node.gather_node_event_log(result)
 
@@ -174,7 +166,7 @@ class NodeExecutionTemplate:
                 raise
             except Exception as err:
                 raise CustomException(
-                    CodeEnum.NODE_RUN_ERROR, err_msg=f"{err}", cause_error=f"{err}"
+                    CodeEnum.NODE_RUN_ERROR, cause_error=f"{err}"
                 ) from err
 
     def _build_execution_parameters(
@@ -601,10 +593,6 @@ class SparkFlowEngineNode(BaseModel):
         # Record token consumption
         if result.token_cost:
             self.node_log.append_usage_data(result.token_cost.dict())
-
-        # Record node configuration (exclude Agent nodes)
-        if self.node_id.split(":")[0] != NodeType.AGENT.value:
-            self.node_log.append_config_data(self.node_instance.get_node_config())
 
         # Record LLM output
         if self.node_id.split(":")[0] in self.llm_nodes:

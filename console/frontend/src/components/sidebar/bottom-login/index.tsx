@@ -20,6 +20,8 @@ interface BottomLoginProps {
   isCollapsed: boolean;
   isLogin?: boolean;
   user?: User | undefined;
+  isPersonCenterOpen: boolean;
+  setIsPersonCenterOpen: (visible: boolean) => void;
   // Components
   OrderTypeComponent?: ReactElement | undefined;
 }
@@ -109,6 +111,8 @@ const getUserAvatar = (user?: User): string => {
 const BottomLogin = ({
   isCollapsed,
   OrderTypeComponent,
+  isPersonCenterOpen,
+  setIsPersonCenterOpen,
 }: BottomLoginProps): ReactElement => {
   const [internalShowModal, setInternalShowModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -194,6 +198,8 @@ const BottomLogin = ({
             onClose={() => {
               setInternalShowModal(false);
             }}
+            isPersonCenterOpen={isPersonCenterOpen}
+            setIsPersonCenterOpen={setIsPersonCenterOpen}
           />
         }
         placement="top"

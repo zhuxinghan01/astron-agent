@@ -91,10 +91,12 @@ const createNameColumn = (
 };
 
 const createTypeColumn = (
-  handleInputParamsChange: (
-    id: number,
-    key: string,
-    value: string | number | boolean | string[] | null | undefined
+  handleBatchInputParamsChange: (
+    id: number | null,
+    updates: Record<
+      string,
+      string | number | boolean | string[] | null | undefined
+    >
   ) => void
 ): ColumnType<TableField> => {
   const { t } = useTranslation();
@@ -119,8 +121,11 @@ const createTypeColumn = (
         options={typeOptions}
         value={type}
         onChange={(value: string) => {
-          handleInputParamsChange(record?.id, 'type', value);
-          handleInputParamsChange(record?.id, 'defaultValue', '');
+          // 使用批量更新避免竞争条件
+          handleBatchInputParamsChange(record?.id, {
+            type: value,
+            defaultValue: '',
+          });
         }}
       />
     ),
@@ -347,6 +352,13 @@ const createColumns = (
     key: string,
     value: string | number | boolean | string[] | null | undefined
   ) => void,
+  handleBatchInputParamsChange: (
+    id: number | null,
+    updates: Record<
+      string,
+      string | number | boolean | string[] | null | undefined
+    >
+  ) => void,
   handleCheckInput: (
     currentParam: TableField,
     key: keyof TableField,
@@ -355,7 +367,7 @@ const createColumns = (
   onDel: (record: TableField) => void
 ): ColumnType<TableField>[] => [
   createNameColumn(handleInputParamsChange, handleCheckInput),
-  createTypeColumn(handleInputParamsChange),
+  createTypeColumn(handleBatchInputParamsChange),
   createDescriptionColumn(handleInputParamsChange, handleCheckInput),
   createDefaultValueColumn(handleInputParamsChange),
   createRequiredColumn(handleInputParamsChange),
@@ -366,6 +378,7 @@ function DataBaseTable(
   {
     dataSource,
     handleInputParamsChange,
+    handleBatchInputParamsChange,
     handleCheckInput,
     onDel,
   }: {
@@ -374,6 +387,13 @@ function DataBaseTable(
       id: number | null,
       key: string,
       value: string | number | boolean | string[] | null | undefined
+    ) => void;
+    handleBatchInputParamsChange: (
+      id: number | null,
+      updates: Record<
+        string,
+        string | number | boolean | string[] | null | undefined
+      >
     ) => void;
     handleCheckInput: (
       currentParam: TableField,
@@ -390,6 +410,7 @@ function DataBaseTable(
   const tableRef = useRef<any>(null);
   const columns = createColumns(
     handleInputParamsChange,
+    handleBatchInputParamsChange,
     handleCheckInput,
     onDel
   );

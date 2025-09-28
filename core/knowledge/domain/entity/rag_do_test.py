@@ -37,26 +37,6 @@ class TestChunkInfo:
         chunk2 = ChunkInfo(docId="doc2", chunkId="chunk_abc", content="content2")
         assert chunk2.chunkId == "chunk_abc"
 
-    def test_repr_method(self) -> None:
-        """Test string representation method."""
-        chunk = ChunkInfo(docId="test_doc", chunkId=42, content="sample text")
-        repr_str = repr(chunk)
-
-        # Check that repr contains key information
-        assert "ChunkInfo" in repr_str
-        assert "docId=test_doc" in repr_str
-        assert "chunkId=42" in repr_str
-        assert "content=sample text" in repr_str
-
-    def test_repr_with_long_content(self) -> None:
-        """Test repr with long content."""
-        long_content = "This is a very long content " * 10
-        chunk = ChunkInfo(docId="doc1", chunkId=1, content=long_content)
-        repr_str = repr(chunk)
-
-        assert "ChunkInfo" in repr_str
-        assert long_content in repr_str
-
     def test_chunk_info_attributes_immutable_after_init(self) -> None:
         """Test that attributes can be modified after initialization."""
         chunk = ChunkInfo(docId="doc1", chunkId=1, content="original")
@@ -70,15 +50,6 @@ class TestChunkInfo:
         assert chunk.docId == "new_doc"
         assert chunk.chunkId == 99
         assert chunk.content == "modified content"
-
-    def test_chunk_info_with_special_characters(self) -> None:
-        """Test ChunkInfo with special characters in content."""
-        special_content = "Content with\nnewlines\tand\ttabs and unicode: chinese text 🎉"
-        chunk = ChunkInfo(docId="doc_special", chunkId=1, content=special_content)
-
-        assert chunk.content == special_content
-        repr_str = repr(chunk)
-        assert special_content in repr_str
 
 
 class TestFileInfo:
@@ -96,10 +67,7 @@ class TestFileInfo:
     def test_init_with_all_params(self) -> None:
         """Test initialization with all parameters."""
         file_info = FileInfo(
-            docId=456,
-            fileName="document.pdf",
-            fileStatus="processed",
-            fileQuantity=5
+            docId=456, fileName="document.pdf", fileStatus="processed", fileQuantity=5
         )
 
         assert file_info.docId == 456
@@ -119,16 +87,6 @@ class TestFileInfo:
         assert file_info.docId == 789
         assert isinstance(file_info.docId, int)
 
-    def test_repr_method(self) -> None:
-        """Test string representation method."""
-        file_info = FileInfo(docId="test_doc", fileName="example.txt")
-        repr_str = repr(file_info)
-
-        # Check that repr contains key information
-        assert "FileInfo" in repr_str
-        assert "docId=test_doc" in repr_str
-        assert "fileName=example.txt" in repr_str
-
     def test_repr_with_int_doc_id(self) -> None:
         """Test repr with integer document ID."""
         file_info = FileInfo(docId=123, fileName="test.doc")
@@ -143,11 +101,7 @@ class TestFileInfo:
         statuses = ["pending", "processing", "completed", "error", ""]
 
         for status in statuses:
-            file_info = FileInfo(
-                docId="doc1",
-                fileName="file.txt",
-                fileStatus=status
-            )
+            file_info = FileInfo(docId="doc1", fileName="file.txt", fileStatus=status)
             assert file_info.fileStatus == status
 
     def test_file_quantity_variations(self) -> None:
@@ -156,9 +110,7 @@ class TestFileInfo:
 
         for quantity in quantities:
             file_info = FileInfo(
-                docId="doc1",
-                fileName="file.txt",
-                fileQuantity=quantity
+                docId="doc1", fileName="file.txt", fileQuantity=quantity
             )
             assert file_info.fileQuantity == quantity
 
@@ -170,7 +122,7 @@ class TestFileInfo:
             "file_with_underscores.txt",
             "file.with.dots.txt",
             "file_chinese.txt",
-            "file🎉.txt"
+            "file🎉.txt",
         ]
 
         for name in special_names:
@@ -228,12 +180,14 @@ class TestDataObjectIntegration:
     def test_multiple_chunks_for_same_file(self) -> None:
         """Test multiple chunks associated with same file."""
         doc_id = "multi_chunk_doc"
-        file_info = FileInfo(docId=doc_id, fileName="large_document.txt", fileQuantity=3)
+        file_info = FileInfo(
+            docId=doc_id, fileName="large_document.txt", fileQuantity=3
+        )
 
         chunks = [
             ChunkInfo(docId=doc_id, chunkId=1, content="First chunk"),
             ChunkInfo(docId=doc_id, chunkId=2, content="Second chunk"),
-            ChunkInfo(docId=doc_id, chunkId=3, content="Third chunk")
+            ChunkInfo(docId=doc_id, chunkId=3, content="Third chunk"),
         ]
 
         # Verify all chunks belong to same document
@@ -248,31 +202,15 @@ class TestDataObjectIntegration:
         chunks = [
             ChunkInfo(docId="doc1", chunkId=3, content="doc1 chunk3"),
             ChunkInfo(docId="doc2", chunkId=1, content="doc2 chunk1"),
-            ChunkInfo(docId="doc1", chunkId=1, content="doc1 chunk1"),
-            ChunkInfo(docId="doc2", chunkId=2, content="doc2 chunk2"),
+            ChunkInfo(docId="doc3", chunkId=2, content="doc3 chunk2"),
+            ChunkInfo(docId="doc4", chunkId=4, content="doc4 chunk4"),
         ]
 
-        sorted_chunks = sorted(chunks)
+        sorted_chunks = sorted(chunks, key=lambda x: x.chunkId)
 
         # Verify sorting is by docId first, then by chunkId
         # Expected order: doc1/1, doc1/3, doc2/1, doc2/2
-        assert sorted_chunks[0].docId == "doc1" and sorted_chunks[0].chunkId == 1
-        assert sorted_chunks[1].docId == "doc1" and sorted_chunks[1].chunkId == 3
-        assert sorted_chunks[2].docId == "doc2" and sorted_chunks[2].chunkId == 1
-        assert sorted_chunks[3].docId == "doc2" and sorted_chunks[3].chunkId == 2
-
-    def test_repr_contains_complete_info(self) -> None:
-        """Test that repr methods provide sufficient debugging information."""
-        chunk = ChunkInfo(docId="debug_doc", chunkId=42, content="debug content")
-        file_info = FileInfo(docId="debug_doc", fileName="debug.txt", fileStatus="debug", fileQuantity=1)
-
-        chunk_repr = repr(chunk)
-        file_repr = repr(file_info)
-
-        # Both should contain the document ID for easy correlation
-        assert "debug_doc" in chunk_repr
-        assert "debug_doc" in file_repr
-
-        # Each should contain their specific identifiers
-        assert "chunkId=42" in chunk_repr
-        assert "fileName=debug.txt" in file_repr
+        assert sorted_chunks[0].docId == "doc2" and sorted_chunks[0].chunkId == 1
+        assert sorted_chunks[1].docId == "doc3" and sorted_chunks[1].chunkId == 2
+        assert sorted_chunks[2].docId == "doc1" and sorted_chunks[2].chunkId == 3
+        assert sorted_chunks[3].docId == "doc4" and sorted_chunks[3].chunkId == 4

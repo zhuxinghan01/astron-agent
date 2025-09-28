@@ -1,49 +1,43 @@
 package com.iflytek.astron.console.commons.exception;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.util.I18nUtil;
+import lombok.Getter;
 
 /** Business exception */
+@Getter
 public class BusinessException extends RuntimeException {
 
     private final int code;
+    private final String messageKey;
     private final ResponseEnum responseEnum;
-    private final Object[] args;
+    private final String[] args;
 
     public BusinessException(ResponseEnum responseEnum) {
-        super(responseEnum.getMessageKey());
+        super(formatMessage(responseEnum.getMessageKey()));
         this.code = responseEnum.getCode();
+        this.messageKey = responseEnum.getMessageKey();
         this.responseEnum = responseEnum;
-        this.args = new Object[0];
+        this.args = new String[0];
     }
 
-    public BusinessException(ResponseEnum responseEnum, Object... args) {
+    public BusinessException(ResponseEnum responseEnum, String... args) {
         super(formatMessage(responseEnum.getMessageKey(), args));
         this.code = responseEnum.getCode();
+        this.messageKey = responseEnum.getMessageKey();
         this.responseEnum = responseEnum;
-        this.args = args != null ? args : new Object[0];
+        this.args = args != null ? args : new String[0];
     }
 
-    public int getCode() {
-        return code;
+    public BusinessException(ResponseEnum responseEnum, Throwable cause, String... args) {
+        super(formatMessage(responseEnum.getMessageKey(), args), cause);
+        this.code = responseEnum.getCode();
+        this.messageKey = responseEnum.getMessageKey();
+        this.responseEnum = responseEnum;
+        this.args = args != null ? args : new String[0];
     }
 
-    public ResponseEnum getResponseEnum() {
-        return responseEnum;
-    }
-
-    public Object[] getArgs() {
-        return args;
-    }
-
-    private static String formatMessage(String template, Object... args) {
-        if (args == null || args.length == 0) {
-            return template;
-        }
-        try {
-            return String.format(template, args);
-        } catch (Exception e) {
-            return template + " " + String.join(", ",
-                    java.util.Arrays.stream(args).map(String::valueOf).toList());
-        }
+    private static String formatMessage(String template, String... args) {
+        return I18nUtil.getMessage(template, args);
     }
 }

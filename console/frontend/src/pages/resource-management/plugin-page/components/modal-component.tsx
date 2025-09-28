@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { deleteTool } from '@/services/plugin';
 
 import dialogDel from '@/assets/imgs/main/icon_dialog_del.png';
@@ -18,6 +18,9 @@ export const DeleteModal: FC<{
       .then(data => {
         setDeleteModal(false);
         getTools();
+      })
+      .catch(error => {
+        message.error(error.message);
       })
       .finally(() => {
         setLoading(false);

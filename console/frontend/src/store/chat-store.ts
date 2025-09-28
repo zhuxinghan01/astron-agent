@@ -4,10 +4,12 @@ import type {
   ChatState,
   ChatActions,
   Option,
+  UploadFileInfo,
 } from '@/types/chat';
 const useChatStore = create<ChatState & ChatActions>(set => ({
   // 状态
   messageList: [],
+  chatFileListNoReq: [],
   streamingMessage: null,
   streamId: '',
   answerPercent: 0,
@@ -27,6 +29,7 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
   initChatStore: (): void => {
     set({
       messageList: [],
+      chatFileListNoReq: [],
       streamId: '',
       streamingMessage: null,
       answerPercent: 0,
@@ -46,8 +49,20 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
 
   setMessageList: (messageList: MessageListType[]): void =>
     set({ messageList }),
+  setChatFileListNoReq: (
+    updater: UploadFileInfo[] | ((prev: UploadFileInfo[]) => UploadFileInfo[])
+  ): void => {
+    set(state => ({
+      chatFileListNoReq:
+        typeof updater === 'function'
+          ? updater(state.chatFileListNoReq)
+          : updater,
+    }));
+  },
   addMessage: (message: MessageListType): void =>
-    set(state => ({ messageList: [...state.messageList, message] })),
+    set(state => {
+      return { messageList: [...state.messageList, message] };
+    }),
 
   // 流式消息管理 - 性能优化版：直接在messageList中操作
   startStreamingMessage: (message: MessageListType): void =>
@@ -127,14 +142,6 @@ const useChatStore = create<ChatState & ChatActions>(set => ({
   clearStreamingMessage: (): void =>
     set(state => {
       const updatedMessageList = [...state.messageList];
-
-      // 移除最后一条未完成的流式消息（没有sid的消息）
-      if (
-        updatedMessageList.length > 0 &&
-        !updatedMessageList[updatedMessageList.length - 1]?.sid
-      ) {
-        updatedMessageList.pop();
-      }
 
       return {
         messageList: updatedMessageList,

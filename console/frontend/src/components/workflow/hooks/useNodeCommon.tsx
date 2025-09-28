@@ -110,8 +110,10 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   }, [nodeType]);
 
   const showInputs = useMemo(() => {
-    return data?.inputs?.length > 0 && !isIfElseNode;
-  }, [data?.inputs, isIfElseNode]);
+    return (
+      data?.inputs?.length > 0 && !isIfElseNode && data?.nodeParam?.mode !== 1
+    );
+  }, [data, isIfElseNode]);
 
   const showOutputs = useMemo(() => {
     return data?.outputs?.length > 0;
@@ -149,9 +151,17 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   }, [data]);
 
   const nodeIcon = useMemo(() => {
+    let nodeFinallyType = '';
+    if (nodeType === 'iteration-node-start') {
+      nodeFinallyType = 'node-start';
+    } else if (nodeType === 'iteration-node-end') {
+      nodeFinallyType = 'node-end';
+    } else {
+      nodeFinallyType = nodeType;
+    }
     const currentNode = nodeList
       ?.flatMap(item => item?.nodes)
-      ?.find(item => item?.idType === nodeType);
+      ?.find(item => item?.idType === nodeFinallyType);
     return currentNode?.data?.icon;
   }, [nodeList, nodeType]);
 
@@ -165,6 +175,9 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
       ?.find(item => item?.idType === nodeType);
     return currentNode?.description || currentNode?.data?.description;
   }, [nodeList, data, nodeType]);
+  const isRpaNode = useMemo(() => {
+    return nodeType === 'rpa' || nodeType === 'rpa';
+  }, [nodeType]);
 
   return {
     nodeType,
@@ -192,6 +205,7 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
     nodeParam,
     nodeIcon,
     nodeDesciption,
+    isRpaNode,
   };
 };
 
@@ -222,6 +236,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
   const updateNodeRef = currentStore(state => state.updateNodeRef);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const deleteNodeRef = currentStore(state => state.deleteNodeRef);
+  const nodes = currentStore(state => state.nodes);
   const handleNodeClick = useMemoizedFn(() => {
     setNodeInfoEditDrawerlInfo({
       open: true,
@@ -255,7 +270,7 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
       setNode(id, old => {
         const currentOutput = findItemById(old.data.outputs, outputId);
         if (currentOutput) {
-          fn(currentOutput, value);
+          fn(currentOutput, value, old?.data);
         }
         handleIteratorEndChange('replace', outputId, value, old);
         return {
@@ -396,7 +411,7 @@ const OutputTypeSelector = ({ id, data, output }): React.ReactElement => {
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const delayUpdateNodeRef = currentStore(state => state.delayUpdateNodeRef);
 
-  const handleTypeChange = useMemoizedFn((value: any) => {
+  const handleTypeChange = useMemoizedFn((value: unknown) => {
     handleChangeOutputParam(
       output.id,
       (data, value) => {
@@ -734,6 +749,7 @@ export const OutputActions = ({
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const setNode = currentStore(state => state.setNode);
+  const checkNode = currentStore(state => state.checkNode);
 
   const handleAddItem = useMemoizedFn((output: OutputItem) => {
     takeSnapshot();
@@ -768,7 +784,7 @@ export const OutputActions = ({
 
   const handleAdd = useMemoizedFn(() => handleAddItem(output));
 
-  const handleRequiredChange = useMemoizedFn((e: any) => {
+  const handleRequiredChange = useMemoizedFn((e: unknown) => {
     handleChangeOutputParam(
       output.id,
       (data, value) => (data.required = value),
@@ -782,6 +798,7 @@ export const OutputActions = ({
       output?.customParameterType !== 'deepseekr1'
     ) {
       handleRemoveOutputLine(output.id);
+      checkNode(id);
     }
   });
 
@@ -847,12 +864,11 @@ const titleRender = (nodeData: {
   schema?: { type?: string };
   type?: string;
 }): React.ReactElement => {
-  const type = nodeData?.schema?.type || nodeData?.type;
   return (
     <div className="flex items-center gap-2">
       <span>{nodeData.name}</span>
       <div className="bg-[#F0F0F0] px-2.5 py-0.5 rounded text-xs">
-        {renderType(type)}
+        {renderType(nodeData)}
       </div>
     </div>
   );
@@ -976,6 +992,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
       };
     });
     canPublishSetNot();
+    checkNode(id);
   });
   const allowNoInputParams = useMemo(() => {
     return (
@@ -1043,7 +1060,7 @@ export const useNodeCommon = ({
     }
   );
 
-  const renderTypeOneClickUpdate = () => {
+  const renderTypeOneClickUpdate = (): React.ReactElement | null => {
     const { nodeType } = useNodeInfo({ id, data });
     if (nodeType === 'agent') {
       return <AgentNodeOneClickUpdate id={id} data={data} />;

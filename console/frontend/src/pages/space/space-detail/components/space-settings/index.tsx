@@ -7,7 +7,7 @@ import styles from './index.module.scss';
 import useSpaceStore from '@/store/space-store';
 import LeaveSpaceModal from '@/components/space/leave-space-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 
 interface SpaceInfo {
   id: string;

@@ -1,3 +1,10 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:08:13
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:08:24
+ * @Description: 插件广场相关接口
+ */
 import http from '@/utils/http';
 import { message } from 'antd';
 import {
@@ -41,10 +48,7 @@ export async function getToolDetail(
     const response = await http.get('/tool/detail', {
       params,
     });
-    if (response?.data.code !== 0) {
-      throw new Error(response.data.message);
-    }
-    return response.data.data;
+    return response as unknown as ToolDetail;
   } catch (error) {
     message.error(error instanceof Error ? error.message : '获取插件详情失败');
     throw error;

@@ -4,6 +4,7 @@ import re
 from enum import Enum, unique
 from typing import Any, Dict, Optional, cast
 
+from workflow.consts.engine.value_type import ValueType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.entities.history import History
 from workflow.engine.entities.node_entities import NodeType
@@ -341,7 +342,7 @@ class VariablePool:
                 json_input_type = input_schema.type
                 python_input_type_list = schema_type_map_python.get(json_input_type, [])
                 input_content: Any = ""
-                if input_value.type == "literal":
+                if input_value.type == ValueType.LITERAL.value:
                     input_content = input_value.content
                     input_content_org = input_content
                     type_match = any(
@@ -483,7 +484,6 @@ class VariablePool:
             mapping_key = assemble_mapping_key(node_id, key)
             if mapping_key not in self.output_variable_mapping:
                 span.add_error_event(f"input key {mapping_key} not exist")
-                # raise Exception(f"Node {node_id} does not have value {key}")
                 raise CustomException(
                     err_code=CodeEnum.VARIABLE_POOL_SET_PARAMETER_ERROR,
                     err_msg=f"Node {node_id} input parameter {mapping_key} does not exist",
@@ -634,11 +634,13 @@ class VariablePool:
             input_schema: InputSchema = input_value.get("schema")
             ref_var_type = input_schema.value.type
             ref_content = input_schema.value.content
-            if ref_var_type == "literal":
+            if ref_var_type == ValueType.LITERAL.value:
                 ref_node_id = node_id
                 ref_var_name = input_value.get("name")
                 literal_var_value = str(ref_content)
-            elif ref_var_type == "ref" and isinstance(ref_content, NodeRef):
+            elif ref_var_type == ValueType.REF.value and isinstance(
+                ref_content, NodeRef
+            ):
                 ref_node_id = ref_content.nodeId
                 ref_var_name = ref_content.name
                 if ref_node_id.split(":")[0] == NodeType.LLM.value:
@@ -672,7 +674,7 @@ class VariablePool:
             if mapping_key in self.input_variable_mapping:
                 input_value = self.input_variable_mapping[mapping_key]
                 input_schema: InputSchema = input_value.get("schema")
-                if input_schema.value.type == "literal":
+                if input_schema.value.type == ValueType.LITERAL.value:
                     return input_value.get("value")
                 else:
                     ref_content = input_schema.value.content
@@ -682,7 +684,6 @@ class VariablePool:
                     node_value = (
                         ref_content.name if isinstance(ref_content, NodeRef) else ""
                     )
-                    # msg = f"node id {node_id}, node value {node_value}"
                     return self.get_output_variable(
                         node_id=node_id, key_name=node_value, span=span
                     )
@@ -738,16 +739,6 @@ class VariablePool:
                 schemas["properties"].update({key: value_schema})
                 if mapping_value.get("required", False):
                     required.append(key)
-        # Alternative validation approach (commented out)
-        # for key in key_name_list:
-        #     mapping_key = assemble_mapping_key(node_id, key)
-        #     if mapping_key not in self.output_variable_mapping:
-        #         continue
-        #     mapping_value = self.output_variable_mapping[mapping_key]
-        #     value_schema = mapping_value.get("schema")
-        #     schemas["properties"].update({key: value_schema})
-        #     if mapping_value.get("required", False):
-        #         required.append(key)
         if required:
             schemas.update({"required": required})
         er_msgs = [
@@ -756,9 +747,6 @@ class VariablePool:
         ]
         if er_msgs:
             raise Exception(f"{';'.join(er_msgs)}")
-            # raise CustomException(err_code=CodeEnum.ChainOutputError,
-            #                       cause_error=f"node {node_id} output value "
-            #                                   f"type err, err reason {';'.join(er_msgs)}", add_msg=True)
 
     def add_variable(
         self,
@@ -776,7 +764,6 @@ class VariablePool:
         :param span: Span object for tracing
         """
         output_value = value.outputs
-        # add_value = {"node_id": node_id, "key": key_name_list, "value": output_value}
         if node_id.split(":")[0] == "node-end":
             self.add_end_node_variable(node_id, key_name_list, value)
             return
@@ -813,31 +800,3 @@ class VariablePool:
             "required": False,
         }
         self.output_variable_mapping.update({mapping_key: mapping_value})
-        # Alternative validation approach (commented out)
-        # for key in key_name_list:
-        #     mapping_key = assemble_mapping_key(node_id, key)
-        #     if mapping_key not in self.output_variable_mapping:
-        #         continue
-        #     mapping_value = self.output_variable_mapping[mapping_key]
-        #     value_schema = mapping_value.get("schema")
-        #     validate_schema = copy.deepcopy(self.validate_template)
-        #
-        #     validate_schema["properties"].update({key: value_schema})
-        #     data_json = {key: output_value.get(key)}
-        #     import jsonschema
-        #     er_msgs = [
-        #         f"path: {er.json_path}, message: {er.message}" for er in
-        #         list(jsonschema.Draft7Validator(validate_schema).iter_errors(data_json))
-        #     ]
-        #     if er_msgs:
-        #         raise CustomException(err_code=CodeEnum.ChainOutputError,
-        #                               cause_error=f"node {node_id} output value "
-        #                                           f"type err, err reason {';'.join(er_msgs)}", add_msg=True)
-        #     self.output_variable_mapping[mapping_key].update({"value": output_value.get(key)})
-
-
-if __name__ == "__main__":
-    try:
-        raise Exception("hellp")
-    except Exception as err:
-        print(f"{err}")

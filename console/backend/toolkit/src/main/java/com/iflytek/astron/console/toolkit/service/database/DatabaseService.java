@@ -50,7 +50,7 @@ import static org.jooq.impl.DSL.*;
 
 /**
  * <p>
- * 服务实现类
+ * Database Service Implementation
  * </p>
  *
  * @author jinggu2
@@ -90,20 +90,20 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     private CommonConfig commonConfig;
 
     private static final String[] SYSTEM_FIELDS = {"id", "uid", "create_time"};
-    // DatabaseService 内新增
-    private static final int MAX_PAGE_SIZE = 1000; // 防炸
-    private static final int MAX_EXPORT_IDS = 1000; // IN 上限
+    // New additions in DatabaseService
+    private static final int MAX_PAGE_SIZE = 1000; // Prevent explosion
+    private static final int MAX_EXPORT_IDS = 1000; // IN clause limit
 
     @Transactional
     public DbInfo create(DatabaseDto databaseDto) {
         try {
-            // 必填项校验
+            // Required field validation
             if (!StringUtils.isNotBlank(databaseDto.getName())) {
                 throw new BusinessException(ResponseEnum.DATABASE_NAME_NOT_EMPTY);
             }
             String userId = Objects.requireNonNull(UserInfoManagerHandler.getUserId()).toString();
             Long spaceId = SpaceInfoUtil.getSpaceId();
-            // 同名校验
+            // Duplicate name validation
             Long count = 0L;
             if (spaceId == null) {
                 count = dbInfoMapper.selectCount(new QueryWrapper<DbInfo>().lambda()
@@ -121,9 +121,9 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             if (count > 0) {
                 throw new BusinessException(ResponseEnum.DATABASE_NAME_EXIST);
             }
-            // 调用核心系统创建数据库
+            // Call core system to create database
             Long dbId = coreSystemService.createDatabase(databaseDto.getName(), userId, spaceId, databaseDto.getDescription());
-            // 保存记录
+            // Save record
             DbInfo database = new DbInfo();
             BeanUtils.copyProperties(databaseDto, database);
             database.setUid(userId);
@@ -135,7 +135,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             dbInfoMapper.insert(database);
             return database;
         } catch (Exception ex) {
-            log.info("创建数据库失败,params:{}", databaseDto.toString(), ex);
+            log.info("Failed to create database, params:{}", databaseDto.toString(), ex);
             throw new BusinessException(ResponseEnum.DATABASE_CREATE_FAILED);
         }
     }
@@ -144,7 +144,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     public void updateDateBase(DatabaseDto databaseDto) {
         try {
             dataPermissionCheckTool.checkDbUpdateBelong(databaseDto.getId());
-            // 名称校验
+            // Name validation
             DbInfo dbInfo = dbInfoMapper.selectById(databaseDto.getId());
             if (StringUtils.isNotBlank(databaseDto.getDescription())) {
                 if (!databaseDto.getDescription().equals(dbInfo.getDescription())) {
@@ -154,14 +154,14 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             }
             dbInfoMapper.updateById(dbInfo);
         } catch (Exception ex) {
-            log.error("更新数据库失败,params={}", JSONObject.toJSONString(databaseDto), ex);
+            log.error("Failed to update database, params={}", JSONObject.toJSONString(databaseDto), ex);
             throw new BusinessException(ResponseEnum.DATABASE_UPDATE_FAILED);
         }
     }
 
     public void delete(Long id) {
         try {
-            // 判断该数据库是否被引用
+            // Check if the database is being referenced
             dataPermissionCheckTool.checkDbUpdateBelong(id);
             DbInfo dbInfo = dbInfoMapper.selectById(id);
             Long count = flowDbRelMapper.selectCount(new QueryWrapper<FlowDbRel>().lambda()
@@ -169,12 +169,12 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             if (count > 0) {
                 throw new BusinessException(ResponseEnum.DATABASE_DELETE_FAILED_CITED);
             }
-            // 核心系统侧删除
+            // Delete from core system
             coreSystemService.dropDataBase(dbInfo.getDbId(), UserInfoManagerHandler.getUserId());
             dbInfo.setDeleted(true);
             dbInfoMapper.updateById(dbInfo);
         } catch (Exception ex) {
-            log.error("删除数据库失败,dbId={}", id, ex);
+            log.error("Failed to delete database, dbId={}", id, ex);
             throw ex;
         }
     }
@@ -191,7 +191,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             newDbInfo.setCreateTime(new Date());
             newDbInfo.setUpdateTime(new Date());
             dbInfoMapper.insert(newDbInfo);
-            // 构建ddl
+            // Build DDL
             dbTableMapper.selectList(new QueryWrapper<DbTable>().lambda()
                     .eq(DbTable::getDbId, dbInfo.getId())
                     .eq(DbTable::getDeleted, false))
@@ -203,7 +203,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         newDbTable.setCreateTime(new Date());
                         newDbTable.setCreateTime(new Date());
                         dbTableMapper.insert(newDbTable);
-                        // 表字段创建
+                        // Create table fields
                         List<DbTableField> fields = new ArrayList<>();
                         dbTableFieldMapper.selectList(new QueryWrapper<DbTableField>().lambda()
                                 .eq(DbTableField::getTbId, dbTable.getId())).forEach(dbTableField -> {
@@ -217,7 +217,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                                 });
                         dbTableFieldMapper.insertBatch(fields);
                     });
-            // 调用核心系统创建数据库
+            // Call core system to create database
             Long dbId = coreSystemService.cloneDataBase(dbInfo.getDbId(), newDbInfo.getName(), UserInfoManagerHandler.getUserId());
             newDbInfo.setDbId(dbId);
             dbInfoMapper.updateById(newDbInfo);
@@ -259,7 +259,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             page = dbInfoMapper.selectPage(page, lqw);
             return page;
         } catch (Exception ex) {
-            log.error("查询数据库列表失败,params={}", JSONObject.toJSONString(databaseDto), ex);
+            log.error("Failed to query database list, params={}", JSONObject.toJSONString(databaseDto), ex);
             throw new BusinessException(ResponseEnum.DATABASE_QUERY_FAILED);
         }
     }
@@ -272,14 +272,14 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             if (dbInfo == null) {
                 throw new BusinessException(ResponseEnum.DATABASE_NOT_EXIST);
             }
-            // 表数量限制
+            // Table count limit
             Long tableCount = dbTableMapper.selectCount(new QueryWrapper<DbTable>().lambda()
                     .eq(DbTable::getDbId, dbInfo.getDbId())
                     .eq(DbTable::getDeleted, false));
             if (tableCount > 20) {
                 throw new BusinessException(ResponseEnum.DATABASE_COUNT_LIMITED);
             }
-            // 表名重复校验
+            // Duplicate table name validation
             Long count = dbTableMapper.selectCount(new QueryWrapper<DbTable>().lambda()
                     .eq(DbTable::getName, dbTableDto.getName())
                     .eq(DbTable::getDbId, dbInfo.getDbId())
@@ -287,15 +287,15 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             if (count > 0) {
                 throw new BusinessException(ResponseEnum.DATABASE_TABLE_NAME_EXIST);
             }
-            // 构建建表ddl语句系统字段必填校验
+            // Build DDL statement and validate required system fields
             if (dbTableDto.getFields() == null || dbTableDto.getFields().isEmpty()) {
                 throw new BusinessException(ResponseEnum.DATABASE_TABLE_FIELD_CANNOT_EMPTY);
             }
-            // 表字段不超过20个
+            // Table fields cannot exceed 20
             if (dbTableDto.getFields().size() > 20) {
                 throw new BusinessException(ResponseEnum.DATABASE_FIELD_CANNOT_BEYOND_20);
             }
-            // 信息保存
+            // Save information
             DbTable dbTable = new DbTable();
             BeanUtils.copyProperties(dbTableDto, dbTable);
             dbTable.setCreateTime(new Date());
@@ -321,15 +321,15 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                 fields.add(dbTableField);
             }
             dbTableFieldMapper.insertBatch(fields);
-            // 核心侧保存
+            // Save to core system
             String ddl = buildDDL(dbTableDto, DBOperateEnum.INSERT.getCode(), null);
-            // 调用核心系统创建表
+            // Call core system to create table
             for (String stmt : safeSplitStatements(ddl)) {
-                SqlRenderer.denyMultiStmtOrComment(stmt); // 这时每一条都不包含分号
+                SqlRenderer.denyMultiStmtOrComment(stmt); // At this point each statement does not contain semicolon
                 coreSystemService.execDDL(stmt, UserInfoManagerHandler.getUserId(), SpaceInfoUtil.getSpaceId(), dbInfo.getDbId());
             }
         } catch (Exception ex) {
-            log.error("创建表失败,params={}", dbTableDto, ex);
+            log.error("Failed to create table, params={}", dbTableDto, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_CREATE_FAILED);
         }
 
@@ -354,7 +354,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             });
             return dbTableVos;
         } catch (Exception ex) {
-            log.error("获取表列表失败,dbId={}", dbId, ex);
+            log.error("Failed to get table list, dbId={}", dbId, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_QUERY_LIST_FAILED);
         }
     }
@@ -367,7 +367,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     .eq(DbTableField::getTbId, dataBaseSearchVo.getTbId()));
             return page;
         } catch (Exception ex) {
-            log.error("获取表字段列表失败,params={}", JSONObject.toJSONString(dataBaseSearchVo), ex);
+            log.error("Failed to get table field list, params={}", JSONObject.toJSONString(dataBaseSearchVo), ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_QUERY_FIELD_FAILED);
         }
 
@@ -377,28 +377,28 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     public void updateTable(DbTableDto dbTableDto) {
         try {
             dataPermissionCheckTool.checkTbBelong(dbTableDto.getId());
-            // 更新表结构
+            // Update table structure
             DbTable dbTable = dbTableMapper.selectById(dbTableDto.getId());
             String originName = dbTable.getName();
-            // 过滤系统字段id,uid,create_time
+            // Filter system fields id, uid, create_time
             List<String> allowedNames = Arrays.asList(SYSTEM_FIELDS);
             if (dbTableDto.getFields() != null && !dbTableDto.getFields().isEmpty()) {
-                // 过滤掉系统字段
+                // Filter out system fields
                 dbTableDto.setFields(dbTableDto.getFields()
                         .stream()
                         .filter(field -> !allowedNames.contains(field.getName()))
                         .peek(field -> {
-                            // 设置默认值
+                            // Set default value
                             if (StringUtils.isBlank(field.getDefaultValue())) {
                                 field.setDefaultValue(transFormDefaultValue(field.getType()).toString());
                             }
                         })
                         .collect(Collectors.toList()));
             }
-            // 更新核心系统侧
+            // Update core system side
             String ddl = buildDDL(dbTableDto, DBOperateEnum.UPDATE.getCode(), originName);
             if (!dbTable.getName().equals(dbTableDto.getName())) {
-                // 判断表名是否已存在
+                // Check if table name already exists
                 Long count = dbTableMapper.selectCount(new QueryWrapper<DbTable>().lambda()
                         .eq(DbTable::getName, dbTableDto.getName())
                         .eq(DbTable::getDbId, dbTable.getDbId())
@@ -408,10 +408,10 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     throw new BusinessException(ResponseEnum.DATABASE_TABLE_NAME_EXIST);
                 }
             }
-            // 查询表字段数量
+            // Query table field count
             Long fieldCount = dbTableFieldMapper.selectCount(new QueryWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, dbTable.getId()));
-            // 统计新增字段数量，删除数量
+            // Count the number of new fields and deleted fields
             long insertCount = dbTableDto.getFields()
                     .stream()
                     .filter(field -> DBOperateEnum.INSERT.getCode().equals(field.getOperateType()))
@@ -457,7 +457,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             }
 
         } catch (Exception ex) {
-            log.info("更新表失败,params={}", dbTableDto.toString(), ex);
+            log.info("Failed to update table, params={}", dbTableDto.toString(), ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_UPDATE_FAILED);
         }
     }
@@ -493,14 +493,14 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                 if (Boolean.TRUE.equals(field.getIsRequired())) {
                     ddl.append(" NOT NULL");
                 }
-                // 默认值
+                // Default value
                 if (StringUtils.isNotBlank(field.getDefaultValue())) {
                     ddl.append(" DEFAULT ").append(SqlRenderer.renderValue(adaptDefault(field)));
                 }
             }
             ddl.append("\n);");
 
-            // 表/列注释
+            // Table/column comments
             if (StringUtils.isNotBlank(dbTableDto.getDescription())) {
                 ddl.append("\nCOMMENT ON TABLE ")
                         .append(table)
@@ -508,9 +508,9 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         .append(SqlRenderer.quoteLiteral(dbTableDto.getDescription()))
                         .append(";");
             }
-            ddl.append("\nCOMMENT ON COLUMN ").append(table).append(".").append(SqlRenderer.quoteIdent("id")).append(" IS '主键id';");
+            ddl.append("\nCOMMENT ON COLUMN ").append(table).append(".").append(SqlRenderer.quoteIdent("id")).append(" IS 'Primary key id';");
             ddl.append("\nCOMMENT ON COLUMN ").append(table).append(".").append(SqlRenderer.quoteIdent("uid")).append(" IS 'uid';");
-            ddl.append("\nCOMMENT ON COLUMN ").append(table).append(".").append(SqlRenderer.quoteIdent("create_time")).append(" IS '创建时间';");
+            ddl.append("\nCOMMENT ON COLUMN ").append(table).append(".").append(SqlRenderer.quoteIdent("create_time")).append(" IS 'Create time';");
 
             for (DbTableFieldDto field : fields) {
                 if (StringUtils.isNotBlank(field.getDescription())) {
@@ -538,7 +538,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         .append("; ");
             }
 
-            // 操作按类型排序（DELETE -> UPDATE -> INSERT），避免依赖问题
+            // Sort operations by type (DELETE -> UPDATE -> INSERT) to avoid dependency issues
             dbTableDto.getFields().sort(Comparator.comparing(DbTableFieldDto::getOperateType).reversed());
 
             for (DbTableFieldDto field : dbTableDto.getFields()) {
@@ -594,8 +594,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
 
 
 
-    // 新增字段
-    // 新增字段
+    // Add field
     public String buildAddColumnSql(String tableName, DbTableFieldDto field) {
         StringBuilder sql = new StringBuilder();
         String table = SqlRenderer.quoteIdent(tableName);
@@ -628,7 +627,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         return sql.toString();
     }
 
-    // 删除字段
+    // Delete field
     public static String buildDropColumnSql(String tableName, String columnName) {
         String table = SqlRenderer.quoteIdent(tableName);
         String col = SqlRenderer.quoteIdent(columnName);
@@ -637,7 +636,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         return sql;
     }
 
-    // 编辑字段
+    // Edit field
     public String buildModifyColumnSql(String tableName, DbTableFieldDto field) {
         List<String> alterClauses = new ArrayList<>();
         String renameClause = null;
@@ -671,7 +670,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             sql.append("ALTER TABLE ").append(table).append(" ").append(String.join(", ", alterClauses)).append(";");
         }
 
-        // 注释
+        // Comment
         if (!StringUtils.equals(field.getDescription(), dbTableField.getDescription())) {
             if (StringUtils.isNotBlank(field.getDescription())) {
                 commentSql.append(" COMMENT ON COLUMN ")
@@ -695,12 +694,15 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         return out;
     }
 
-    // 删除字段
+    // Delete field
     // public static String buildDropColumnSql(String tableName, String columnName) {
     // return "ALTER TABLE " + tableName + " DROP COLUMN IF EXISTS " + columnName + ";";
     // }
 
-    /** 结合字段类型把 defaultValue 转成更“正确”的 Java 类型，随后交给 renderValue 渲染 */
+    /**
+     * Combine field type to convert defaultValue to a more "correct" Java type, then pass it to
+     * renderValue for rendering
+     */
     private Object adaptDefault(DbTableFieldDto field) {
         String t = StringUtils.lowerCase(field.getType());
         String v = field.getDefaultValue();
@@ -708,7 +710,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             return null;
         switch (t) {
             case CommonConst.DBFieldType.TIME: // "yyyy-MM-dd HH:mm:ss"
-                return v; // 按字符串字面量处理，渲染为 '...'
+                return v; // Treat as string literal, render as '...'
             case CommonConst.DBFieldType.INTEGER:
                 return SqlRenderer.requireLong(v, "defaultValue");
             case CommonConst.DBFieldType.NUMBER:
@@ -720,18 +722,18 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             case CommonConst.DBFieldType.BOOLEAN:
                 return Boolean.parseBoolean(v);
             default:
-                return v; // 其他当字符串
+                return v; // Others as string
         }
     }
 
-    // 编辑字段
+    // Edit field
     public String buildModifyColumnSqlOld(String tableName, DbTableFieldDto field) {
 
         List<String> alterClauses = new ArrayList<>();
         String renameClause = null;
         StringBuilder commentSql = new StringBuilder();
 
-        // 判断是否修改名称
+        // Check if name is modified
         DbTableField dbTableField = dbTableFieldMapper.selectById(field.getId());
         String colNameToUse = dbTableField.getName();
         if (field.getName() != null && !dbTableField.getName().equals(field.getName())) {
@@ -749,7 +751,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             alterClauses.add(String.format("ALTER COLUMN %s DROP NOT NULL", colNameToUse));
         }
 
-        // 设置默认值，只有不同才设置
+        // Set default value, only if different
         if (!field.getDefaultValue().equals(dbTableField.getDefaultValue())) {
             if (CommonConst.DBFieldType.STRING.equalsIgnoreCase(field.getType()) || CommonConst.DBFieldType.TIME.equalsIgnoreCase(field.getType())) {
                 alterClauses.add(String.format("ALTER COLUMN %s SET DEFAULT '%s'", colNameToUse, field.getDefaultValue()));
@@ -757,7 +759,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                 alterClauses.add(String.format(String.format("ALTER COLUMN %s SET DEFAULT %s", colNameToUse, field.getDefaultValue())));
             }
         }
-        // 拼接 ALTER TABLE 语句
+        // Concatenate ALTER TABLE statement
         StringBuilder sql = new StringBuilder();
         if (renameClause != null) {
             sql.append(String.format("ALTER TABLE %s ", tableName));
@@ -768,9 +770,9 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         sql.append(";");
 
 
-        // 判断注释是否变化，拼接 COMMENT 语句
+        // Check if comment changes, concatenate COMMENT statement
         if (StringUtils.isNotBlank(field.getDescription())) {
-            // 设置或修改注释，只有变化才执行
+            // Set or modify comment, only execute if changed
             if (!field.getDescription().equals(dbTableField.getDescription())) {
                 commentSql.append(String.format("COMMENT ON COLUMN %s.%s IS '%s'; ", tableName, colNameToUse, field.getDescription()));
             }
@@ -794,19 +796,19 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             DbTableDto dbTableDto = new DbTableDto();
             dbTableDto.setName(dbTable.getName());
             String ddl = buildDDL(dbTableDto, DBOperateEnum.DELETE.getCode(), null);
-            // 核心系统侧删除
+            // Delete from core system
             for (String stmt : safeSplitStatements(ddl)) {
-                SqlRenderer.denyMultiStmtOrComment(stmt); // 这时每一条都不包含分号
+                SqlRenderer.denyMultiStmtOrComment(stmt); // At this point each statement does not contain semicolon
                 coreSystemService.execDDL(stmt, UserInfoManagerHandler.getUserId(), SpaceInfoUtil.getSpaceId(), dbInfo.getDbId());
             }
             dbTableMapper.update(new UpdateWrapper<DbTable>().lambda()
                     .eq(DbTable::getId, tbId)
                     .set(DbTable::getDeleted, true));
-            // 删除表字段
+            // Delete table fields
             dbTableFieldMapper.delete(new UpdateWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, tbId));
         } catch (Exception ex) {
-            log.error("删除表失败,tbId={}", tbId, ex);
+            log.error("Failed to delete table, tbId={}", tbId, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_DELETE_FAILED);
         }
     }
@@ -819,8 +821,8 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     .eq(DbTableField::getTbId, dbTable.getId()));
             DbInfo dbInfo = dbInfoMapper.selectById(dbTable.getDbId());
 
-            // 逐条校验 + 逐条执行（可分批，以提高可用性）
-            final int BATCH = 100; // 可调
+            // Validate and execute one by one (can be batched to improve availability)
+            final int BATCH = 100; // Adjustable
             List<DbTableDataDto> rows = dbTableOperateDto.getData();
             for (int i = 0; i < rows.size(); i++) {
                 DbTableDataDto data = rows.get(i);
@@ -837,44 +839,45 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         DBOperateEnum.UPDATE.getCode(),
                         dbTableOperateDto.getExecDev());
 
-                // 可在这里做简单的批次让步（如每 BATCH 条 sleep 1ms），防止压垮核心系统
+                // Simple batch yielding can be done here (e.g., sleep 1ms every BATCH items) to prevent
+                // overwhelming the core system
                 if ((i + 1) % BATCH == 0) {
-                    // Thread.yield(); // 可选
+                    // Thread.yield(); // Optional
                 }
             }
         } catch (Exception ex) {
-            log.error("表操作失败,params={}", JSONObject.toJSONString(dbTableOperateDto), ex);
+            log.error("Table operation failed, params={}", JSONObject.toJSONString(dbTableOperateDto), ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_OPERATION_FAILED);
         }
     }
 
     private void validateParams(Map<String, Object> params, List<DbTableField> fields, Integer operateType) {
-        // 1. 获取所有表字段名称
+        // 1. Get all table field names
         Set<String> fieldNames = fields.stream().map(DbTableField::getName).collect(Collectors.toSet());
 
-        // 2. 校验非法字段
+        // 2. Validate illegal fields
         for (String paramKey : params.keySet()) {
             if (!fieldNames.contains(paramKey)) {
-                log.error("非法字段: " + paramKey);
+                log.error("Illegal field: " + paramKey);
                 throw new BusinessException(ResponseEnum.DATABASE_TABLE_FIELD_ILLEGAL);
             }
         }
 
-        // 3. 校验必填字段
+        // 3. Validate required fields
         for (DbTableField field : fields) {
-            // 跳过系统字段校验（新增操作时）
+            // Skip system field validation (for insert operations)
             if (operateType.equals(DBOperateEnum.INSERT.getCode()) && Arrays.asList(SYSTEM_FIELDS).contains(field.getName())) {
                 continue;
             }
             if (operateType.equals(DBOperateEnum.DELETE.getCode()) || operateType.equals(DBOperateEnum.UPDATE.getCode())) {
-                // 对于删除和更新操作，uuid和create_time不校验
+                // For delete and update operations, uuid and create_time are not validated
                 if (Arrays.asList("uuid", "create_time").contains(field.getName())) {
                     continue;
                 }
             }
-            // 校验必填且没有默认值的
+            // Validate required fields without default values
             if (Boolean.TRUE.equals(field.getIsRequired()) && field.getDefaultValue() == null && !params.containsKey(field.getName())) {
-                log.error("缺少必填字段: " + field.getName());
+                log.error("Missing required field: " + field.getName());
                 throw new BusinessException(ResponseEnum.DATABASE_TABLE_FIELD_LACK);
             }
         }
@@ -885,7 +888,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         String table = SqlRenderer.quoteIdent(tableName);
 
         if (DBOperateEnum.INSERT.getCode().equals(operateType)) {
-            // 过滤 null
+            // Filter null
             Map<String, Object> nonNull = params.entrySet()
                     .stream()
                     .filter(e -> e.getValue() != null)
@@ -944,8 +947,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     private String buildDmlOld(String tableName, Map<String, Object> params, Integer operateType) {
         StringBuilder sql = new StringBuilder();
         if (DBOperateEnum.INSERT.getCode().equals(operateType)) {
-            // 系统字段uuid填充
-            // 过滤为空的值
+            // System field uuid filling
             params = params.entrySet()
                     .stream()
                     .filter(entry -> entry.getValue() != null)
@@ -961,17 +963,15 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             }
             sql.append("INSERT INTO ").append(tableName).append(" (").append(columns).append(") VALUES (").append(values).append("); ");
         } else if (DBOperateEnum.UPDATE.getCode().equals(operateType)) {
-            // 构建update语句
             String condition = "id = " + params.get("id");
             String updates = params.entrySet()
                     .stream()
-                    .filter(entry -> !"id".equals(entry.getKey())) // 过滤掉 key 为 "id" 的 entry
+                    .filter(entry -> !"id".equals(entry.getKey())) // Filter out entries with key "id"
                     .map(entry -> entry.getKey() + " = " +
                             (entry.getValue() instanceof String ? "'" + entry.getValue() + "'" : entry.getValue()))
                     .collect(Collectors.joining(", "));
             sql.append("UPDATE ").append(tableName).append(" SET ").append(updates).append(" WHERE ").append(condition).append("; ");
         } else if (DBOperateEnum.DELETE.getCode().equals(operateType)) {
-            // 构建delete语句
             String condition = "id = " + params.get("id");
             sql.append("DELETE FROM ").append(tableName).append(" WHERE ").append(condition).append("; ");
         }
@@ -981,35 +981,34 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     public void getTableTemplateFile(HttpServletResponse response, Long tbId) {
         dataPermissionCheckTool.checkTbBelong(tbId);
         try {
-            // 构建模版excel文件
+            // Build a template Excel file
             DbTable dbTable = dbTableMapper.selectById(tbId);
             List<DbTableField> fields = dbTableFieldMapper.selectList(new QueryWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, tbId)
                     .orderByAsc(DbTableField::getCreateTime));
-            // 设置响应头，支持文件下载
+
             response.setContentType("application/vnd.ms-excel");
             response.setCharacterEncoding("utf-8");
             String fileName = URLEncoder.encode(dbTable.getName(), "UTF-8");
             response.setHeader("Content-Disposition", "attachment; filename=" + fileName + ".xlsx");
 
-            // 模拟数据
             List<List<String>> head = new ArrayList<>();
             for (DbTableField field : fields) {
-                // 表头为字段名称
+                // The header is the field name
                 if (Arrays.asList(SYSTEM_FIELDS).contains(field.getName())) {
                     continue;
                 }
                 head.add(Collections.singletonList(field.getName()));
             }
 
-            // 使用 EasyExcel 生成文件流，仅写入表头
+            // Generate a file stream using EasyExcel, writing only the header row
             EasyExcel.write(response.getOutputStream())
                     .head(head)
                     .sheet("模版")
-                    .doWrite(new ArrayList<>()); // 空数据
+                    .doWrite(new ArrayList<>());
 
         } catch (Exception ex) {
-            log.error("模版生成失败, tbId={}", tbId, ex);
+            log.error("Template generation failed, tbId={}", tbId, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TEMPLATE_GENERATE_FAILED);
         }
 
@@ -1019,7 +1018,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
         dataPermissionCheckTool.checkTbBelong(dto.getTbId());
         try {
             Page<JSONObject> page = new Page<>(dto.getPageNum(), dto.getPageSize());
-            page.setSize(Math.min(page.getSize(), MAX_PAGE_SIZE)); // 上限
+            page.setSize(Math.min(page.getSize(), MAX_PAGE_SIZE));
 
             DbTable dbTable = dbTableMapper.selectById(dto.getTbId());
             DbInfo dbInfo = dbInfoMapper.selectById(dbTable.getDbId());
@@ -1056,7 +1055,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             page.setRecords(maps);
             return page;
         } catch (Exception ex) {
-            log.error("查询表数据失败,params={}", JSONObject.toJSONString(dto), ex);
+            log.error("Failed to query table data, params={}", JSONObject.toJSONString(dto), ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_QUERY_DATA_FAILED);
         }
     }
@@ -1072,7 +1071,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     .eq(DbTableField::getTbId, tbId)
                     .orderByDesc(DbTableField::getCreateTime));
 
-            // 1) 读 Excel -> rows
+            // 1) read Excel -> rows
             List<Map<String, Object>> rows = new ArrayList<>();
             DBExcelReadListener listener = new DBExcelReadListener(
                     dbTableFields,
@@ -1081,7 +1080,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     10_000);
             EasyExcel.read(file.getInputStream(), listener).sheet().doRead();
 
-            // 2) 构建 INSERT（绑定参数），分片执行 + 重试 + 错误收集
+            // 2) build INSERT (Bind parameters), shard execution + retry + error collection
             final int CHUNK = 200, MAX_RETRIES = 3;
             JooqBatchExecutor.ResultSummary summary = JooqBatchExecutor.executeInChunks(
                     dslCon,
@@ -1099,9 +1098,10 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         }
                         return (Query) step;
                     },
-                    // ★ 这里收到的 sql 已经是 INLINED 的完整语句
+
                     (sql, paramsIgnored) -> {
-                        // 单条语句安全检查（允许末尾 ;，但拒绝内部多条）
+                        // Single statement security check (semicolons at the end are allowed, but multiple internal
+                        // statements are rejected)
                         SqlRenderer.denyMultiStmtOrComment(sql);
                         coreSystemService.execDML(
                                 sql,
@@ -1112,9 +1112,9 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                                 execDev);
                     });
 
-            // 3) 汇总
+            // 3) Summary
             if (!summary.errors.isEmpty()) {
-                // 记录前 10 条失败样例
+                // Record the first 10 failed examples
                 StringBuilder sb = new StringBuilder();
                 sb.append("导入部分失败：success=")
                         .append(summary.success)
@@ -1123,11 +1123,10 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                         .append(". 失败样例：");
                 summary.errors.stream().limit(10).forEach(err -> sb.append("\n#").append(err.index).append(" : ").append(err.message));
                 log.warn("importTableData partial failures: {}", sb);
-                // 业务策略：若允许“部分成功”，这里可不抛；若要求“全成功”，这里抛出
                 throw new BusinessException(ResponseEnum.DATABASE_IMPORT_FAILED);
             }
         } catch (Exception ex) {
-            log.error("导入数据失败, tbId={}, execDev={}, fileName={}", tbId, execDev, file.getOriginalFilename(), ex);
+            log.error("import data failed, tbId={}, execDev={}, fileName={}", tbId, execDev, file.getOriginalFilename(), ex);
             throw new BusinessException(ResponseEnum.DATABASE_IMPORT_FAILED);
         }
     }
@@ -1136,10 +1135,10 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     public void copyTable(Long tbId) {
         try {
             DbTable dbTable = dbTableMapper.selectById(tbId);
-            // 统一规范副本名称，避免非法字符
+            // Unify and standardize the copy names, and avoid illegal characters
             String tableName = NamePolicy.copyName(dbTable.getName());
 
-            // 构建 DDL：CREATE TABLE new AS SELECT * FROM old;
+            // build DDL：CREATE TABLE new AS SELECT * FROM old;
             DbTableDto dbTableDto = new DbTableDto();
             dbTableDto.setName(tableName);
             String ddl = buildDDL(dbTableDto, DBOperateEnum.COPY.getCode(), dbTable.getName());
@@ -1147,13 +1146,13 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             DbInfo dbInfo = dbInfoMapper.selectById(dbTable.getDbId());
 
             for (String stmt : safeSplitStatements(ddl)) {
-                SqlRenderer.denyMultiStmtOrComment(stmt); // 这时每一条都不包含分号
+                SqlRenderer.denyMultiStmtOrComment(stmt); // At this point each statement does not contain semicolon
                 coreSystemService.execDDL(stmt,
                         UserInfoManagerHandler.getUserId(),
                         SpaceInfoUtil.getSpaceId(),
                         dbInfo.getDbId());
             }
-            // 本地元数据保存
+
             DbTable copyTable = new DbTable();
             copyTable.setName(tableName);
             copyTable.setDbId(dbTable.getDbId());
@@ -1162,7 +1161,6 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             copyTable.setUpdateTime(new Date());
             dbTableMapper.insert(copyTable);
 
-            // 复制表字段
             List<DbTableField> dbTableFields = dbTableFieldMapper.selectList(new QueryWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, tbId));
             List<DbTableField> copyTableFields = new ArrayList<>();
@@ -1176,7 +1174,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             }
             dbTableFieldMapper.insertBatch(copyTableFields);
         } catch (Exception ex) {
-            log.error("复制表失败, tbId={}", tbId, ex);
+            log.error("copy table failed, tbId={}", tbId, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_COPY_FAILED);
         }
     }
@@ -1194,7 +1192,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                 if (dto.getDataIds().size() > MAX_EXPORT_IDS) {
                     throw new BusinessException(ResponseEnum.DATABASE_TOO_MANY_EXPORT_IDS);
                 }
-                // 全部做数字白名单校验
+                // All perform digital whitelist verification
                 List<Long> ids = dto.getDataIds()
                         .stream()
                         .map(x -> SqlRenderer.requireLong(x, "id"))
@@ -1212,7 +1210,6 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     DBOperateEnum.SELECT.getCode(),
                     dto.getExecDev());
 
-            // 组装表头与数据（与原逻辑一致）
             List<List<String>> headList = new ArrayList<>();
             dbTableFieldMapper.selectList(new QueryWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, dto.getTbId()))
@@ -1238,7 +1235,7 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
                     .sheet("data")
                     .doWrite(dataList);
         } catch (Exception ex) {
-            log.error("导出表数据失败, params:{}", dto, ex);
+            log.error("export data failed, params:{}", dto, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_EXPORT_FAILED);
         }
     }
@@ -1278,18 +1275,18 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
 
     public List<DbTableFieldDto> importDbTableField(MultipartFile file) {
         try {
-            // 读取文件内容
+            // read file
             List<DbTableFieldDto> fields = new ArrayList<>();
             DBTableExcelReadListener listener = new DBTableExcelReadListener(fields);
 
-            // 读取 Excel
+            // read Excel
             EasyExcel.read(file.getInputStream(), listener)
                     .sheet()
                     .doRead();
-            // 调用核心系统接口
+
             return fields;
         } catch (Exception ex) {
-            log.error("数据库表字段导入失败", ex);
+            log.error("Failed to import database table fields", ex);
             throw new BusinessException(ResponseEnum.DATABASE_IMPORT_FAILED);
         }
     }
@@ -1297,11 +1294,10 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
     public static List<String> safeSplitStatements(String sql) {
         List<String> out = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
-        boolean inSingle = false; // 在 '...' 中
+        boolean inSingle = false;
         for (int i = 0; i < sql.length(); i++) {
             char c = sql.charAt(i);
             if (c == '\'') {
-                // 处理转义 '' -> 字面上的一个 '
                 if (inSingle && i + 1 < sql.length() && sql.charAt(i + 1) == '\'') {
                     cur.append("''");
                     i++;

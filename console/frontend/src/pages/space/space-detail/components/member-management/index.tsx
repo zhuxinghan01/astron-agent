@@ -10,7 +10,7 @@ import SpaceTable, {
   SpaceTableRef,
 } from '@/components/space/space-table';
 import { ButtonConfig } from '@/components/button-group';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import { usePermissions } from '@/hooks/use-permissions';
 import useUserStore from '@/store/user-store';
 

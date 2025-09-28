@@ -1,25 +1,24 @@
+/*
+ * @Author: snoopyYang
+ * @Date: 2025-09-23 10:06:56
+ * @LastEditors: snoopyYang
+ * @LastEditTime: 2025-09-23 10:07:09
+ * @Description: MCPDetail组件(MCP工具详情)
+ */
 import React, { useMemo, useState, useEffect } from 'react';
 import { Input, Button, InputNumber, Select, message } from 'antd';
 import { cloneDeep } from 'lodash';
 import dayjs from 'dayjs';
-import {
-  getServerToolDetailAPI,
-  debugServerToolAPI,
-  // workflowGetEnvKey,
-  workflowPushEnvKey,
-} from '@/services/plugin';
+import { getServerToolDetailAPI, debugServerToolAPI } from '@/services/plugin';
 import MarkdownRender from '@/components/markdown-render';
 import JsonMonacoEditor from '@/components/monaco-editor/JsonMonacoEditor';
 import { useTranslation } from 'react-i18next';
 import { MCPToolDetail, InputSchema, ToolArg } from '@/types/plugin-store';
-
 import toolArrowLeft from '@/assets/imgs/workflow/tool-arrow-left.png';
 import publishIcon from '@/assets/imgs/workflow/publish-icon.png';
 import trialRunIcon from '@/assets/imgs/workflow/trial-run-icon.png';
 import mcpArrowDown from '@/assets/imgs/mcp/mcp-arrow-down.svg';
 import mcpArrowUp from '@/assets/imgs/mcp/mcp-arrow-up.svg';
-// import mcpEnvKeyVisible from '@/assets/imgs/mcp/mcp-envKey-visible.svg';
-// import mcpEnvKeyHidden from '@/assets/imgs/mcp/mcp-envKey-hidden.svg';
 
 function MCPDetailWrapper({
   currentToolId,
@@ -78,10 +77,10 @@ export function MCPDetail({
   const [currentMcp, setCurrentMcp] = useState<MCPToolDetail>(
     {} as MCPToolDetail
   );
-  // const [envKeyParameters, setEnvKeyParameters] = useState<ToolArg[]>([]);
-  // const [envKeyDescription, setEnvKeyDescription] = useState('');
-  // const [loading, setLoading] = useState(false);
-  const [testDisabled, setTestDisabled] = useState(false);
+
+  const tools = useMemo(() => {
+    return currentMcp?.tools || [];
+  }, [currentMcp]);
 
   const generateDefaultInputValue = (type: string): unknown => {
     if (type === 'string') {
@@ -99,9 +98,8 @@ export function MCPDetail({
     }
   };
 
-  function transformSchemaToArray(schema: InputSchema): ToolArg[] {
+  const transformSchemaToArray = (schema: InputSchema): ToolArg[] => {
     const requiredFields = schema.required || [];
-
     return Object.entries(schema.properties).map(([name, property]) => {
       return {
         name,
@@ -112,69 +110,7 @@ export function MCPDetail({
         value: property?.default || generateDefaultInputValue(property.type),
       };
     });
-  }
-
-  // const handleNoInputParams = (currentMcp: MCPToolDetail): void => {
-  //   const params = {
-  //     recordId: currentMcp.recordId,
-  //     mcpId: currentMcp.id,
-  //     serverName: currentMcp.name,
-  //     serverDesc: currentMcp.brief,
-  //     env: null,
-  //     customize: false,
-  //   };
-  //   workflowPushEnvKey(params, false).then(data => {
-  //     setCurrentMcp(mcp => {
-  //       mcp.sparkId = data as string;
-  //       return cloneDeep(mcp);
-  //     });
-  //   });
-  // };
-
-  // const handleAddEnvKey = (currentMcp: MCPToolDetail): void => {
-  //   workflowGetEnvKey(currentMcp?.id, currentMcp?.recordId).then(data => {
-  //     if (
-  //       data?.parameters?.filter(item => item?.hasDefault === false)?.length > 0
-  //     ) {
-  //       setEnvKeyParameters(
-  //         data?.parameters?.map(item => ({
-  //           ...item,
-  //           default:
-  //             data?.oldParameters?.[item.name] !== undefined
-  //               ? data?.oldParameters?.[item.name]
-  //               : item.default,
-  //         }))
-  //       );
-  //       setEnvKeyDescription(data?.['user_guide'] as string);
-  //       if (!Object.hasOwn(data, 'oldParameters')) {
-  //         setTestDisabled(true);
-  //       }
-  //     } else {
-  //       handleNoInputParams(currentMcp);
-  //     }
-  //   });
-  // };
-
-  useEffect(() => {
-    if (currentToolId) {
-      getServerToolDetailAPI(currentToolId).then((data: MCPToolDetail) => {
-        data.tools = data.tools?.map(item => ({
-          ...item,
-          args: item.inputSchema
-            ? transformSchemaToArray(item.inputSchema)
-            : [],
-        }));
-        setCurrentMcp(data);
-        if (data?.mcpType !== 'flow') {
-          // handleAddEnvKey(data);
-        }
-      });
-    }
-  }, [currentToolId]);
-
-  const tools = useMemo(() => {
-    return currentMcp?.tools || [];
-  }, [currentMcp]);
+  };
 
   const handleInputParamsChange = (
     toolIndex: number,
@@ -226,7 +162,7 @@ export function MCPDetail({
       .then(data => {
         setCurrentMcp(mcp => {
           const tool = mcp?.tools?.find((item, index) => index === toolIndex);
-          if (tool && (data as { content: { text: string }[] })?.content) {
+          if (tool && data?.content) {
             tool.textResult = (
               data as { content: { text: string }[] }
             )?.content?.[0]?.text;
@@ -336,107 +272,6 @@ export function MCPDetail({
     }
   };
 
-  // const handleEnvKeyInputParamsChange = (argIndex: number, value: unknown): void => {
-  //   setEnvKeyParameters(parameters => {
-  //     const parameter = parameters?.find((item, index) => index === argIndex);
-  //     parameter.default = value;
-  //     return cloneDeep(parameters);
-  //   });
-  // };
-
-  // const renderEnvKeyInput = (arg, index): React.ReactElement => {
-  //   if (arg.enum?.length > 0) {
-  //     return (
-  //       <Select
-  //         className="global-select"
-  //         placeholder={t('workflow.nodes.common.selectPlaceholder')}
-  //         options={arg?.enum?.map(item => ({
-  //           label: item,
-  //           value: item,
-  //         }))}
-  //         value={arg?.default}
-  //         onChange={value => handleEnvKeyInputParamsChange(index, value)}
-  //       />
-  //     );
-  //   }
-  //   if (arg.type === 'string') {
-  //     return (
-  //       <Input.Password
-  //         className="w-full global-input"
-  //         placeholder={t('workflow.nodes.common.inputPlaceholder')}
-  //         value={arg?.default}
-  //         style={{ borderRadius: 8 }}
-  //         onChange={e => handleEnvKeyInputParamsChange(index, e.target.value)}
-  //         iconRender={visible => {
-  //           return (
-  //             <img
-  //               src={visible ? mcpEnvKeyVisible : mcpEnvKeyHidden}
-  //               className="w-5 h-5"
-  //               alt=""
-  //               style={{
-  //                 cursor: 'pointer',
-  //               }}
-  //             />
-  //           );
-  //         }}
-  //       />
-  //     );
-  //   } else if (arg.type === 'boolean') {
-  //     return (
-  //       <Select
-  //         className="global-select"
-  //         placeholder={t('workflow.nodes.common.selectPlaceholder')}
-  //         options={[
-  //           {
-  //             label: 'true',
-  //             value: true,
-  //           },
-  //           {
-  //             label: 'false',
-  //             value: false,
-  //           },
-  //         ]}
-  //         value={arg?.default}
-  //         onChange={value => handleEnvKeyInputParamsChange(index, value)}
-  //       />
-  //     );
-  //   } else if (arg.type === 'int' || arg.type === 'integer') {
-  //     return (
-  //       <InputNumber
-  //         className="w-full pt-1 global-input"
-  //         placeholder={t('workflow.nodes.common.inputPlaceholder')}
-  //         value={arg?.default}
-  //         onChange={value => handleEnvKeyInputParamsChange(index, value)}
-  //       />
-  //     );
-  //   }
-  // };
-
-  // const handlePublishEnvKey = (): void => {
-  //   const env: Record<string, unknown> = {};
-  //   for (const item of envKeyParameters) {
-  //     env[item.name] = item.default;
-  //   }
-  //   const params = {
-  //     mcpId: currentMcp.id,
-  //     serverName: currentMcp.name,
-  //     serverDesc: currentMcp.brief,
-  //     recordId: currentMcp['recordId'],
-  //     env,
-  //     customize: true,
-  //   };
-  //   setLoading(true);
-  //   // workflowPushEnvKey(params)
-  //   //   .then((data) => {
-  //   //     setCurrentMcp(mcp => {
-  //   //       mcp.sparkId = data as string;
-  //   //       return cloneDeep(mcp);
-  //   //     });
-  //   //     setTestDisabled(false);
-  //   //   })
-  //   //   .finally(() => setLoading(false));
-  // };
-
   const handleOpenTool = (toolIndex: number): void => {
     setCurrentMcp(mcp => {
       const tool = mcp?.tools?.find((item, index) => index === toolIndex);
@@ -446,6 +281,23 @@ export function MCPDetail({
       return cloneDeep(mcp);
     });
   };
+
+  useEffect(() => {
+    if (currentToolId) {
+      getServerToolDetailAPI(currentToolId).then((data: MCPToolDetail) => {
+        data.tools = data.tools?.map(item => ({
+          ...item,
+          args: item.inputSchema
+            ? transformSchemaToArray(item.inputSchema)
+            : [],
+        }));
+        setCurrentMcp(data);
+        if (data?.mcpType !== 'flow') {
+          // handleAddEnvKey(data);
+        }
+      });
+    }
+  }, [currentToolId]);
 
   return (
     <div>
@@ -472,15 +324,6 @@ export function MCPDetail({
       <div className="flex items-start gap-6 mt-9">
         <div className="flex flex-col w-full">
           <div className="bg-[#F6F9FF] rounded-lg p-1 inline-flex items-center gap-4 mb-3 w-fit">
-            {/* <div className='px-5 py-2 text-[#7F7F7F] rounded-lg cursor-pointer hover:bg-[#fff] hover:text-[#275EFF]'
-              style={{
-                background: currentTab === 'overview' ? '#fff' : '',
-                color: currentTab === 'overview' ? '#275EFF' : ''
-              }}
-              onClick={() => setCurrentTab('overview')}
-            >
-              Overview
-            </div> */}
             <div
               className="px-5 py-2 text-[#7F7F7F] rounded-lg cursor-pointer hover:bg-[#fff] hover:text-[#275EFF]"
               style={{
@@ -516,54 +359,7 @@ export function MCPDetail({
             </div>
           )}
           {currentTab === 'tools' && (
-            <div className="">
-              {/* {envKeyParameters?.length > 0 && (
-                <div className="mb-8 border border-[#F2F5FE] rounded-lg pb-6">
-                  <div
-                    className="text-desc envKeyMarkdown flex flex-col gap-3 bg-[#F6F9FF] p-4 pr-8"
-                    style={{
-                      borderRadius: '8px 8px 0 0',
-                    }}
-                  >
-                    <div className="text-base text-[#3D3D3D] font-semibold">
-                      {t('workflow.nodes.mcpDetail.activateMcpServiceToTest')}
-                    </div>
-                    <MarkdownRender
-                      content={envKeyDescription}
-                      isSending={false}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-4 px-4 mt-6">
-                    {envKeyParameters?.map((item, index) => (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center">
-                          {item?.require && (
-                            <span className="text-[#F74E43]">*</span>
-                          )}
-                          <div className="ml-1">{item?.name}：</div>
-                        </div>
-                        {renderEnvKeyInput(item, index)}
-                      </div>
-                    ))}
-                    <div className="flex justify-end">
-                      <Button
-                        loading={loading}
-                        disabled={envKeyParameters?.some(
-                          arg =>
-                            arg.require &&
-                            typeof arg.default === 'string' &&
-                            !arg.default?.trim()
-                        )}
-                        type="primary"
-                        className="w-[78px] flex items-center gap-2"
-                        onClick={() => handlePublishEnvKey()}
-                      >
-                        {t('workflow.nodes.toolNode.save')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )} */}
+            <div>
               <div className="font-semibold">
                 {t('workflow.nodes.toolNode.tool')}
               </div>
@@ -591,14 +387,12 @@ export function MCPDetail({
                         />
                         <Button
                           loading={tool?.loading}
-                          disabled={
-                            tool?.args?.some(
-                              arg =>
-                                arg.required &&
-                                typeof arg?.value === 'string' &&
-                                !arg.value?.trim()
-                            ) || testDisabled
-                          }
+                          disabled={tool?.args?.some(
+                            arg =>
+                              arg.required &&
+                              typeof arg?.value === 'string' &&
+                              !arg.value?.trim()
+                          )}
                           type="primary"
                           className="flex items-center gap-2"
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) =>

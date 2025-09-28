@@ -17,6 +17,14 @@ const translation = {
   viewApiDoc: 'View API document',
   bindAppID: 'Bound APPID:',
   appName: 'Application name:',
+  createApp: 'createApp',
+  createAppName: 'appName',
+  createAppNameRequired: 'Please input appName',
+  createAppNamePlaceholder:
+    'Please create an app name with fewer than 30 characters',
+  createAppDesc: 'appDesc',
+  createAppDescPlaceholder:
+    'Please describe the usage scenarios, application characteristics, etc.,fewer than 300 characters',
   unNamed: 'Unnamed',
   updateBind: 'Update binding',
   selectApp: 'Select your application to bind',

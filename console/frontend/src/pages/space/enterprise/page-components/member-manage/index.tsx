@@ -15,7 +15,7 @@ import BatchImport from './components/batch-import';
 import { useSpaceI18n } from '@/pages/space/hooks/use-space-i18n';
 
 import styles from './index.module.scss';
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import { enterpriseInvite } from '@/services/enterprise';
 import { DEFAULT_VALUES } from '@/pages/space/config';
 

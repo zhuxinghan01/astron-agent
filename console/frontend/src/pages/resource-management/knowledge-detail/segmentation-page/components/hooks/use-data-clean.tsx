@@ -294,6 +294,10 @@ const useDataSlicing = (params: {
   sliceFile: (config?: SliceFilesParams) => void;
   selectDefault: () => void;
   selectCustom: () => void;
+  selectTypeCache: React.RefObject<{
+    default: PageData<KnowledgeItem> | Record<string, never>;
+    custom: PageData<KnowledgeItem> | Record<string, never>;
+  }>;
 } => {
   const {
     tag,
@@ -424,6 +428,7 @@ const useDataSlicing = (params: {
     sliceFile,
     selectDefault,
     selectCustom,
+    selectTypeCache,
   };
 };
 
@@ -605,7 +610,80 @@ export const useDataClean = ({
     resetData: paginationManager.resetData,
   });
 
-  // 处理历史切片数据
+  const pollFileStatus = (sliceType: string): void => {
+    window.clearInterval(timer);
+
+    timer = window.setInterval(() => {
+      const statusParams = {
+        indexType: 0,
+        tag,
+        fileIds: [fileId],
+      };
+
+      getStatusAPI(statusParams)
+        .then(data => {
+          const doneList = data.filter(
+            item => item.status === 1 || item.status === 2 || item.status === 5
+          );
+          const failedList = data.filter(item => item.status === 1);
+
+          dataSliceManager.setFailedList(failedList);
+
+          if (doneList.length === 1) {
+            window.clearInterval(timer);
+            dataSliceManager.setSlicing(false);
+
+            const previewParams = {
+              tag,
+              fileIds: [fileId],
+              pageNo: 1,
+              pageSize: 10,
+            };
+
+            listPreviewKnowledgeByPage(previewParams)
+              .then(previewData => {
+                const chunks = modifyChunks(previewData.pageData || []);
+                paginationManager.setChunks(chunks);
+                paginationManager.setPageNumber(2);
+                paginationManager.setTotal(previewData.totalCount);
+                paginationManager.setViolationTotal(
+                  (previewData.extMap?.auditBlockCount as number) || 0
+                );
+
+                if (previewData.totalCount > 10) {
+                  paginationManager.setHasMore(true);
+                } else {
+                  paginationManager.setHasMore(false);
+                }
+
+                if (dataSliceManager.selectTypeCache.current) {
+                  dataSliceManager.selectTypeCache.current[
+                    sliceType as 'default' | 'custom'
+                  ] = cloneDeep(previewData);
+                }
+              })
+              .catch(error => {
+                console.error('获取预览数据失败:', error);
+                dataSliceManager.setSlicing(false);
+              });
+          } else {
+            dataSliceManager.setSlicing(true);
+          }
+        })
+        .catch(error => {
+          console.error('检查文件状态失败:', error);
+          dataSliceManager.setSlicing(false);
+          window.clearInterval(timer);
+        });
+    }, 1000);
+  };
+
+  const initializeData = (sliceType: string): void => {
+    dataSliceManager.setSlicing(true);
+
+    pollFileStatus(sliceType);
+  };
+
   const oldSlice = (): void => {
     if (sliceData.sliceType === 1) {
       const configParameter = {
@@ -616,14 +694,18 @@ export const useDataClean = ({
             ? '\\n'
             : sliceData.seperator[0] || '',
       };
-      dataSliceManager.setSlicing(true);
       configManager.setConfigDetail({ ...configParameter });
       dataSliceManager.setSliceType('custom');
-    }
-    if (sliceData.sliceType === 0) {
-      dataSliceManager.setSlicing(true);
+      initializeData('custom');
+    } else if (sliceData.sliceType === 0) {
       dataSliceManager.setSliceType('default');
       configManager.initConfig();
+      initializeData('default');
+    } else {
+      dataSliceManager.setSliceType('default');
+      configManager.initConfig();
+
+      initializeData('default');
     }
   };
 

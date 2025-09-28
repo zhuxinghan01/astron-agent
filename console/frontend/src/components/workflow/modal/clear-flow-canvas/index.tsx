@@ -19,6 +19,9 @@ function useDeleteCanvas(): () => void {
   const setClearFlowCanvasModalInfo = useFlowsManager(
     state => state.setClearFlowCanvasModalInfo
   );
+  const autoSaveCurrentFlow = useFlowsManager(
+    state => state.autoSaveCurrentFlow
+  );
   const setNodes = currentStore(state => state.setNodes);
   const setEdges = currentStore(state => state.setEdges);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
@@ -51,6 +54,7 @@ function useDeleteCanvas(): () => void {
     setClearFlowCanvasModalInfo({
       open: false,
     });
+    autoSaveCurrentFlow();
   });
 }
 

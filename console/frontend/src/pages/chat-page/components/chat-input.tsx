@@ -1,19 +1,32 @@
 import useChatStore from '@/store/chat-store';
-import { type BotInfoType, type MessageListType } from '@/types/chat';
+import {
+  type BotInfoType,
+  type MessageListType,
+  type UploadFileInfo,
+} from '@/types/chat';
 import TextArea from 'antd/es/input/TextArea';
-import { ReactElement, useRef, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import newChatIcon from '@/assets/imgs/chat/new-chat.svg';
 import stopIcon from '@/assets/imgs/chat/stop-icon.svg';
 import delIcon from '@/assets/imgs/chat/delete-history.svg';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { clearChatList, postNewChat } from '@/services/chat';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import DeleteModal from './delete-modal';
 import RecorderCom, { type RecorderRef } from './recorder-com';
+import deleteIcon from '@/assets/imgs/chat/plugin/delete-file.png';
+import { getFileIcon, getStatusText } from '@/utils';
+import useChatFileUpload from '@/hooks/use-chat-file-upload';
+import FilePreview from './file-preview';
 
 const ChatInput = (props: {
-  handleSendMessage: (msg: string, callback?: () => void) => void;
+  handleSendMessage: (params: {
+    item: string;
+    fileUrl?: string;
+    callback?: () => void;
+  }) => void;
   botInfo: BotInfoType;
   stopAnswer: () => void;
 }): ReactElement => {
@@ -24,16 +37,27 @@ const ChatInput = (props: {
   const isLoading = useChatStore(state => state.isLoading); //  是否正在加载
   const currentChatId = useChatStore(state => state.currentChatId); //  当前聊天id
   const addMessage = useChatStore(state => state.addMessage); //  添加消息
-  const setMessageList = useChatStore(state => state.setMessageList); //  设置消息列表
-  const setCurrentChatId = useChatStore(state => state.setCurrentChatId); //  设置当前聊天id
   const workflowOperation = useChatStore(state => state.workflowOperation); //  工作流操作
   const isWorkflowOption = useChatStore(state => state.isWorkflowOption); //  是否有工作流选项
-  const workflowOption = useChatStore(state => state.workflowOption); //  工作流选项数据
+  const chatFileListNoReq = useChatStore(state => state.chatFileListNoReq); //  文件列表
+  const setChatFileListNoReq = useChatStore(
+    state => state.setChatFileListNoReq
+  ); //  设置文件列表
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false); //  是否显示删除对话框
   const [isComposing, setIsComposing] = useState<boolean>(false); //  是否正在输入
   const [inputValue, setInputValue] = useState<string>(''); //  输入框值
   const textAreaRef = useRef<HTMLTextAreaElement>(null); //  输入框ref
   const $record = useRef<RecorderRef>(null); //  录音ref
+  const {
+    fileList,
+    setFileList,
+    fileInputRef,
+    handleFileSelect,
+    triggerFileSelect,
+    removeFile,
+    hasErrorFiles,
+  } = useChatFileUpload(botInfo);
+  const [previewFile, setPreviewFile] = useState<UploadFileInfo>();
 
   // 检查是否有待选择的工作流选项
   const hasWorkflowOptionsToSelect = (): boolean => {
@@ -55,10 +79,14 @@ const ChatInput = (props: {
     return false;
   };
 
+  useEffect(() => {
+    setFileList(chatFileListNoReq);
+  }, [chatFileListNoReq]);
+
   //全新对话
   const handleNewChat = async () => {
     if (streamId) {
-      message.warning(t('chatPage.chatWindow.answering'));
+      message.warning(t('chatPage.chatWindow.answeringInProgress'));
       return;
     }
     if (messageList.pop()?.reqId === 'START') {
@@ -87,27 +115,25 @@ const ChatInput = (props: {
     setDeleteModalOpen(true);
   };
 
-  //清除对话历史确认
-  const handleClearChatListConfirm = () => {
-    clearChatList(currentChatId, botInfo.botId)
-      .then(res => {
-        setCurrentChatId(res.id);
-        setMessageList([]);
-        setDeleteModalOpen(false);
-      })
-      .catch(() => {
-        message.error(t('chatPage.chatWindow.clearChatHistoryFailed'));
-      });
-  };
-
   //发送消息
   const handleSend = () => {
     if (!inputValue.trim()) {
       return;
     }
 
-    handleSendMessage(inputValue, () => {
-      setInputValue('');
+    // 检查是否有错误文件
+    if (hasErrorFiles()) {
+      message.error('请先删除上传失败的文件再发送消息');
+      return;
+    }
+
+    handleSendMessage({
+      item: inputValue,
+      fileUrl: fileList[0]?.fileUrl,
+      callback: () => {
+        setInputValue('');
+        setFileList([]);
+      },
     });
   };
 
@@ -118,6 +144,67 @@ const ChatInput = (props: {
       handleSend();
     }
   };
+
+  /**
+   * 渲染单个文件项
+   */
+  const renderFileItem = (file: UploadFileInfo) => {
+    const loading = !file.fileId && file.status !== 'error';
+    return (
+      <div
+        key={file.uid}
+        className="flex items-center justify-between p-2.5 mb-2 bg-gray-50 rounded-lg border border-gray-200 w-48"
+        onClick={() => setPreviewFile(file)}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          {/* 文件图标 */}
+          <Spin
+            spinning={loading}
+            indicator={<LoadingOutlined spin />}
+            size="small"
+          >
+            <img src={getFileIcon(file, loading)} alt="" className="w-6 h-8" />
+          </Spin>
+
+          {/* 文件信息 */}
+          <div className="flex-1 ml-2 min-w-0">
+            <div className="flex items-center justify-between">
+              <span
+                className="text-xs text-[#939393] truncate block max-w-[120px]"
+                title={file.fileName}
+              >
+                {file.fileName}
+              </span>
+              {/* 操作按钮 */}
+              <img
+                src={deleteIcon}
+                alt=""
+                className="w-4 h-4 ml-2 flex-shrink-0 cursor-pointer hover:opacity-80"
+                onClick={e => {
+                  e.stopPropagation();
+                  removeFile(file);
+                }}
+                title={file.fileId ? '删除文件' : '取消上传'}
+              />
+            </div>
+
+            {/* 状态信息 */}
+            <span
+              className="text-xs truncate block max-w-full"
+              style={{ color: file.status === 'error' ? '#ff4d4f' : '#939393' }}
+            >
+              {getStatusText(file)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 同步到全局状态
+  useEffect(() => {
+    setChatFileListNoReq(fileList);
+  }, [fileList]);
 
   return (
     <div className="pl-2.5 pr-[388px] py-6">
@@ -158,12 +245,18 @@ const ChatInput = (props: {
         </div>
         <div
           className={clsx(
-            'rounded-2xl min-h-[140px] bg-white border border-[#d3dbf8] pb-2.5 focus-within:border-[1.5px] focus-within:border-[#275eff]',
+            'rounded-2xl min-h-[140px] bg-white border px-2.5 pt-4 border-[#d3dbf8] focus-within:border-[1.5px] focus-within:border-[#275eff]',
             {
               'opacity-50 cursor-not-allowed': hasWorkflowOptionsToSelect(),
             }
           )}
         >
+          {/* 文件列表显示 */}
+          {fileList.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {fileList.map(file => renderFileItem(file))}
+            </div>
+          )}
           <TextArea
             placeholder={
               hasWorkflowOptionsToSelect()
@@ -183,31 +276,65 @@ const ChatInput = (props: {
             readOnly={hasWorkflowOptionsToSelect()}
             disabled={hasWorkflowOptionsToSelect()}
           />
-          <div className="flex items-center justify-end">
-            <RecorderCom
-              ref={$record}
-              disabled={hasWorkflowOptionsToSelect()}
-              send={result => {
-                textAreaRef?.current?.focus();
-                setInputValue(prev => prev + result);
-              }}
-            />
-            <div
-              onClick={handleSend}
-              className={clsx(
-                'w-10 h-10 bg-no-repeat bg-center mx-4',
-                inputValue.trim() !== '' && !hasWorkflowOptionsToSelect()
-                  ? "!bg-[url('@/assets/imgs/chat/send-hover.svg')] cursor-pointer"
-                  : "bg-[url('@/assets/imgs/chat/send.svg')] cursor-not-allowed"
+          <div className="flex items-center justify-between">
+            {/* 文件上传区域 */}
+            <div className="flex items-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={botInfo?.supportUploadConfig?.[0]?.accept}
+                multiple={(botInfo?.supportUploadConfig?.[0]?.limit || 0) > 1}
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+
+              {/* 上传按钮 */}
+              {botInfo?.supportUploadConfig?.length > 0 && (
+                <div
+                  className="flex items-center justify-center w-fit h-8 cursor-pointer transition-colors pl-2.5"
+                  onClick={triggerFileSelect}
+                  title={`上传${botInfo?.supportUploadConfig?.[0]?.type}文件 (${botInfo?.supportUploadConfig?.[0]?.accept})`}
+                >
+                  <img
+                    src="https://openres.xfyun.cn/xfyundoc/2024-10-23/eb1e209f-e13f-4722-8561-8c564658e46d/1729648162929/adfsa.svg"
+                    alt="上传文件"
+                    className="w-3 h-3"
+                  />
+                  <span className="ml-2 text-sm text-gray-500">
+                    {botInfo?.supportUploadConfig?.[0]?.tip}
+                  </span>
+                </div>
               )}
-            />
+            </div>
+            <div className="flex items-center pb-2.5">
+              <RecorderCom
+                ref={$record}
+                disabled={hasWorkflowOptionsToSelect()}
+                send={result => {
+                  textAreaRef?.current?.focus();
+                  setInputValue(prev => prev + result);
+                }}
+              />
+              <div
+                onClick={handleSend}
+                className={clsx(
+                  'w-10 h-10 bg-no-repeat bg-center ml-4 mr-1.5',
+                  inputValue.trim() !== '' && !hasWorkflowOptionsToSelect()
+                    ? "!bg-[url('@/assets/imgs/chat/send-hover.svg')] cursor-pointer"
+                    : "bg-[url('@/assets/imgs/chat/send.svg')] cursor-not-allowed"
+                )}
+              />
+            </div>
           </div>
         </div>
       </div>
       <DeleteModal
         open={deleteModalOpen}
         onCancel={() => setDeleteModalOpen(false)}
-        onOk={handleClearChatListConfirm}
+      />
+      <FilePreview
+        file={previewFile || ({} as UploadFileInfo)}
+        onClose={() => setPreviewFile({} as UploadFileInfo)}
       />
     </div>
   );

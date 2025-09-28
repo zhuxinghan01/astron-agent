@@ -76,6 +76,10 @@ export type FlowsManagerStoreType = {
     open: boolean;
   };
   setFlowModalInfo: (flowModalInfo: { open: boolean }) => void;
+  rpaModalInfo: {
+    open: boolean;
+  };
+  setRpaModalInfo: (rpaModalInfo: { open: boolean }) => void;
   currentStore?: unknown;
   knowledgeParameterModalInfo: {
     open: boolean;

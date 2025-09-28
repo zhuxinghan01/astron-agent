@@ -182,7 +182,7 @@ export const removeBotApplyRecord = (params: any) => {
   return http.post(`/bot/remove-bot`, params);
 };
 
-//申请下架助手
+//申请下架助手 -- NOTE: 发布模块原有逻辑, 用新接口后应该删去
 export const applyCancelUpload = (params: any) => {
   return http.post(`/bot/take-off-bot`, params);
 };
@@ -244,6 +244,11 @@ export const getWechatAuthUrl = (
   return http.get(
     `/bot/offiaccount/auth-url/get?botId=${botId}&appid=${appid}&redirectUrl=${redirectUrl}`
   );
+};
+
+// 点击调试前
+export const getInputsType = (params: any) => {
+  return http.post(`/xingchen-api/u/bot/v2/getInputsType`, params);
 };
 
 // mcp发布

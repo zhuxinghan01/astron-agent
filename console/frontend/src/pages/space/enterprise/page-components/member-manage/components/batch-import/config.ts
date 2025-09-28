@@ -1,4 +1,4 @@
-import { ModuleType, OperationType } from '@/permissions/permission-type';
+import { ModuleType, OperationType } from '@/types/permission';
 import type { ButtonConfig } from '@/components/button-group/types';
 
 // 导入步骤枚举

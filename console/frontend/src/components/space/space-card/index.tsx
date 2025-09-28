@@ -7,7 +7,7 @@ import JoinStatus from './components/join-status';
 import spaceAvatar from '@/assets/imgs/space/spaceAvatar.png';
 import creator from '@/assets/imgs/space/creator.svg';
 import member from '@/assets/imgs/space/member.svg';
-import { SpaceType } from '@/permissions/permission-type';
+import { SpaceType } from '@/types/permission';
 
 interface SpaceItem {
   id: string;

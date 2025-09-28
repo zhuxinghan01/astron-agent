@@ -117,7 +117,7 @@ export function LiteralField({
 }
 
 function RemoveButton({ id, data, item }: unknown): React.ReactElement {
-  const { allowNoInputParams, canvasesDisabled, handleRemoveLine } =
+  const { allowNoInputParams, canvasesDisabled, handleRemoveInputLine } =
     useNodeCommon({ id, data });
   if (!allowNoInputParams || canvasesDisabled) return null;
 
@@ -130,7 +130,7 @@ function RemoveButton({ id, data, item }: unknown): React.ReactElement {
         cursor: isImageParam ? 'not-allowed' : 'pointer',
         opacity: isImageParam ? 0.5 : 1,
       }}
-      onClick={() => !isImageParam && handleRemoveLine(item.id)}
+      onClick={() => !isImageParam && handleRemoveInputLine(item.id)}
       alt=""
     />
   );
@@ -152,7 +152,7 @@ function ReferenceField({
     ? [item?.schema?.value?.content?.nodeId, item?.schema?.value?.content?.name]
     : [];
 
-  const handleSelect = (node: unknown) =>
+  const handleSelect = (node: unknown): void =>
     handleChangeInputParam(
       item.id,
       (data, val) => {

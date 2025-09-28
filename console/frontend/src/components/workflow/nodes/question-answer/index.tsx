@@ -266,21 +266,6 @@ export const QuestionAnswerDetail = memo(props => {
           setEdges={setEdges}
           removeNodeRef={removeNodeRef}
         />
-        {nodeParam?.answerType === 'option' && (
-          <div className="relative intent-collapse-expand">
-            <FLowCollapse
-              isIntentCollapse={true}
-              label={
-                <div>
-                  {t('workflow.nodes.questionAnswerNode.setOptionContent')}
-                </div>
-              }
-              content={
-                <FixedOptions id={id} data={data} nodeParam={nodeParam} />
-              }
-            />
-          </div>
-        )}
         <OutputSection
           id={id}
           data={data}

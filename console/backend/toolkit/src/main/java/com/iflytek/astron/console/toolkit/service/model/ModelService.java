@@ -778,6 +778,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
             // First 4 digits + asterisks + last 4 digits
             apiKey = apiKey.substring(0, 4) + "********" + apiKey.substring(apiKey.length() - 4);
         }
+        if(model.getType() == 2 && !Objects.equals(model.getStatus(), ModelStatusEnum.RUNNING.getCode())){
+            this.flushStatus(model);
+        }
         vo.setName(model.getName());
         vo.setServiceId(model.getDomain());
         vo.setConfig(JSONArray.parseArray(model.getConfig()));
@@ -1105,14 +1108,14 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                 if (nodeParam == null) {
                     continue;
                 }
-                // —— Only perform replacement when current node actually references oldServiceId ——
+                // Only perform replacement when current node actually references oldServiceId
                 boolean hitOld = Objects.equals(llmId, nodeParam.getLong("llmId"));
 
                 if (!hitOld) {
                     continue;
                 }
 
-                // —— Replacement logic
+                // Replacement logic
                 nodeParam.put("modelEnabled", false);
                 changed = true;
                 if (changed) {
@@ -1283,6 +1286,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setColor(dto.getColor());
         model.setUpdateTime(new Date());
         model.setRemark(serviceId);
+        model.setModelPath(dto.getModelPath());
+        model.setAcceleratorCount(dto.getAcceleratorCount());
+        model.setReplicaCount(dto.getReplicaCount());
     }
 
     private void persistModel(Model model, boolean isCreate) {

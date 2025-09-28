@@ -1,3 +1,5 @@
+import React, { SetStateAction } from 'react';
+
 // Add Knowledge Modal 相关类型定义
 
 // 知识库项接口
@@ -64,4 +66,20 @@ export interface NodeItem {
 // Modal 组件的 Props 接口（如果需要的话）
 export interface AddKnowledgeModalProps {
   // 可以为空，因为组件目前没有 props
+}
+
+export interface useAddKnowledgeProps {
+  tag: string | undefined;
+  setTag: (tag: SetStateAction<VersionType | undefined>) => void;
+  orderBy: OrderByType;
+  versionList: { label: string; value: string }[];
+  getKnowledgesDebounce: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleKnowledgesChange: (knowledge: KnowledgeItem) => void;
+  ragType: string;
+  checkedIds: string[];
+  allData: KnowledgeItem[];
+  setAllData: (allData: KnowledgeItem[]) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+  setOrderBy: (orderBy: OrderByType) => void;
 }
