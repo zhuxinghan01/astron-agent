@@ -4,7 +4,7 @@
 
 ![Logo](docs/logo.svg)
 
-**企业级 AI 智能代理开发平台，结合智能 RPA，让代理不仅能思考，更能行动——跨数字和桌面环境自动化工作流程。**
+**星辰Agent是一款专为AI开发者和中小企业打造的企业级Agent开发平台。它提供从模型托管、应用开发到效果优化与权限管控的全链路能力。其技术内核与讯飞星辰Agent平台保持“内外同源”，并创新性地融合智能RPA技术，使Agent不仅能思考，更能自主行动，高效完成跨数字与桌面环境的复杂工作流任务。**
 
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
