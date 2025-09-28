@@ -35,7 +35,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.*;
 
 /**
- * @author yingpeng
+ * @author mingsuiyongheng
  */
 @RestController
 @Slf4j
@@ -237,7 +237,16 @@ public class ChatMessageController {
     }
 
     private record ValidationResult(boolean isValid) {
+        /**
+         * Gets a static method that represents validation passed.
+         *
+         * @return ValidationResult A static result object representing validation passed
+         */
         static ValidationResult valid() { return new ValidationResult(true); }
+        /**
+         * Returns a static method that represents an invalid validation result.
+         * @return ValidationResult Represents an invalid validation result
+         */
         static ValidationResult invalid() { return new ValidationResult(false); }
     }
 
