@@ -32,11 +32,11 @@ public class LocalModelHandler {
      * @return
      */
     public List<ModelFileVo> getLocalModelList() {
-        String url = apiUrl.getLocalModel() + MODEL_FILE_LIST;
-        log.info("getLocalModelList request url:{}", url);
-        String resp = OkHttpUtil.get(url);
-        log.info("getLocalModelList response data:{}", resp);
         try {
+            String url = apiUrl.getLocalModel() + MODEL_FILE_LIST;
+            log.info("getLocalModelList request url:{}", url);
+            String resp = OkHttpUtil.get(url);
+            log.info("getLocalModelList response data:{}", resp);
             JSONObject respObj = JSONObject.parseObject(resp);
             if (respObj.getInteger("code") == 0) {
                 JSONArray data = respObj.getJSONArray("data");
@@ -45,6 +45,7 @@ public class LocalModelHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to get model file list: " + respObj.getString("message"));
             }
         } catch (Exception e) {
+            log.error("getLocalModelList post fail", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to get model file list");
         }
     }
@@ -69,6 +70,7 @@ public class LocalModelHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Service deployment failed: " + respObj.getString("message"));
             }
         } catch (Exception e) {
+            log.error("deployModel post fail", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Service deployment failed");
         }
     }
@@ -81,11 +83,11 @@ public class LocalModelHandler {
      * @return
      */
     public String deployModelUpdate(ModelDeployVo deployVo, String serviceId) {
-        String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
-        log.info("deployModelUpdate request url:{}", url);
-        String resp = OkHttpUtil.put(url, JSON.toJSONString(deployVo));
-        log.info("deployModelUpdate response data:{}", resp);
         try {
+            String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
+            log.info("deployModelUpdate request url:{}", url);
+            String resp = OkHttpUtil.put(url, JSON.toJSONString(deployVo));
+            log.info("deployModelUpdate response data:{}", resp);
             JSONObject respObj = JSONObject.parseObject(resp);
             if (respObj.getInteger("code") == 0) {
                 JSONObject data = respObj.getJSONObject("data");
@@ -94,6 +96,7 @@ public class LocalModelHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Service update deployment failed: " + respObj.getString("message"));
             }
         } catch (Exception e) {
+            log.error("deployModelUpdate post fail", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Service update deployment failed");
         }
     }
@@ -108,11 +111,11 @@ public class LocalModelHandler {
      *         "http://xxxx:xxxx/xx", // openai like endpoint "updateTime": "2025-09-01 14:30" }
      */
     public JSONObject checkDeployStatus(String serviceId) {
-        String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
-        log.info("checkDeployStatus request url:{}", url);
-        String resp = OkHttpUtil.get(url);
-        log.info("checkDeployStatus response data:{}", resp);
         try {
+            String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
+            log.info("checkDeployStatus request url:{}", url);
+            String resp = OkHttpUtil.get(url);
+            log.info("checkDeployStatus response data:{}", resp);
             JSONObject respObj = JSONObject.parseObject(resp);
             if (respObj.getInteger("code") == 0) {
                 return respObj.getJSONObject("data");
@@ -120,6 +123,7 @@ public class LocalModelHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to get service deployment status: " + respObj.getString("message"));
             }
         } catch (Exception e) {
+            log.error("checkDeployStatus post fail", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to get service deployment status");
         }
     }
@@ -131,11 +135,11 @@ public class LocalModelHandler {
      * @return
      */
     public Boolean deleteModel(String serviceId) {
-        String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
-        log.info("deleteModel request url:{}", url);
-        String resp = OkHttpUtil.delete(url);
-        log.info("deleteModel response data:{}", resp);
         try {
+            String url = apiUrl.getLocalModel() + MODEL_DEPLOY_OPTION + serviceId;
+            log.info("deleteModel request url:{}", url);
+            String resp = OkHttpUtil.delete(url);
+            log.info("deleteModel response data:{}", resp);
             JSONObject respObj = JSONObject.parseObject(resp);
             if (respObj.getInteger("code") == 0) {
                 return true;
@@ -143,6 +147,7 @@ public class LocalModelHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to delete service: " + respObj.getString("message"));
             }
         } catch (Exception e) {
+            log.error("deleteModel post fail", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to delete service");
         }
     }

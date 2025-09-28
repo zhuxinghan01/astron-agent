@@ -28,6 +28,10 @@ spring:
           jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://auth-server:8000/.well-known/jwks}
           audiences:
             - ${OAUTH2_AUDIENCE:your-oauth2-client-id}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   # Disable static resource mapping
   web:

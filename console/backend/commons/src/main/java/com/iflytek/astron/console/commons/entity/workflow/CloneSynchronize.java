@@ -6,7 +6,7 @@ import lombok.Data;
 public class CloneSynchronize {
 
     private String uid;
-    private String originId;
+    private Long originId;
     private Long currentId;
     private Long spaceId;
     private String flowId;
