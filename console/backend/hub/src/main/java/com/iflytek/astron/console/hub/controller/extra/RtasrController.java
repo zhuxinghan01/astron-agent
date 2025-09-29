@@ -54,12 +54,13 @@ public class RtasrController {
     }
 
     /**
-    * Get signature
-    * @param ts Timestamp
-    * @param lfasrApikey API key
-    * @param appId Application ID
-    * @return Signature string
-    */
+     * Get signature
+     *
+     * @param ts Timestamp
+     * @param lfasrApikey API key
+     * @param appId Application ID
+     * @return Signature string
+     */
     public String getSign(String ts, String lfasrApikey, String appId) {
         try {
             String sign = CryptTools.hmacEncrypt(CryptTools.HMAC_SHA1, CryptTools.md5Encrypt(appId + ts), lfasrApikey);

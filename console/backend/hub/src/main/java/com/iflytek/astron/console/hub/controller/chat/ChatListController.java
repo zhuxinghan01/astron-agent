@@ -51,6 +51,7 @@ public class ChatListController {
 
     /**
      * Controller method for creating chat list
+     *
      * @param payload Request body containing chat list creation request data
      * @return Returns an ApiResult object containing chat list creation response data
      */

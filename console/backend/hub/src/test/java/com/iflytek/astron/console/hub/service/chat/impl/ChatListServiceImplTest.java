@@ -346,6 +346,12 @@ class ChatListServiceImplTest {
     void testCreateChatList_WithNullExistingChat_ShouldCreateNewChat() {
         // Given
         when(chatListDataService.findLatestEnabledChatByUserAndBot(uid, botId)).thenReturn(null);
+        // Mock createChat to simulate database behavior that sets the ID
+        doAnswer(invocation -> {
+            ChatList chatList = invocation.getArgument(0);
+            chatList.setId(100L); // Simulate database setting the ID
+            return null;
+        }).when(chatListDataService).createChat(any(ChatList.class));
 
         // When
         ChatListCreateResponse result = chatListService.createChatList(uid, chatListName, botId);
@@ -354,7 +360,7 @@ class ChatListServiceImplTest {
         assertNotNull(result);
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
+        verify(chatListDataService).addRootTree(eq(100L), eq(uid));
     }
 
     @Test
@@ -487,6 +493,14 @@ class ChatListServiceImplTest {
 
     @Test
     void testCreateRestartChat_WithValidInput_ShouldCreateNewChat() {
+        // Given
+        // Mock createChat to simulate database behavior that sets the ID
+        doAnswer(invocation -> {
+            ChatList chatList = invocation.getArgument(0);
+            chatList.setId(200L); // Simulate database setting the ID
+            return null;
+        }).when(chatListDataService).createChat(any(ChatList.class));
+
         // When
         ChatListCreateResponse result = chatListService.createRestartChat(uid, chatListName, botId);
 
@@ -496,7 +510,7 @@ class ChatListServiceImplTest {
         assertEquals(botId, result.getBotId());
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
+        verify(chatListDataService).addRootTree(eq(200L), eq(uid));
     }
 
     @Test

@@ -21,6 +21,7 @@ public class ChatBotApiServiceImpl implements ChatBotApiService {
 
     /**
      * Get chat bot API list for specified user ID
+     *
      * @param uid User ID
      * @return List of chat bot APIs
      */

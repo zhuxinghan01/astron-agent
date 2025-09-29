@@ -30,6 +30,7 @@ public class ShareServiceImpl implements ShareService {
 
     /**
      * Get bot status
+     *
      * @param relatedId Related ID
      * @return Bot status
      * @throws BusinessException If unable to get bot status

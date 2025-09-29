@@ -60,7 +60,7 @@ public class PublishApiController {
     @RateLimit(limit = 30, window = 60, dimension = "USER")
     @GetMapping("/usage-history")
     public ApiResult<BotApiHistoryUsageDTO> usageHistory(@RequestParam Integer botId,
-                                                         @RequestParam Integer type) {
+            @RequestParam Integer type) {
         return ApiResult.success(null);
     }
 

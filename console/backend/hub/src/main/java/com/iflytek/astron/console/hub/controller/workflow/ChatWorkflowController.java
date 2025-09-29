@@ -41,10 +41,11 @@ public class ChatWorkflowController {
     private WorkflowService workflowService;
 
     /**
-    * Get workflow information
-    * @param botId Bot ID
-    * @return Workflow information
-    */
+     * Get workflow information
+     *
+     * @param botId Bot ID
+     * @return Workflow information
+     */
     @GetMapping(value = "/info")
     public ApiResult<WorkflowInfoDto> info(@RequestParam Integer botId) {
         WorkflowInfoDto workflowInfo = new WorkflowInfoDto();

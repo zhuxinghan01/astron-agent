@@ -180,6 +180,7 @@ public class ChatEnhanceServiceImpl implements ChatEnhanceService {
 
     /**
      * Find chat file user by link ID and user ID
+     *
      * @param linkId Link ID
      * @param uid User ID
      * @return Returns the matching chat file user object
@@ -202,14 +203,16 @@ public class ChatEnhanceServiceImpl implements ChatEnhanceService {
     }
 
     /**
-     * Method to check files, validate if file name, URL and size are valid, and check if the number of uploaded files exceeds daily limit.
+     * Method to check files, validate if file name, URL and size are valid, and check if the number of
+     * uploaded files exceeds daily limit.
      *
      * @param uid User ID
      * @param fileName File name
      * @param fileUrl File URL
      * @param fileSize File size
      * @param limitEnum File limit enum, including maximum file size and daily upload count limit
-     * @throws BusinessException Business exception thrown when file name or URL is empty, business type is wrong, file size exceeds limit or daily upload count exceeds limit
+     * @throws BusinessException Business exception thrown when file name or URL is empty, business type
+     *         is wrong, file size exceeds limit or daily upload count exceeds limit
      */
     private void checkFile(String uid, String fileName, String fileUrl, Long fileSize, ChatFileLimitEnum limitEnum) {
         if (StringUtils.isBlank(fileName) || StringUtils.isBlank(fileUrl)) {

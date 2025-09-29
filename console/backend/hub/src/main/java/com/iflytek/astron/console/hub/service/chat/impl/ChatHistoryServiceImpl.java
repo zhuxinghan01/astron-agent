@@ -42,6 +42,7 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
 
     /**
      * Get historical message records of system bot
+     *
      * @param uid User ID
      * @param chatId Chat room ID
      * @return List of system bot message records

@@ -46,10 +46,11 @@ public class SparkChatService {
     private ChatRecordModelService chatRecordModelService;
 
     /**
-    * Create and return an SseEmitter object for handling chat room streaming requests
-    * @param request SparkChatRequest object containing chat room request
-    * @return SseEmitter object for handling chat room streaming requests
-    */
+     * Create and return an SseEmitter object for handling chat room streaming requests
+     *
+     * @param request SparkChatRequest object containing chat room request
+     * @return SseEmitter object for handling chat room streaming requests
+     */
     public SseEmitter chatStream(SparkChatRequest request) {
         SseEmitter emitter = SseEmitterUtil.createSseEmitter();
         String streamId = request.getChatId() + "_" + request.getUserId() + "_" + System.currentTimeMillis();
