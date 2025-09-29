@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import {
@@ -862,34 +868,36 @@ const BaseConfig: React.FC<ChatProps> = ({
   // 提示词、模型对比涉及状态 over
 
   /** 处理InputBox发送消息 */
-  const handleInputBoxSend = useCallback((text: string) => {
-    // 根据当前模式触发相应的PromptTry实例
-    
-    if (showTipPk) {
-      tipPromptTryRefs.current.forEach(ref => {
-        if (ref) {
-          ref.send(text);
-        }
-      });
-    } else if (showModelPk > 0) {
+  const handleInputBoxSend = useCallback(
+    (text: string) => {
+      // 根据当前模式触发相应的PromptTry实例
 
-      modelPromptTryRefs.current.forEach(ref => {
-        if (ref) {
-          ref.send(text);
+      if (showTipPk) {
+        tipPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else if (showModelPk > 0) {
+        modelPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else {
+        // 默认模式：触发单个PromptTry实例
+        console.log('Triggering default mode');
+        if (defaultPromptTryRef.current) {
+          defaultPromptTryRef.current.send(text);
         }
-      });
-    } else {
-      // 默认模式：触发单个PromptTry实例
-      console.log('Triggering default mode');
-      if (defaultPromptTryRef.current) {
-        defaultPromptTryRef.current.send(text);
       }
-    }
 
-    // 清空相关状态
-    setInputExampleTip('');
-    setInputExampleModel('');
-  }, [showTipPk, showModelPk]);
+      // 清空相关状态
+      setInputExampleTip('');
+      setInputExampleModel('');
+    },
+    [showTipPk, showModelPk]
+  );
 
   useEffect(() => {
     eventBus.on('eventSavebot', savebot);
