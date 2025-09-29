@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import {
@@ -24,6 +30,7 @@ import InputBox from '@/components/prompt-try/input-box';
 import WxModal from '@/components/wx-modal';
 
 import { configListRepos } from '@/services/knowledge';
+import { handleAgentStatus } from '@/services/release-management';
 import {
   getBotInfo,
   getBotType,
@@ -38,7 +45,6 @@ import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
 import usePrompt from '@/hooks/use-prompt';
 import { v4 as uuid } from 'uuid';
-import { robotType } from '@/types/typesServices';
 import eventBus from '@/utils/event-bus';
 import { debounce } from 'lodash';
 import { useTranslation } from 'react-i18next';
@@ -52,16 +58,20 @@ import tipIcon from '@/assets/imgs/sparkImg/tip.svg';
 
 import styles from './index.module.scss';
 
-interface ChatProps {
-  currentRobot: robotType;
-  setCurrentRobot: (value: any) => void;
-  currentTab: string;
-  setCurrentTab: (value: string) => void;
-}
+import {
+  ChatProps,
+  BaseModelConfig,
+  DatasetItem,
+  PageDataItem,
+  MaasDatasetItem,
+  TreeNode,
+  KnowledgeLeaf,
+  Knowledge,
+} from './types';
 
 const { Option } = Select;
 
-const baseModelConfig = {
+const baseModelConfig: BaseModelConfig = {
   visible: false,
   isSending: false,
   optionsVisible: false,
@@ -92,41 +102,6 @@ const baseModelConfig = {
     },
   },
 };
-
-interface TreeNode {
-  id?: string | number;
-  files?: TreeNode[];
-  [key: string]: any;
-}
-
-interface KnowledgeLeaf {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface Knowledge {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface DatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface PageDataItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface MaasDatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
 
 const BaseConfig: React.FC<ChatProps> = ({
   currentRobot,
@@ -388,6 +363,8 @@ const BaseConfig: React.FC<ChatProps> = ({
     );
 
     const obj = buildRequestObject(isRag, useFormValues);
+    // MARK: 这里用新接口后，无论是否发布，都可以直接调用吗
+    // const api = handleAgentStatus
     const api =
       detailInfo.botStatus === 1 ||
       detailInfo.botStatus === 2 ||
@@ -862,34 +839,36 @@ const BaseConfig: React.FC<ChatProps> = ({
   // 提示词、模型对比涉及状态 over
 
   /** 处理InputBox发送消息 */
-  const handleInputBoxSend = useCallback((text: string) => {
-    // 根据当前模式触发相应的PromptTry实例
-    
-    if (showTipPk) {
-      tipPromptTryRefs.current.forEach(ref => {
-        if (ref) {
-          ref.send(text);
-        }
-      });
-    } else if (showModelPk > 0) {
+  const handleInputBoxSend = useCallback(
+    (text: string) => {
+      // 根据当前模式触发相应的PromptTry实例
 
-      modelPromptTryRefs.current.forEach(ref => {
-        if (ref) {
-          ref.send(text);
+      if (showTipPk) {
+        tipPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else if (showModelPk > 0) {
+        modelPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else {
+        // 默认模式：触发单个PromptTry实例
+        console.log('Triggering default mode');
+        if (defaultPromptTryRef.current) {
+          defaultPromptTryRef.current.send(text);
         }
-      });
-    } else {
-      // 默认模式：触发单个PromptTry实例
-      console.log('Triggering default mode');
-      if (defaultPromptTryRef.current) {
-        defaultPromptTryRef.current.send(text);
       }
-    }
 
-    // 清空相关状态
-    setInputExampleTip('');
-    setInputExampleModel('');
-  }, [showTipPk, showModelPk]);
+      // 清空相关状态
+      setInputExampleTip('');
+      setInputExampleModel('');
+    },
+    [showTipPk, showModelPk]
+  );
 
   useEffect(() => {
     eventBus.on('eventSavebot', savebot);
