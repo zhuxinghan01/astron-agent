@@ -806,6 +806,8 @@ public class DatabaseService extends ServiceImpl<DbInfoMapper, DbInfo> {
             // Delete table fields
             dbTableFieldMapper.delete(new UpdateWrapper<DbTableField>().lambda()
                     .eq(DbTableField::getTbId, tbId));
+        } catch (BusinessException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Failed to delete table, tbId={}", tbId, ex);
             throw new BusinessException(ResponseEnum.DATABASE_TABLE_DELETE_FAILED);
