@@ -3,7 +3,6 @@ import { Button, Form, message, Modal, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-// import config from '@/config';
 import {
   getApiList,
   getApiInfo,
@@ -43,12 +42,6 @@ export default function BotApi({
   const [apiUsage, setApiUsage] = useState<any>({});
   const [freshCount, setFreshCount] = useState<number>(0); // 刷新页面数据
   const [loading, setLoading] = useState(false);
-  const [listModalOpen, setListModalOpen] = useState<boolean>(false);
-  const [listModalData, setListModalData] = useState<any[]>([]); //订单列表
-  const [publishBindId, setPublishBindId] = useState<any>(); // 发布绑定id
-  const [publishBindIdLoading, setPublishBindIdLoading] = useState(false);
-  const [SkipBindLoading, setSkipBindLoading] = useState(false);
-  const [selectError, setSelectError] = useState(false); // Select 错误状态
   const [isShowCreateAppModal, setIsShowCreateAppModal] =
     useState<boolean>(false); // 是否显示创建应用弹框
   const [docUrl, setDocUrl] = useState<string>(); // 文档地址
@@ -58,46 +51,12 @@ export default function BotApi({
       await createApi({ botId, appId: appIdParam || appId, publishBindId });
       setFreshCount(freshCount + 1);
       message.success('绑定成功');
-      setListModalOpen(false);
-      setPublishBindId(null);
-      setSelectError(false); // 重置错误状态
     } catch (e: any) {
       message.error(e?.msg);
-      setPublishBindIdLoading(false);
-      setSkipBindLoading(false);
     } finally {
-      setPublishBindIdLoading(false);
-      setSkipBindLoading(false);
+      setLoading(false);
     }
   };
-  // const handleSkipBind = async () => {
-  //   setSkipBindLoading(true);
-  //   createApiFn();
-  // };
-  // const operateApi = async (appId?: any) => {
-  //   try {
-  //     setLoading(true);
-  //     const res = await getOrderList();
-  //     const data = res.map((item: any) => {
-  //       return {
-  //         value: item.id,
-  //         label: item.name || item.appId,
-  //       };
-  //     });
-  //     if (data.length > 0 && searchParams.get('version') !== '1') {
-  //       setListModalData(data);
-  //       setListModalOpen(true);
-  //     } else {
-  //       createApiFn(null, appId);
-  //     }
-  //   } catch (error: any) {
-  //     message.error(error?.msg);
-  //     setLoading(false);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   //更新 or 绑定
   const handleBindApi = () => {
     if (!appId) {
@@ -456,52 +415,6 @@ export default function BotApi({
             </div>
           </div>
         </div>
-        {/* <Modal
-          open={listModalOpen}
-          onCancel={() => {
-            handleCancel();
-          }}
-          title={t('botApi.modal.title')}
-          width={500}
-          centered
-          footer={
-            <>
-              <Button
-                onClick={() => handleSkipBind()}
-                color="default"
-                disabled={publishBindIdLoading}
-                loading={SkipBindLoading}
-              >
-                {t('botApi.modal.skip')}
-              </Button>
-              <Button
-                type="primary"
-                onClick={() => handleConfirmBindApi()}
-                disabled={publishBindIdLoading}
-                loading={publishBindIdLoading}
-              >
-                {t('botApi.modal.confirm')}
-              </Button>
-            </>
-          }
-        >
-          <div className={styles.modal_tips}>{t('botApi.modal.tips')}</div>
-          <Select
-            options={listModalData}
-            style={{
-              width: '100%',
-              marginBottom: 12,
-            }}
-            className={selectError ? 'my-select-error' : ''}
-            onChange={e => {
-              setPublishBindId(e);
-              setSelectError(false); // 选择后清除错误状态
-            }}
-            value={publishBindId}
-            placeholder={t('botApi.modal.selectOrder')}
-            status={selectError ? 'error' : undefined}
-          ></Select>
-        </Modal> */}
       </section>
       <Modal
         open={isShowCreateAppModal}
@@ -530,9 +443,6 @@ export default function BotApi({
             form={createAppForm}
             name="promptForm"
             initialValues={{ remember: true }}
-            // onFinish={handleFormFinish}
-            // onFinishFailed={onFinishFailed}
-            // onValuesChange={handleFormValuesChange} // 监听表单值变化
             autoComplete="off"
           >
             <Form.Item
