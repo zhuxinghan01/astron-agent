@@ -312,7 +312,7 @@ const MenuList: FC<MenuListProps> = ({
   const [hoverTab, setHoverTab] = useState('');
   const [menuActiveKey, setMenuActiveKey] = useState('');
   const [showRecent, setShowRecent] = useState(true);
-  const [chatListId, setChatListId] = useState('');
+  const [chatListId, setChatListId] = useState<number>(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Refs

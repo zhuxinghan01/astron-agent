@@ -37,6 +37,9 @@ const transition = {
   chatBottom: {
     feedbackSuccess: 'Feedback submitted successfully',
     feedbackFailed: 'Failed to submit feedback, please try again later',
+    stopReading: 'Stop Reading',
+    read: 'Read',
+    copy: 'Copy',
   },
   chatWindow: {
     clearChatHistoryFailed: 'Failed to clear chat history',
