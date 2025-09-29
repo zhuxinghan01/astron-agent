@@ -27,12 +27,6 @@ const tabs = [
     iconClass: 'rpa-icon',
     title: 'common.header.rpa',
   },
-  {
-    key: 'rpa',
-    path: '/resource/rpa',
-    iconClass: 'rpa-icon',
-    title: 'common.header.rpa',
-  },
 ];
 
 function index(): JSX.Element {

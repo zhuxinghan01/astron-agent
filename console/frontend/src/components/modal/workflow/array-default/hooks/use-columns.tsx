@@ -43,7 +43,7 @@ export const useColumns = ({
           title={record?.description}
           overlayClassName="black-tooltip config-secret"
         >
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 h-[40px]">
             <span>{name}</span>
             {record?.required && (
               <span className="text-[#F74E43] flex-shrink-0">*</span>

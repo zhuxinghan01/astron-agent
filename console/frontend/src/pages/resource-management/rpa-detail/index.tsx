@@ -20,6 +20,22 @@ export const RpaDetail = () => {
     {
       title: t('rpa.robotName'),
       dataIndex: 'name',
+      width: 200,
+      ellipsis: true,
+      render: (_, record) => {
+        return (
+          <div className="flex items-center">
+            <img
+              src={record.icon}
+              className="w-[28px] h-[28px] rounded-lg"
+              alt=""
+            />
+            <div className="flex-1 pl-[6px] truncate max-w-[166px]">
+              {record.name}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: t('rpa.description'),
@@ -68,7 +84,7 @@ export const RpaDetail = () => {
             </div>
             <div className="text-sm text-[#7F7F7F] pb-[16px]">
               {t('rpa.updateTime')}
-              {dayjs(rpaDetail?.createTime).format('YYYY-MM-DD HH:mm:ss')}
+              {dayjs(rpaDetail?.updateTime).format('YYYY-MM-DD HH:mm:ss')}
             </div>
           </div>
           <div className="w-full text-[#7F7F7F]  pt-[12px] ">

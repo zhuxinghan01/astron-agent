@@ -46,6 +46,7 @@ export interface UseNodeInfoReturn {
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
   isCodeNode: boolean;
+  isDataBaseNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;
   showExceptionFlow: boolean;

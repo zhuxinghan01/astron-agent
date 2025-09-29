@@ -37,6 +37,9 @@ const transition = {
   chatBottom: {
     feedbackSuccess: '反馈成功',
     feedbackFailed: '反馈提交失败，请稍后重试',
+    stopReading: '停止朗读',
+    read: '朗读',
+    copy: '复制',
   },
   chatWindow: {
     clearChatHistoryFailed: '清空聊天记录失败',

@@ -27,17 +27,17 @@ export const updateUserInfo = ({
 
 // 拒绝邀请
 export const refuseInvite = (params: any): Promise<any> => {
-  return http.post(`/inviteRecord/refuseInvite?inviteId=${params.inviteId}`);
+  return http.post(`/invite-record/refuse-invite?inviteId=${params.inviteId}`);
 };
 
 // 接受邀请
 export const acceptInvite = (params: any): Promise<any> => {
-  return http.post(`/inviteRecord/acceptInvite?inviteId=${params.inviteId}`);
+  return http.post(`/invite-record/accept-invite?inviteId=${params.inviteId}`);
 };
 
 // 邀请记录信息
 export const getInviteByParam = (params: any): Promise<any> => {
-  return http.get(`/inviteRecord/getInviteByParam?param=${params}`);
+  return http.get(`/invite-record/get-invite-by-param?param=${params}`);
 };
 
 // b编辑个人中心用户名
