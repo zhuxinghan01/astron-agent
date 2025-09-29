@@ -1,5 +1,7 @@
 package com.iflytek.astron.console.commons.constant;
 
+import lombok.Getter;
+
 /**
  * Response code enumeration class
  */
@@ -72,6 +74,9 @@ public enum ResponseEnum {
     ACTIVITY_NOT_FOUND_ERROR(60030, "error.activity.not.found"),
     BOT_CHAIN_UPDATE_ERROR(60031, "error.bot.chain.update.error"),
 
+    USER_APP_ID_CREATE_ERROR(60032, "error.app.create.failed"),
+
+    USER_APP_NAME_REPEAT(60032, "error.app.create.name.repeat"),
 
     // Space application related errors
     SPACE_APPLICATION_PLEASE_JOIN_ENTERPRISE_FIRST(61001, "space.application.please.join.enterprise.first"),
@@ -362,20 +367,14 @@ public enum ResponseEnum {
     // System errors 9xxxx
     SYSTEM_ERROR(99999, "system.error");
 
+    @Getter
     private final int code;
 
+    @Getter
     private final String messageKey;
 
     ResponseEnum(int code, String messageKey) {
         this.code = code;
         this.messageKey = messageKey;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessageKey() {
-        return messageKey;
     }
 }

@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * @author mingsuiyongheng
+ */
 @Service
 @Slf4j
 public class BotChainServiceImpl implements BotChainService {
@@ -28,26 +31,21 @@ public class BotChainServiceImpl implements BotChainService {
     private MaasUtil maasUtil;
 
     /**
-     * 复制助手2.0
-     *
-     * @param uid
-     * @param sourceId
-     * @param targetId
-     * @param spaceId
+     * Copy assistant 2.0
      */
     @Override
     public void copyBot(String uid, Long sourceId, Long targetId, Long spaceId) {
-        // 查源助手
+        // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source助手不存在, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
         UserLangChainInfo chainInfo = botList.getFirst();
-        // 把节点id 换掉，防止数据回流错乱
+        // Replace node id to prevent data backflow confusion
         replaceNodeId(chainInfo);
-        // 配置 _id, id, botId, flowId, uid, updateTime
+        // Configure botId, flowId, uid, updateTime
         chainInfo.setId(null);
         chainInfo.setBotId(Math.toIntExact(targetId));
         chainInfo.setFlowId(null);
@@ -58,26 +56,20 @@ public class BotChainServiceImpl implements BotChainService {
         }
         chainInfo.setUpdateTime(LocalDateTime.now());
 
-        // 添加新json
+        // Add new json
         userLangChainDataService.insertUserLangChainInfo(chainInfo);
     }
 
     /**
-     * 复制工作流
-     *
-     * @param uid uid
-     * @param sourceId
-     * @param targetId
-     * @param request
-     * @param spaceId
+     * Copy workflow
      */
     @Override
     @Transactional
     public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId) {
-        // 查源助手
+        // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source助手不存在, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
@@ -85,7 +77,7 @@ public class BotChainServiceImpl implements BotChainService {
         Long massId = Long.valueOf(String.valueOf(chainInfo.getMaasId()));
         JSONObject res = maasUtil.copyWorkFlow(massId, uid);
         if (Objects.isNull(res)) {
-            // 抛出异常,保持数据的事务性
+            // Throw exception to maintain data transactionality
             throw new BusinessException(ResponseEnum.BOT_CHAIN_UPDATE_ERROR);
         }
         JSONObject data = res.getJSONObject("data");
@@ -102,9 +94,14 @@ public class BotChainServiceImpl implements BotChainService {
         }
         chain.setUpdateTime(LocalDateTime.now());
         userLangChainDataService.insertUserLangChainInfo(chain);
-        log.info("----- 源助手: {}, 目标助手: {} 得到的新画布id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
+        log.info("----- Source assistant: {}, target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
     }
 
+    /**
+     * Replace node ID
+     *
+     * @param botMap UserLangChainInfo object containing open and GCY strings
+     */
     public static void replaceNodeId(UserLangChainInfo botMap) {
         JSONObject open = JSONObject.parseObject(botMap.getOpen());
         String openStr = botMap.getOpen();
@@ -115,7 +112,7 @@ public class BotChainServiceImpl implements BotChainService {
             JSONObject node = (JSONObject) o;
             String oldNodeId = node.getString("id");
             String newNodeId = getNewNodeId(oldNodeId);
-            // 直接匹配字符串并替换
+            // Directly match string and replace
             openStr = openStr.replace(oldNodeId, newNodeId);
             gcyStr = gcyStr.replace(oldNodeId, newNodeId);
         }
@@ -123,13 +120,19 @@ public class BotChainServiceImpl implements BotChainService {
         botMap.setGcy(gcyStr);
     }
 
+    /**
+     * Get new node ID
+     *
+     * @param original Original node ID string
+     * @return New node ID string, if the original string contains a colon, add a random UUID after the colon, otherwise throw an exception
+     */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');
         if (colonIndex != -1) {
             return original.substring(0, colonIndex + 1) + UUID.randomUUID();
         }
-        // 如果没有找到冒号，则返回原始字符串
-        log.info("***** {}没有找到冒号", original);
-        throw new RuntimeException("助手后台数据不符合规范");
+        // If no colon is found, return the original string
+        log.info("***** {} no colon found", original);
+        throw new RuntimeException("Assistant backend data does not conform to specifications");
     }
 }

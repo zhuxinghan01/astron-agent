@@ -17,6 +17,9 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @author mingsuiyongheng
+ */
 @Service
 @Slf4j
 public class ChatHistoryServiceImpl implements ChatHistoryService {
@@ -37,6 +40,13 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
             简洁而专业地充分回答用户的问题，不允许在答案中添加编造成分。
             """;
 
+    /**
+     * Get historical message records of system bot
+     *
+     * @param uid User ID
+     * @param chatId Chat room ID
+     * @return List of system bot message records
+     */
     @Override
     public List<SparkChatRequest.MessageDto> getSystemBotHistory(String uid, Long chatId) {
         // Get question history
@@ -83,6 +93,14 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
         return messages;
     }
 
+    /**
+     * Get history records for specified user and chat ID
+     *
+     * @param uid User ID
+     * @param chatId Chat ID
+     * @param reqList Request model list
+     * @return Merged chat history records
+     */
     @Override
     public ChatRequestDtoList getHistory(String uid, Long chatId, List<ChatReqModelDto> reqList) {
         if (reqList == null || reqList.isEmpty()) {

@@ -45,6 +45,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author mingsuiyongheng
+ */
 @Slf4j
 @Service
 public class BotChatServiceImpl implements BotChatService {
@@ -136,6 +139,14 @@ public class BotChatServiceImpl implements BotChatService {
         }
     }
 
+    /**
+     * Method to re-answer messages
+     *
+     * @param requestId Request ID
+     * @param botId Bot ID
+     * @param sseEmitter SSE emitter
+     * @param sseId SSE ID
+     */
     @Override
     public void reAnswerMessageBot(Long requestId, Integer botId, SseEmitter sseEmitter, String sseId) {
         try {
@@ -169,6 +180,20 @@ public class BotChatServiceImpl implements BotChatService {
         }
     }
 
+    /**
+     * Debug chat bot messages
+     *
+     * @param text User input text
+     * @param prompt Prompt text
+     * @param messages Chat message list
+     * @param uid User ID
+     * @param openedTool Opened tools
+     * @param model Model to use
+     * @param modelId Model ID
+     * @param maasDatasetList MaaS dataset list
+     * @param sseEmitter SSE emitter
+     * @param sseId SSE ID
+     */
     @Override
     public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, List<String> maasDatasetList, SseEmitter sseEmitter, String sseId) {
         int maxInputTokens = this.maxInputTokens;
@@ -194,6 +219,15 @@ public class BotChatServiceImpl implements BotChatService {
         }
     }
 
+    /**
+     * Clear chat window content
+     *
+     * @param chatId Chat window ID
+     * @param uid User ID
+     * @param botId Bot ID
+     * @param botBase Chat bot base information
+     * @return Chat window response object after clearing
+     */
     @Override
     @Transactional
     public ChatListCreateResponse clear(Long chatId, String uid, Integer botId, ChatBotBase botBase) {
@@ -386,7 +420,7 @@ public class BotChatServiceImpl implements BotChatService {
         promptBuilder.insert(promptBuilder.indexOf("[") + 1, knowledgeList);
         promptBuilder.append("\n接下来我的输入是：{{}}");
         promptBuilder.insert(promptBuilder.indexOf("{{") + 2, chatBotReqDto.getAsk());
-        // 需要文档问答, 把prompt和数据集都拼起来, 成为真正的ask
+        // Need document Q&A, concatenate prompt and dataset to become the real ask
         String ask = promptBuilder.toString();
         SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
         queryMessage.setRole("user");
@@ -429,7 +463,7 @@ public class BotChatServiceImpl implements BotChatService {
 
         SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
         queryMessage.setRole("user");
-        // 拼接当前提问
+        // Concatenate current question
         StringBuilder askBuilder = new StringBuilder();
         askBuilder.append(LOOSE_PREFIX_PROMPT);
         List<String> askKnowledgeList = knowledgeService.getChuncks(maasDatasetList, text, 3, true);
@@ -444,16 +478,16 @@ public class BotChatServiceImpl implements BotChatService {
 
         if (tokenStats.availableTokens() > 0 && !messages.isEmpty()) {
             List<SparkChatRequest.MessageDto> historyMessages = convertStringMessagesToDto(messages);
-            // maas数据集处理
+            // MaaS dataset processing
             for (SparkChatRequest.MessageDto messageDto : historyMessages) {
-                // 只拼接用户的问题, 不处理回答
+                // Only concatenate user questions, do not process answers
                 if ("user".equals(messageDto.getRole())) {
                     String ask = messageDto.getContent();
                     StringBuilder builder = new StringBuilder();
                     builder.append(LOOSE_PREFIX_PROMPT);
                     List<String> knowledgeList = knowledgeService.getChuncks(maasDatasetList, ask, 3, true);
                     builder.insert(builder.indexOf("[") + 1, knowledgeList);
-                    builder.append("\n接下来我的输入是：{{}}");
+                    builder.append("\nNext, my input is: {{}}");
                     builder.insert(builder.indexOf("{{") + 2, ask);
                     messageDto.setContent(builder.toString());
                 }
@@ -518,7 +552,8 @@ public class BotChatServiceImpl implements BotChatService {
             }
 
             currentTokens += messageTokens;
-            result.addFirst(message); // Add to the beginning of the list, maintain time order
+            // Add to the beginning of the list, maintain time order
+            result.addFirst(message);
         }
 
         return result;
@@ -556,7 +591,8 @@ public class BotChatServiceImpl implements BotChatService {
         log.trace("Token estimation - Chinese characters: {}, English characters: {}, Estimated tokens: {}",
                 chineseChars, englishChars, estimatedTokens);
 
-        return Math.max(estimatedTokens, 1); // At least 1 token
+        // At least 1 token
+        return Math.max(estimatedTokens, 1);
     }
 
     /**
@@ -572,18 +608,25 @@ public class BotChatServiceImpl implements BotChatService {
         sparkChatRequest.setModel(botConfig.model);
         sparkChatRequest.setMessages(messages);
         sparkChatRequest.setChatId(chatBotReqDto.getChatId().toString());
-        sparkChatRequest.setUserId(chatBotReqDto.getUid().toString());
+        sparkChatRequest.setUserId(chatBotReqDto.getUid());
         sparkChatRequest.setEnableWebSearch(enableWebSearch(botConfig.openedTool));
         return sparkChatRequest;
     }
 
+    /**
+     * Build JSON object for prompt chat request
+     *
+     * @param llmInfoVo LLMInfoVo object containing URL, API key and model information
+     * @param messages List of chat messages
+     * @return JSON object representing the prompt chat request
+     */
     private JSONObject buildPromptChatRequest(LLMInfoVo llmInfoVo, List<SparkChatRequest.MessageDto> messages) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("url", llmInfoVo.getUrl());
         jsonObject.put("apiKey", llmInfoVo.getApiKey());
         jsonObject.put("model", llmInfoVo.getDomain());
         jsonObject.put("messages", messages);
-        // 将Object转为JSONArray类型
+        // Convert Object to JSONArray type
         Object configObj = llmInfoVo.getConfig();
         JSONArray config = null;
         if (configObj instanceof JSONArray) {

@@ -6,6 +6,7 @@ from asyncio import Event
 from typing import Any, AsyncIterator, Dict, List, Literal, Optional, Tuple
 
 from pydantic import BaseModel, Field
+
 from workflow.consts.engine.chat_status import ChatStatus, SparkLLMStatus
 from workflow.consts.engine.model_provider import ModelProviderEnum
 from workflow.consts.engine.template import TemplateSplitType, TemplateType
@@ -1033,8 +1034,8 @@ class BaseLLMNode(BaseNode):
     model: str = Field(...)
     domain: str = Field(...)
     appId: str = Field(...)
-    apiKey: str = Field(...)
-    apiSecret: str = Field(...)
+    apiKey: str = Field(default="")
+    apiSecret: str = Field(default="")
 
     url: str = Field(default="")
     temperature: float = Field(gt=0, le=1, default=1.0)
