@@ -2,7 +2,6 @@ package com.iflytek.astron.console.hub.service.publish.impl;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
-import com.iflytek.astron.console.hub.dto.publish.mcp.McpContentResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
 import com.iflytek.astron.console.commons.entity.model.McpData;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
@@ -10,7 +9,6 @@ import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
 import com.iflytek.astron.console.commons.mapper.UserLangChainInfoMapper;
 import com.iflytek.astron.console.hub.service.publish.McpService;
-import com.iflytek.astron.console.hub.converter.McpDataConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,37 +31,8 @@ public class McpServiceImpl implements McpService {
     private final McpDataMapper mcpDataMapper;
     private final ChatBotBaseMapper chatBotBaseMapper;
     private final UserLangChainInfoMapper userLangChainInfoMapper;
-    private final McpDataConverter mcpDataConverter;
     private final BotPublishService botPublishService;
 
-    @Override
-    public McpContentResponseDto getMcpContent(Integer botId, String currentUid, Long spaceId) {
-        log.info("Get MCP content: botId={}, uid={}, spaceId={}", botId, currentUid, spaceId);
-
-        // 1. Permission check
-        int hasPermission = chatBotBaseMapper.checkBotPermission(botId, currentUid, spaceId);
-        if (hasPermission == 0) {
-            throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
-        }
-
-        // 2. Query MCP data
-        McpData mcpData = mcpDataMapper.selectLatestByBotId(botId);
-
-        // 3. Build response
-        McpContentResponseDto response;
-        if (mcpData != null) {
-            // Use MapStruct converter
-            response = mcpDataConverter.toResponseDto(mcpData);
-        } else {
-            // No MCP data found, return default status
-            response = new McpContentResponseDto();
-            response.setBotId(botId);
-            response.setReleased("0"); // Not published
-        }
-
-        log.info("MCP content query completed: botId={}, released={}", botId, response.getReleased());
-        return response;
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

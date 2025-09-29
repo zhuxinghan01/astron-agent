@@ -15,9 +15,9 @@ import com.iflytek.astron.console.hub.dto.publish.BotVersionVO;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlRequestDto;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
-import com.iflytek.astron.console.hub.dto.publish.mcp.McpContentResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
 import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.hub.service.publish.McpService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,6 +96,32 @@ public class BotPublishController {
         log.info("Bot details retrieved successfully: botId={}, channels={}", botId, result.getPublishChannels());
 
         return ApiResult.success(result);
+    }
+
+    /**
+     * Get Publish Prepare Data
+     *
+     * Unified endpoint to get preparation data for different publish types
+     */
+    @Operation(
+            summary = "Get publish prepare data",
+            description = "Get preparation data needed for publishing to different channels (market, mcp, feishu, api)")
+    @RateLimit(limit = 50, window = 60, dimension = "USER")
+    @GetMapping("/bots/{botId}/prepare")
+    public ApiResult<UnifiedPrepareDto> getPrepareData(
+            @Parameter(description = "Unique bot identifier", required = true)
+            @PathVariable Integer botId,
+            @Parameter(description = "Publish type: market, mcp, feishu, api", required = true)
+            @RequestParam String type) {
+
+        String currentUid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+
+        log.info("Getting publish prepare data: botId={}, type={}, uid={}, spaceId={}", 
+                botId, type, currentUid, spaceId);
+
+        UnifiedPrepareDto prepareData = botPublishService.getPrepareData(botId, type, currentUid, spaceId);
+        return ApiResult.success(prepareData);
     }
 
     /**
@@ -238,28 +264,6 @@ public class BotPublishController {
 
     // ==================== MCP Publishing Management ====================
 
-    /**
-     * Get MCP service configuration for a bot
-     */
-    @Operation(
-            summary = "Get MCP service details",
-            description = "Retrieve MCP service configuration including server details, parameters, and publishing status")
-    @RateLimit(limit = 50, window = 60, dimension = "USER")
-    @GetMapping("/mcp/{botId}")
-    public ApiResult<McpContentResponseDto> getMcpContent(
-            @Parameter(description = "Unique bot identifier", required = true)
-            @PathVariable Integer botId) {
-
-        String currentUid = RequestContextUtil.getUID();
-        Long spaceId = SpaceInfoUtil.getSpaceId();
-
-        log.info("Retrieving MCP service details: botId={}, uid={}, spaceId={}", botId, currentUid, spaceId);
-
-        McpContentResponseDto result = mcpService.getMcpContent(botId, currentUid, spaceId);
-
-        log.info("MCP service details retrieved successfully: botId={}, released={}", botId, result.getReleased());
-        return ApiResult.success(result);
-    }
 
     /**
      * Get workflow input parameters for MCP publishing
