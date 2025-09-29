@@ -47,9 +47,16 @@ public class I18nUtil {
     public static String getMessage(String msgKey, String[] args) {
         try {
             Locale locale = getRequestLocale();
+            log.info("I18nUtil.getMessage - msgKey: {}, resolved locale: {}, args: {}", 
+                     msgKey, locale, args != null ? java.util.Arrays.toString(args) : "null");
+            
             ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
             if (applicationContext != null) {
-                return applicationContext.getMessage(msgKey, args, msgKey, locale);
+                String message = applicationContext.getMessage(msgKey, args, msgKey, locale);
+                log.info("I18nUtil.getMessage - resolved message: {}", message);
+                return message;
+            } else {
+                log.warn("I18nUtil.getMessage - ApplicationContext is null, returning msgKey: {}", msgKey);
             }
         } catch (Exception e) {
             log.warn("Failed to get message for key: {}, falling back to key itself", msgKey, e);
@@ -80,21 +87,41 @@ public class I18nUtil {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
+                
+                // Log request headers for debugging
+                String acceptLanguage = request.getHeader("Accept-Language");
+                String langParam = request.getParameter("lang");
+                log.info("I18nUtil.getRequestLocale - Accept-Language header: {}, lang param: {}", 
+                         acceptLanguage, langParam);
+                
                 ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
                 if (applicationContext != null) {
                     try {
                         LocaleResolver localeResolver = applicationContext.getBean(LocaleResolver.class);
-                        return localeResolver.resolveLocale(request);
+                        Locale resolvedLocale = localeResolver.resolveLocale(request);
+                        log.info("I18nUtil.getRequestLocale - LocaleResolver resolved locale: {}, resolver type: {}", 
+                                 resolvedLocale, localeResolver.getClass().getSimpleName());
+                        return resolvedLocale;
                     } catch (Exception e) {
-                        log.debug("Failed to get LocaleResolver, falling back to request.getLocale()", e);
-                        return request.getLocale();
+                        log.warn("Failed to get LocaleResolver, falling back to request.getLocale()", e);
+                        Locale requestLocale = request.getLocale();
+                        log.info("I18nUtil.getRequestLocale - request.getLocale() returned: {}", requestLocale);
+                        return requestLocale;
                     }
+                } else {
+                    log.warn("I18nUtil.getRequestLocale - ApplicationContext is null");
+                    Locale requestLocale = request.getLocale();
+                    log.info("I18nUtil.getRequestLocale - request.getLocale() returned: {}", requestLocale);
+                    return requestLocale;
                 }
-                return request.getLocale();
+            } else {
+                log.warn("I18nUtil.getRequestLocale - ServletRequestAttributes is null");
             }
         } catch (Exception e) {
-            log.debug("Failed to get locale from request context, falling back to en_US", e);
+            log.warn("Failed to get locale from request context, falling back to en_US", e);
         }
-        return Locale.US;
+        Locale fallbackLocale = Locale.US;
+        log.info("I18nUtil.getRequestLocale - falling back to: {}", fallbackLocale);
+        return fallbackLocale;
     }
 }
