@@ -327,6 +327,7 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
   const [showInput, setShowInput] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [itemIdToDelete, setItemIdToDelete] = useState<number | null>(null);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
 
@@ -334,17 +335,17 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
     navigate(`/chat/${item.botId}`);
   }, []);
 
-  const handleDeleteFavorite = useCallback((item: any) => {
+  const handleDeleteFavorite = useCallback((botId: number) => {
     cancelFavorite({
-      botId: item.botId,
+      botId,
     }).then(res => {
       message.success('删除成功');
     });
   }, []);
 
-  const handleDeleteChat = useCallback((item: any) => {
+  const handleDeleteChat = useCallback((chatListId: number) => {
     deleteChatList({
-      chatListId: item.id,
+      chatListId,
     })
       .then((res: any) => {
         setDeleteOpen(false);
@@ -364,23 +365,33 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
   const handleDelete = useCallback(
     (item: any, e: React.MouseEvent, isRecentTab: boolean) => {
       e.stopPropagation();
+      console.log('item', item);
+      // Extract ID based on tab type
+      const itemId = isRecentTab ? item?.id : item?.bot?.botId;
+      setItemIdToDelete(itemId);
       setDeleteOpen(true);
     },
     []
   );
 
-  const handleDeleteChatConfirm = useCallback(
-    (item: any) => {
-      if (activeIndex === 0) {
-        handleDeleteChat(item);
-      } else {
-        handleDeleteFavorite(item);
-      }
-      setDeleteOpen(false);
-      onRefreshData();
-    },
-    [onRefreshData]
-  );
+  const handleDeleteChatConfirm = useCallback(() => {
+    if (!itemIdToDelete) return;
+
+    if (activeIndex === 0) {
+      handleDeleteChat(itemIdToDelete);
+    } else {
+      handleDeleteFavorite(itemIdToDelete);
+    }
+    setDeleteOpen(false);
+    setItemIdToDelete(null);
+    onRefreshData();
+  }, [
+    activeIndex,
+    itemIdToDelete,
+    handleDeleteChat,
+    handleDeleteFavorite,
+    onRefreshData,
+  ]);
 
   const handleTabChange = useCallback(
     (index: number) => {
@@ -422,7 +433,10 @@ const PersonalCenter: FC<PersonalCenterProps> = ({
           <div className={styles.contentBox}>
             <Modal
               open={deleteOpen}
-              onCancel={() => setDeleteOpen(false)}
+              onCancel={() => {
+                setDeleteOpen(false);
+                setItemIdToDelete(null);
+              }}
               closeIcon={null}
               wrapClassName={styles.delete_mode}
               centered
