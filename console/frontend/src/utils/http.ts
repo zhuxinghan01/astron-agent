@@ -71,6 +71,11 @@ export const downloadFileWithHeaders = (
     xhr.setRequestHeader('space-id', spaceId);
   }
 
+  const accessToken = localStorage.getItem('accessToken');
+  if (accessToken) {
+    xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+  }
+
   // 添加enterprise-id (如果是团队空间)
   const spaceType = useSpaceStore.getState().spaceType;
   if (spaceType === 'team') {
