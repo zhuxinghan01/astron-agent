@@ -17,6 +17,7 @@ import RetractableInput from '@/components/ui/global/retract-table-input';
 import useChat from '@/hooks/use-chat';
 import useUserStore from '@/store/user-store';
 import { jumpTologin, downloadFileWithHeaders } from '@/utils/http';
+import { getFixedUrl } from '@/components/workflow/utils';
 
 import iconNew from '@/assets/imgs/main/icon_bot_new.png';
 import search from '@/assets/imgs/knowledge/icon_zhishi_search.png';
@@ -579,22 +580,22 @@ function index() {
                               }}
                             >
                               {k?.version === 3 && (
-                                <a
+                                <span
                                   className="p-1 rounded hover:bg-[#F2F5FE] block"
-                                  href={`${window.location.origin}/workflow/export/${k?.maasId}`}
-                                  download={`${k?.botName}.yml`}
                                   onClick={e => {
                                     e?.stopPropagation();
                                     e.preventDefault();
                                     setOperationId(null);
                                     downloadFileWithHeaders(
-                                      `${window.location.origin}/workflow/export/${k?.maasId}`,
+                                      getFixedUrl(
+                                        `/workflow/export/${k?.maasId}`
+                                      ),
                                       `${k?.botName}.yml`
                                     );
                                   }}
                                 >
                                   {t('agentPage.agentPage.export')}
-                                </a>
+                                </span>
                               )}
                               {![1, 4].includes(k?.botStatus) && (
                                 <div

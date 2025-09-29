@@ -779,6 +779,7 @@ const AddPlugin = (): React.ReactElement => {
                         <ToolDetail
                           currentToolInfo={currentToolInfo}
                           handleClearData={handleClearData}
+                          handleToolDebugger={() => setToolOperate('test')}
                         />
                       )}
                     </>

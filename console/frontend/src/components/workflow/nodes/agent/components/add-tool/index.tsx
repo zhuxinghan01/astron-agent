@@ -180,7 +180,7 @@ const useToolData = ({
           ?.filter(item => item?.tag !== 'SparkDesk-RAG')
           ?.map(item => ({
             ...item,
-            toolId: item['spark_id'],
+            toolId: item['server_url'],
             icon: item['logo_url'],
             updateTime: dayjs(item?.updateTime)?.format('YYYY-MM-DD HH:mm:ss'),
             createTime: dayjs(item?.createTime)?.format('YYYY-MM-DD HH:mm:ss'),
@@ -204,7 +204,7 @@ const useToolData = ({
       .then(data => {
         const newData = data?.map(item => ({
           ...item,
-          toolId: item['spark_id'],
+          toolId: item['server_url'],
           description: item?.brief,
           icon: item['logo_url'],
           updateTime: dayjs(item['create_time'])?.format('YYYY-MM-DD HH:mm:ss'),
@@ -852,7 +852,7 @@ function AddTools({
   handleAddTool,
   toolsList,
   id,
-}): React.ReactElement => {
+}): React.ReactElement {
   const loader = useRef<null | HTMLDivElement>(null);
   const loadingRef = useRef<boolean>(false);
   const contentRef = useRef<string>('');

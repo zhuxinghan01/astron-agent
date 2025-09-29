@@ -20,10 +20,31 @@ const baseURL = (): string => {
   }
 };
 
-export const getFixedUrl = (path: string) => {
+export const getFixedUrl = (path: string): string => {
   return `${baseURL()}${path}`;
 };
 
-export const getAuthorization = () => {
+export const getAuthorization = (): string => {
   return `Bearer ${localStorage.getItem('accessToken')}`;
+};
+
+export const handleFlowExport = (currentFlow: unknown): void => {
+  fetch(getFixedUrl(`/workflow/export/${currentFlow?.id}`), {
+    method: 'GET',
+    headers: {
+      Authorization: getAuthorization(),
+    },
+  }).then(async res => {
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentFlow?.name}.yml`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  });
 };
