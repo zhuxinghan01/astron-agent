@@ -14,15 +14,12 @@ import com.iflytek.astron.console.toolkit.entity.dto.eval.WorkflowComparisonSave
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowComparison;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowDialog;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowFeedback;
-import com.iflytek.astron.console.toolkit.entity.tool.McpServerTool;
-import com.iflytek.astron.console.toolkit.entity.vo.McpServerToolDetailVO;
 import com.iflytek.astron.console.toolkit.entity.vo.WorkflowVo;
 import com.iflytek.astron.console.toolkit.service.workflow.WorkflowExportService;
 import com.iflytek.astron.console.toolkit.service.workflow.WorkflowService;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -41,7 +37,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -58,19 +53,12 @@ import static org.mockito.Mockito.*;
 /**
  * WorkflowController 综合单元测试
  *
- * 覆盖目标：
- * - JaCoCo 语句覆盖率 >= 80%，分支覆盖率 >= 90%
- * - PIT 变异测试通过率高
- * - 涵盖正常流程、边界条件、异常情况、并发场景
+ * 覆盖目标： - JaCoCo 语句覆盖率 >= 80%，分支覆盖率 >= 90% - PIT 变异测试通过率高 - 涵盖正常流程、边界条件、异常情况、并发场景
  *
  * 技术栈：JUnit5 + Mockito + AssertJ + ParameterizedTest
  *
- * Mock依赖：
- * - WorkflowService（主要业务逻辑）
- * - WorkflowExportService（导入导出）
- * - HttpServletRequest/Response（Web请求响应）
- * - MultipartFile（文件上传）
- * - ServletOutputStream（文件下载）
+ * Mock依赖： - WorkflowService（主要业务逻辑） - WorkflowExportService（导入导出） -
+ * HttpServletRequest/Response（Web请求响应） - MultipartFile（文件上传） - ServletOutputStream（文件下载）
  */
 @ExtendWith(MockitoExtension.class)
 class WorkflowControllerTest {
@@ -245,8 +233,7 @@ class WorkflowControllerTest {
                 "'; DROP TABLE workflows; --",
                 "../../etc/passwd",
                 "\u0000\u0001\u0002",
-                "测试中文关键词"
-        );
+                "测试中文关键词");
     }
 
     // ==================== Workflow List Tests ====================
@@ -334,17 +321,15 @@ class WorkflowControllerTest {
                     .thenReturn(validPageData);
 
             // When
-            List<CompletableFuture<PageData<WorkflowVo>>> futures = Stream.generate(() ->
-                    CompletableFuture.supplyAsync(() -> {
-                        try {
-                            return controller.list(validPagination, "concurrent", null, null, null, null);
-                        } catch (UnsupportedEncodingException e) {
-                            throw new RuntimeException(e);
-                        } finally {
-                            latch.countDown();
-                        }
-                    }, executor)
-            ).limit(5).toList();
+            List<CompletableFuture<PageData<WorkflowVo>>> futures = Stream.generate(() -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    return controller.list(validPagination, "concurrent", null, null, null, null);
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();
+                }
+            }, executor)).limit(5).toList();
 
             // Then
             latch.await();
