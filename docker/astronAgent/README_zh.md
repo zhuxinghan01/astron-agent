@@ -251,7 +251,7 @@ RAGFLOW_TIMEOUT=60
 
 ### 服务依赖说明
 
-所有 astronAgent 核心服务都依赖于中间件服务的健康状态：
+所有 AstronAgent 核心服务都依赖于中间件服务的健康状态：
 - PostgreSQL (用于 core-memory 服务)
 - MySQL (用于其他核心服务)
 - Redis (缓存和会话)
