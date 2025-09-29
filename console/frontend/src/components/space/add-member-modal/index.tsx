@@ -5,6 +5,7 @@ import React, {
   useMemo,
   KeyboardEvent,
 } from 'react';
+import { useDebounceFn } from 'ahooks';
 import { Modal, message } from 'antd';
 import styles from './index.module.scss';
 import ButtonGroup from '@/components/button-group/button-group';
@@ -25,6 +26,7 @@ import { patterns } from '@/utils/pattern';
 interface User {
   uid: string;
   username: string;
+  nickname?: string;
   mobile: string;
   avatar?: string;
   status?: number; // 0：未加入，1：已加入，2：确认中 ,
@@ -34,6 +36,7 @@ interface User {
 interface SelectedUser {
   uid: string;
   username: string;
+  nickname?: string;
   mobile: string;
   avatar?: string;
   role: string;
@@ -103,6 +106,7 @@ const useUserSearch = (inviteType: 'enterprise' | 'space') => {
         );
         const users = (res || []).map(user => ({
           ...user,
+          username: user.username || user.nickname || '',
           avatar: user.avatar || creatorImg,
         }));
         setUserList(users);
@@ -116,6 +120,13 @@ const useUserSearch = (inviteType: 'enterprise' | 'space') => {
     [inviteType]
   );
 
+  const { run: debouncedSearch } = useDebounceFn(
+    (value: string) => {
+      searchUsers(value);
+    },
+    { wait: 500 }
+  );
+
   const handleSearch = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {
       const value = e.target.value;
@@ -124,17 +135,17 @@ const useUserSearch = (inviteType: 'enterprise' | 'space') => {
       setSearchValue(numericValue);
 
       if (numericValue === '') {
-        searchUsers('');
+        debouncedSearch('');
         return;
       }
 
-      searchUsers(numericValue);
+      debouncedSearch(numericValue);
       // if (numericValue.length === 11) {
       //   if (isValidPhoneNumber(numericValue)) {
       //   }
       // }
     },
-    [searchUsers]
+    [debouncedSearch]
   );
 
   const handleKeyPress = useCallback(
@@ -143,13 +154,13 @@ const useUserSearch = (inviteType: 'enterprise' | 'space') => {
         e.preventDefault();
         const trimmedValue = searchValue.trim();
         if (!trimmedValue) {
-          message.warning('请输入手机号');
+          message.warning('请输入用户名');
           return;
         }
-        searchUsers(trimmedValue);
+        debouncedSearch(trimmedValue);
       }
     },
-    [searchValue, searchUsers]
+    [searchValue, debouncedSearch]
   );
 
   const resetSearch = useCallback((): void => {
@@ -338,7 +349,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = React.memo(
 
     const emptyStateText = useMemo(() => {
       return !userSearch.lastSearchedValue
-        ? '搜索手机号以添加新成员'
+        ? '搜索用户名以添加新成员'
         : `未找到"${userSearch.lastSearchedValue}"相关用户`;
     }, [userSearch.lastSearchedValue]);
 
@@ -375,7 +386,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = React.memo(
           <div className={styles.leftPanel}>
             <div className={styles.searchSection}>
               <SpaceSearch
-                placeholder="搜索手机号"
+                placeholder="搜索用户名"
                 value={userSearch.searchValue}
                 onChange={userSearch.handleSearch}
                 onKeyPress={userSearch.handleKeyPress}
