@@ -22,7 +22,12 @@ public enum BotPublishTypeEnum {
     /**
      * 发布到MCP
      */
-    MCP("MCP", "MCP", 3);
+    MCP("MCP", "MCP", 3),
+    
+    /**
+     * 发布到飞书
+     */
+    FEISHU("FEISHU", "飞书", 4);
 
     /**
      * 类型代码
