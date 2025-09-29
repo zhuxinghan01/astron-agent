@@ -15,6 +15,16 @@ export const uploadUserProfile = (formData: FormData): Promise<any> =>
     timeout: 20000,
   });
 
+export const updateUserInfo = ({
+  nickname,
+  avatar,
+}: {
+  nickname: string;
+  avatar: string;
+}): Promise<any> => {
+  return http.post(`/user-info/update`, { nickname, avatar });
+};
+
 // 拒绝邀请
 export const refuseInvite = (params: any): Promise<any> => {
   return http.post(`/inviteRecord/refuseInvite?inviteId=${params.inviteId}`);
@@ -182,11 +192,6 @@ export const removeBotApplyRecord = (params: any) => {
   return http.post(`/bot/remove-bot`, params);
 };
 
-//申请下架助手 -- NOTE: 发布模块原有逻辑, 用新接口后应该删去
-export const applyCancelUpload = (params: any) => {
-  return http.post(`/bot/take-off-bot`, params);
-};
-
 //提交助手审核
 export const sendApplyBot = (params: any): Promise<{ botId: number }> => {
   return http.request({
@@ -269,7 +274,7 @@ export const getApiCertInfo = (): Promise<boolean> => {
 
 // 获取api列表
 export const getApiList = (): Promise<any[]> => {
-  return http.get(`/bot/api/appList`);
+  return http.get(`/publish-api/app-list`);
 };
 
 // 获取订单列表
@@ -284,12 +289,17 @@ export const getApiInfo = (botId: any) => {
 
 // 获取api 实时用量
 export const getApiUsage = (botId: any) => {
-  return http.post(`/bot/api/usage?botId=${botId}`);
+  return http.post(`/publish-api/usage-real-time?botId=${botId}`);
 };
 
 // 创建助手api
 export const createApi = (params: any) => {
-  return http.post(`/bot/api/create`, params);
+  return http.post(`/publish-api/create-bot-api`, params);
+};
+
+// create app of user
+export const createApp = (params: any) => {
+  return http.post(`/publish-api/create-user-app`, params);
 };
 
 // 获取api 历史用量

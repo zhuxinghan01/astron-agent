@@ -141,10 +141,6 @@ export async function getKnowledgeProStrategyAPI(): Promise<unknown> {
   return http.get('/workflow/get-knowledge-pro-strategy');
 }
 
-export async function workflowCategories(): Promise<unknown> {
-  return http.post('/bot/get-list');
-}
-
 export async function getBotStatisticsInfoByBotld(botId): Promise<unknown> {
   return http.get(`/bot/get-bot-statistics-info-by-bot-id?botId=${botId}`);
 }

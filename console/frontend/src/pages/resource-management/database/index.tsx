@@ -88,15 +88,6 @@ const DataBase = (): JSX.Element => {
     [createDatabaseOk]
   );
 
-  // 删除后刷新列表
-  const handleAfterDelete = useCallback((): void => {
-    if (searchValue) {
-      setSearchValue('');
-    } else {
-      getList();
-    }
-  }, [searchValue, setSearchValue, getList]);
-
   return (
     <>
       <DatabaseGrid
@@ -122,7 +113,7 @@ const DataBase = (): JSX.Element => {
         <DeleteModal
           setDeleteModal={setDeleteModal}
           currentData={botDetail}
-          getDataBase={handleAfterDelete}
+          getDataBase={getList}
         />
       )}
     </>
