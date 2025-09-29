@@ -31,10 +31,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> handleBusinessException(BusinessException e) {
         log.error("Business exception: {}", e.getMessage(), e);
-        ApiResult<Void> result = ApiResult.error(e);
-        log.info("GlobalExceptionHandler.handleBusinessException - returning result: code={}, message={}",
-                result.code(), result.message());
-        return result;
+        return ApiResult.error(e);
     }
 
     /** Handle parameter validation exceptions */
