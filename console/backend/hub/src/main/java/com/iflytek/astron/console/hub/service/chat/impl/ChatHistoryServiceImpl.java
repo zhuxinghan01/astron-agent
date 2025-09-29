@@ -5,6 +5,8 @@ import com.iflytek.astron.console.commons.dto.llm.SparkChatRequest;
 import com.iflytek.astron.console.commons.entity.chat.*;
 import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatHistoryService;
+import com.iflytek.astron.console.hub.data.ReqKnowledgeRecordsDataService;
+import com.iflytek.astron.console.hub.entity.ReqKnowledgeRecords;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Base64Util;
@@ -22,7 +24,18 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
     @Autowired
     private ChatDataService chatDataService;
 
+    @Autowired
+    private ReqKnowledgeRecordsDataService reqKnowledgeRecordsDataService;
+
     public static final int MAX_HISTORY_NUMBERS = 8000;
+
+    public static final String LOOSE_PREFIX_PROMPT = """
+            Please use the following document fragments as known information: []
+            Please answer questions accurately based on the original text of the above passages and your knowledge
+            When answering user questions, please respond in the language the user asked the question
+            If the above content cannot answer user information, combine the information you know to answer user questions
+            Answer user questions concisely and professionally, and do not allow fabricated components to be added to the answer.
+            """;
 
     @Override
     public List<SparkChatRequest.MessageDto> getSystemBotHistory(String uid, Long chatId) {
@@ -35,6 +48,7 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
         // Get answer history
         List<Long> reqIds = chatReqModelDtos.stream().map(ChatReqModelDto::getId).collect(Collectors.toList());
         List<ChatRespModelDto> chatRespModelDtos = chatDataService.getChatRespModelBotHistoryByChatId(uid, chatId, reqIds);
+
         // Group answer history by reqId
         Map<Long, ChatRespModelDto> respMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(chatRespModelDtos)) {
@@ -42,13 +56,21 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
                 respMap.put(respDto.getReqId(), respDto);
             }
         }
+
+        // Get knowledge records to enhance ask content
+        Map<Long, ReqKnowledgeRecords> knowledgeRecordsMap = reqKnowledgeRecordsDataService.findByReqIds(reqIds);
+
         // Merge conversation history in chronological order of questions
         for (ChatReqModelDto reqDto : chatReqModelDtos) {
-            // Add user message
+            // Add user message with knowledge enhancement
             SparkChatRequest.MessageDto userMessage = new SparkChatRequest.MessageDto();
             userMessage.setRole("user");
-            userMessage.setContent(reqDto.getMessage());
+
+            // Enhance ask content with knowledge from reqKnowledgeRecords
+            String enhancedAsk = enhanceAskWithKnowledgeRecord(reqDto.getMessage(), knowledgeRecordsMap.get(reqDto.getId()));
+            userMessage.setContent(enhancedAsk);
             messages.add(userMessage);
+
             // Add corresponding assistant response
             ChatRespModelDto respDto = respMap.get(reqDto.getId());
             if (respDto != null && respDto.getMessage() != null && !respDto.getMessage().trim().isEmpty()) {
@@ -166,5 +188,48 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
             metaList.add(meta);
         }
         return metaList;
+    }
+
+    /**
+     * Enhance ask content with knowledge from reqKnowledgeRecords
+     *
+     * @param originalAsk Original ask message
+     * @param knowledgeRecord Knowledge record containing stored knowledge
+     * @return Enhanced ask content with knowledge wrapped
+     */
+    private String enhanceAskWithKnowledgeRecord(String originalAsk, ReqKnowledgeRecords knowledgeRecord) {
+        if (StringUtils.isBlank(originalAsk)) {
+            return originalAsk;
+        }
+
+        // If no knowledge record found, return original ask
+        if (knowledgeRecord == null || StringUtils.isBlank(knowledgeRecord.getKnowledge())) {
+            return originalAsk;
+        }
+
+        try {
+            // Parse knowledge string (it's stored as a string representation of a list)
+            String knowledgeStr = knowledgeRecord.getKnowledge();
+
+            // Build enhanced content with knowledge wrapping
+            StringBuilder promptBuilder = new StringBuilder();
+            promptBuilder.append(LOOSE_PREFIX_PROMPT);
+
+            // Insert knowledge content into the placeholder
+            promptBuilder.insert(promptBuilder.indexOf("[") + 1, knowledgeStr);
+            promptBuilder.append("\nNext, my input is: {{}}");
+            promptBuilder.insert(promptBuilder.indexOf("{{") + 2, originalAsk);
+
+            String enhancedContent = promptBuilder.toString();
+
+            log.debug("Enhanced ask with stored knowledge for reqId: {}, original length: {}, enhanced length: {}",
+                    knowledgeRecord.getReqId(), originalAsk.length(), enhancedContent.length());
+
+            return enhancedContent;
+        } catch (Exception e) {
+            log.warn("Failed to enhance ask with stored knowledge for reqId: {}, error: {}",
+                    knowledgeRecord.getReqId(), e.getMessage());
+            return originalAsk;
+        }
     }
 }

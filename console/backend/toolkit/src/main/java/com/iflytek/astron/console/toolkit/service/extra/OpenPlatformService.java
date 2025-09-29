@@ -52,7 +52,7 @@ public class OpenPlatformService {
         CloneSynchronize cloneSynchronize = new CloneSynchronize();
         cloneSynchronize.setUid(uid);
         cloneSynchronize.setFlowId(flowId);
-        cloneSynchronize.setOriginId(originId.toString());
+        cloneSynchronize.setOriginId(originId);
         cloneSynchronize.setCurrentId(currentId);
         cloneSynchronize.setSpaceId(spaceId);
         log.info("OpenPlatformService syncWorkflowClonereqBody = {}", cloneSynchronize);

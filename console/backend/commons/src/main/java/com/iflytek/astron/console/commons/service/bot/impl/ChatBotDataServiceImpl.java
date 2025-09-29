@@ -8,9 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.commons.dto.vcn.CustomV2VCNDTO;
@@ -36,8 +34,6 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -179,45 +175,44 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
 
     @Override
     public boolean deleteBot(Integer botId, String uid) {
-        return updateEntity(chatBotBaseMapper, ChatBotBase::getId, ChatBotBase::getUid, botId, uid, ChatBotBase::new, entity -> entity.setIsDelete(1)) &&
-                updateEntity(chatBotListMapper, ChatBotList::getRealBotId, ChatBotList::getUid, botId, uid, ChatBotList::new, entity -> entity.setIsAct(0)) &&
-                updateEntity(chatListMapper, ChatList::getBotId, ChatList::getUid, botId, uid, ChatList::new, entity -> entity.setIsDelete(1)) &&
-                updateEntity(chatBotMarketMapper, ChatBotMarket::getBotId, ChatBotMarket::getUid, botId, uid, ChatBotMarket::new, entity -> entity.setIsDelete(1));
+        return deleteChatBotBase(botId, uid) &&
+                deleteChatBotList(botId, uid) &&
+                deleteChatList(botId, uid) &&
+                deleteChatBotMarket(botId, uid);
     }
 
-    /**
-     * Generic update method to update entity status based on two condition fields.
-     *
-     * @param <T> Entity type
-     * @param mapper Corresponding MyBatis Plus Mapper
-     * @param field1 First query condition field (usually ID related)
-     * @param field2 Second query condition field (such as user ID)
-     * @param value1 Value of the first field
-     * @param value2 Value of the second field
-     * @param entitySupplier // Supplier for creating new entity
-     * @param configurator Configuration on how to set updated entity attributes
-     * @return Returns true if update is successful and affected rows > 0; otherwise returns false
-     */
-    private <T> boolean updateEntity(
-            BaseMapper<T> mapper,
-            SFunction<T, ?> field1,
-            SFunction<T, ?> field2,
-            Object value1,
-            Object value2,
-            Supplier<T> entitySupplier,
-            Consumer<T> configurator) {
-        LambdaQueryWrapper<T> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(field1, value1)
-                .eq(field2, value2);
-
-        // Create new entity instance using supplier
-        T entity = entitySupplier.get();
-        // Set entity attributes according to the passed configurator
-        configurator.accept(entity);
-
-        int rowsAffected = mapper.update(entity, queryWrapper);
-        return rowsAffected > 0;
+    private boolean deleteChatBotBase(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotBase> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotBase::getId, botId)
+                .eq(ChatBotBase::getUid, uid)
+                .set(ChatBotBase::getIsDelete, 1);
+        return chatBotBaseMapper.update(null, updateWrapper) > 0;
     }
+
+    private boolean deleteChatBotList(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotList> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotList::getRealBotId, botId)
+                .eq(ChatBotList::getUid, uid)
+                .set(ChatBotList::getIsAct, 0);
+        return chatBotListMapper.update(null, updateWrapper) > 0;
+    }
+
+    private boolean deleteChatList(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatList> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatList::getBotId, botId)
+                .eq(ChatList::getUid, uid)
+                .set(ChatList::getIsDelete, 1);
+        return chatListMapper.update(null, updateWrapper) > 0;
+    }
+
+    private boolean deleteChatBotMarket(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotMarket> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotMarket::getBotId, botId)
+                .eq(ChatBotMarket::getUid, uid)
+                .set(ChatBotMarket::getIsDelete, 1);
+        return chatBotMarketMapper.update(null, updateWrapper) > 0;
+    }
+
 
     @Override
     public boolean deleteBot(Integer botId, Long spaceId) {

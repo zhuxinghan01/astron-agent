@@ -7,6 +7,7 @@ import java.util.*;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
+import com.iflytek.astron.console.toolkit.entity.enumVo.VarType;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,7 @@ public class RpaHandler {
             resp = OkHttpUtil.get(url, headers);
         } catch (Exception httpEx) {
             log.warn("getRpaList http error, url: {}, ex: {}", url, httpEx.toString());
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to call RPA api", httpEx);
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, httpEx, "Failed to call RPA api");
         }
 
         log.debug("getRpaList <- raw response: {}", abbreviate(resp, 2000));
@@ -86,6 +87,16 @@ public class RpaHandler {
                     log.warn("getRpaList data is null, treat as empty list. resp: {}", abbreviate(resp, 1000));
                     return new JSONObject();
                 }
+                JSONArray records = data.getJSONArray("records");
+                if (records != null && !records.isEmpty()) {
+                    for (Object item : records) {
+                        if (!(item instanceof JSONObject record)) {
+                            continue;
+                        }
+                        JSONArray parameters = record.getJSONArray("parameters");
+                        convertParameterTypes(parameters);
+                    }
+                }
                 return data;
             }
             String message = obj.getString("message");
@@ -96,8 +107,25 @@ public class RpaHandler {
             throw be;
         } catch (Exception parseEx) {
             log.warn("getRpaList parse error, resp: {}", abbreviate(resp, 1000), parseEx);
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Failed to parse RPA response", parseEx);
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, parseEx, "Failed to parse RPA response");
         }
+    }
+
+    private static void convertParameterTypes(JSONArray parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            return;
+        }
+        int converted = 0;
+        for (Object param : parameters) {
+            if (!(param instanceof JSONObject pm)) {
+                continue;
+            }
+            String varTypeStr = pm.getString("varType");
+            VarType varType = VarType.fromCode(varTypeStr);
+            pm.put("type", varType.getJsonType());
+            converted++;
+        }
+        log.debug("Converted {} parameter types.", converted);
     }
 
     /**
