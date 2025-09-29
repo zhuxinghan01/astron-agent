@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   getAllMessage,
-  getAllMessageType,
   changeMessageStatus,
-  readAllMessage,
   type NotificationResponse,
   type Notification,
+  deleteMessage,
 } from '@/services/notification';
 import { CaretDownOutlined } from '@ant-design/icons';
 import { Dropdown, Menu, Modal, Button, message, Popconfirm } from 'antd';
@@ -96,35 +95,37 @@ const renderDropdown = (
   messageType: any[],
   selectType: string,
   changeType: (item: any) => void
-) => (
-  <Dropdown
-    overlay={
-      <Menu
-        className={styles.notice_type_menu}
-        selectedKeys={[selectType]}
-        onClick={changeType}
-      >
-        {messageType?.map((item: any) => (
-          <Menu.Item key={item.id}>{item.typeInfo}</Menu.Item>
-        ))}
-      </Menu>
-    }
-    trigger={['click']}
-    placement="bottomCenter"
-    getPopupContainer={(trigger: HTMLElement) =>
-      trigger.parentNode as HTMLElement
-    }
-  >
-    <div className={styles.notice_types_trigger}>
-      <span>
-        {messageType?.length &&
-          messageType.filter(item => item.id === parseInt(selectType))[0]
-            .typeInfo}
-      </span>
-      <CaretDownOutlined />
-    </div>
-  </Dropdown>
-);
+) => {
+  return (
+    <Dropdown
+      overlay={
+        <Menu
+          className={styles.notice_type_menu}
+          selectedKeys={[selectType]}
+          onClick={changeType}
+        >
+          {messageType?.map((item: any) => (
+            <Menu.Item key={item.id}>{item.typeInfo}</Menu.Item>
+          ))}
+        </Menu>
+      }
+      trigger={['click']}
+      placement="bottomCenter"
+      getPopupContainer={(trigger: HTMLElement) =>
+        trigger.parentNode as HTMLElement
+      }
+    >
+      <div className={styles.notice_types_trigger}>
+        <span>
+          {messageType?.length &&
+            messageType.filter(item => item.id === parseInt(selectType))[0]
+              .typeInfo}
+        </span>
+        <CaretDownOutlined />
+      </div>
+    </Dropdown>
+  );
+};
 
 const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
   const [selectType, setSelectType] = useState<string>('0');
@@ -143,7 +144,7 @@ const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
     getMessages(item.key);
   };
 
-  const getMessages = async (queryMessageType: string) => {
+  const getMessages = async (queryMessageType?: string) => {
     const queryParam = {
       type: queryMessageType || '0',
       unreadOnly: false,
@@ -153,21 +154,15 @@ const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
     };
     const messageResult = await getAllMessage(queryParam);
     setNotificationData(messageResult);
+    setMessageType(
+      Object.keys(messageResult.notificationsByType).map(
+        (item: string, index) => ({
+          id: index,
+          typeInfo: item,
+        })
+      )
+    );
   };
-
-  const getMessageType = async () => {
-    const messageRes = await getAllMessage({
-      type: '0',
-      unreadOnly: true,
-      pageIndex: 1,
-      pageSize: 100,
-      offset: 0,
-    });
-    setNotificationData(messageRes);
-    console.log('song messageResult', messageRes.notificationsByType);
-    // setMessageType(Object.values(messageRes.notificationsByType));
-  };
-
   const readMessage = async (messageItem: Notification) => {
     const readStatus = await changeMessageStatus({
       notificationIds: [messageItem.id],
@@ -186,16 +181,14 @@ const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
     setSelectedId(messageItem.id);
 
     if (payload.outlink) {
+      //
     }
 
     getMessages(selectType);
   };
 
   const delMessage = async (messageItem: Notification, e: any) => {
-    changeMessageStatus({
-      messageId: messageItem.id,
-      operateType: 2,
-    })
+    deleteMessage(messageItem.id)
       .then(res => {
         message.success(t('systemMessage.deleteSuccess'));
         getMessages(selectType);
@@ -206,7 +199,13 @@ const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
   };
 
   const readAll = () => {
-    readAllMessage({ typeId: selectType })
+    changeMessageStatus({
+      notificationIds:
+        notificationData?.notificationsByType[
+          messageType[parseInt(selectType)].typeInfo
+        ]?.map((item: Notification) => item.id) || [],
+      markAll: false,
+    })
       .then(res => {
         getMessages(selectType);
       })
@@ -216,7 +215,7 @@ const NoticeModal: React.FC<NoticeModalProps> = ({ open, onClose }) => {
   };
 
   useEffect(() => {
-    getMessageType();
+    getMessages();
   }, []);
 
   return (
