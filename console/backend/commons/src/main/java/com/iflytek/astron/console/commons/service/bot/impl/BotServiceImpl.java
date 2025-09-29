@@ -179,6 +179,7 @@ public class BotServiceImpl implements BotService {
         BotDetail detail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         ChatBotBase botBase = new ChatBotBase();
         BeanUtils.copyProperties(detail, botBase);
+        log.info("copy old bot : {} , new bot : {}", detail, botBase);
         botBase.setId(null);
         // Set a new assistant name as differentiation
         botBase.setVersion(Integer.valueOf(detail.getVersion()));

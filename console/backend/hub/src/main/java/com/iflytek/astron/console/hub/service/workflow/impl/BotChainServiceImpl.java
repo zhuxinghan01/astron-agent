@@ -17,9 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * @author mingsuiyongheng
- */
 @Service
 @Slf4j
 public class BotChainServiceImpl implements BotChainService {
@@ -32,20 +29,25 @@ public class BotChainServiceImpl implements BotChainService {
 
     /**
      * Copy assistant 2.0
+     *
+     * @param uid
+     * @param sourceId
+     * @param targetId
+     * @param spaceId
      */
     @Override
     public void copyBot(String uid, Long sourceId, Long targetId, Long spaceId) {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source assistant does not exist, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
         UserLangChainInfo chainInfo = botList.getFirst();
         // Replace node id to prevent data backflow confusion
         replaceNodeId(chainInfo);
-        // Configure botId, flowId, uid, updateTime
+        // Configure _id, id, botId, flowId, uid, updateTime
         chainInfo.setId(null);
         chainInfo.setBotId(Math.toIntExact(targetId));
         chainInfo.setFlowId(null);
@@ -62,6 +64,12 @@ public class BotChainServiceImpl implements BotChainService {
 
     /**
      * Copy workflow
+     *
+     * @param uid uid
+     * @param sourceId
+     * @param targetId
+     * @param request
+     * @param spaceId
      */
     @Override
     @Transactional
@@ -69,7 +77,7 @@ public class BotChainServiceImpl implements BotChainService {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source assistant does not exist, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
@@ -94,14 +102,9 @@ public class BotChainServiceImpl implements BotChainService {
         }
         chain.setUpdateTime(LocalDateTime.now());
         userLangChainDataService.insertUserLangChainInfo(chain);
-        log.info("----- Source assistant: {}, Target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
+        log.info("----- Source assistant: {}, target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
     }
 
-    /**
-    * Replace node ID
-    *
-    * @param botMap User language chain information object
-    */
     public static void replaceNodeId(UserLangChainInfo botMap) {
         JSONObject open = JSONObject.parseObject(botMap.getOpen());
         String openStr = botMap.getOpen();
@@ -112,7 +115,7 @@ public class BotChainServiceImpl implements BotChainService {
             JSONObject node = (JSONObject) o;
             String oldNodeId = node.getString("id");
             String newNodeId = getNewNodeId(oldNodeId);
-            // Direct string matching and replacement
+            // Directly match string and replace
             openStr = openStr.replace(oldNodeId, newNodeId);
             gcyStr = gcyStr.replace(oldNodeId, newNodeId);
         }
@@ -120,18 +123,13 @@ public class BotChainServiceImpl implements BotChainService {
         botMap.setGcy(gcyStr);
     }
 
-    /**
-    * Get new node ID
-    * @param original Original node ID, format like "prefix:suffix"
-    * @return New node ID, throws exception if colon is not found
-    */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');
         if (colonIndex != -1) {
             return original.substring(0, colonIndex + 1) + UUID.randomUUID();
         }
-        // If no colon is found, return original string
-        log.info("***** {} colon not found", original);
+        // If no colon is found, return the original string
+        log.info("***** {} no colon found", original);
         throw new RuntimeException("Assistant backend data does not conform to specifications");
     }
 }
