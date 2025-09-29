@@ -322,10 +322,13 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
               onClick={() => {
                 /* 工作流：input -- chain 即工作流详情（获取多参数） -- 发布 -- baseInfo 即详情 
                 TODO: 工作流智能体的返回数据不满足，等后端完成
+                getAgentInputParams -- 能否发布为mcp
+                botMultiFileParam -- 能否发布到星火
                 */
                 if (bot.version === 3) {
                   console.log(bot, 'bot---------');
                   getAgentInputParams(bot.botId).then((res: any) => {
+                    console.log('🚀 ~ index.tsx:329 ~ res:', res);
                     if (
                       (res.length === 2 &&
                         res[1].fileType === 'file' &&

@@ -108,7 +108,7 @@ export default function index(): React.ReactElement {
                   </span>
                   <img
                     src={Icons.advancedConfig.close}
-                    className="w-7 h-7 cursor-pointer"
+                    className="w-[14px] h-[14px] cursor-pointer"
                     alt=""
                     onClick={handleCloseModal}
                   />
@@ -176,7 +176,7 @@ export default function index(): React.ReactElement {
                                     </p>
                                   </div>
                                 </div>
-                                <Space size={16}>
+                                <Space size={24}>
                                   <Button
                                     type="link"
                                     className="p-0 !text-[#275EFF]"

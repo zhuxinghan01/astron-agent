@@ -91,6 +91,7 @@ const translation = {
   },
   // ToolInputParameters component translations
   pleaseEnterDefaultValue: '请输入默认值',
+  pleaseEnterParameterValue: '请输入参数值',
   // Constant component translations
   gallerySelection: '图库选择',
   localUpload: '本地上传',

@@ -271,6 +271,7 @@ const RecentList: FC<RecentListProps> = ({
 };
 
 interface MenuListProps {
+  isCollapsed: boolean;
   mixedChatList: PostChatItem[];
   onRefreshData?: () => void;
 }
@@ -588,7 +589,11 @@ const DeleteModal: FC<{
   </Modal>
 );
 
-const MenuList: FC<MenuListProps> = ({ mixedChatList, onRefreshData }) => {
+const MenuList: FC<MenuListProps> = ({
+  isCollapsed,
+  mixedChatList,
+  onRefreshData,
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -611,7 +616,6 @@ const MenuList: FC<MenuListProps> = ({ mixedChatList, onRefreshData }) => {
   const { checkNeedCreateTeamFn, isTeamSpaceEmpty } = useEnterprise();
 
   // Local state - using local state instead of recoil
-  const [isCollapsed] = useState(false);
   const [hoverTab, setHoverTab] = useState('');
   const [menuActiveKey, setMenuActiveKey] = useState('');
   const [showRecent, setShowRecent] = useState(true);
