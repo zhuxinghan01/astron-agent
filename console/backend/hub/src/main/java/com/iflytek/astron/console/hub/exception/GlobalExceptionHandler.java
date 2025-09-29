@@ -32,8 +32,8 @@ public class GlobalExceptionHandler {
     public ApiResult<Void> handleBusinessException(BusinessException e) {
         log.error("Business exception: {}", e.getMessage(), e);
         ApiResult<Void> result = ApiResult.error(e);
-        log.info("GlobalExceptionHandler.handleBusinessException - returning result: code={}, message={}", 
-                 result.code(), result.message());
+        log.info("GlobalExceptionHandler.handleBusinessException - returning result: code={}, message={}",
+                result.code(), result.message());
         return result;
     }
 
