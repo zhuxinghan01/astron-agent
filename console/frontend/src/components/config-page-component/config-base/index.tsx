@@ -413,12 +413,17 @@ const BaseConfig: React.FC<ChatProps> = ({
         const obj = buildRequestObject(isRag, true, true);
         updateBot(obj)
           .then(() => {
-            handleApiCall(
-              { botId },
-              sendApplyBot,
-              t('configBase.publishSuccess'),
-              true // 导航到 /space/agent
-            );
+            handleAgentStatus(Number(botId), {
+              action: 'PUBLISH',
+              reason: '',
+            })
+              .then(() => {
+                message.success(t('configBase.publishSuccess'));
+                navigate('/space/agent');
+              })
+              .catch(err => {
+                message.error(err?.msg);
+              });
           })
           .catch(err => {
             message.error(err?.msg);
@@ -431,12 +436,17 @@ const BaseConfig: React.FC<ChatProps> = ({
       const obj = buildRequestObject(isRag, false, true);
       insertBot(obj)
         .then((res: any) => {
-          handleApiCall(
-            { botId: res.botId },
-            sendApplyBot,
-            t('configBase.publishSuccess'),
-            true // 导航到 /space/agent
-          );
+          handleAgentStatus(Number(res.botId), {
+            action: 'PUBLISH',
+            reason: '',
+          })
+            .then(() => {
+              message.success(t('configBase.publishSuccess'));
+              navigate('/space/agent');
+            })
+            .catch(err => {
+              message.error(err?.msg);
+            });
         })
         .catch(err => {
           message.error(err.msg);
