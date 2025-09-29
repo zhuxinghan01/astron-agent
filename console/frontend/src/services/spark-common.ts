@@ -15,6 +15,16 @@ export const uploadUserProfile = (formData: FormData): Promise<any> =>
     timeout: 20000,
   });
 
+export const updateUserInfo = ({
+  nickname,
+  avatar,
+}: {
+  nickname: string;
+  avatar: string;
+}): Promise<any> => {
+  return http.post(`/user-info/update`, { nickname, avatar });
+};
+
 // 拒绝邀请
 export const refuseInvite = (params: any): Promise<any> => {
   return http.post(`/inviteRecord/refuseInvite?inviteId=${params.inviteId}`);
