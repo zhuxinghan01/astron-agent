@@ -1447,10 +1447,10 @@ public class ToolBoxService extends ServiceImpl<ToolBoxMapper, ToolBox> {
             }
 
             String params = jsonObject.getString("title");
-            if (STRING.equals(type) || NUMBER.equals(type) || BOOLEAN.equals(type)) {// 单属性
+            if (STRING.equals(type) || NUMBER.equals(type) || BOOLEAN.equals(type)) {// Single attribute
                 Object defaultValue = jsonObject.get("default");
                 targetObject.put(params, defaultValue);
-            } else if (OBJECT.equals(type) || ARRAY.equals(type)) {// 复合属性 object array
+            } else if (OBJECT.equals(type) || ARRAY.equals(type)) {// Composite attribute object array
                 JSONArray jsonArray = jsonObject.getJSONArray("children");
                 if (OBJECT.equals(type)) {
                     JSONObject prop = new JSONObject();
