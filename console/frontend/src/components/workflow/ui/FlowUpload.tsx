@@ -42,7 +42,7 @@ const FlowUpload: React.FC<FlowUploadProps> = ({
   const fileUpload = (event: unknown): void => {
     const file = event.file as File;
     const fileId = uuid();
-    const url = getFixedUrl('/workflow/uploadFile');
+    const url = getFixedUrl('/workflow/upload-file');
     const form = new FormData();
     form.append('files', file);
     form.append('flowId', currentFlow?.flowId || '');
