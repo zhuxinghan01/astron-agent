@@ -354,7 +354,7 @@ class ChatListServiceImplTest {
         assertNotNull(result);
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(isNull(), eq(uid));
+        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
     }
 
     @Test
@@ -496,7 +496,7 @@ class ChatListServiceImplTest {
         assertEquals(botId, result.getBotId());
         // Verified new chat creation
         verify(chatListDataService).createChat(any(ChatList.class));
-        verify(chatListDataService).addRootTree(isNull(), eq(uid)); // ID is null before database save
+        verify(chatListDataService).addRootTree(any(Long.class), eq(uid));
     }
 
     @Test
