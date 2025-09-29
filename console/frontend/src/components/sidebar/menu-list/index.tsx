@@ -271,12 +271,14 @@ const RecentList: FC<RecentListProps> = ({
 };
 
 interface MenuListProps {
+  isCollapsed: boolean;
   mixedChatList: PostChatItem[];
   favoriteBotList: FavoriteEntry[];
   onRefreshData?: () => void;
 }
 
 const MenuList: FC<MenuListProps> = ({
+  isCollapsed,
   mixedChatList,
   favoriteBotList,
   onRefreshData,
@@ -308,7 +310,6 @@ const MenuList: FC<MenuListProps> = ({
     useEnterprise();
 
   // Local state - using local state instead of recoil
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoverTab, setHoverTab] = useState('');
   const [menuActiveKey, setMenuActiveKey] = useState('');
   const [showRecent, setShowRecent] = useState(true);
