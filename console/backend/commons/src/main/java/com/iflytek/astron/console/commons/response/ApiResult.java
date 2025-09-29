@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.util.I18nUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record ApiResult<T>(int code, String message, T data, Long timestamp) {
+    private static final Logger log = LoggerFactory.getLogger(ApiResult.class);
     public static <T> ApiResult<T> of(ResponseEnum responseEnum, T data) {
         return new ApiResult<>(
                 responseEnum.getCode(),
@@ -43,9 +46,12 @@ public record ApiResult<T>(int code, String message, T data, Long timestamp) {
     }
 
     public static <T> ApiResult<T> error(BusinessException e) {
+        String resolvedMessage = I18nUtil.getMessage(e.getMessageKey(), e.getArgs());
+        log.info("ApiResult.error - BusinessException: code={}, messageKey={}, args={}, resolvedMessage={}",
+                 e.getCode(), e.getMessageKey(), e.getArgs(), resolvedMessage);
         return new ApiResult<>(
                 e.getCode(),
-                I18nUtil.getMessage(e.getMessageKey(), e.getArgs()),
+                resolvedMessage,
                 null,
                 System.currentTimeMillis()
         );

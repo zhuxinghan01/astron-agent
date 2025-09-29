@@ -3,6 +3,7 @@ package com.iflytek.astron.console.commons.util;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.LocaleResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
@@ -46,9 +47,61 @@ public class I18nUtil {
     public static String getMessage(String msgKey, String[] args) {
         try {
             Locale locale = getRequestLocale();
+            log.info("I18nUtil.getMessage - msgKey: {}, resolved locale: {}, args: {}",
+                    msgKey, locale, args != null ? java.util.Arrays.toString(args) : "null");
+
             ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
             if (applicationContext != null) {
-                return applicationContext.getMessage(msgKey, args, msgKey, locale);
+                try {
+                    // Debug MessageSource information
+                    org.springframework.context.MessageSource messageSource = applicationContext;
+                    log.info("I18nUtil.getMessage - MessageSource type: {}", messageSource.getClass().getSimpleName());
+                    
+                    // Try to get ResourceBundleMessageSource for more debugging
+                    try {
+                        org.springframework.context.support.ResourceBundleMessageSource rbms = 
+                            applicationContext.getBean(org.springframework.context.support.ResourceBundleMessageSource.class);
+                        log.info("I18nUtil.getMessage - Found ResourceBundleMessageSource bean");
+                        
+                        // Get message with explicit MessageSource
+                        String message = rbms.getMessage(msgKey, args, msgKey, locale);
+                        log.info("I18nUtil.getMessage - resolved message from RBMS: {}", message);
+                        
+                        // Additional debug: try to get the same message with different locales
+                        try {
+                            String zhMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.SIMPLIFIED_CHINESE);
+                            String enMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.ENGLISH);
+                            String zhCNMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.forLanguageTag("zh-CN"));
+                            log.info("I18nUtil.getMessage - DEBUG RBMS: zh={}, en={}, zh-CN={}", zhMessage, enMessage, zhCNMessage);
+                        } catch (Exception debugEx) {
+                            log.warn("I18nUtil.getMessage - RBMS DEBUG failed: {}", debugEx.getMessage());
+                        }
+                        
+                        return message;
+                    } catch (Exception e) {
+                        log.info("I18nUtil.getMessage - No ResourceBundleMessageSource bean, using ApplicationContext directly");
+                    }
+                    
+                    String message = applicationContext.getMessage(msgKey, args, msgKey, locale);
+                    log.info("I18nUtil.getMessage - resolved message: {}", message);
+                    
+                    // Additional debug: try to get the same message with different locales
+                    try {
+                        String zhMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.SIMPLIFIED_CHINESE);
+                        String enMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.ENGLISH);
+                        String zhCNMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.forLanguageTag("zh-CN"));
+                        log.info("I18nUtil.getMessage - DEBUG: zh={}, en={}, zh-CN={}", zhMessage, enMessage, zhCNMessage);
+                    } catch (Exception debugEx) {
+                        log.warn("I18nUtil.getMessage - DEBUG failed: {}", debugEx.getMessage());
+                    }
+                    
+                    return message;
+                } catch (org.springframework.context.NoSuchMessageException e) {
+                    log.warn("I18nUtil.getMessage - NoSuchMessageException for key: {} with locale: {}, falling back to key", msgKey, locale);
+                    return msgKey;
+                }
+            } else {
+                log.warn("I18nUtil.getMessage - ApplicationContext is null, returning msgKey: {}", msgKey);
             }
         } catch (Exception e) {
             log.warn("Failed to get message for key: {}, falling back to key itself", msgKey, e);
@@ -69,21 +122,51 @@ public class I18nUtil {
     }
 
     /**
-     * Get the locale from the current HTTP request context This method retrieves the locale from the
-     * Accept-Language header in the HTTP request
+     * Get the locale from the current HTTP request context This method retrieves the locale using
+     * Spring's LocaleResolver, which respects both Accept-Language header and configured defaults
      *
-     * @return the locale from request context, or en_US as fallback if no request context available
+     * @return the locale from request context, or configured default locale as fallback
      */
     private static Locale getRequestLocale() {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
-                return request.getLocale();
+
+                // Log request headers for debugging
+                String acceptLanguage = request.getHeader("Accept-Language");
+                String langParam = request.getParameter("lang");
+                log.info("I18nUtil.getRequestLocale - Accept-Language header: {}, lang param: {}",
+                        acceptLanguage, langParam);
+
+                ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
+                if (applicationContext != null) {
+                    try {
+                        LocaleResolver localeResolver = applicationContext.getBean(LocaleResolver.class);
+                        Locale resolvedLocale = localeResolver.resolveLocale(request);
+                        log.info("I18nUtil.getRequestLocale - LocaleResolver resolved locale: {}, resolver type: {}",
+                                resolvedLocale, localeResolver.getClass().getSimpleName());
+                        return resolvedLocale;
+                    } catch (Exception e) {
+                        log.warn("Failed to get LocaleResolver, falling back to request.getLocale()", e);
+                        Locale requestLocale = request.getLocale();
+                        log.info("I18nUtil.getRequestLocale - request.getLocale() returned: {}", requestLocale);
+                        return requestLocale;
+                    }
+                } else {
+                    log.warn("I18nUtil.getRequestLocale - ApplicationContext is null");
+                    Locale requestLocale = request.getLocale();
+                    log.info("I18nUtil.getRequestLocale - request.getLocale() returned: {}", requestLocale);
+                    return requestLocale;
+                }
+            } else {
+                log.warn("I18nUtil.getRequestLocale - ServletRequestAttributes is null");
             }
         } catch (Exception e) {
-            log.debug("Failed to get locale from request context, falling back to en_US", e);
+            log.warn("Failed to get locale from request context, falling back to en_US", e);
         }
-        return Locale.US;
+        Locale fallbackLocale = Locale.US;
+        log.info("I18nUtil.getRequestLocale - falling back to: {}", fallbackLocale);
+        return fallbackLocale;
     }
 }
