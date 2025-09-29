@@ -528,6 +528,7 @@ const BasicInfoForm: React.FC<{
       {authType === 2 && <AuthorizationFields />}
       <Form.Item
         name="method"
+        className="mb-0"
         label={
           <div className="flex items-center gap-1">
             <span className="text-sm font-medium">
@@ -878,9 +879,9 @@ export const CreateTool = forwardRef<
             {showHeader && <StepIndicator step={step} setStep={setStep} />}
             {/* <div className='w-full h-[2px] bg-[#E5E5EC] my-[18px]'>
       </div> */}
-            <div className="w-full h-full p-6 bg-[#fff] rounded-2xl overflow-auto">
+            <div className="w-full h-full  bg-[#fff] rounded-2xl p-6 overflow-auto">
               <div
-                className="w-full h-full"
+                className="w-full"
                 style={{
                   pointerEvents:
                     selectedCard?.id && step !== 3 ? 'none' : 'auto',
