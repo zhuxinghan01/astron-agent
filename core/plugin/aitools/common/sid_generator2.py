@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import socket
 import time
+from typing import Optional
 
 from plugin.aitools.const.const import (
     SERVICE_LOCATION_KEY,
@@ -40,7 +41,7 @@ def get_host_ip() -> str:
     """
     description:查询本机ip
     """
-    s = None
+    s: Optional[socket.socket] = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(3)
@@ -49,7 +50,7 @@ def get_host_ip() -> str:
     except Exception as err:
         raise Exception(f"failed to get local ip, err reason {str(err)}") from err
     finally:
-        if not s:
+        if s is not None:
             s.close()
 
     return ip
