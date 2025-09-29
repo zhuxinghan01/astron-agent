@@ -55,7 +55,7 @@ public class I18nUtil {
                 try {
                     String message = applicationContext.getMessage(msgKey, args, msgKey, locale);
                     log.info("I18nUtil.getMessage - resolved message: {}", message);
-                    
+
                     // Additional debug: try to get the same message with different locales
                     try {
                         String zhMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.SIMPLIFIED_CHINESE);
@@ -64,7 +64,7 @@ public class I18nUtil {
                     } catch (Exception debugEx) {
                         log.warn("I18nUtil.getMessage - DEBUG failed: {}", debugEx.getMessage());
                     }
-                    
+
                     return message;
                 } catch (org.springframework.context.NoSuchMessageException e) {
                     log.warn("I18nUtil.getMessage - NoSuchMessageException for key: {} with locale: {}, falling back to key", msgKey, locale);
