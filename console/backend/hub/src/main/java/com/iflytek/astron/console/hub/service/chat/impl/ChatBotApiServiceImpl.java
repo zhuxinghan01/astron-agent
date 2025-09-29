@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * @author mingsuiyongheng
+ */
 @Slf4j
 @Service
 public class ChatBotApiServiceImpl implements ChatBotApiService {
@@ -17,6 +20,11 @@ public class ChatBotApiServiceImpl implements ChatBotApiService {
     @Autowired
     private ChatBotApiMapper chatBotApiMapper;
 
+    /**
+     * Get chat bot API list for specified user ID
+     * @param uid User ID
+     * @return List of chat bot APIs
+     */
     @Override
     public List<ChatBotApi> getBotApiList(String uid) {
         return chatBotApiMapper.selectListWithVersion(uid);
