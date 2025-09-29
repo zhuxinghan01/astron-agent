@@ -47,7 +47,7 @@ public record ApiResult<T>(int code, String message, T data, Long timestamp) {
 
     public static <T> ApiResult<T> error(BusinessException e) {
         String resolvedMessage = I18nUtil.getMessage(e.getMessageKey(), e.getArgs());
-        log.info("ApiResult.error - BusinessException: code={}, messageKey={}, args={}, resolvedMessage={}", 
+        log.info("ApiResult.error - BusinessException: code={}, messageKey={}, args={}, resolvedMessage={}",
                  e.getCode(), e.getMessageKey(), e.getArgs(), resolvedMessage);
         return new ApiResult<>(
                 e.getCode(),
