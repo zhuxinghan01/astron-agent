@@ -3,6 +3,7 @@ package com.iflytek.astron.console.commons.util;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.LocaleResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
@@ -69,16 +70,26 @@ public class I18nUtil {
     }
 
     /**
-     * Get the locale from the current HTTP request context This method retrieves the locale from the
-     * Accept-Language header in the HTTP request
+     * Get the locale from the current HTTP request context This method retrieves the locale using
+     * Spring's LocaleResolver, which respects both Accept-Language header and configured defaults
      *
-     * @return the locale from request context, or en_US as fallback if no request context available
+     * @return the locale from request context, or configured default locale as fallback
      */
     private static Locale getRequestLocale() {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
+                ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
+                if (applicationContext != null) {
+                    try {
+                        LocaleResolver localeResolver = applicationContext.getBean(LocaleResolver.class);
+                        return localeResolver.resolveLocale(request);
+                    } catch (Exception e) {
+                        log.debug("Failed to get LocaleResolver, falling back to request.getLocale()", e);
+                        return request.getLocale();
+                    }
+                }
                 return request.getLocale();
             }
         } catch (Exception e) {
