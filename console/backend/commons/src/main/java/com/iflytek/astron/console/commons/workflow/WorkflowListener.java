@@ -192,12 +192,12 @@ public class WorkflowListener extends EventSourceListener {
     }
 
     /**
-    * Callback method invoked by event source listener when connection fails
-    *
-    * @param eventSource Event source object
-    * @param t Thrown exception
-    * @param response HTTP response object
-    */
+     * Callback method invoked by event source listener when connection fails
+     *
+     * @param eventSource Event source object
+     * @param t Thrown exception
+     * @param response HTTP response object
+     */
     @Override
     public void onFailure(@NotNull EventSource eventSource, Throwable t, Response response) {
         log.error(".....MassListener failed to establish connection with chain-sse....., sseId: {}, uid: {}, chatId: {}", sseId, chatReqRecords.getUid(), chatReqRecords.getChatId(), t);
@@ -247,9 +247,10 @@ public class WorkflowListener extends EventSourceListener {
     }
 
     /**
-    * Function to handle debug workflow
-    * @param jsonObject Input JSON object
-    */
+     * Function to handle debug workflow
+     *
+     * @param jsonObject Input JSON object
+     */
     private void processDeBugWorkFlow(JSONObject jsonObject) {
         // debug url has special handling for end frames, for detailed processing please consult Institute
         if (isDebug) {

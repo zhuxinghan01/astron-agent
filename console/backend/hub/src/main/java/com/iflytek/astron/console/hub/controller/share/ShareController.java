@@ -43,10 +43,11 @@ public class ShareController {
     private ChatListService chatListService;
 
     /**
-    * Method defined with @PostMapping annotation to handle GET share key requests
-    * @param body CardAddBody object containing request body
-    * @return Returns an ApiResult object containing share key
-    */
+     * Method defined with @PostMapping annotation to handle GET share key requests
+     *
+     * @param body CardAddBody object containing request body
+     * @return Returns an ApiResult object containing share key
+     */
     @SpacePreAuth(key = "AgentController_getShareKey_POST")
     @PostMapping("/get-share-key")
     @Operation(summary = "Get sharing identifier")
@@ -68,11 +69,12 @@ public class ShareController {
     }
 
     /**
-    * Add shared agent
-    * @param request HTTP request object
-    * @param shareKey Share key object
-    * @return ApiResult object containing operation result
-    */
+     * Add shared agent
+     *
+     * @param request HTTP request object
+     * @param shareKey Share key object
+     * @return ApiResult object containing operation result
+     */
     @PostMapping("/add-shared-agent")
     @Operation(summary = "Add shared agent")
     public ApiResult<ChatListCreateResponse> addSharedAgent(HttpServletRequest request, @RequestBody ShareKey shareKey) {

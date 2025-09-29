@@ -55,7 +55,8 @@ public class PublishApiServiceImpl implements PublishApiService {
     @Override
     public List<AppListDTO> getAppList() {
         String uid = RequestContextUtil.getUID();
-        return appMstService.getAppListByUid(uid).stream()
+        return appMstService.getAppListByUid(uid)
+                .stream()
                 .map(appMst -> new AppListDTO(appMst.getAppId(), appMst.getAppName(), appMst.getAppDescribe()))
                 .collect(Collectors.toList());
     }

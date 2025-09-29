@@ -81,7 +81,7 @@ class ShareServiceImplTest {
         AgentShareRecord existingRecord = new AgentShareRecord();
         existingRecord.setShareKey(testShareKey);
         when(shareDataService.findActiveShareRecord(testUid, testRelatedType, testRelatedId))
-            .thenReturn(existingRecord);
+                .thenReturn(existingRecord);
 
         // When
         String result = shareService.getShareKey(testUid, testRelatedType, testRelatedId);
@@ -97,7 +97,7 @@ class ShareServiceImplTest {
         // Given
         String expectedGeneratedKey = "generated-md5-key";
         when(shareDataService.findActiveShareRecord(testUid, testRelatedType, testRelatedId))
-            .thenReturn(null);
+                .thenReturn(null);
 
         try (MockedStatic<Md5Util> md5UtilMock = mockStatic(Md5Util.class)) {
             // Mock MD5 encryption to return our expected key regardless of input
@@ -112,11 +112,9 @@ class ShareServiceImplTest {
             verify(shareDataService).createShareRecord(testUid, testRelatedId, expectedGeneratedKey, testRelatedType);
 
             // Verify that MD5 encryption was called with a string containing the expected components
-            md5UtilMock.verify(() -> Md5Util.encryption(argThat(input ->
-                input.contains(testRelatedId.toString()) &&
-                input.contains("_salt_") &&
-                input.contains(testUid)
-            )));
+            md5UtilMock.verify(() -> Md5Util.encryption(argThat(input -> input.contains(testRelatedId.toString()) &&
+                    input.contains("_salt_") &&
+                    input.contains(testUid))));
         }
     }
 

@@ -49,4 +49,3 @@ public class BotApiRealTimeUsageDTO {
     @Schema(description = "Concurrency")
     private int conc;
 }
-

@@ -48,9 +48,10 @@ public class WorkflowClient {
     }
 
     /**
-    * Create WebSocket connection
-    * @param sseListener Listener for handling SSE events
-    */
+     * Create WebSocket connection
+     *
+     * @param sseListener Listener for handling SSE events
+     */
     public void createWebSocketConnect(EventSourceListener sseListener) {
         // Platform chain large model interface wsURL
         String wsURL = chatUrl;
@@ -65,6 +66,7 @@ public class WorkflowClient {
 
     /**
      * Create a new EventSource object and handle events using the given listener.
+     *
      * @param listener EventSourceListener object for handling events
      */
     private void newSSE(EventSourceListener listener) {
@@ -73,9 +75,8 @@ public class WorkflowClient {
     }
 
     /**
-    * Method to close SSE event source.
-    * Cancels the event source if eventSource is not null.
-    */
+     * Method to close SSE event source. Cancels the event source if eventSource is not null.
+     */
     public void closeSse() {
         if (this.eventSource != null) {
             this.eventSource.cancel();
@@ -83,10 +84,11 @@ public class WorkflowClient {
     }
 
     /**
-    * Generate authorization information
-    *
-    * @return Returns authorization string with appKey and appSecret, format: Bearer <appKey>:<appSecret>
-    */
+     * Generate authorization information
+     *
+     * @return Returns authorization string with appKey and appSecret, format: Bearer
+     *         <appKey>:<appSecret>
+     */
     public String genAuthorization() {
         return "Bearer " + appKey + ":" + appSecret;
     }

@@ -22,8 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * KnowledgeServiceImpl unit tests
- * Tests the core business logic of knowledge service
+ * KnowledgeServiceImpl unit tests Tests the core business logic of knowledge service
  */
 @ExtendWith(MockitoExtension.class)
 class KnowledgeServiceImplTest {
@@ -63,7 +62,7 @@ class KnowledgeServiceImplTest {
 
         when(datasetDataService.findMaasDatasetsByBotIdAndIsAct(testBotId, 1)).thenReturn(datasetList);
         when(repoService.hitTest(anyLong(), eq(testAsk), eq(testTopN), eq(false)))
-            .thenReturn(createTestChunkInfoList());
+                .thenReturn(createTestChunkInfoList());
 
         // When
         List<String> result = knowledgeService.getChuncksByBotId(testBotId, testAsk, testTopN);
@@ -111,7 +110,7 @@ class KnowledgeServiceImplTest {
         List<BotDatasetMaas> datasetList = createTestDatasetList();
         when(datasetDataService.findMaasDatasetsByBotIdAndIsAct(testBotId, 1)).thenReturn(datasetList);
         when(repoService.hitTest(anyLong(), anyString(), anyInt(), anyBoolean()))
-            .thenReturn(createTestChunkInfoList());
+                .thenReturn(createTestChunkInfoList());
 
         // When
         knowledgeService.getChuncksByBotId(testBotId, testAsk, testTopN);
@@ -127,7 +126,7 @@ class KnowledgeServiceImplTest {
         // Given
         List<ChunkInfo> chunkInfoList = createTestChunkInfoList();
         when(repoService.hitTest(anyLong(), eq(testText), eq(testTopN), eq(false)))
-            .thenReturn(chunkInfoList);
+                .thenReturn(chunkInfoList);
 
         // When
         List<String> result = knowledgeService.getChuncks(testMaasDatasetList, testText, testTopN, false);
@@ -180,18 +179,17 @@ class KnowledgeServiceImplTest {
         boolean isBelongLoginUser = true;
 
         when(repoService.hitTest(anyLong(), anyString(), anyInt(), anyBoolean()))
-            .thenReturn(createTestChunkInfoList());
+                .thenReturn(createTestChunkInfoList());
 
         // When
         knowledgeService.getChuncks(singleDatasetList, testText, testTopN, isBelongLoginUser);
 
         // Then
         verify(repoService).hitTest(
-            eq(Long.parseLong(repoId)),
-            eq(testText),
-            eq(testTopN),
-            eq(isBelongLoginUser)
-        );
+                eq(Long.parseLong(repoId)),
+                eq(testText),
+                eq(testTopN),
+                eq(isBelongLoginUser));
     }
 
     @Test
@@ -199,7 +197,7 @@ class KnowledgeServiceImplTest {
         // Given
         List<ChunkInfo> chunkInfoList = createTestChunkInfoList();
         when(repoService.hitTest(anyLong(), eq(testText), eq(testTopN), eq(false)))
-            .thenReturn(chunkInfoList);
+                .thenReturn(chunkInfoList);
 
         // When
         List<String> result = knowledgeService.getChuncks(testMaasDatasetList, testText, testTopN, false);

@@ -29,6 +29,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final String LOG_STRING = "RequestURL: {}, Timestamp: {}, {}: {}";
+
     /** Handle business exceptions */
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)

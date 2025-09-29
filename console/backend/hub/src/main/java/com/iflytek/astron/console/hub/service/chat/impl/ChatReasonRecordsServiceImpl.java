@@ -21,13 +21,14 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ChatReasonRecordsServiceImpl implements ChatReasonRecordsService {
-    
+
     /**
-    * Function to assemble response reasons
-    * @param respList Chat response model list
-    * @param reasonRecordsList Chat reason records list
-    * @param traceList Chat trace source list
-    */
+     * Function to assemble response reasons
+     *
+     * @param respList Chat response model list
+     * @param reasonRecordsList Chat reason records list
+     * @param traceList Chat trace source list
+     */
     @Override
     public void assembleRespReasoning(List<ChatRespModelDto> respList, List<ChatReasonRecords> reasonRecordsList, List<ChatTraceSource> traceList) {
         if (CollUtil.isEmpty(respList) || CollUtil.isEmpty(reasonRecordsList)) {
