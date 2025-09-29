@@ -34,8 +34,15 @@ export default function App() {
   useEffect(() => {
     getUserInfo();
     initSpaceInfo();
+    getEnterpriseSpaceCount();
     getJoinedEnterpriseList();
   }, []);
+
+  useEffect(() => {
+    if (!initDone) return;
+    getEnterpriseSpaceCount();
+    visitEnterprise(enterpriseId);
+  }, [enterpriseId, initDone]);
 
   return (
     <>
