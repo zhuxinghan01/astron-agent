@@ -53,6 +53,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     /**
      * Override method: Get text chunks from MAAS datasets
+     *
      * @param maasDatasetList MAAS dataset list
      * @param text Text to be processed
      * @param topN Number of most relevant text chunks to return

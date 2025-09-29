@@ -553,7 +553,7 @@ public class BotChatServiceImpl implements BotChatService {
 
             currentTokens += messageTokens;
             // Add to the beginning of the list, maintain time order
-            result.addFirst(message); 
+            result.addFirst(message);
         }
 
         return result;
@@ -592,7 +592,7 @@ public class BotChatServiceImpl implements BotChatService {
                 chineseChars, englishChars, estimatedTokens);
 
         // At least 1 token
-        return Math.max(estimatedTokens, 1); 
+        return Math.max(estimatedTokens, 1);
     }
 
     /**

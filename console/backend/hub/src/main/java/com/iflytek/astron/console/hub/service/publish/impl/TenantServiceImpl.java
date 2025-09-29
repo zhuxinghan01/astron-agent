@@ -45,7 +45,9 @@ public class TenantServiceImpl implements TenantService {
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), requestBody.toJSONString());
         Request request = new Request.Builder()
-                .url(createApp).method("POST", body).build();
+                .url(createApp)
+                .method("POST", body)
+                .build();
 
         JSONObject reqJson = new JSONObject();
         try (Response response = HTTP_CLIENT.newCall(request).execute()) {
@@ -69,7 +71,9 @@ public class TenantServiceImpl implements TenantService {
     public TenantAuth getAppDetail(String appId) {
         String requestUrl = String.format("%s?app_ids=%s&cloud_id=0&dev_id=1", getAppDetail, appId);
         Request request = new Request.Builder()
-                .url(requestUrl).method("GET", null).build();
+                .url(requestUrl)
+                .method("GET", null)
+                .build();
 
         JSONObject reqJson = new JSONObject();
         try (Response response = HTTP_CLIENT.newCall(request).execute()) {

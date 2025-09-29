@@ -16,11 +16,11 @@ import java.util.List;
 public class TraceToSourceServiceImpl implements TraceToSourceService {
 
     /**
-    * Add trace information to response
-    *
-    * @param respList Response list where each element will have trace information attached
-    * @param traceList Trace source list used to get trace content and type
-    */
+     * Add trace information to response
+     *
+     * @param respList Response list where each element will have trace information attached
+     * @param traceList Trace source list used to get trace content and type
+     */
     @Override
     public void respAddTrace(List<ChatRespModelDto> respList, List<ChatTraceSource> traceList) {
         // Iterate through responses, supplement traceability data based on reqId
