@@ -28,6 +28,7 @@ const TeamCreate = lazy(() => import('@/pages/space/team-create'));
 const ReleaseManagement = lazy(() => import('@/pages/release-management'));
 const BotApi = lazy(() => import('@/pages/bot-api/api'));
 const ApiHistory = lazy(() => import('@/pages/bot-api/api-history'));
+const SharePage = lazy(() => import('@/pages/share-page'));
 
 const routes = [
   {
@@ -227,6 +228,19 @@ const routes = [
         <WorkFlow />
       </Suspense>
     ),
+  },
+  {
+    path: '/sharepage',
+    children: [
+      {
+        path: '/sharepage',
+        element: (
+          <Suspense fallback={<Loading />}>
+            <SharePage />
+          </Suspense>
+        ),
+      },
+    ],
   },
 ];
 
