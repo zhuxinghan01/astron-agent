@@ -26,7 +26,12 @@ public enum BotPublishTypeEnum {
     /**
      * 发布到飞书
      */
-    FEISHU("FEISHU", "飞书", 4);
+    FEISHU("FEISHU", "飞书", 4),
+    
+    /**
+     * 发布到微信公众号
+     */
+    WECHAT("WECHAT", "微信公众号", 5);
 
     /**
      * 类型代码
