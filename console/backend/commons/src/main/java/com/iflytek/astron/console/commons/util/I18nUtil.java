@@ -53,18 +53,48 @@ public class I18nUtil {
             ApplicationContext applicationContext = SpringContextHolder.getApplicationContext();
             if (applicationContext != null) {
                 try {
+                    // Debug MessageSource information
+                    org.springframework.context.MessageSource messageSource = applicationContext;
+                    log.info("I18nUtil.getMessage - MessageSource type: {}", messageSource.getClass().getSimpleName());
+                    
+                    // Try to get ResourceBundleMessageSource for more debugging
+                    try {
+                        org.springframework.context.support.ResourceBundleMessageSource rbms = 
+                            applicationContext.getBean(org.springframework.context.support.ResourceBundleMessageSource.class);
+                        log.info("I18nUtil.getMessage - Found ResourceBundleMessageSource bean");
+                        
+                        // Get message with explicit MessageSource
+                        String message = rbms.getMessage(msgKey, args, msgKey, locale);
+                        log.info("I18nUtil.getMessage - resolved message from RBMS: {}", message);
+                        
+                        // Additional debug: try to get the same message with different locales
+                        try {
+                            String zhMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.SIMPLIFIED_CHINESE);
+                            String enMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.ENGLISH);
+                            String zhCNMessage = rbms.getMessage(msgKey, args, msgKey, java.util.Locale.forLanguageTag("zh-CN"));
+                            log.info("I18nUtil.getMessage - DEBUG RBMS: zh={}, en={}, zh-CN={}", zhMessage, enMessage, zhCNMessage);
+                        } catch (Exception debugEx) {
+                            log.warn("I18nUtil.getMessage - RBMS DEBUG failed: {}", debugEx.getMessage());
+                        }
+                        
+                        return message;
+                    } catch (Exception e) {
+                        log.info("I18nUtil.getMessage - No ResourceBundleMessageSource bean, using ApplicationContext directly");
+                    }
+                    
                     String message = applicationContext.getMessage(msgKey, args, msgKey, locale);
                     log.info("I18nUtil.getMessage - resolved message: {}", message);
-
+                    
                     // Additional debug: try to get the same message with different locales
                     try {
                         String zhMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.SIMPLIFIED_CHINESE);
                         String enMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.ENGLISH);
-                        log.info("I18nUtil.getMessage - DEBUG: zh message: {}, en message: {}", zhMessage, enMessage);
+                        String zhCNMessage = applicationContext.getMessage(msgKey, args, msgKey, java.util.Locale.forLanguageTag("zh-CN"));
+                        log.info("I18nUtil.getMessage - DEBUG: zh={}, en={}, zh-CN={}", zhMessage, enMessage, zhCNMessage);
                     } catch (Exception debugEx) {
                         log.warn("I18nUtil.getMessage - DEBUG failed: {}", debugEx.getMessage());
                     }
-
+                    
                     return message;
                 } catch (org.springframework.context.NoSuchMessageException e) {
                     log.warn("I18nUtil.getMessage - NoSuchMessageException for key: {} with locale: {}, falling back to key", msgKey, locale);
