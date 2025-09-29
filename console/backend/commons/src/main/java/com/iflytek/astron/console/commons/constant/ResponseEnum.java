@@ -1,5 +1,7 @@
 package com.iflytek.astron.console.commons.constant;
 
+import com.iflytek.astron.console.commons.util.I18nUtil;
+
 /**
  * Response code enumeration class
  */
@@ -379,6 +381,6 @@ public enum ResponseEnum {
     }
 
     public String getMessageKey() {
-        return messageKey;
+        return I18nUtil.getMessage(messageKey);
     }
 }
