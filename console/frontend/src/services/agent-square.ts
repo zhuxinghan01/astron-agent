@@ -42,9 +42,9 @@ export const collectBot = (
 };
 
 // 取消收藏bot
-export const cancelFavorite = (params: {
-  botId: number;
-}): Promise<{ [key: string]: boolean | number | string }> => {
+export const cancelFavorite = (
+  params: URLSearchParams
+): Promise<{ [key: string]: boolean | number | string }> => {
   return http({
     url: `/bot/favorite/delete`,
     method: 'POST',
