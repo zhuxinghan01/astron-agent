@@ -269,7 +269,7 @@ export const getApiCertInfo = (): Promise<boolean> => {
 
 // 获取api列表
 export const getApiList = (): Promise<any[]> => {
-  return http.get(`/bot/api/appList`);
+  return http.get(`/publish-api/app-list`);
 };
 
 // 获取订单列表
@@ -284,12 +284,17 @@ export const getApiInfo = (botId: any) => {
 
 // 获取api 实时用量
 export const getApiUsage = (botId: any) => {
-  return http.post(`/bot/api/usage?botId=${botId}`);
+  return http.post(`/publish-api/usage-real-time?botId=${botId}`);
 };
 
 // 创建助手api
 export const createApi = (params: any) => {
-  return http.post(`/bot/api/create`, params);
+  return http.post(`/publish-api/create-bot-api`, params);
+};
+
+// create app of user
+export const createApp = (params: any) => {
+  return http.post(`/publish-api/create-user-app`, params);
 };
 
 // 获取api 历史用量
