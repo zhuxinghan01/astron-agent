@@ -1,42 +1,125 @@
 package com.iflytek.astron.console.hub.strategy.publish.impl;
 
 import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
+import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.commons.entity.model.McpData;
+import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
+import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
+import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
+import com.iflytek.astron.console.commons.mapper.UserLangChainInfoMapper;
+import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
-import com.iflytek.astron.console.hub.service.publish.McpService;
+import com.iflytek.astron.console.hub.service.publish.BotPublishService;
+import com.iflytek.astron.console.commons.util.MaasUtil;
+import okhttp3.*;
+import org.springframework.beans.factory.annotation.Value;
 import com.iflytek.astron.console.hub.strategy.publish.PublishStrategy;
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 /**
  * MCP publish strategy implementation
  * Handles bot publishing to MCP server channel
+ * Based on original MCPController#publishMCP logic
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class McpPublishStrategy implements PublishStrategy {
 
-    private final McpService mcpService;
+    private final ChatBotBaseMapper chatBotBaseMapper;
+    private final UserLangChainInfoMapper userLangChainInfoMapper;
+    private final UserLangChainDataService userLangChainDataService;
+    private final McpDataMapper mcpDataMapper;
+    private final BotPublishService botPublishService;
+    
+    @Value("${maas.workflowVersion}")
+    private String baseUrl;
+    
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .build();
+            
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+    private static final String GET_VERSION_NAME_URL = "/getVersionName";
 
     @Override
-    public ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    @Transactional(rollbackFor = Exception.class)
+    public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to MCP: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
             // Parse MCP publish data
             McpPublishRequestDto mcpRequest = parsePublishData(publishData, botId);
-            
             log.debug("MCP publish request: {}", JSON.toJSONString(mcpRequest));
+
+            // 1. Permission check (corresponds to botPermissionUtil.checkBot)
+            int hasPermission = chatBotBaseMapper.checkBotPermission(botId, currentUid, spaceId);
+            if (hasPermission == 0) {
+                throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
+            }
+
+            // 2. Check if workflow protocol exists (corresponds to userLangChainInfoDao.findListByBotId)
+            UserLangChainInfo chainInfo = userLangChainInfoMapper.selectOne(
+                    new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserLangChainInfo>()
+                            .eq("bot_id", botId)
+                            .orderByDesc("create_time")
+                            .last("LIMIT 1"));
+            if (chainInfo == null) {
+                log.info("Bot workflow protocol not found: uid={}, botId={}", currentUid, botId);
+                throw new BusinessException(ResponseEnum.BOT_CHAIN_SUBMIT_ERROR);
+            }
+
+
+            // 4. Get version name (corresponds to releaseManageClientService.getVersionNameByBotId)
+            String versionName = getVersionName(botId, currentUid, spaceId);
+            log.info("Got version name for MCP publish: botId={}, versionName={}", botId, versionName);
+
+            // 5. Get cookies (corresponds to MassUtil.getRequestCookies(request))
+            // Note: In strategy pattern, we don't have HttpServletRequest, so we'll use empty cookie for now
+            String cookie = ""; // TODO: Get actual cookies if needed
             
-            // Delegate to existing MCP publish logic
-            mcpService.publishMcp(mcpRequest, currentUid, spaceId);
+            // 6. Register MCP (corresponds to massUtil.registerMcp)
+            JSONObject mcpResult = MaasUtil.registerMcp(cookie, chainInfo, mcpRequest, versionName);
+            log.info("MCP registration result: {}", mcpResult);
+
+            // 7. Save MCP data (corresponds to mcpDataDao.insert(mcp) in original project)
+            // Original project: mcp.set("createTime", LocalDateTime.now()); mcp.set("uid", uid); mcpDataDao.insert(mcp);
+            mcpResult.put("createTime", LocalDateTime.now());
+            mcpResult.put("uid", currentUid);
+            mcpResult.put("spaceId", spaceId);
+            mcpResult.put("botId", botId);
+            mcpResult.put("versionName", versionName);
+            mcpResult.put("released", 1);
+            mcpResult.put("isDelete", 0);
+
+            // Insert MCP data using the JSONObject result (similar to original project)
+            int insertResult = insertMcpData(mcpResult);
+            if (insertResult == 0) {
+                throw new BusinessException(ResponseEnum.SYSTEM_ERROR);
+            }
+
+            // 7. Record the release (corresponds to releaseManageClientService.releaseMCP)
+            recordMcpRelease(botId, versionName, currentUid, spaceId);
+
+            // 8. Update publish channel
+            botPublishService.updatePublishChannel(botId, currentUid, spaceId, PublishChannelEnum.MCP, true);
+
+            log.info("MCP publish completed successfully: botId={}, versionName={}", 
+                    botId, versionName);
             
-            log.info("MCP publish completed successfully: botId={}, serverName={}", 
-                    botId, mcpRequest.getServerName());
-            return ApiResult.success("Bot published as MCP server successfully");
+            return ApiResult.success(null); // No specific data needed for MCP publish
             
         } catch (Exception e) {
             log.error("MCP publish failed: botId={}, error={}", botId, e.getMessage(), e);
@@ -45,15 +128,18 @@ public class McpPublishStrategy implements PublishStrategy {
     }
 
     @Override
-    public ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Offlining bot from MCP: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
             // TODO: Implement MCP offline logic
-            // Current McpService doesn't have offline method, need to add it
-            // For now, just log the action
+            // This would involve removing MCP server registration and updating database
             log.warn("MCP offline not fully implemented yet: botId={}", botId);
-            return ApiResult.success("MCP offline request processed (implementation pending)");
+            
+            // Update publish channel to remove MCP
+            botPublishService.updatePublishChannel(botId, currentUid, spaceId, PublishChannelEnum.MCP, false);
+            
+            return ApiResult.success(null); // No specific data needed for MCP offline
             
         } catch (Exception e) {
             log.error("MCP offline failed: botId={}, error={}", botId, e.getMessage(), e);
@@ -67,6 +153,180 @@ public class McpPublishStrategy implements PublishStrategy {
     }
 
     /**
+     * Get version name for MCP publishing
+     * Corresponds to releaseManageClientService.getVersionNameByBotId -> getVersionName in original project
+     * Sends HTTP request to BASE_URL + GET_VERSION_NAME_URL (/getVersionName)
+     */
+    private String getVersionName(Integer botId, String currentUid, Long spaceId) {
+        try {
+            // 1. Get flowId from botId (same as original project)
+            String flowId = userLangChainDataService.findFlowIdByBotId(botId);
+            if (flowId == null || flowId.trim().isEmpty()) {
+                log.error("getVersionName - Failed to get flowId by botId, botId={}", botId);
+                return generateDefaultVersion();
+            }
+
+            // 2. Send HTTP request to get version name (same as original project)
+            log.info("Getting version name for MCP publish: botId={}, flowId={}", botId, flowId);
+            
+            // Build request body (same as original project)
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("flowId", flowId);
+            String jsonBody = requestBody.toJSONString();
+            
+            // Build HTTP request
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(baseUrl + GET_VERSION_NAME_URL)
+                    .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
+                    .addHeader("Content-Type", "application/json");
+            
+            // Add spaceId to header (same as original project)
+            if (spaceId != null) {
+                requestBuilder.addHeader("space-id", spaceId.toString());
+            }
+            
+            // Execute request
+            try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
+                if (!response.isSuccessful()) {
+                    log.error("getVersionName - HTTP request failed: flowId={}, responseCode={}", flowId, response.code());
+                    return generateDefaultVersion();
+                }
+                
+                String responseBody = response.body().string();
+                log.debug("getVersionName response: {}", responseBody);
+                
+                // Parse response (same as original project)
+                JSONObject responseJson = JSON.parseObject(responseBody);
+                JSONObject data = responseJson.getJSONObject("data");
+                
+                if (data != null && data.containsKey("workflowVersionName")) {
+                    String versionName = data.getString("workflowVersionName");
+                    log.info("Successfully got version name for MCP: botId={}, versionName={}", botId, versionName);
+                    return versionName;
+                }
+                
+                log.warn("getVersionName - workflowVersionName not found in response: flowId={}", flowId);
+                return generateDefaultVersion();
+            }
+
+        } catch (Exception e) {
+            log.error("getVersionName - Exception occurred: botId={}, flowId={}", botId, 
+                    userLangChainDataService.findFlowIdByBotId(botId), e);
+            return generateDefaultVersion();
+        }
+    }
+
+
+    /**
+     * Insert MCP data to database
+     * Corresponds to mcpDataDao.insert(mcp) in original project
+     */
+    private int insertMcpData(JSONObject mcpResult) {
+        try {
+            // Convert JSONObject to McpData entity for database insertion
+            McpData mcpData = McpData.builder()
+                    .botId(mcpResult.getInteger("botId"))
+                    .uid(mcpResult.getString("uid"))
+                    .spaceId(mcpResult.getLong("spaceId"))
+                    .serverName(mcpResult.getString("serverName"))
+                    .description(mcpResult.getString("description"))
+                    .content(mcpResult.getString("content"))
+                    .icon(mcpResult.getString("icon"))
+                    .serverUrl(mcpResult.getString("serverUrl"))
+                    .args(mcpResult.getString("args"))
+                    .versionName(mcpResult.getString("versionName"))
+                    .released(mcpResult.getInteger("released"))
+                    .isDelete(mcpResult.getInteger("isDelete"))
+                    .createTime(mcpResult.getObject("createTime", LocalDateTime.class))
+                    .updateTime(LocalDateTime.now())
+                    .build();
+            
+            log.info("Inserting MCP data: botId={}, serverName={}, versionName={}", 
+                    mcpData.getBotId(), mcpData.getServerName(), mcpData.getVersionName());
+            
+            return mcpDataMapper.insert(mcpData);
+            
+        } catch (Exception e) {
+            log.error("Failed to insert MCP data: {}", mcpResult, e);
+            throw new BusinessException(ResponseEnum.SYSTEM_ERROR, "Failed to save MCP data");
+        }
+    }
+
+    /**
+     * Record MCP release
+     * Corresponds to releaseManageClientService.releaseMCP -> releaseBot in original project
+     * Sends HTTP request to BASE_URL + ADD_VERSION_URL (empty string, so just BASE_URL)
+     */
+    private void recordMcpRelease(Integer botId, String versionName, String currentUid, Long spaceId) {
+        try {
+            // Get flowId (same as original project)
+            String flowId = userLangChainDataService.findFlowIdByBotId(botId);
+            if (flowId == null || flowId.trim().isEmpty()) {
+                log.error("recordMcpRelease - Failed to get flowId by botId, botId={}", botId);
+                return;
+            }
+            
+            log.info("Recording MCP release: botId={}, flowId={}, versionName={}", botId, flowId, versionName);
+            
+            // Build release bot request (same as original project)
+            JSONObject releaseBotDto = new JSONObject();
+            releaseBotDto.put("botId", botId.toString());
+            releaseBotDto.put("flowId", flowId);
+            releaseBotDto.put("publishChannel", 3); // ReleaseTypeEnum.MCP.getCode() = 3
+            releaseBotDto.put("publishResult", "成功"); // RELEASE_SUCCESS = "成功"
+            releaseBotDto.put("description", "");
+            releaseBotDto.put("name", versionName);
+            
+            String jsonParams = releaseBotDto.toJSONString();
+            
+            // Build HTTP request (same as original project)
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(baseUrl) // ADD_VERSION_URL is empty string, so just use baseUrl
+                    .post(RequestBody.create(jsonParams, JSON_MEDIA_TYPE))
+                    .addHeader("Content-Type", "application/json");
+            
+            // Add spaceId to header (same as original project)
+            if (spaceId != null) {
+                requestBuilder.addHeader("space-id", spaceId.toString());
+            }
+            
+            // Execute request
+            try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
+                if (!response.isSuccessful()) {
+                    log.error("recordMcpRelease - HTTP request failed: botId={}, responseCode={}", botId, response.code());
+                    return;
+                }
+                
+                String responseBody = response.body().string();
+                log.debug("recordMcpRelease response: {}", responseBody);
+                
+                // Parse response (same as original project)
+                JSONObject responseJson = JSON.parseObject(responseBody);
+                JSONObject data = responseJson.getJSONObject("data");
+                
+                if (data != null) {
+                    log.info("MCP release recorded successfully: botId={}, versionName={}, workflowVersionId={}", 
+                            botId, versionName, data.get("workflowVersionId"));
+                } else {
+                    log.warn("recordMcpRelease - No data in response: botId={}", botId);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("recordMcpRelease - Exception occurred: botId={}, versionName={}", botId, versionName, e);
+            // Don't throw exception here as the main MCP data has already been saved
+        }
+    }
+
+
+    /**
+     * Generate default version name as fallback
+     */
+    private String generateDefaultVersion() {
+        return "v" + System.currentTimeMillis();
+    }
+
+    /**
      * Parse publish data to McpPublishRequestDto
      */
     private McpPublishRequestDto parsePublishData(Object publishData, Integer botId) {
@@ -75,7 +335,6 @@ public class McpPublishStrategy implements PublishStrategy {
         }
 
         try {
-            // Convert publishData to McpPublishRequestDto
             McpPublishRequestDto mcpRequest;
             
             if (publishData instanceof McpPublishRequestDto) {

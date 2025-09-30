@@ -138,7 +138,7 @@ public class BotPublishController {
     )
     @RateLimit(limit = 10, window = 60, dimension = "USER")
     @PostMapping("/bots/{botId}")
-    public ApiResult<String> unifiedPublish(
+    public ApiResult<Object> unifiedPublish(
             @Parameter(description = "Bot ID", required = true)
             @PathVariable Integer botId,
             @Valid @RequestBody UnifiedPublishRequestDto request) {
@@ -160,7 +160,7 @@ public class BotPublishController {
             // Get strategy and execute action
             PublishStrategy strategy = publishStrategyFactory.getStrategy(request.getPublishType());
             
-            ApiResult<String> result;
+            ApiResult<Object> result;
             if ("PUBLISH".equalsIgnoreCase(request.getAction())) {
                 result = strategy.publish(botId, request.getPublishData(), currentUid, spaceId);
             } else if ("OFFLINE".equalsIgnoreCase(request.getAction())) {
@@ -297,56 +297,6 @@ public class BotPublishController {
         return ApiResult.success(result);
     }
 
-    /**
-     * Generate WeChat Official Account authorization URL
-     */
-    @Operation(
-            summary = "Get WeChat authorization URL",
-            description = "Generate authorization URL for binding bot to WeChat Official Account for publishing")
-    @RateLimit(limit = 10, window = 60, dimension = "USER")
-    @PostMapping("/wechat/auth-url")
-    public ApiResult<WechatAuthUrlResponseDto> getWechatAuthUrl(
-            @Valid @RequestBody WechatAuthUrlRequestDto request) {
-
-        String uid = RequestContextUtil.getUID();
-        Long spaceId = SpaceInfoUtil.getSpaceId();
-
-        log.info("Generating WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}",
-                request.getBotId(), request.getAppid(), request.getRedirectUrl(), uid, spaceId);
-
-        WechatAuthUrlResponseDto result = botPublishService.getWechatAuthUrl(
-                request.getBotId(), request.getAppid(), request.getRedirectUrl(), uid, spaceId);
-
-        log.info("WeChat authorization URL generated successfully: botId={}", request.getBotId());
-        return ApiResult.success(result);
-    }
-
-    // ==================== MCP Publishing Management ====================
-
-
-
-    /**
-     * Publish bot as MCP service
-     */
-    @Operation(
-            summary = "Publish bot to MCP",
-            description = "Publish workflow bot as MCP (Model Context Protocol) service with custom server configuration")
-    @RateLimit(limit = 10, window = 60, dimension = "USER")
-    @PostMapping("/mcp/publish")
-    public ApiResult<Void> publishMcp(@Valid @RequestBody McpPublishRequestDto request) {
-
-        String currentUid = RequestContextUtil.getUID();
-        Long spaceId = SpaceInfoUtil.getSpaceId();
-
-        log.info("Publishing bot to MCP: botId={}, serverName={}, uid={}, spaceId={}",
-                request.getBotId(), request.getServerName(), currentUid, spaceId);
-
-        mcpService.publishMcp(request, currentUid, spaceId);
-
-        log.info("Bot published to MCP successfully: botId={}, serverName={}",
-                request.getBotId(), request.getServerName());
-        return ApiResult.success();
-    }
 
     // ==================== Trace Log Management ====================
 

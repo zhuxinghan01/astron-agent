@@ -22,7 +22,7 @@ public class MarketPublishStrategy implements PublishStrategy {
     private final BotPublishService botPublishService;
 
     @Override
-    public ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to market: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
@@ -39,8 +39,10 @@ public class MarketPublishStrategy implements PublishStrategy {
             // Delegate to existing market publish logic
             botPublishService.updatePublishStatus(botId, updateDto, currentUid, spaceId);
             
-            log.info("Market publish completed successfully: botId={}", botId);
-            return ApiResult.success("Bot published to market successfully");
+           log.info("Market publish completed successfully: botId={}", botId);
+           
+           log.info("Market publish completed successfully: botId={}", botId);
+           return ApiResult.success(null); // No specific data needed for market publish
             
         } catch (Exception e) {
             log.error("Market publish failed: botId={}, error={}", botId, e.getMessage(), e);
@@ -49,7 +51,7 @@ public class MarketPublishStrategy implements PublishStrategy {
     }
 
     @Override
-    public ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Offlining bot from market: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
@@ -60,8 +62,10 @@ public class MarketPublishStrategy implements PublishStrategy {
             // Delegate to existing market offline logic
             botPublishService.updatePublishStatus(botId, updateDto, currentUid, spaceId);
             
-            log.info("Market offline completed successfully: botId={}", botId);
-            return ApiResult.success("Bot removed from market successfully");
+           log.info("Market offline completed successfully: botId={}", botId);
+           
+           log.info("Market offline completed successfully: botId={}", botId);
+           return ApiResult.success(null); // No specific data needed for market offline
             
         } catch (Exception e) {
             log.error("Market offline failed: botId={}, error={}", botId, e.getMessage(), e);
