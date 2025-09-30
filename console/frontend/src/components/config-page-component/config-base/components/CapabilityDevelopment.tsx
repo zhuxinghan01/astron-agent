@@ -1001,7 +1001,7 @@ function CapabilityDevelopment(props: CapabilityDevelopmentProps) {
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
                       ) => {
-                        inputExample[0] = event.target.value.trim();
+                        inputExample[0] = event.target.value;
                         setInputExample([...inputExample]);
                       }}
                     />
@@ -1018,7 +1018,7 @@ function CapabilityDevelopment(props: CapabilityDevelopmentProps) {
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
                       ) => {
-                        inputExample[1] = event.target.value.trim();
+                        inputExample[1] = event.target.value;
                         setInputExample([...inputExample]);
                       }}
                     />
@@ -1033,7 +1033,7 @@ function CapabilityDevelopment(props: CapabilityDevelopmentProps) {
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
                       ) => {
-                        inputExample[2] = event.target.value.trim();
+                        inputExample[2] = event.target.value;
                         setInputExample([...inputExample]);
                       }}
                     />

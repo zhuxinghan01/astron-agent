@@ -1,16 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { message, Modal, Popover } from 'antd';
-// import VoiceTraining from './voice-training'; // TODO: 确定是否使用
-// import TrainingGuide from './training-guide';
 import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useLocaleStore } from '@/store/spark-store/locale-store';
 import { vcnCnJson, vcnCnJsonEn, vcnEnJson, vcnOther } from './vcn';
 import { localeConfig } from '@/locales/localeConfig';
-import {
-  getV2CustomVCNList,
-  deleteCustomVCN,
-  updateCustomVCN,
-} from '@/services/spark-common';
 
 import closeIcon from '@/assets/imgs/config-components/close-feedback.png';
 import listenImg from '@/assets/svgs/listen_play.svg';
@@ -56,7 +49,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
   const audioRef: any = useRef(null);
 
   useEffect(() => {
-    getMyVoicerList();
     if (localeNow === 'en') {
       setVcnDisplay(vcnCnJsonEn);
     } else {
@@ -69,27 +61,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
     botCreateCallback && botCreateCallback(botCreateActiveV);
     changeSpeakerModal(false);
   };
-
-  const getMyVoicerList = () => {
-    getV2CustomVCNList()
-      .then(res => {
-        setMySpeaker(res);
-      })
-      .catch(err => {
-        message.error(err.msg);
-        console.log(err);
-      });
-  };
-
-  const changeAudioBtn = (status: boolean) => {
-    setIsAudioPlaying(false);
-    setPlayActive('');
-    console.log('playActive=>', '惊不惊喜，意不意外');
-  };
-
-  useEffect(() => {
-    console.log('playActive=>', playActive);
-  }, [playActive]);
 
   /**
    *
@@ -130,69 +101,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
     }, 100);
   };
 
-  const deleteMySpeaker = (item: any) => {
-    confirm({
-      title: '删除发音人',
-      content: '删除后，该发音人将无法使用，是否确认删除？',
-      onOk() {
-        deleteCustomVCN({ vcnId: item.vcnId })
-          .then(res => {
-            message.success('删除成功');
-            getMyVoicerList();
-          })
-          .catch(err => {
-            message.error(err.msg);
-            console.log(err);
-          });
-      },
-      onCancel() {
-        console.log('Cancel');
-      },
-    });
-  };
-
-  const closeTrainModal = () => {
-    setShowVoiceTraining(false);
-    setIsAudioPlaying(false);
-    getMyVoicerList();
-  };
-
-  const createMyVCN = () => {
-    setShowTrainingGuide(false);
-    getMyVoicerList();
-    setShowVoiceTraining(true);
-  };
-
-  const continueRecord = (item: any) => {
-    setTaskId(item.taskId);
-    setShowVoiceTraining(true);
-  };
-
-  const editVCN = (e: any, item: any) => {
-    e.stopPropagation();
-    setEditVCNId(item.vcnId);
-    setEditVCNName(item.name);
-  };
-
-  const updateVCNName = (e: { stopPropagation: () => void }, item: any) => {
-    e.stopPropagation();
-    const regex = /^[\u4e00-\u9fa5a-zA-Z0-9\s]+$/;
-    if (!regex.test(editVCNName)) {
-      message.info('发音人名称仅支持中英文、空格、数字');
-      return;
-    }
-    updateCustomVCN({ vcnId: item.vcnId, name: editVCNName })
-      .then(res => {
-        message.success('修改成功');
-        setEditVCNId('');
-        getMyVoicerList();
-      })
-      .catch(err => {
-        message.error(err.msg);
-        console.log(err);
-      });
-  };
-
   // 关闭发音人时，播放暂停
   const closeSpeakerModal = () => {
     setIsAudioPlaying(false);
@@ -204,17 +112,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
   return (
     <div className={styles.speaker_modal}>
       <audio src="" ref={audioRef} onEnded={() => setPlayActive('')} />
-      {/* {showVoiceTraining && (
-        <VoiceTraining changeTrainModal={closeTrainModal} taskId={taskId} />
-      )} */}
-      {/* {showTrainingGuide && (
-        <TrainingGuide
-          changeTrainModal={() => {
-            setShowTrainingGuide(false);
-          }}
-          onCreateVoice={createMyVCN}
-        />
-      )} */}
       {!showVoiceTraining && !showTrainingGuide && (
         <div className={styles.speaker_modal_content}>
           <div className={styles.modal_header}>
