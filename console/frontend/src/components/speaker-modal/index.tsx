@@ -1,13 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { message, Switch, Select, Slider, Modal, Popover } from 'antd';
-import type { SliderMarks } from 'antd/es/slider';
+import { message, Modal, Popover } from 'antd';
 // import VoiceTraining from './voice-training'; // TODO: 确定是否使用
 // import TrainingGuide from './training-guide';
-import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useLocaleStore } from '@/store/spark-store/locale-store';
 import { vcnCnJson, vcnCnJsonEn, vcnEnJson, vcnOther } from './vcn';
-import { FormattedMessage } from 'react-intl';
 import { localeConfig } from '@/locales/localeConfig';
 import {
   getV2CustomVCNList,
@@ -21,6 +18,7 @@ import listenStopImg from '@/assets/svgs/listen_stop.svg';
 
 import styles from './index.module.scss';
 import { ReactSVG } from 'react-svg';
+import { useTranslation } from 'react-i18next';
 
 interface SpeakerModalProps {
   changeSpeakerModal: any;
@@ -39,8 +37,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
 }) => {
   const activeV = useSparkCommonStore(state => state.activeVcn); // 选中的发音人
   const setActiveV = useSparkCommonStore(state => state.setActiveVcn);
-  const bgm = useSparkCommonStore(state => state.vcnBgm); // 语音背景音乐
-  const setBgm = useSparkCommonStore(state => state.setVcnBgm);
   const { locale: localeNow } = useLocaleStore();
   const currentActiveV = botCreateMode ? botCreateActiveV : activeV;
 
@@ -56,30 +52,10 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
   const [editVCNName, setEditVCNName]: any = useState(''); // 编辑的训练id
   const [audioInfo, setAudioInfo] = useState<any>({ assignVcn: '' });
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
-
-  const bgmList = [
-    {
-      label: localeConfig?.[localeNow]?.softMusic,
-      value:
-        'https://1024-cdn.xfyun.cn/2022_1024%2Fcms%2F16828512103618230%2Fqrshmusic5.mp3',
-    },
-    {
-      label: 'inspiring-cinematic-uplifting-piano-short',
-      value:
-        'https://1024-cdn.xfyun.cn/2022_1024%2Fcms%2F16828487315849114%2Finspiring-cinematic-uplifting-piano-short-8701.mp3',
-    },
-  ];
+  const { t } = useTranslation();
   const audioRef: any = useRef(null);
 
-  const marks: SliderMarks = {
-    35: localeConfig?.[localeNow]?.slowVoice,
-    50: localeConfig?.[localeNow]?.defaultVoice,
-    65: localeConfig?.[localeNow]?.fastVoice,
-  };
-
   useEffect(() => {
-    if (!bgm) setShowBGM(false);
-    else setShowBGM(true);
     getMyVoicerList();
     if (localeNow === 'en') {
       setVcnDisplay(vcnCnJsonEn);
@@ -152,25 +128,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
     setTimeout(() => {
       setPlayActive(vcn);
     }, 100);
-  };
-
-  const changeBGM = (checked: any) => {
-    setShowBGM(checked);
-    setBgm(checked ? bgmList[0]?.value : '');
-    if (playActive === 'bgm') {
-      audioRef.current.pause();
-      setPlayActive('');
-      return;
-    }
-  };
-
-  const selectMusic = (value: any) => {
-    setBgm(value);
-  };
-
-  const changeSpeed = (value: any) => {
-    if (!botCreateMode) setActiveV({ ...activeV, speed: value });
-    else setBotCreateActiveV({ ...botCreateActiveV, speed: value });
   };
 
   const deleteMySpeaker = (item: any) => {
@@ -261,12 +218,10 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
       {!showVoiceTraining && !showTrainingGuide && (
         <div className={styles.speaker_modal_content}>
           <div className={styles.modal_header}>
-            <FormattedMessage id="chooseVoice" />
+            {t('chooseVoice')}
             <img src={closeIcon} alt="" onClick={closeSpeakerModal} />
           </div>
-          <div className={styles.speaker_type}>
-            <FormattedMessage id="Chinese" />
-          </div>
+          <div className={styles.speaker_type}>{t('Chinese')}</div>
           <div className={styles.speaker_container}>
             {vcnDisplay.map((item: any) => (
               <div
@@ -307,21 +262,14 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
                     src={playActive === item?.vcn ? listenStopImg : listenImg}
                     alt=""
                   />
-                  {playActive === item?.vcn ? (
-                    '播放中'
-                  ) : (
-                    <FormattedMessage id="voiceTry" />
-                  )}
+                  {playActive === item?.vcn ? t('playing') : t('voiceTry')}
                 </div>
               </div>
             ))}
           </div>
-          <div className={styles.speaker_type}>
-            <FormattedMessage id="English" />
-          </div>
+          <div className={styles.speaker_type}>{t('English')}</div>
           <div className={styles.speaker_container}>
             {vcnEnJson.map((item: any) => (
-              // eslint-disable-next-line react/jsx-key
               <div
                 key={item.vcn}
                 className={`${styles.speaker_item} ${
@@ -353,23 +301,19 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
                     src={playActive === item?.vcn ? listenStopImg : listenImg}
                     alt=""
                   />
-                  {playActive === item?.vcn ? (
-                    '播放中'
-                  ) : (
-                    <FormattedMessage id="voiceTry" />
-                  )}
+                  {playActive === item?.vcn ? t('playing') : t('voiceTry')}
                 </div>
               </div>
             ))}
           </div>
 
           <div className={styles.speaker_type}>
-            <FormattedMessage id="Multilingual" />
+            {t('Multilingual')}
             <Popover
               color="#626366"
               overlayClassName="spearker-modal-type-tip-pop"
               title={null}
-              content={<FormattedMessage id="MultilingualTip" />}
+              content={t('MultilingualTip')}
             >
               <div className={styles.icon_wrap}>
                 <ReactSVG
@@ -382,7 +326,6 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
 
           <div className={styles.speaker_container}>
             {vcnOther.map((item: any) => (
-              // eslint-disable-next-line react/jsx-key
               <div key={item.vcn} className={`${styles.speaker_item}`}>
                 <div>
                   <img
@@ -404,70 +347,13 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
                     src={playActive === item?.vcn ? listenStopImg : listenImg}
                     alt=""
                   />
-                  {playActive === item?.vcn ? (
-                    '播放中'
-                  ) : (
-                    <FormattedMessage id="voiceTry" />
-                  )}
+                  {playActive === item?.vcn ? t('playing') : t('voiceTry')}
                 </div>
               </div>
             ))}
           </div>
-
-          <div className={styles.speaker_type}>
-            <FormattedMessage id="voiceAdjust" />
-          </div>
-          <div className={styles.spearker_speed}>
-            <Slider
-              max={65}
-              min={35}
-              marks={marks}
-              step={15}
-              onAfterChange={changeSpeed}
-              defaultValue={currentActiveV?.speed}
-            />
-          </div>
-          {!botCreateMode && (
-            <div className={styles.bgm_box}>
-              <div className={styles.speaker_type}>
-                <span>
-                  <FormattedMessage id="bgMusicVoice" />
-                </span>
-                <Switch checked={showBGM} onChange={changeBGM} />
-              </div>
-              <div className={styles.speaker_container}>
-                {showBGM && (
-                  <div className={styles.bgm_wrap}>
-                    <span className={styles.bgm_label}>
-                      <FormattedMessage id="bgMusicChoose" />
-                    </span>
-                    <span
-                      className={styles.bgm_play}
-                      onClick={(e: any) => {
-                        e.stopPropagation();
-                        audition(bgm, 'bgm');
-                      }}
-                    >
-                      {playActive === 'bgm' ? (
-                        <PauseCircleOutlined />
-                      ) : (
-                        <PlayCircleOutlined />
-                      )}
-                    </span>
-                    <Select
-                      className="bsmlist"
-                      defaultValue={bgm}
-                      style={{ width: 220, height: 43 }}
-                      onChange={selectMusic}
-                      options={bgmList}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           <div className={styles.confirm_btn} onClick={() => setSpeaker()}>
-            <FormattedMessage id="btnOk" />
+            {t('btnOk')}
           </div>
         </div>
       )}
