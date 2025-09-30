@@ -176,8 +176,8 @@ const MessageList = (props: {
           .map((item: MessageListType, index: number) => {
             return (
               <div className="w-full" key={index}>
-                {item?.reqId === 'USER' && renderReq(item)}
-                {item?.reqId === 'BOT' && renderResp(item)}
+                {item?.reqType === 'USER' && renderReq(item)}
+                {item?.reqType === 'BOT' && renderResp(item)}
               </div>
             );
           })}

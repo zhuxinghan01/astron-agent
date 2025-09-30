@@ -40,6 +40,7 @@ const transition = {
     stopReading: '停止朗读',
     read: '朗读',
     copy: '复制',
+    reAnswer: '重新回答',
   },
   chatWindow: {
     clearChatHistoryFailed: '清空聊天记录失败',
