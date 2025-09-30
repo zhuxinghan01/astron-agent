@@ -1,14 +1,12 @@
 from typing import ClassVar
 
-from pydantic import Field
-
 from common.otlp.log_trace.node_log import NodeLog
 from common.otlp.log_trace.node_trace_log import NodeTraceLog
 
 
 class WorkflowLog(NodeTraceLog):
 
-    workflow_stream_node_types: ClassVar[list] = Field(default=["message", "node-end"])
+    workflow_stream_node_types: ClassVar[list] = ["message", "node-end"]
 
     def add_node_log(self, node_logs: list[NodeLog]) -> None:
         if not node_logs:
