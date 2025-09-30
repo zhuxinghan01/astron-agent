@@ -65,7 +65,7 @@
         a.bot_desc AS botDesc,
         a.version,
         -- 智能体状态映射：0=下架，1=上架，NULL=未发布
-        COALESCE(b.bot_status, 0) AS botStatus,
+        b.bot_status AS botStatus,
         a.create_time AS createTime,
         a.update_time AS updateTime,
         b.publish_channels AS publishChannels
@@ -101,7 +101,7 @@
             a.bot_name AS botName,
             a.bot_desc AS botDesc,
             a.version,
-            COALESCE(b.bot_status, 0) AS botStatus,
+            b.bot_status AS botStatus,
             a.create_time AS createTime,
             a.update_time AS updateTime,
             b.publish_channels AS publishChannels

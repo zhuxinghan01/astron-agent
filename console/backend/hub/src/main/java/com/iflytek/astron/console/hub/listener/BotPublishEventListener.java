@@ -1,5 +1,6 @@
-package com.iflytek.astron.console.hub.event;
+package com.iflytek.astron.console.hub.listener;
 
+import com.iflytek.astron.console.hub.event.BotPublishStatusChangedEvent;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

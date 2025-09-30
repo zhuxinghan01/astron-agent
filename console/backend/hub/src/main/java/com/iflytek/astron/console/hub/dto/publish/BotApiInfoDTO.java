@@ -41,4 +41,3 @@ public class BotApiInfoDTO {
     private String flowId;
 
 }
-

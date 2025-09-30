@@ -1,5 +1,7 @@
 package com.iflytek.astron.console.commons.constant;
 
+import lombok.Getter;
+
 /**
  * Response code enumeration class
  */
@@ -144,6 +146,7 @@ public enum ResponseEnum {
     INVITE_UNSUPPORTED_TYPE(64023, "invite.unsupported.type"),
     INVITE_PARAMETER_EXCEPTION(64024, "invite.parameter.exception"),
     INVITE_SPACE_ALREADY_DELETED(64025, "invite.space.already.deleted"),
+    INVITE_PLEASE_UPLOAD_USERNAMES(64026, "invite.please.upload.usernames"),
 
     // Space management related errors
     SPACE_NAME_EXISTS(65001, "space.name.exists"),
@@ -373,20 +376,14 @@ public enum ResponseEnum {
     // System errors 9xxxx
     SYSTEM_ERROR(99999, "system.error");
 
+    @Getter
     private final int code;
 
+    @Getter
     private final String messageKey;
 
     ResponseEnum(int code, String messageKey) {
         this.code = code;
         this.messageKey = messageKey;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessageKey() {
-        return messageKey;
     }
 }

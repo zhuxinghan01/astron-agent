@@ -32,9 +32,13 @@ public class AppMstServiceImpl implements AppMstService {
     @Override
     public void insert(String uid, String appId, String appName, String appDescribe, String apiKey, String apiSecret) {
         AppMst appMst = AppMst.builder()
-                .uid(uid).appId(appId).appName(appName)
-                .appDescribe(appDescribe).appKey(apiKey)
-                .appSecret(apiSecret).isDelete(0)
+                .uid(uid)
+                .appId(appId)
+                .appName(appName)
+                .appDescribe(appDescribe)
+                .appKey(apiKey)
+                .appSecret(apiSecret)
+                .isDelete(0)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
                 .build();

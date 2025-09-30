@@ -55,11 +55,11 @@ public class ChatHistoryMultiModalServiceImpl implements ChatHistoryMultiModalSe
     }
 
     /**
-    * Set bot last session context
-    *
-    * @param records List of chat request model data transfer objects
-    * @param botId Bot ID
-    */
+     * Set bot last session context
+     *
+     * @param records List of chat request model data transfer objects
+     * @param botId Bot ID
+     */
     public void setBotLastContext(List<ChatReqModelDto> records, Integer botId) {
         if (botId == null || 0 == botId) {
             return;
