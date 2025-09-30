@@ -40,6 +40,7 @@ const transition = {
     stopReading: 'Stop Reading',
     read: 'Read',
     copy: 'Copy',
+    reAnswer: 'Re-answer',
   },
   chatWindow: {
     clearChatHistoryFailed: 'Failed to clear chat history',

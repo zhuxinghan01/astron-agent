@@ -203,7 +203,7 @@ const PromptTry = forwardRef<
           id: Date.now(),
           message: form.get('text')?.toString() || '',
           updateTime: new Date().toISOString(),
-          reqId: 'USER',
+          reqType: 'USER',
         },
       ]);
       // 追加一个空的机器人消息，用于流式更新
@@ -212,7 +212,7 @@ const PromptTry = forwardRef<
         {
           id: Date.now() + 1,
           message: '',
-          reqId: 'BOT',
+          reqType: 'BOT',
           updateTime: new Date().toISOString(),
         },
       ]);
@@ -300,6 +300,16 @@ const PromptTry = forwardRef<
     // 停止回答
     const stopAnswer = () => {
       controllerRef?.current.abort();
+      setMessageList(prev => {
+        const updated = [...prev];
+        const last = updated.length - 1;
+        updated[last] = {
+          ...updated[last],
+          sid: currentSid?.current?.toString() || '',
+          message: updated[last]?.message || '',
+        };
+        return updated;
+      });
       setIsLoading(false);
       setIsCompleted(true);
     };
