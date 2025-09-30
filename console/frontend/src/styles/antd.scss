@@ -1694,3 +1694,37 @@ input[type='number']::-webkit-outer-spin-button {
     }
   }
 }
+
+.dropdown {
+  width: max-content;
+  .ant-dropdown-menu {
+    .ant-dropdown-menu-item {
+      padding: 4px;
+    }
+    .ant-dropdown-menu-item[data-type='delete'] {
+      .delete-icon {
+        background-image: url('@/assets/imgs/workflow/delete.svg');
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: auto;
+      }
+      .delete-text {
+        color: #99a1b6;
+      }
+      &:hover {
+        background-color: #feedec;
+        .delete-icon {
+          background-image: url('@/assets/imgs/workflow/delete_hover.svg');
+        }
+        .delete-text {
+          color: #f74e43;
+        }
+      }
+    }
+    .ant-dropdown-menu-item:not([data-type='delete']) {
+      &:hover {
+        background-color: #f2f5fe;
+      }
+    }
+  }
+}

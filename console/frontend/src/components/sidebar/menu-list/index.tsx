@@ -321,7 +321,7 @@ const useMenuListHelpers = (
 
   const handleDeleteChatConfirm = () => {
     deleteChatList({
-      chatListId: chatListId,
+      chatListId: Number(chatListId),
     })
       .then((res: any) => {
         setDeleteOpen(false);

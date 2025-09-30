@@ -56,7 +56,6 @@ interface SidebarProps {
       isRead: number;
     }>;
   };
-  onDocumentClick?: () => void;
 }
 
 const Sidebar = ({
@@ -75,10 +74,6 @@ const Sidebar = ({
   // Bottom login props
   user,
   OrderTypeComponent,
-
-  // Icon entry props
-  myMessage,
-  onDocumentClick,
 }: SidebarProps): ReactElement => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPersonCenterOpen, setIsPersonCenterOpen] = useState(false);
@@ -200,8 +195,6 @@ const Sidebar = ({
 
         {/* Icon Entry */}
         <IconEntry
-          myMessage={myMessage}
-          onDocumentClick={onDocumentClick}
           onMessageClick={() => {
             setNoticeModalVisible(true);
           }}

@@ -27,7 +27,7 @@ import UseToolsInfo from './use-tools-info';
 import WorkflowNodeOptions from './workflow-node-options';
 import { formatFileSize, getFileIcon } from '@/utils';
 import FilePreview from './file-preview';
-
+import ResqBottomButtons from './resq-bottom-buttons';
 //渲染全新开始
 const renderRestart = (): ReactElement => {
   return (
@@ -271,6 +271,7 @@ const MessageList = (props: {
           </div>
         </div>
         {item?.sid && <SourceInfoBox traceSource={item?.traceSource} />}
+        {item?.sid && <ResqBottomButtons message={item} />}
       </div>
     );
   };
