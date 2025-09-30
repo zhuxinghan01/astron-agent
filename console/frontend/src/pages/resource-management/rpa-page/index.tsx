@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import RetractableInput from '@/components/ui/global/retract-table-input';
 import { jumpTologin } from '@/utils/http';
 import { useRpaPage } from './hooks/use-rpa-page';
-import { Button, Divider, Dropdown, Modal, Space } from 'antd';
+import { Button, Divider, Dropdown, message, Modal, Space } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
 
 import useUserStore, { User } from '@/store/user-store';
@@ -130,11 +130,14 @@ export const RpaCard = ({
         Modal.confirm({
           title: t('rpa.deleteRpa'),
           content: t('rpa.deleteRpaConfirm'),
-          onOk: () => {
-            deleteRpa(record.id).then(() => {
-              refresh?.();
-            });
-          },
+          onOk: () =>
+            deleteRpa(record.id)
+              .then(() => {
+                refresh?.();
+              })
+              .catch(error => {
+                message.error(error.message);
+              }),
         });
       },
     ],

@@ -61,7 +61,7 @@ export const useColumns = ({
       key: 'default',
       width: '40%',
       render: (_, record) => (
-        <div className="w-full">
+        <div className="w-full pb-[8px]">
           {record?.type === 'object' || record?.type === 'array' ? null : (
             <Input
               placeholder="请输入参数值"
