@@ -23,8 +23,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * MCP publish strategy implementation
@@ -86,9 +92,9 @@ public class McpPublishStrategy implements PublishStrategy {
             String versionName = getVersionName(botId, currentUid, spaceId);
             log.info("Got version name for MCP publish: botId={}, versionName={}", botId, versionName);
 
-            // 5. Get cookies (corresponds to MassUtil.getRequestCookies(request))
-            // Note: In strategy pattern, we don't have HttpServletRequest, so we'll use empty cookie for now
-            String cookie = ""; // TODO: Get actual cookies if needed
+           // 5. Get cookies (corresponds to MassUtil.getRequestCookies(request))
+           // Use RequestContextHolder to get current request context
+           String cookie = getCurrentRequestCookies();
             
             // 6. Register MCP (corresponds to massUtil.registerMcp)
             JSONObject mcpResult = MaasUtil.registerMcp(cookie, chainInfo, mcpRequest, versionName);
@@ -319,12 +325,41 @@ public class McpPublishStrategy implements PublishStrategy {
     }
 
 
-    /**
-     * Generate default version name as fallback
-     */
-    private String generateDefaultVersion() {
-        return "v" + System.currentTimeMillis();
-    }
+   /**
+    * Generate default version name as fallback
+    */
+   private String generateDefaultVersion() {
+       return "v" + System.currentTimeMillis();
+   }
+
+   /**
+    * Get cookies from current HTTP request context
+    * This is a better practice than passing HttpServletRequest directly to strategy
+    */
+   private String getCurrentRequestCookies() {
+       try {
+           ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+           if (attributes == null) {
+               log.warn("No request context available, using empty cookies");
+               return "";
+           }
+           
+           HttpServletRequest request = attributes.getRequest();
+           Cookie[] cookies = request.getCookies();
+           
+           if (cookies == null || cookies.length == 0) {
+               return "";
+           }
+           
+           return Arrays.stream(cookies)
+                   .map(cookie -> cookie.getName() + "=" + cookie.getValue())
+                   .collect(Collectors.joining("; "));
+                   
+       } catch (Exception e) {
+           log.error("Failed to get request cookies", e);
+           return "";
+       }
+   }
 
     /**
      * Parse publish data to McpPublishRequestDto
