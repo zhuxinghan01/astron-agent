@@ -194,7 +194,9 @@ class CBGRAGStrategy(RAGStrategy):
             List of split chunks
         """
         if fileUrl is None:
-            raise ProtocolParamException(msg="fileUrl is required")
+            fileUrl = ""
+            if not kwargs.get("file"):
+                raise ProtocolParamException(msg="file is required")
 
         data = []
         wiki_split_extends: Dict[str, Any] = {}
