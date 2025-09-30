@@ -21,8 +21,7 @@ while maintaining security by not exposing internal system details.
 from fastapi import Request, Response
 from fastapi.exceptions import RequestValidationError
 
-from workflow.domain.entities.response import Resp
-from workflow.exception.errors.err_code import CodeEnum
+from workflow.extensions.fastapi.base import JSONResponseBase
 from workflow.extensions.otlp.trace.span import Span
 
 
@@ -65,19 +64,6 @@ async def validation_exception_handler(
         # Log validation errors to the tracing system for monitoring and debugging
         span_ctx.add_error_events(attributes={"errors": "\n".join(errors_list)})
 
-        # Handle chat endpoints with SSE response format for real-time communication
-        if request.url.path in [
-            "/workflow/v1/debug/chat/completions",
-            "/workflow/v1/chat/completions",
-            "/workflow/v1/debug/resume",
-            "/workflow/v1/resume",
-        ]:
-            return Resp.error_sse(
-                CodeEnum.PARAM_ERROR.code, "\n".join(errors_list), span_ctx.sid
-            )
-
-        # Handle other endpoints with standard JSON response format
-        else:
-            return Resp.error(
-                CodeEnum.PARAM_ERROR.code, "\n".join(errors_list), span_ctx.sid
-            )
+        return JSONResponseBase.generate_error_response(
+            request.url.path, "\n".join(errors_list), span_ctx.sid
+        )
