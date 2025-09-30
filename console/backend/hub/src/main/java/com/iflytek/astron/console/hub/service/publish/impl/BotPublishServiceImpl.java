@@ -14,6 +14,7 @@ import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
 import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
+import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotMarketMapper;
@@ -67,6 +68,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final WechatThirdpartyService wechatThirdpartyService;
     private final ApplicationEventPublisher eventPublisher;
     private final WorkflowInputService workflowInputService;
+    private final UserLangChainDataService userLangChainDataService;
 
     // Version management related
     private final WorkflowVersionMapper workflowVersionMapper;
@@ -141,7 +143,7 @@ public class BotPublishServiceImpl implements BotPublishService {
             throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
         }
 
-        // 2. Query current publish status (may be null for never published bots)
+        // 2. Query current publish status (maybe null for never published bots)
         BotPublishQueryResult queryResult = chatBotMarketMapper.selectBotDetail(botId, currentUid, spaceId);
         Integer currentStatus = queryResult != null ? queryResult.getBotStatus() : null;
         String currentChannels = queryResult != null ? queryResult.getPublishChannels() : null;
@@ -150,27 +152,27 @@ public class BotPublishServiceImpl implements BotPublishService {
         Integer newStatus;
         String newChannels;
 
-        if ("PUBLISH".equals(updateDto.getAction())) {
+        if (ShelfStatusEnum.isPublishAction(updateDto.getAction())) {
             // Publish to market
             // null status means never published, treat as off-shelf, can be published
             Integer effectiveStatus = currentStatus != null ? currentStatus : ShelfStatusEnum.OFF_SHELF.getCode();
 
-            if (effectiveStatus.equals(ShelfStatusEnum.ON_SHELF.getCode())) {
+            if (ShelfStatusEnum.isOnShelf(effectiveStatus)) {
                 log.warn("Bot already published, no need to repeat operation: botId={}", botId);
                 return;
             }
 
             // Only offline status (including never published) can be published to market
-            if (!effectiveStatus.equals(ShelfStatusEnum.OFF_SHELF.getCode())) {
+            if (!ShelfStatusEnum.isOffShelf(effectiveStatus)) {
                 throw new BusinessException(ResponseEnum.BOT_STATUS_NOT_ALLOW_PUBLISH);
             }
 
             newStatus = ShelfStatusEnum.ON_SHELF.getCode();
             newChannels = publishChannelService.updatePublishChannels(currentChannels, PublishChannelEnum.MARKET.getCode(), true);
 
-        } else if ("OFFLINE".equals(updateDto.getAction())) {
+        } else if (ShelfStatusEnum.isOfflineAction(updateDto.getAction())) {
             // Take offline from market
-            if (currentStatus == null || !currentStatus.equals(ShelfStatusEnum.ON_SHELF.getCode())) {
+            if (currentStatus == null || !ShelfStatusEnum.isOnShelf(currentStatus)) {
                 throw new BusinessException(ResponseEnum.BOT_STATUS_NOT_ALLOW_OFFLINE);
             }
 
@@ -196,11 +198,12 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Bot publish status updated successfully: botId={}, {} -> {}, channels: {} -> {}",
                 botId, currentStatus, newStatus, currentChannels, newChannels);
 
-        // Publish status change event
+        // Publish status change event (workflow logic will be handled by WorkflowBotPublishListener)
         eventPublisher.publishEvent(new BotPublishStatusChangedEvent(
                 this, botId, currentUid, spaceId, updateDto.getAction(),
                 currentStatus, newStatus, newChannels));
     }
+
 
     // ==================== Version Management ====================
 
@@ -212,15 +215,22 @@ public class BotPublishServiceImpl implements BotPublishService {
         // 1. Permission validation - ensure user has permission to access the bot
         validateBotPermission(botId, uid, spaceId);
 
-        // 2. Pagination query version list - query workflow_version table
-        Page<WorkflowVersion> pageParam = new Page<>(page, size);
-        Page<WorkflowVersion> resultPage = workflowVersionMapper.selectPageByCondition(pageParam, String.valueOf(botId));
+        // 2. Get flowId from botId
+        String flowId = userLangChainDataService.findFlowIdByBotId(botId);
+        if (flowId == null || flowId.trim().isEmpty()) {
+            log.warn("No flowId found for botId={}", botId);
+            return PageResponse.of(page, size, 0L, new ArrayList<>());
+        }
 
-        // 3. Use MapStruct batch conversion to VO
+        // 3. Pagination query version list - query workflow_version table using flowId
+        Page<WorkflowVersion> pageParam = new Page<>(page, size);
+        Page<WorkflowVersion> resultPage = workflowVersionMapper.selectPageByCondition(pageParam, flowId);
+
+        // 4. Use MapStruct batch conversion to VO
         List<WorkflowVersion> versions = resultPage.getRecords();
         List<BotVersionVO> versionList = workflowVersionConverter.toVersionVOList(versions);
 
-        log.info("Query workflow version list successful: botId={}, total={}", botId, resultPage.getTotal());
+        log.info("Query workflow version list successful: botId={}, flowId={}, total={}", botId, flowId, resultPage.getTotal());
         return PageResponse.of(page, size, resultPage.getTotal(), versionList);
     }
 
