@@ -345,6 +345,7 @@ export const en = {
     releaseManagement: 'Release Management',
     modelManagement: 'Model Management',
     resourceManagement: 'Resource Management',
+    appManagement: 'App Management',
 
     // Order type translations
     orderTypes: {

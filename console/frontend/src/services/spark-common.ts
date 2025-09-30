@@ -367,7 +367,7 @@ export const getDataSource = () => {
 // 生成输入示例
 export const generateInputExample = (params: any) => {
   return http({
-    url: `/bot/generateInputExample`,
+    url: `/bot/generate-input-example`,
     method: 'POST',
     data: params,
     headers: {
