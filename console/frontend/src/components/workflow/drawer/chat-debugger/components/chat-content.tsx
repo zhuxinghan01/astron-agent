@@ -511,7 +511,6 @@ const MessageReply = ({
 };
 
 const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
-  let optionId = useRef<string | undefined>('');
   const currentFlow = useFlowsManager(state => state.currentFlow);
   const [sid, setSid] = useState<string | undefined>('');
   const advancedConfig = useMemo<ChatContentAdvancedConfig>(() => {
@@ -558,7 +557,6 @@ const useChatContent = ({ chatList, setChatList }): UseChatContentProps => {
     }
   }, [currentFlow?.advancedConfig]);
   const copyData = useMemoizedFn((params: ChatListItemExtended): void => {
-    optionId = params.id;
     const clickData = chatList.find(item => item.id === params.id) as
       | ChatListItemExtended
       | undefined;

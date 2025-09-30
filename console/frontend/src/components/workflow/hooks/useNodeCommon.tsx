@@ -154,7 +154,7 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   // 节点参数
   const nodeParam = useMemo(() => {
     return data?.nodeParam || {};
-  }, [data]);
+  }, [data?.nodeParam]);
 
   const nodeIcon = useMemo(() => {
     let nodeFinallyType = '';

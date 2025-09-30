@@ -13,6 +13,7 @@ import { useMemoizedFn } from 'ahooks';
 import JsonMonacoEditor from '@/components/monaco-editor/JsonMonacoEditor';
 import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
 import { getFixedUrl, getAuthorization } from '@/components/workflow/utils';
+import { useAICodeInputBoxProps } from '@/components/workflow/types';
 
 // 类型导入
 import {
@@ -39,7 +40,7 @@ const CodeIDEAHeader = ({
   value,
   setAiCodeInputShow,
   aiCodeInputShow,
-}) => {
+}): React.ReactElement => {
   const { t } = useTranslation();
   const setCodeIDEADrawerlInfo = useFlowsManager(
     state => state.setCodeIDEADrawerlInfo
@@ -101,7 +102,7 @@ const CodeEditor = ({
   value,
   canvasesDisabled,
   handleChangeNodeParam,
-}) => {
+}): React.ReactElement => {
   return (
     <div className="flex-1 global-monaco-editor-python">
       <MonacoEditor
@@ -135,7 +136,10 @@ const useAICodeInputBox = ({
   setRePrompt,
   setPrompt,
   handleChangeNodeParam,
-}) => {
+  errCodeMsg,
+  textQueue,
+}): useAICodeInputBoxProps => {
+  const { t } = useTranslation();
   const extractInputs = useMemoizedFn((functionString: string): string[] => {
     const pattern = /\((.*?)\)/;
     const match = functionString.match(pattern);
@@ -235,7 +239,9 @@ const AICodeInputBox = ({
   temporaryStorageCode,
   generateAIcode,
   rePrompt,
-}) => {
+  errCodeMsg,
+  textQueue,
+}): React.ReactElement => {
   const { t } = useTranslation();
   const { handleAiCode, handleSendMessage } = useAICodeInputBox({
     value,
@@ -250,6 +256,8 @@ const AICodeInputBox = ({
     setRePrompt,
     setPrompt,
     handleChangeNodeParam,
+    errCodeMsg,
+    textQueue,
   });
   return (
     <div className="w-full bg-[#000]">
@@ -386,7 +394,7 @@ const IOTestPanel = ({
   loading,
   errCodeMsg,
   output,
-}) => {
+}): React.ReactElement => {
   const { t } = useTranslation();
   const user = useUserStore(state => state.user);
   const generateRandomString = useMemoizedFn((): string => {
@@ -546,7 +554,7 @@ const useCodeIDEAEffect = ({
   userWheel,
   value,
   open,
-}) => {
+}): void => {
   useEffect(() => {
     const handleKeyDown = (e: Event): void =>
       (e as KeyboardEvent).stopPropagation();
@@ -594,7 +602,6 @@ const useCodeIDEAEffect = ({
 };
 
 function CodeIDEA(): React.ReactElement {
-  const { t } = useTranslation();
   const editorRef = useRef<unknown>(null);
   const textQueue = useRef<string[]>([]);
   const wsMessageStatus = useRef<string>('end');
@@ -690,6 +697,8 @@ function CodeIDEA(): React.ReactElement {
             temporaryStorageCode={temporaryStorageCode}
             generateAIcode={generateAIcode}
             rePrompt={rePrompt}
+            errCodeMsg={errCodeMsg}
+            textQueue={textQueue}
           />
         )}
         <IOTestPanel

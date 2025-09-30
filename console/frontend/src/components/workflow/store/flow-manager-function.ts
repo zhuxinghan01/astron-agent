@@ -627,7 +627,7 @@ function validateOutgoingEdges({
   errNodes,
   cycleEdges,
   dfs,
-}): void {
+}): void | boolean {
   if (outgoingEdges?.length === 0) {
     addErrNode({
       errNodes,
@@ -641,8 +641,6 @@ function validateOutgoingEdges({
     const targetNode = nodes.find(node => node.id === edge.target);
     if (!targetNode) return false;
     if (!targetNode.data.label.trim()) return false;
-    console.log('targetNode', targetNode);
-    console.log('recStack', recStack);
     if (recStack.has(targetNode.id)) {
       cycleEdges.push(edge);
       addErrNode({

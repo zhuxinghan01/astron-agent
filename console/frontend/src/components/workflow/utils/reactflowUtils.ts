@@ -1548,7 +1548,7 @@ type EdgeType = {
 };
 
 function buildSchemaReferences(
-  schema: any,
+  schema: unknown,
   parent: { originId: string; prefix?: string; parentType?: string } = {
     originId: '',
   }
@@ -1585,7 +1585,7 @@ function buildSchemaReferences(
         type: schema?.type,
         parentType: parent.parentType,
         fileType: schema.allowedFileType?.[0] || '',
-        children: schema.properties.flatMap((prop: any) =>
+        children: schema.properties.flatMap((prop: unknown) =>
           buildSchemaReferences(
             {
               ...prop,
@@ -1620,13 +1620,13 @@ function buildOwnReferences(
 
   const outputs =
     targetNode?.nodeType === 'iteration'
-      ? sourceNode?.data?.outputs?.filter((output: any) =>
+      ? sourceNode?.data?.outputs?.filter((output: unknown) =>
           output?.schema?.type?.includes('array')
         )
       : [...(sourceNode?.data?.outputs || []), ...errorOutputs];
 
   return (
-    outputs?.flatMap((output: any) =>
+    outputs?.flatMap((output: unknown) =>
       buildSchemaReferences(
         {
           ...output,

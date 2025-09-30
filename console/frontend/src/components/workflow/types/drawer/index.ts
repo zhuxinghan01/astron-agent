@@ -80,3 +80,9 @@ export type {
   NewNodeType,
   IFlyCollectorType,
 } from './chat-debugger';
+
+// Chat Debugger 相关类型
+export type { UseChatContentProps } from './chat-debugger';
+
+// Code IDEA 相关类型
+export type { useAICodeInputBoxProps } from './code-idea';

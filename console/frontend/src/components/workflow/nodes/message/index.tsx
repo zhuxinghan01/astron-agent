@@ -8,14 +8,12 @@ import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
 
 export const MessageDetail = memo(props => {
   const { id, data } = props;
-  const { handleChangeInputParam, handleChangeNodeParam, nodeParam } =
-    useNodeCommon({ id, data });
+  const { handleChangeNodeParam, nodeParam } = useNodeCommon({ id, data });
   const { t } = useTranslation();
   const getCurrentStore = useFlowsManager(state => state.getCurrentStore);
   const currentStore = getCurrentStore();
   const canvasesDisabled = useFlowsManager(state => state.canvasesDisabled);
   const delayCheckNode = currentStore(state => state.delayCheckNode);
-
   return (
     <div id={id}>
       <div className="p-[14px] pb-[6px]">
@@ -41,13 +39,9 @@ export const MessageDetail = memo(props => {
                     className="list-switch"
                     checked={nodeParam?.streamOutput}
                     onChange={value =>
-                      handleChangeInputParam(
-                        id,
-                        (data, value) => {
-                          data.nodeParam.streamOutput = value;
-                        },
-                        value
-                      )
+                      handleChangeNodeParam((data, value) => {
+                        data.nodeParam.streamOutput = value;
+                      }, value)
                     }
                   />
                 </div>

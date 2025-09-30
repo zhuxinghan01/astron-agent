@@ -7,6 +7,7 @@ import { capitalizeFirstLetter } from '@/components/workflow/utils/reactflowUtil
 import { Select, Radio } from 'antd';
 import { cn } from '@/utils';
 import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { UseQueryFieldReturnProps } from '@/components/workflow/types';
 
 import inputAddIcon from '@/assets/imgs/workflow/input-add-icon.png';
 import remove from '@/assets/imgs/workflow/input-remove-icon.png';
@@ -21,7 +22,7 @@ const useQueryField = ({
   from,
   data,
   allFields,
-}) => {
+}): UseQueryFieldReturnProps => {
   const handleRemoveLine = (id): void => {
     const newList = fieldList.filter(it => it.id != id);
     setFieldList(newList);
