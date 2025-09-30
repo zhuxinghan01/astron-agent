@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -34,6 +35,23 @@ public class ChatBotApiServiceImpl implements ChatBotApiService {
     @Override
     public boolean exists(Long botId) {
         return chatBotApiMapper.exists(Wrappers.lambdaQuery(ChatBotApi.class).eq(ChatBotApi::getBotId, botId));
+    }
+
+    @Override
+    public Long selectCount(Integer botId) {
+        return chatBotApiMapper.selectCount(Wrappers.lambdaQuery(ChatBotApi.class).eq(ChatBotApi::getBotId, botId));
+    }
+
+    @Override
+    public void insert(String uid, Integer botId, String assistantId, String appId, String appSecret, String appKey,
+                       String prompt, String pluginIds, String embeddingIds, String apiPath, String description) {
+        ChatBotApi chatBotApi = ChatBotApi.builder()
+                .uid(uid).botId(botId).assistantId(assistantId).appId(appId).apiSecret(appSecret)
+                .apiKey(appKey).prompt(prompt).pluginId(pluginIds)
+                .embeddingId(embeddingIds).apiPath(apiPath)
+                .description(description).createTime(LocalDateTime.now())
+                .build();
+        chatBotApiMapper.insert(chatBotApi);
     }
 
 }
