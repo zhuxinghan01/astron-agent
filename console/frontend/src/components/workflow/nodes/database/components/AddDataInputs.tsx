@@ -19,7 +19,7 @@ import { capitalizeFirstLetter } from '@/components/workflow/utils/reactflowUtil
 import { Tooltip, Select } from 'antd';
 import { cn } from '@/utils';
 
-const RenderNameCell = ({ item }):React.ReactElement => {
+const RenderNameCell = ({ item }): React.ReactElement => {
   return (
     <div className="flex flex-col flex-shrink-0 w-1/3">
       <div className="flex items-center w-[204px] relative gap-2.5 overflow-hidden">
@@ -44,7 +44,10 @@ const RenderNameCell = ({ item }):React.ReactElement => {
   );
 };
 
-const RenderTypeCell = ({ item, handleChangeInputParam }):React.ReactElement => {
+const RenderTypeCell = ({
+  item,
+  handleChangeInputParam,
+}): React.ReactElement => {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col flex-shrink-0 w-1/4">
@@ -85,7 +88,7 @@ const RenderValueCell = ({
   id,
   references,
   checkNode,
-}):React.ReactElement => {
+}): React.ReactElement => {
   const autoSaveCurrentFlow = useFlowsManager(
     state => state.autoSaveCurrentFlow
   );
@@ -154,7 +157,7 @@ const InputRow = ({
   mode,
   setAddDataOptions,
   handleRemoveInputLine,
-}):React.ReactElement => {
+}): React.ReactElement => {
   return (
     <div key={item.id} className="flex flex-col gap-1">
       <div className="flex items-start gap-3 overflow-hidden">

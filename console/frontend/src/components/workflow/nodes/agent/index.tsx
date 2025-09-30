@@ -484,7 +484,7 @@ const useAgent = ({
     );
   });
 
-  const handleAddAddress = useMemoizedFn((e) => {
+  const handleAddAddress = useMemoizedFn(e => {
     e.stopPropagation();
     const newAddressList = [...addressList, { id: uuid(), value: '' }];
     handleChangeNodeParam(

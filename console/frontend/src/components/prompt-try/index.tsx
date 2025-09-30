@@ -13,6 +13,7 @@ import { MessageListType } from '@/types/chat';
 import { getLanguageCode } from '@/utils/http';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import eventBus from '@/utils/event-bus';
+import { baseURL } from '@/utils/http';
 
 // PromptTry组件暴露的方法接口
 export interface PromptTryRef {
@@ -138,18 +139,7 @@ const PromptTry = forwardRef<
 
     // 获取答案
     const getAnswer = (question: string) => {
-      let esURL = `http://172.29.201.92:8080/chat-message/bot-debug`;
-      if (
-        typeof window !== 'undefined' &&
-        window.location.hostname === 'localhost'
-      ) {
-        esURL = `/xingchen-api/chat-message/bot-debug`;
-      } else {
-        const mode = import.meta.env.VITE_MODE;
-        if (mode === 'development') {
-          esURL = `http://172.29.202.54:8080/chat-message/bot-debug`;
-        }
-      }
+      const esURL = `${baseURL}/chat-message/bot-debug`;
       const form = new FormData();
       if (model) {
         form.append('model', newModel ? newModel : model);
@@ -203,7 +193,7 @@ const PromptTry = forwardRef<
           id: Date.now(),
           message: form.get('text')?.toString() || '',
           updateTime: new Date().toISOString(),
-          reqId: 'USER',
+          reqType: 'USER',
         },
       ]);
       // 追加一个空的机器人消息，用于流式更新
@@ -212,7 +202,7 @@ const PromptTry = forwardRef<
         {
           id: Date.now() + 1,
           message: '',
-          reqId: 'BOT',
+          reqType: 'BOT',
           updateTime: new Date().toISOString(),
         },
       ]);
@@ -300,6 +290,16 @@ const PromptTry = forwardRef<
     // 停止回答
     const stopAnswer = () => {
       controllerRef?.current.abort();
+      setMessageList(prev => {
+        const updated = [...prev];
+        const last = updated.length - 1;
+        updated[last] = {
+          ...updated[last],
+          sid: currentSid?.current?.toString() || '',
+          message: updated[last]?.message || '',
+        };
+        return updated;
+      });
       setIsLoading(false);
       setIsCompleted(true);
     };

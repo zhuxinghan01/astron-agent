@@ -59,7 +59,7 @@ const ArrayDefault: FC<{
           />
         </div>
         <div
-          className="flex-1 pr-6 overflow-auto"
+          className="flex-1 pr-6 overflow-auto py-[24px]"
           style={{
             maxHeight: '50vh',
           }}
