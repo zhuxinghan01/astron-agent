@@ -184,12 +184,9 @@ async def file_split(
 @rag_router.post("/document/upload")
 async def file_upload(
     file: UploadFile = File(),
-    rag_type: RAGType = Form(),
-    length_range: Optional[str] = Form(None),
-    overlap: Optional[int] = Form(None),
+    ragType: RAGType = Form(),
+    lengthRange: Optional[str] = Form(None),
     separator: Optional[str] = Form(None),
-    cut_off: Optional[str] = Form(None),
-    title_split: Optional[bool] = Form(None),
     app_id: str = Depends(get_app_id),
 ) -> Union[SuccessDataResponse, ErrorResponse]:
     """
@@ -198,14 +195,10 @@ async def file_upload(
     2. Form-data mode: Upload file or provide URL with form parameters
 
     Args:
-        split_request: File splitting request parameters (JSON mode)
         file: Uploaded file (form-data mode)
         rag_type: RAG type (form-data mode)
         length_range: Split length range as JSON string (form-data mode)
-        overlap: Overlap length (form-data mode)
         separator: Separator list as JSON string (form-data mode)
-        cut_off: Cutoff marker list as JSON string (form-data mode)
-        title_split: Whether to split by title (form-data mode)
         app_id: Application identifier
 
     Returns:
@@ -220,18 +213,15 @@ async def file_upload(
                 "usr_input": json.dumps(
                     {
                         "file": file.filename,
-                        "rag_type": rag_type,
-                        "length_range": length_range,
-                        "overlap": overlap,
+                        "rag_type": ragType,
+                        "length_range": lengthRange,
                         "separator": separator,
-                        "cut_off": cut_off,
-                        "title_split": title_split,
                     },
                     ensure_ascii=False,
                 )
             }
         )
-        strategy = RAGStrategyFactory.get_strategy(rag_type)
+        strategy = RAGStrategyFactory.get_strategy(ragType)
 
         # Use helper function to handle core operations and exceptions
         return await handle_rag_operation(
@@ -239,11 +229,8 @@ async def file_upload(
             metric=metric,
             operation_callable=strategy.split,
             file=file,
-            lengthRange=length_range,
-            overlap=overlap,
+            lengthRange=lengthRange,
             separator=separator,
-            titleSplit=title_split,
-            cutOff=cut_off,
         )
 
 
