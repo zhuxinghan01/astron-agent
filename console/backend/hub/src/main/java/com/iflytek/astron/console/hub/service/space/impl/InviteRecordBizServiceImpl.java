@@ -485,7 +485,7 @@ public class InviteRecordBizServiceImpl implements InviteRecordBizService {
             return userInfos.stream().map(i -> {
                 ChatUserVO chatUserVO = new ChatUserVO();
                 chatUserVO.setMobile(mobileMap.get(i.getUid()));
-                chatUserVO.setUid(i.getUsername());
+                chatUserVO.setUsername(i.getUsername());
                 chatUserVO.setNickname(i.getNickname());
                 chatUserVO.setUid(i.getUid());
                 chatUserVO.setAvatar(i.getAvatar());
