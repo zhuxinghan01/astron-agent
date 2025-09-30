@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class FeishuPublishStrategy implements PublishStrategy {
 
     @Override
-    public ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to Feishu: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         // TODO: Implement Feishu publish logic
@@ -28,11 +28,11 @@ public class FeishuPublishStrategy implements PublishStrategy {
         // 5. Update publish status
         // 6. Send publish event
         
-        return ApiResult.success("Feishu publish completed successfully");
+        return ApiResult.success(null); // No specific data needed for Feishu publish
     }
 
     @Override
-    public ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Offlining bot from Feishu: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         // TODO: Implement Feishu offline logic
@@ -43,7 +43,7 @@ public class FeishuPublishStrategy implements PublishStrategy {
         // 5. Update publish status
         // 6. Send offline event
         
-        return ApiResult.success("Feishu offline completed successfully");
+        return ApiResult.success(null); // No specific data needed for Feishu offline
     }
 
     @Override

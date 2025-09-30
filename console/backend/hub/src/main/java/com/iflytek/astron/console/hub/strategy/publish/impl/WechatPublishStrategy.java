@@ -3,8 +3,8 @@ package com.iflytek.astron.console.hub.strategy.publish.impl;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
-import com.iflytek.astron.console.hub.service.wechat.BotOffiaccountService;
 import com.iflytek.astron.console.hub.strategy.publish.PublishStrategy;
 import com.alibaba.fastjson2.JSON;
 import lombok.RequiredArgsConstructor;
@@ -20,27 +20,27 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class WechatPublishStrategy implements PublishStrategy {
 
-    private final BotOffiaccountService botOffiaccountService;
     private final BotPublishService botPublishService;
 
     @Override
-    public ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to WeChat: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
             // Parse WeChat publish data
             WechatPublishData wechatData = parsePublishData(publishData);
             
-            log.debug("WeChat publish data: appId={}", wechatData.getAppId());
+            log.debug("WeChat publish data: appId={}, redirectUrl={}", wechatData.getAppId(), wechatData.getRedirectUrl());
             
-            // 1. Bind bot to WeChat official account
-            botOffiaccountService.bind(botId, wechatData.getAppId(), currentUid);
+            // Generate WeChat authorization URL for binding
+            WechatAuthUrlResponseDto authUrlResponse = botPublishService.getWechatAuthUrl(
+                    botId, wechatData.getAppId(), wechatData.getRedirectUrl(), currentUid, spaceId);
             
-            // 2. Update publish channel to include WeChat
-            botPublishService.updatePublishChannel(botId, currentUid, spaceId, PublishChannelEnum.WECHAT, true);
+            log.info("WeChat authorization URL generated successfully: botId={}, authUrl={}", 
+                    botId, authUrlResponse.getAuthUrl());
             
-            log.info("WeChat publish completed successfully: botId={}, appId={}", botId, wechatData.getAppId());
-            return ApiResult.success("Bot published to WeChat successfully");
+            // Return the authorization URL response object as data
+            return ApiResult.success(authUrlResponse);
             
         } catch (Exception e) {
             log.error("WeChat publish failed: botId={}, error={}", botId, e.getMessage(), e);
@@ -49,7 +49,7 @@ public class WechatPublishStrategy implements PublishStrategy {
     }
 
     @Override
-    public ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Offlining bot from WeChat: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         try {
@@ -62,7 +62,7 @@ public class WechatPublishStrategy implements PublishStrategy {
             botPublishService.updatePublishChannel(botId, currentUid, spaceId, PublishChannelEnum.WECHAT, false);
             
             log.info("WeChat offline completed successfully: botId={}", botId);
-            return ApiResult.success("Bot removed from WeChat successfully");
+            return ApiResult.success(null); // No specific data needed for offline
             
         } catch (Exception e) {
             log.error("WeChat offline failed: botId={}, error={}", botId, e.getMessage(), e);
@@ -98,6 +98,9 @@ public class WechatPublishStrategy implements PublishStrategy {
             if (wechatData.getAppId() == null || wechatData.getAppId().trim().isEmpty()) {
                 throw new IllegalArgumentException("WeChat appId is required");
             }
+            if (wechatData.getRedirectUrl() == null || wechatData.getRedirectUrl().trim().isEmpty()) {
+                throw new IllegalArgumentException("WeChat redirectUrl is required");
+            }
             
             return wechatData;
             
@@ -110,24 +113,10 @@ public class WechatPublishStrategy implements PublishStrategy {
     /**
      * WeChat publish data structure
      */
+    @lombok.Data
     public static class WechatPublishData {
         private String appId;
+        private String redirectUrl; // Required redirect URL for authorization
         private String menuConfig; // Optional menu configuration
-        
-        public String getAppId() {
-            return appId;
-        }
-        
-        public void setAppId(String appId) {
-            this.appId = appId;
-        }
-        
-        public String getMenuConfig() {
-            return menuConfig;
-        }
-        
-        public void setMenuConfig(String menuConfig) {
-            this.menuConfig = menuConfig;
-        }
     }
 }

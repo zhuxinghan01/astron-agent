@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class ApiPublishStrategy implements PublishStrategy {
 
     @Override
-    public ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to API: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         // TODO: Implement API publish logic
@@ -28,11 +28,11 @@ public class ApiPublishStrategy implements PublishStrategy {
         // 5. Update publish status
         // 6. Send publish event
         
-        return ApiResult.success("API publish completed successfully");
+        return ApiResult.success(null); // No specific data needed for API publish
     }
 
     @Override
-    public ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
+    public ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Offlining bot from API: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
         // TODO: Implement API offline logic
@@ -43,7 +43,7 @@ public class ApiPublishStrategy implements PublishStrategy {
         // 5. Update publish status
         // 6. Send offline event
         
-        return ApiResult.success("API offline completed successfully");
+        return ApiResult.success(null); // No specific data needed for API offline
     }
 
     @Override

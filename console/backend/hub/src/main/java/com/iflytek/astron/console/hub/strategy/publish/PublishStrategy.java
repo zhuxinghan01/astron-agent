@@ -15,9 +15,9 @@ public interface PublishStrategy {
      * @param publishData Publish data specific to the channel
      * @param currentUid Current user ID
      * @param spaceId Space ID
-     * @return Publish result
+     * @return Publish result with specific data for the channel (e.g., WechatAuthUrlResponseDto for WeChat, null for others)
      */
-    ApiResult<String> publish(Integer botId, Object publishData, String currentUid, Long spaceId);
+    ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId);
 
     /**
      * Offline bot from specific channel
@@ -26,9 +26,9 @@ public interface PublishStrategy {
      * @param publishData Offline data specific to the channel
      * @param currentUid Current user ID
      * @param spaceId Space ID
-     * @return Offline result
+     * @return Offline result with specific data for the channel (usually null)
      */
-    ApiResult<String> offline(Integer botId, Object publishData, String currentUid, Long spaceId);
+    ApiResult<Object> offline(Integer botId, Object publishData, String currentUid, Long spaceId);
 
     /**
      * Get supported publish type

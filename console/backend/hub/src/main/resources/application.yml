@@ -179,6 +179,9 @@ wechat:
     token: ${WECHAT_TOKEN:your_token}
     # Message encryption/decryption key
     encoding-aes-key: ${WECHAT_ENCODING_AES_KEY:your_encoding_aes_key}
+  development:
+    # Auto-initialize verify ticket for development/testing (set to false in production)
+    auto-init: ${WECHAT_DEV_AUTO_INIT:true}
 
 tenant:
   create-app: http://10.1.87.65:5052/v2/app
