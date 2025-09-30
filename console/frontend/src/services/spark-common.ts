@@ -376,39 +376,12 @@ export const generateInputExample = (params: any) => {
   });
   // return http.post(`/login/check-account`, params);
 };
-/**
- * @description 获取V2一户话自训练发音人列表
- */
-export const getV2CustomVCNList = (params?: any): Promise<any> => {
-  return http.post(`/customVCN/v2/getVcnList`, params);
-};
-
-/**
- * @description 删除自训练发音人
- */
-export const deleteCustomVCN = (params: any): Promise<any> => {
-  return http.post(`/customVCN/deleteCustomVCN`, params);
-};
 
 /**
  * @description 获取任务状态
  */
 export const updateCustomVCN = (params: any): Promise<any> => {
   return http.post(`/customVCN/updateCustomVCN`, params);
-};
-
-/**
- * @description 创建一句话复刻任务
- */
-export const createOnceTrainTask = (params: any): Promise<any> => {
-  return http({
-    url: `/customVCN/v2/create?sex=${params.sex}&index=${params.sampleIndex}`,
-    method: 'POST',
-    data: params.formData,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
 };
 
 // 新增bot
