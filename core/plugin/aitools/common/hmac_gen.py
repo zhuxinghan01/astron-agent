@@ -45,7 +45,9 @@ def parse_url(requset_url: str) -> Url:
 
 
 # build websocket auth request url
-def assemble_auth_url(requset_url: str, method: str = "GET", api_key: str = "", api_secret: str = "") -> str:
+def assemble_auth_url(
+    requset_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+) -> str:
     u = parse_url(requset_url)
     host = u.host
     path = u.path

@@ -53,12 +53,13 @@ def get_host_ip() -> str:
     return ip
 
 
-
 class SidGenerator2:
     # 2.0架构专用后缀
     sid2 = 2
 
-    def __init__(self, service_sub: str, service_location: str, host_ip: str, service_port: str) -> None:
+    def __init__(
+        self, service_sub: str, service_location: str, host_ip: str, service_port: str
+    ) -> None:
         self.index = 0
         ip = socket.inet_aton(host_ip)
         if ip:

@@ -10,9 +10,9 @@ import json
 import os
 import ssl
 from time import mktime
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
-from typing import Tuple, List, Any, Dict, Optional
 
 import websocket
 
@@ -23,7 +23,15 @@ STATUS_LAST_FRAME = 2  # 最后一帧的标识
 
 class Ws_Param:
     # 初始化
-    def __init__(self, APPID: str, APIKey: str, APISecret: str, Text: str, res_id: str, speed: int) -> None:
+    def __init__(
+        self,
+        APPID: str,
+        APIKey: str,
+        APISecret: str,
+        Text: str,
+        res_id: str,
+        speed: int,
+    ) -> None:
         """Initialize WebSocket parameters for TTS synthesis.
 
         All 6 parameters are essential for TTS authentication and configuration:
@@ -117,7 +125,15 @@ class TTSClient:
     from authentication through configuration to data collection and output.
     """
 
-    def __init__(self, app_id: str, api_key: str, api_secret: str, text: str, res_id: str, speed: int) -> None:
+    def __init__(
+        self,
+        app_id: str,
+        api_key: str,
+        api_secret: str,
+        text: str,
+        res_id: str,
+        speed: int,
+    ) -> None:
         """Initialize TTS client with authentication and synthesis parameters.
 
         All 6 parameters are required for complete TTS functionality:
@@ -170,7 +186,9 @@ class TTSClient:
         def on_error(_ws: websocket.WebSocket, _error: Exception) -> None:
             pass
 
-        def on_close(_ws: websocket.WebSocket, _ts: Optional[int], _end: Optional[str]) -> None:
+        def on_close(
+            _ws: websocket.WebSocket, _ts: Optional[int], _end: Optional[str]
+        ) -> None:
             pass
 
         def on_open(ws: websocket.WebSocket) -> None:
@@ -213,18 +231,20 @@ class TTSClient:
             with open("./demo.mp3", "ab") as f:
                 f.write(audio)
         # else:
-            # errMsg = message["message"]
-            # print("sid:%s call error:%s code is:%s" % (sid, errMsg, code))
+        # errMsg = message["message"]
+        # print("sid:%s call error:%s code is:%s" % (sid, errMsg, code))
 
     @staticmethod
-    def assemble_ws_auth_url(requset_url: str, method: str = "GET", api_key: str = "", api_secret: str = "") -> str:
+    def assemble_ws_auth_url(
+        requset_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+    ) -> str:
         class Url:
             def __init__(self, host: str, path: str, schema: str) -> None:
                 self.host = host
                 self.path = path
                 self.schema = schema
 
-        def parse_url(requset_url: str) -> 'Url':
+        def parse_url(requset_url: str) -> "Url":
             stidx = requset_url.index("://")
             host = requset_url[stidx + 3 :]
             schema = requset_url[: stidx + 3]
@@ -252,7 +272,9 @@ class TTSClient:
             signature_origin.encode("utf-8"),
             digestmod=hashlib.sha256,
         ).digest()
-        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(encoding="utf-8")
+        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(
+            encoding="utf-8"
+        )
         authorization_origin = (
             f'api_key="{api_key}", algorithm="hmac-sha256", '
             f'headers="host date request-line", signature="{signature_sha}"'

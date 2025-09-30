@@ -41,7 +41,9 @@ class SuccessDataResponse:
     message: str
     data: Any
 
-    def __init__(self, data: Any, message: str = "success", sid: Optional[str] = None) -> None:
+    def __init__(
+        self, data: Any, message: str = "success", sid: Optional[str] = None
+    ) -> None:
         """
 
         :param data: json
@@ -69,7 +71,9 @@ class ErrorResponse:
     code: int
     message: str
 
-    def __init__(self, code_enum: Any, sid: Optional[str] = None, message: Optional[str] = None) -> None:
+    def __init__(
+        self, code_enum: Any, sid: Optional[str] = None, message: Optional[str] = None
+    ) -> None:
         self.code = code_enum.code
         self.message = code_enum.msg
         if message:
@@ -95,7 +99,9 @@ class ErrorCResponse:
     code: int
     message: Optional[str]
 
-    def __init__(self, code: int, sid: Optional[str] = None, message: Optional[str] = None) -> None:
+    def __init__(
+        self, code: int, sid: Optional[str] = None, message: Optional[str] = None
+    ) -> None:
         self.code = code
         self.message = message
         if sid is not None:
@@ -215,7 +221,7 @@ class TranslationInput(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_language_combination(self) -> 'TranslationInput':
+    def validate_language_combination(self) -> "TranslationInput":
         """Validate that at least one language is Chinese (cn)"""
         if not is_valid_language_pair(self.source_language, self.target_language):
             raise ValueError(

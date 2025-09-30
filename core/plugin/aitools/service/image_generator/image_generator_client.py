@@ -49,7 +49,9 @@ def parse_url(request_url: str) -> Url:
     return u
 
 
-def assemble_ws_auth_url(request_url: str, method: str = "GET", api_key: str = "", api_secret: str = "") -> str:
+def assemble_ws_auth_url(
+    request_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+) -> str:
     u = parse_url(request_url)
     host = u.host
     path = u.path
@@ -145,7 +147,9 @@ class ImageGenerator:
             self.image_base64 = image_base
             # self._save_image(image_base)
 
-    def _save_image(self, base64_data: str, save_path: str = "generated_image.jpg") -> None:
+    def _save_image(
+        self, base64_data: str, save_path: str = "generated_image.jpg"
+    ) -> None:
         img_data = base64.b64decode(base64_data)
         img = Image.open(BytesIO(img_data))
         img.save(save_path)

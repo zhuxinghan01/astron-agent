@@ -13,6 +13,10 @@ import time
 import uuid
 from typing import Any, Union
 
+from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
+from common.otlp.metrics.meter import Meter
+from common.otlp.trace.span import Span
+from common.service import get_kafka_producer_service
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
 from plugin.aitools.common.sid_generator2 import new_sid
 from plugin.aitools.const.err_code.code import CodeEnum
@@ -23,14 +27,11 @@ from plugin.aitools.service.translation.translation_client import (
     TranslationClient,
 )
 
-from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
-from common.otlp.metrics.meter import Meter
-from common.otlp.trace.span import Span
-from common.service import get_kafka_producer_service
-
 
 # 图片理解 - 开放平台
-def image_understanding_main(question: str, image_url: str, request: Any) -> Union[SuccessDataResponse, ErrorResponse]:
+def image_understanding_main(
+    question: str, image_url: str, request: Any
+) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
