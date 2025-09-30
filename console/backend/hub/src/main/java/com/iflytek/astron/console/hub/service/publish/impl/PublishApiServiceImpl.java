@@ -3,11 +3,14 @@ package com.iflytek.astron.console.hub.service.publish.impl;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.DatasetInfo;
+import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.entity.user.AppMst;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.mapper.bot.BotDatasetMapper;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
+import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.service.user.AppMstService;
+import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.hub.dto.publish.AppListDTO;
@@ -58,6 +61,12 @@ public class PublishApiServiceImpl implements PublishApiService {
     @Autowired
     private BotDatasetMapper botDatasetMapper;
 
+    @Autowired
+    private UserLangChainDataService userLangChainDataService;
+
+    @Autowired
+    private MaasUtil maasUtil;
+
     private static final String PUBLISH_API = "publish_api";
 
     private static final String BOT_API_CBM_BASE_URL = "ws(s)://spark-openapi.cn-huabei-1.xf-yun.com";
@@ -90,7 +99,8 @@ public class PublishApiServiceImpl implements PublishApiService {
         String uid = RequestContextUtil.getUID();
         return appMstService.getAppListByUid(uid)
                 .stream()
-                .map(appMst -> new AppListDTO(appMst.getAppId(), appMst.getAppName(), appMst.getAppDescribe()))
+                .map(appMst -> new AppListDTO(appMst.getAppId(), appMst.getAppName(), appMst.getAppDescribe(),
+                        appMst.getAppKey(), appMst.getAppSecret()))
                 .collect(Collectors.toList());
     }
 
@@ -145,6 +155,16 @@ public class PublishApiServiceImpl implements PublishApiService {
     }
 
     private BotApiInfoDTO createMaasApi(String uid, AppMst appMst, ChatBotBase botBase) {
+        Integer botId = botBase.getId();
+        List<UserLangChainInfo> userLangChainInfoList = userLangChainDataService.findListByBotId(botId);
+        if (Objects.isNull(userLangChainInfoList) || userLangChainInfoList.isEmpty()) {
+            log.error("----- 未找到助手协议, uid: {}, botId: {}", uid, botId);
+            throw new BusinessException(ResponseEnum.BOT_API_CREATE_ERROR);
+        }
+
+        UserLangChainInfo userLangChainInfo = userLangChainInfoList.get(0);
+        String flowId = userLangChainInfo.getFlowId();
+
         return null;
     }
 
