@@ -104,7 +104,7 @@ class RagflowRAGStrategy(RAGStrategy):
 
     async def split(
         self,
-        file: str,
+        fileUrl: Optional[str] = None,
         lengthRange: Optional[List[int]] = None,
         overlap: int = 16,
         resourceType: int = 0,
@@ -152,7 +152,7 @@ class RagflowRAGStrategy(RAGStrategy):
         doc_id = None
         dataset_id = None
 
-        logger.info("Starting split request: %s, group: %s", file, group)
+        logger.info("Starting split request: %s, group: %s", fileUrl, group)
 
         try:
             # Step 1: Dataset management - use group as dataset name
@@ -160,7 +160,7 @@ class RagflowRAGStrategy(RAGStrategy):
             logger.info("Using dataset: %s, name: %s", dataset_id, group)
 
             # Step 2: File processing
-            file_content, filename = await RagflowUtils.process_file(file)
+            file_content, filename = await RagflowUtils.process_file(fileUrl)
             logger.info(
                 "File processing completed: %s, size: %d bytes",
                 filename,
