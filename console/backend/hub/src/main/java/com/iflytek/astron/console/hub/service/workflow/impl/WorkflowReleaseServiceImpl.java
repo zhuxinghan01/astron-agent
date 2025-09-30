@@ -101,22 +101,22 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             request.setPublishResult("成功");
             request.setDescription("");
             request.setName(versionName);
-            
+
             WorkflowReleaseResponseDto response = createWorkflowVersion(request);
             if (!response.getSuccess()) {
                 return response;
             }
-            
+
             // 5. Sync to API system directly (no approval needed)
             String appId = getAppIdByBotId(botId);
             syncToApiSystem(botId, flowId, versionName, appId);
-            
+
             // 6. Update audit result to success
             updateAuditResult(response.getWorkflowVersionId(), "成功");
-            
-            log.info("Workflow bot publish and sync successful: botId={}, versionId={}, versionName={}", 
+
+            log.info("Workflow bot publish and sync successful: botId={}, versionId={}, versionName={}",
                     botId, response.getWorkflowVersionId(), response.getWorkflowVersionName());
-            
+
             return response;
             
         } catch (Exception e) {

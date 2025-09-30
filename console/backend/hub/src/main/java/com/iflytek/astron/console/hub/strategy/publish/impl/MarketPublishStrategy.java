@@ -9,6 +9,7 @@ import com.alibaba.fastjson2.JSON;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Market publish strategy implementation
@@ -22,6 +23,7 @@ public class MarketPublishStrategy implements PublishStrategy {
     private final BotPublishService botPublishService;
 
     @Override
+    @Transactional
     public ApiResult<Object> publish(Integer botId, Object publishData, String currentUid, Long spaceId) {
         log.info("Publishing bot to market: botId={}, currentUid={}, spaceId={}", botId, currentUid, spaceId);
         
