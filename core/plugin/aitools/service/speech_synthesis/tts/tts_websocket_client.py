@@ -48,7 +48,15 @@ class TTSWebSocketClient:
     through WebSocket communication to audio data collection and output.
     """
 
-    def __init__(self, app_id: str, api_key: str, api_secret: str, text: str, vcn: str, speed: int):
+    def __init__(
+        self,
+        app_id: str,
+        api_key: str,
+        api_secret: str,
+        text: str,
+        vcn: str,
+        speed: int,
+    ):
         """Initialize TTS WebSocket client with complete configuration parameters.
 
         All 6 parameters are required for proper TTS WebSocket functionality:
@@ -124,7 +132,9 @@ class TTSWebSocketClient:
             signature_origin.encode("utf-8"),
             digestmod=hashlib.sha256,
         ).digest()
-        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(encoding="utf-8")
+        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(
+            encoding="utf-8"
+        )
 
         authorization_origin = (
             f'api_key="{self.api_key}", algorithm="hmac-sha256", '
@@ -162,7 +172,12 @@ class TTSWebSocketClient:
     def on_error(self, ws: websocket.WebSocket, error: Exception) -> None:
         pass
 
-    def on_close(self, ws: websocket.WebSocket, close_status_code: Optional[int] = None, close_msg: Optional[str] = None) -> None:
+    def on_close(
+        self,
+        ws: websocket.WebSocket,
+        close_status_code: Optional[int] = None,
+        close_msg: Optional[str] = None,
+    ) -> None:
         pass
 
     def on_open(self, ws: websocket.WebSocket) -> None:

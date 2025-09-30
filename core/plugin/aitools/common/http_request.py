@@ -4,7 +4,8 @@ HTTP request utility module providing HTTP client request functionality.
 TODO: refactor input config type validation with Pydantic
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import requests
 
 

@@ -184,7 +184,9 @@ class OcrRespParse:
                 if item["row"] == r:
 
                     # 单独加一层list，可复用 _deal_one 函数
-                    root_content: List[List[Dict[str, Any]]] = [item.get("content", [{}])]
+                    root_content: List[List[Dict[str, Any]]] = [
+                        item.get("content", [{}])
+                    ]
                     c = {"content": root_content}
                     # 处理结果
                     text_arr = OcrRespParse._deal_one(c)
@@ -243,8 +245,7 @@ class OcrRespParse:
                 # 递归获取子内容
                 else:
                     results = OcrRespParse._process_other_content_types(
-                        child_content2,
-                        content_type
+                        child_content2, content_type
                     )
                     child_ocr_texts.extend(results)
 
@@ -287,8 +288,7 @@ class OcrRespParse:
 
     @staticmethod
     def _process_other_content_types(
-        child_content2: Dict[str, Any],
-        content_type: str
+        child_content2: Dict[str, Any], content_type: str
     ) -> List[str]:
         """处理其他内容类型（代码、标题、列表等）"""
         results = []

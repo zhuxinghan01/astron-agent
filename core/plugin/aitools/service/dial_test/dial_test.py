@@ -11,12 +11,12 @@ from dotenv import load_dotenv
 
 
 def dial_test_main(
-        method: str,
-        url: str,
-        headers: Dict[str, str],
-        payload: Dict[str, Any],
-        _success_code: int,
-        _call_frequency: int
+    method: str,
+    url: str,
+    headers: Dict[str, str],
+    payload: Dict[str, Any],
+    _success_code: int,
+    _call_frequency: int,
 ) -> Optional[Dict[str, Any]]:
     """Execute HTTP request with specified parameters for dial testing.
 

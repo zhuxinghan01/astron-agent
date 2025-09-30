@@ -1,10 +1,9 @@
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Optional, Any, TypedDict, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 import requests
-
 from common.http_request import HttpRequest
 
 
@@ -16,7 +15,14 @@ class ErrorResponse(TypedDict):
 
 class APIConfiguration:
     def __init__(
-        self, target_url: str, method: str, headers: Dict[str, str], params: Dict[str, Any], payload: Dict[str, Any], success_code: int, call_frequency: int
+        self,
+        target_url: str,
+        method: str,
+        headers: Dict[str, str],
+        params: Dict[str, Any],
+        payload: Dict[str, Any],
+        success_code: int,
+        call_frequency: int,
     ) -> None:
         self.url = target_url
         self.method = method
@@ -38,7 +44,9 @@ class APIConfiguration:
 
 
 class APITester:
-    def execute_request(self, config: APIConfiguration) -> Union[ErrorResponse, Dict[str, Any]]:
+    def execute_request(
+        self, config: APIConfiguration
+    ) -> Union[ErrorResponse, Dict[str, Any]]:
         ex_res: ErrorResponse = {
             "code": -1,
             "message": "failed",

@@ -30,7 +30,9 @@ class VoiceCloneClient:
         digest = base64.b64encode(sha256.digest()).decode(encoding="utf-8")
         return digest
 
-    def assemble_auth_header(self, method: str = "POST", body: str = "") -> Dict[str, str]:
+    def assemble_auth_header(
+        self, method: str = "POST", body: str = ""
+    ) -> Dict[str, str]:
         u = urlparse(self.requrl)
         host = u.hostname or ""
         path = u.path
@@ -45,7 +47,9 @@ class VoiceCloneClient:
             signature_origin.encode("utf-8"),
             digestmod=hashlib.sha256,
         ).digest()
-        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(encoding="utf-8")
+        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(
+            encoding="utf-8"
+        )
         authorization = f'api_key="{self.api_key}", algorithm="hmac-sha256", \
         headers="host date request-line digest", signature="{signature_sha}"'
         headers = {
@@ -74,7 +78,9 @@ class VoiceCloneClient:
             # print(f"下载失败：{error_code},{error_message}")
             return (error_code, error_message)
 
-    def train(self, res_id: str, audio_url: str) -> Tuple[str, Union[dict[str, Any], Tuple[int, str]]]:
+    def train(
+        self, res_id: str, audio_url: str
+    ) -> Tuple[str, Union[dict[str, Any], Tuple[int, str]]]:
         audio_data = self.get_data(audio_url)
         if isinstance(audio_data, tuple):
             # 如果下载音频时出错，直接返回错误信息

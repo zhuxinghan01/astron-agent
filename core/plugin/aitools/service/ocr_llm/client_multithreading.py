@@ -97,7 +97,7 @@ class OcrLLMClientMultithreading(Power):
         except Exception as e:
             raise e
 
-    def _subscribe(self) -> 'Generator[OcrResultMStream, None, None]':
+    def _subscribe(self) -> "Generator[OcrResultMStream, None, None]":
         """
         订阅处理
         Returns:

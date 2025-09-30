@@ -44,7 +44,15 @@ class SmartTTSClient:
     authentication setup through synthesis processing to audio output collection.
     """
 
-    def __init__(self, app_id: str, api_key: str, api_secret: str, text: str, vcn: str, speed: int) -> None:
+    def __init__(
+        self,
+        app_id: str,
+        api_key: str,
+        api_secret: str,
+        text: str,
+        vcn: str,
+        speed: int,
+    ) -> None:
         """Initialize Smart TTS client with authentication and synthesis configuration.
 
         All 6 parameters are essential for TTS service operation:
@@ -74,9 +82,7 @@ class SmartTTSClient:
         else:
             raise ValueError("Missing TTS_URL environment variable.")
         self.ws_url = self.assemble_ws_auth_url(
-            self.request_url, "GET",
-            self.api_key,
-            self.api_secret
+            self.request_url, "GET", self.api_key, self.api_secret
         )
 
         self.vcn = vcn
@@ -96,7 +102,9 @@ class SmartTTSClient:
         host = host[:edidx]
         return type("Url", (object,), {"host": host, "path": path, "schema": schema})
 
-    def assemble_ws_auth_url(self, request_url: str, method: str, api_key: str, api_secret: str) -> str:
+    def assemble_ws_auth_url(
+        self, request_url: str, method: str, api_key: str, api_secret: str
+    ) -> str:
         u = self.parse_url(request_url)
         host = u.host
         path = u.path
@@ -108,7 +116,9 @@ class SmartTTSClient:
             signature_origin.encode("utf-8"),
             digestmod=hashlib.sha256,
         ).digest()
-        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(encoding="utf-8")
+        signature_sha: str = base64.b64encode(signature_sha_bytes).decode(
+            encoding="utf-8"
+        )
         authorization_origin = f'api_key="{api_key}", algorithm="hmac-sha256",\
               headers="host date request-line", signature="{signature_sha}"'
         authorization = base64.b64encode(authorization_origin.encode("utf-8")).decode(
@@ -143,7 +153,12 @@ class SmartTTSClient:
     def on_error(self, ws: websocket.WebSocket, error: Exception) -> None:
         pass
 
-    def on_close(self, ws: websocket.WebSocket, close_status_code: Optional[int], close_msg: Optional[str]) -> None:
+    def on_close(
+        self,
+        ws: websocket.WebSocket,
+        close_status_code: Optional[int],
+        close_msg: Optional[str],
+    ) -> None:
         pass
 
     def on_open(self, ws: websocket.WebSocket) -> None:
@@ -178,7 +193,11 @@ class SmartTTSClient:
                     "text": str(base64.b64encode(self.text.encode("utf-8")), "UTF8"),
                 }
             }
-            d_dict = {"header": common_args, "parameter": business_args, "payload": data}
+            d_dict = {
+                "header": common_args,
+                "parameter": business_args,
+                "payload": data,
+            }
             d = json.dumps(d_dict)
             # print("Starting to send text data...")
             ws.send(d)

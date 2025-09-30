@@ -21,7 +21,9 @@ from plugin.aitools.const.err_code.code import CodeEnum
 
 
 class ImageUnderstandingClient:
-    def __init__(self, app_id: str, api_key: str, api_secret: str, imageunderstanding_url: str) -> None:
+    def __init__(
+        self, app_id: str, api_key: str, api_secret: str, imageunderstanding_url: str
+    ) -> None:
         self.app_id = app_id
         self.api_key = api_key
         self.api_secret = api_secret

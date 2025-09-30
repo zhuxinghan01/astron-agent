@@ -13,7 +13,7 @@ import ssl
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from time import mktime
-from typing import Any, Dict, Tuple, Callable, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 
@@ -531,7 +531,9 @@ class ISEClient:
 
         return on_message
 
-    def _handle_evaluation_response(self, data_info: Dict[str, Any], ise_param: ISEParam, ws: Any) -> None:
+    def _handle_evaluation_response(
+        self, data_info: Dict[str, Any], ise_param: ISEParam, ws: Any
+    ) -> None:
         """处理评测响应数据"""
         status = data_info.get("status", 0)
 
