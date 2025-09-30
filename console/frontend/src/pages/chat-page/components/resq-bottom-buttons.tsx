@@ -27,7 +27,6 @@ const ResqBottomButtons = ({
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
   };
-  console.log('isLastMessage', isLastMessage);
   return (
     <div className="flex items-center ml-14 w-fit px-2 py-1 h-7">
       <TtsModule
