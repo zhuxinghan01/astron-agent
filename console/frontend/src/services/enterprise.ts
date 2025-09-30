@@ -37,8 +37,8 @@ export const getEnterpriseJoinList = () => {
 };
 
 // 搜索查询邀请的用户列表 /inviteRecord/enterpriseSearchUser
-export const getEnterpriseSearchUser = (params: any) => {
-  return http.get('/invite-record/enterprise-search-user', {
+export const getEnterpriseSearchUsername = (params: any) => {
+  return http.get('/invite-record/enterprise-search-username', {
     params,
   });
 };
@@ -96,11 +96,11 @@ export const getEnterpriseUserLimit = () => {
 };
 
 // 团队批量导入
-export const batchImportEnterpriseUser = (
+export const batchImportEnterpriseUsername = (
   params: any,
   options: { signal?: AbortSignal } = {}
 ) => {
-  return http.post('/invite-record/enterprise-batch-search-user', params, {
+  return http.post('/invite-record/enterprise-batch-search-username', params, {
     headers: { 'Content-Type': 'multipart/form-data' },
     signal: options.signal, // 传递 AbortSignal
   });
