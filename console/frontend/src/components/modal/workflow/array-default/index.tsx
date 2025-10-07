@@ -44,8 +44,6 @@ const ArrayDefault: FC<{
     setDefaultParamsData,
   });
 
-  console.log(defaultParamsData, 'defaultParamsData');
-
   return (
     <div className="mask">
       <div className="modalContent min-w-[624px] flex flex-col min-h-[350px] pr-0">
