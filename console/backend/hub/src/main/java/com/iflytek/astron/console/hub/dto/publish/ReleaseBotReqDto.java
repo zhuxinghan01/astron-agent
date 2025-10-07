@@ -1,11 +1,17 @@
 package com.iflytek.astron.console.hub.dto.publish;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author yun-zhi-ztl
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReleaseBotReqDto {
     private String botId;
     private String flowId;

@@ -113,24 +113,14 @@ public class PublishApiServiceImpl implements PublishApiService {
     public BotApiInfoDTO createBotApi(CreateBotApiVo createBotApiVo, HttpServletRequest request) {
         String uid = RequestContextUtil.getUID();
         String uuid = UUID.randomUUID().toString();
-        String teamCreateUid = SpaceInfoUtil.getUidByCurrentSpaceId();
         // Only the space creator can publish APIs
-        if (!uid.equals(teamCreateUid)) {
+        if (!uid.equals(SpaceInfoUtil.getUidByCurrentSpaceId())) {
             throw new BusinessException(ResponseEnum.USER_NO_APPROVEL);
         }
 
         ChatBotBase botBase = chatBotDataService.findOne(uid, createBotApiVo.getBotId());
-        if (botBase == null) {
-            throw new BusinessException(ResponseEnum.BOT_NOT_EXISTS);
-        }
-
-        boolean existsFlag = chatBotApiService.exists(createBotApiVo.getBotId());
-        if (existsFlag && !botBase.getVersion().equals(BotVersionEnum.WORKFLOW.getVersion())) {
-            throw new BusinessException(ResponseEnum.BOT_API_CREATE_REPEAT);
-        }
-
         AppMst appMst = appMstService.getByAppId(uid, createBotApiVo.getAppId());
-        if (appMst == null) {
+        if (botBase == null || appMst == null) {
             throw new BusinessException(ResponseEnum.USER_APP_ID_NOT_EXISTE);
         }
 
@@ -141,15 +131,10 @@ public class PublishApiServiceImpl implements PublishApiService {
             if (botBase.getVersion().equals(BotVersionEnum.BASE_BOT.getVersion())) {
                 return createBaseBotApi(uid, appMst, botBase);
             } else if (botBase.getVersion().equals(BotVersionEnum.WORKFLOW.getVersion())) {
-                if (!existsFlag) {
-                    return createMaasApi(uid, appMst, botBase, request);
-                } else {
-                    return updateMaasApi(uid, appMst, botBase);
-                }
+                return createMaasApi(uid, appMst, botBase, request);
             } else {
                 throw new BusinessException(ResponseEnum.BOT_TYPE_NOT_EXISTS);
             }
-
         } catch (Exception e) {
             log.error("PublishApiServiceImpl.createBotApi : create Bot api error, request: {}", createBotApiVo, e);
             throw new BusinessException(ResponseEnum.BOT_API_CREATE_ERROR);
@@ -185,10 +170,6 @@ public class PublishApiServiceImpl implements PublishApiService {
                 .appId(appMst.getAppId()).appKey(appMst.getAppKey())
                 .appSecret(appMst.getAppSecret()).serviceUrl(BOT_API_MASS_BASE_URL + "/workflow/v1/chat/completions")
                 .flowId(flowId).build();
-    }
-
-    private BotApiInfoDTO updateMaasApi(String uid, AppMst appMst, ChatBotBase botBase) {
-        return null;
     }
 
     private BotApiInfoDTO createBaseBotApi(String uid, AppMst appMst, ChatBotBase botBase) throws IOException {
