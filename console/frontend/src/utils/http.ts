@@ -447,5 +447,6 @@ const getBaseURL = (): string => {
 
 export const baseURL = getBaseURL();
 
+
 axios.defaults.baseURL = baseURL;
 export default axios;

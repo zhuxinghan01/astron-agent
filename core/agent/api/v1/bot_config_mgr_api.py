@@ -201,7 +201,7 @@ async def get_bot_config(
         # Ensure returning dict type
         if isinstance(bot_config_result, dict):
             return bot_config_result
-        return bot_config_result.model_dump()
+        return bot_config_result.model_dump()  # type: ignore[no-any-return]
 
     return await handle_bot_config_operation(
         operation_func=_get_operation,
