@@ -1,8 +1,8 @@
-import json
 import re
 from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
+
 from workflow.consts.engine.template import TemplateSplitType
 from workflow.consts.engine.value_type import ValueType
 from workflow.engine.entities.variable_pool import RefNodeInfo, VariablePool
@@ -144,7 +144,7 @@ def prompt_template_replace(
         try:
             if not isinstance(value, str):
                 # Convert non-string values to JSON format for template replacement
-                value = json.dumps(value, ensure_ascii=False)
+                value = f"{value}"
         except Exception:
             value = ""
         replacements_str[key] = value

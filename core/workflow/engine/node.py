@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union, cast
 
 from pydantic import BaseModel
+
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.chains import Chains
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
@@ -577,7 +578,7 @@ class SparkFlowEngineNode(BaseModel):
         # Process input data
         for key, value in result.inputs.items():
             if isinstance(value, (list, dict)):
-                value = json.dumps(value, ensure_ascii=False)
+                value = f"{value}"
             else:
                 value = str(value)
             self.node_log.append_input_data(key, value)
@@ -585,7 +586,7 @@ class SparkFlowEngineNode(BaseModel):
         # Process output data
         for key, value in result.outputs.items():
             if isinstance(value, (list, dict)):
-                value = json.dumps(value, ensure_ascii=False)
+                value = f"{value}"
             else:
                 value = str(value)
             self.node_log.append_output_data(key, value)

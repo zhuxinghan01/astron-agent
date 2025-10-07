@@ -4,9 +4,21 @@ import json
 import time
 from asyncio import Queue
 from datetime import datetime
-from typing import Any, AsyncGenerator, AsyncIterator, Dict, List, Optional, Tuple, cast
+from typing import (
+    Any,
+    AsyncGenerator,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    cast,
+)
 
 from loguru import logger
+
 from workflow.cache.engine import get_engine, set_engine
 from workflow.cache.event_registry import Event, EventRegistry
 from workflow.consts.app_audit import AppAuditPolicy
@@ -19,7 +31,11 @@ from workflow.engine.callbacks.callback_handler import (
     ChatCallBacks,
     StructuredConsumer,
 )
-from workflow.engine.callbacks.openai_types_sse import LLMGenerate, WorkflowStep
+from workflow.engine.callbacks.openai_types_sse import (
+    LLMGenerate,
+    NodeInfo,
+    WorkflowStep,
+)
 from workflow.engine.dsl_engine import WorkflowEngine, WorkflowEngineFactory
 from workflow.engine.entities.file import File
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
@@ -54,10 +70,11 @@ async def event_stream(
     span: Span,
 ) -> AsyncIterator[str]:
     """
-    Event stream processing function for handling chat requests and generating streaming responses.
+    Event stream processing function for handling chat requests and generating
+    streaming responses.
 
-    This function orchestrates the workflow execution process, including engine initialization,
-    callback setup, and streaming response generation.
+    This function orchestrates the workflow execution process,including engine
+    initialization, callback setup, and streaming response generation.
 
     :param app_alias_id: Application alias ID for identification
     :param event_id: Unique event identifier for tracking
@@ -173,7 +190,9 @@ async def _get_or_build_workflow_engine(
             sparkflow_engine = engine_cache_entity
             need_rebuild = False
             span_context.add_info_event(
-                f"Retrieved Workflow engine from cache, DSL update time: {workflow_dsl_update_time}, engine build time: {build_timestamp}"
+                f"Retrieved Workflow engine from cache, "
+                f"DSL update time: {workflow_dsl_update_time}, "
+                f"engine build time: {build_timestamp}"
             )
 
     # Rebuild engine if cache miss or outdated
@@ -280,11 +299,13 @@ async def _validate_file_inputs(
     This function checks if required file parameters are provided and validates
     file types and formats according to the workflow definition.
 
-    :param workflow_dsl: Workflow DSL definition containing file parameter specifications
+    :param workflow_dsl: Workflow DSL definition containing
+                         file parameter specifications
     :param chat_vo: Chat value object containing user input parameters
     :param span_context: Distributed tracing span context
     :return: None
-    :raises CustomException: When file validation fails or required parameters are missing
+    :raises CustomException: When file validation fails or
+                             required parameters are missing
     """
     file_info_list, has_file = File.has_file_in_dsl(workflow_dsl, span_context)
     if not has_file:
@@ -480,7 +501,6 @@ async def _run(
     with span.start(
         attributes={"flow_id": chat_vo.flow_id},
     ) as span_context:
-        # span_context.add_info_event(f"start event_stream : {time.time() - start_time}")
         span.add_info_event(f"user input: {chat_vo.json()}")
         span.add_info_event(
             f"spark dsl: {json.dumps(workflow_dsl, ensure_ascii=False)}"
@@ -597,7 +617,8 @@ async def _init_stream_q(
     This function sets up streaming queues for nodes that support streaming output,
     enabling real-time data flow between nodes.
 
-    :param msg_or_end_node_deps: Dictionary mapping node IDs to their dependency information
+    :param msg_or_end_node_deps: Dictionary mapping node IDs to their dependency
+                                 information
     :param variable_pool: Variable pool containing streaming data structures
     :return: None
     """
@@ -662,10 +683,23 @@ def change_dsl_triplets(
     return dsl
 
 
+async def _get_response_or_ping(
+    sid: str,
+    node_info: NodeInfo,
+    getter: Callable[[], Awaitable[LLMGenerate]],
+    timeout: float = 30.0,
+) -> LLMGenerate:
+    try:
+        return await asyncio.wait_for(getter(), timeout=timeout)
+    except asyncio.TimeoutError:
+        return LLMGenerate._ping(sid=sid, node_info=node_info)
+
+
 async def _get_response(
     app_audit_policy: AppAuditPolicy,
     audit_strategy: Optional[AuditStrategy],
     response_queue: asyncio.Queue,
+    last_response: LLMGenerate | None,
 ) -> LLMGenerate:
     """
     Get response data from appropriate queue based on audit policy and strategy.
@@ -680,7 +714,15 @@ async def _get_response(
     :raises Exception: When timeout occurs or audit processing fails
     """
     response: LLMGenerate
-    if app_audit_policy == AppAuditPolicy.AGENT_PLATFORM and audit_strategy:
+    step: Optional[WorkflowStep] = (
+        last_response.workflow_step if last_response else None
+    )
+    node: Optional[NodeInfo] = step.node if step else None
+    if last_response and node and node.id.startswith(NodeType.RPA.value):
+        response = await _get_response_or_ping(
+            sid=last_response.id, node_info=node, getter=lambda: response_queue.get()
+        )
+    elif app_audit_policy == AppAuditPolicy.AGENT_PLATFORM and audit_strategy:
         frame_audit_result: FrameAuditResult = await asyncio.wait_for(
             audit_strategy.context.output_queue.get(), timeout=120
         )
@@ -762,11 +804,13 @@ def _filter_response_frame(
 
     :param response_frame: Current response frame to process
     :param is_stream: Whether this is a streaming response
-    :param last_workflow_step: Previous workflow step for tracking frame index and progress
+    :param last_workflow_step: Previous workflow step for tracking frame index
+                               and progress
     :param message_cache: Cached content for non-streaming mode
     :param reasoning_content_cache: Cached reasoning content for non-streaming mode
     :param is_release: Whether running in production release mode
-    :return: Tuple of (filtered response frame or None, whether to keep the response frame)
+    :return: Tuple of (filtered response frame or None, whether to keep the response
+             frame)
     """
 
     if not is_release:
@@ -866,6 +910,7 @@ async def _chat_response_stream(
     final_content = ""
     final_reasoning_content = ""
     last_workflow_step = WorkflowStep(seq=0, progress=0)
+    last_response: LLMGenerate | None = None
 
     with span.start(attributes={"flow_id": flow_id}) as span_context:
 
@@ -878,8 +923,9 @@ async def _chat_response_stream(
         try:
             while True:
                 response = await _get_response(
-                    app_audit_policy, audit_strategy, response_queue
+                    app_audit_policy, audit_strategy, response_queue, last_response
                 )
+                last_response = response
 
                 response, should_return = _filter_response_frame(
                     response_frame=response,
@@ -1005,11 +1051,13 @@ async def _forward_queue_messages(
     :param event_id: Event identifier
     :param span: Span
     """
+    last_response: LLMGenerate | None = None
     try:
         while True:
             response = await _get_response(
-                app_audit_policy, audit_strategy, response_queue
+                app_audit_policy, audit_strategy, response_queue, last_response
             )
+            last_response = response
             event = EventRegistry().get_event(event_id=event_id)
             data = json.dumps(response.dict(), ensure_ascii=False)
             await EventRegistry().write_resume_data(
