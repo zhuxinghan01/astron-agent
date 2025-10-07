@@ -50,6 +50,18 @@ export const aiGenerateCover = (params: any): Promise<any> => {
   return http.post(`/bot/ai-avatar-gen `, params);
 };
 
+export interface ModelListData {
+  isCustom: boolean;
+  modelDomain: string;
+  modelName: string;
+  modeId: string;
+  modelIcon: string;
+}
+// 获取模型列表
+export const getModelList = (): Promise<ModelListData[]> => {
+  return http.get(`/bot/bot-model`);
+};
+
 // 上传图片
 export const uploadBotImg = (formData: FormData): Promise<any> => {
   return http.post(`/personality/upload`, formData, {
