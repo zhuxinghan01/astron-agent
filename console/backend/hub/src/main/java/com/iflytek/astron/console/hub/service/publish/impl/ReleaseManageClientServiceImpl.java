@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class ReleaseManageClientServiceImpl implements ReleaseManageClientService {
 
     // Basic URL configuration, read from config file
-    @Value("${mass.workflowVersion}")
-    private String BASE_URL;
+    @Value("${maas.workflowVersion}")
+    private String baseUrl;
 
     // User language chain data service dependency injection
     @Autowired
@@ -138,7 +138,7 @@ public class ReleaseManageClientServiceImpl implements ReleaseManageClientServic
      */
     private Request.Builder buildRequest(String url, Long spaceId, HttpServletRequest request) {
         Request.Builder builder = new Request.Builder()
-                .url(BASE_URL + url) // Concatenate complete URL
+                .url(baseUrl + url) // Concatenate complete URL
                 .addHeader(AUTHORIZATION_HEADER, MaasUtil.getAuthorizationHeader(request)); // Add authentication header
         // If space ID exists, add it to request headers
         if (spaceId != null) {
