@@ -9,7 +9,11 @@ from starlette.types import ASGIApp
 
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
-from workflow.extensions.fastapi.base import JSONResponseBase
+from workflow.extensions.fastapi.base import (
+    AUTH_OPEN_API_PATHS,
+    CHAT_OPEN_API_PATHS,
+    JSONResponseBase,
+)
 from workflow.extensions.middleware.getters import get_cache_service
 from workflow.extensions.otlp.trace.span import Span
 from workflow.utils.hmac_auth import HMACAuth
@@ -22,7 +26,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: ASGIApp):
         super().__init__(app)
-        self.exclude_paths: list[str] = []
+        self.need_auth_paths = CHAT_OPEN_API_PATHS + AUTH_OPEN_API_PATHS
         self.api_key = os.getenv("APP_MANAGE_PLAT_KEY", "")
         self.api_secret = os.getenv("APP_MANAGE_PLAT_SECRET", "")
 
@@ -30,7 +34,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         span = Span()
         with span.start() as span_ctx:
             # Check if the path is in the exclude paths
-            if any(request.url.path.startswith(path) for path in self.exclude_paths):
+            if request.url.path not in self.need_auth_paths:
                 return await call_next(request)
 
             # Get the authentication header
