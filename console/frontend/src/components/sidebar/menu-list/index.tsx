@@ -4,7 +4,7 @@ import { Popover, Modal, message } from 'antd';
 import { menuList } from '@/constants';
 import useUserStore from '@/store/user-store';
 import eventBus from '@/utils/event-bus';
-import { jumpTologin } from '@/utils/http';
+import { jumpToLogin } from '@/utils/http';
 import { checkUserInfo } from '@/services/spark-common';
 import useChat from '@/hooks/use-chat';
 import { useEnterprise } from '@/hooks/use-enterprise';
