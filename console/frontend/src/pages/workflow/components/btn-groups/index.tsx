@@ -115,7 +115,7 @@ const usePublishHeader = ({
 
   const handlePublish = useMemoizedFn(() => {
     setVersionManagement(false);
-    const botId = JSON.parse(currentFlow?.ext)?.botId;
+    // const botId = JSON.parse(currentFlow?.ext)?.botId;
     isCanPublish(currentFlow?.id).then(flag => {
       if (flag) {
         // getChainInfo(botId).then(res => {
@@ -201,6 +201,7 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
         onCancel={() => {
           setOpenWxmol(false);
         }}
+        workflowId={JSON.parse(currentFlow?.ext)?.botId}
       />
       <Tooltip
         title={t('workflow.nodes.header.export')}

@@ -1,6 +1,7 @@
 package com.iflytek.astron.console.hub.controller.chat;
 
 import cn.hutool.core.util.RandomUtil;
+import com.alibaba.fastjson2.JSON;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.chat.ChatListCreateResponse;
@@ -364,14 +365,23 @@ public class ChatMessageController {
 
         log.info("Debug interface establishing SSE connection, sseId: {}", sseId);
         // Check if multi-turn conversation is selected
-        if (debugRequest.getNeed() == 0) {
-            debugRequest.setArr(new ArrayList<>());
+        List<String> messageList = new ArrayList<>();
+        if (debugRequest.getMultiTurn() && StringUtils.isNotBlank(debugRequest.getArr())) {
+            messageList = JSON.parseArray(debugRequest.getArr(), String.class);
         }
-
+        // Parse array from frontend
+        List<String> maasDatasetList;
+        String maasDatasetListStr = debugRequest.getMaasDatasetListStr();
+        if (Objects.nonNull(maasDatasetListStr) && StringUtils.isNotBlank(maasDatasetListStr)) {
+            maasDatasetListStr = maasDatasetListStr.substring(1, maasDatasetListStr.length() - 1);
+            maasDatasetList = Arrays.asList(maasDatasetListStr.split(","));
+        } else {
+            maasDatasetList = new ArrayList<>();
+        }
         try {
             sendStartSignal(sseEmitter, sseId, new ChatContext(uid, 0L, 0));
-            botChatService.debugChatMessageBot(debugRequest.getText(), debugRequest.getPrompt(), debugRequest.getArr(),
-                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), debugRequest.getModelId(), sseEmitter, sseId);
+            botChatService.debugChatMessageBot(debugRequest.getText(), debugRequest.getPrompt(), messageList,
+                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), debugRequest.getModelId(), maasDatasetList, sseEmitter, sseId);
             return sseEmitter;
         } catch (Exception e) {
             log.error("Bot debug error, sseId: {}", sseId, e);

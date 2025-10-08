@@ -475,15 +475,10 @@ export const useArrayDefault = ({
         return;
       }
 
-      console.log('Current node for editing:', currentNode);
-      console.log('Existing default value:', currentNode.default);
-
       const copyCurrentNode = cloneDeep([currentNode]) as InputParamsData[];
       addTestProperty(copyCurrentNode);
       const defaultParamsData =
         transformInputDataToDefaultParamsData(copyCurrentNode);
-
-      console.log('Transformed data for editing:', defaultParamsData);
 
       setDefaultParamsData(defaultParamsData);
       const allKeys: string[] = [];

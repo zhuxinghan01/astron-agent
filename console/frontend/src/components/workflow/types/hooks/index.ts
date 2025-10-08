@@ -243,7 +243,7 @@ export interface UseNodeCommonReturn {
   isIteratorChildNode: boolean;
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
-  isRpaNode: boolean;
+  isRpaNode?: boolean;
   isCodeNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;

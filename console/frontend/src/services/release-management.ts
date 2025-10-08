@@ -10,15 +10,17 @@ export const getAgentDetail = async (botId: number): Promise<any> => {
  * @param botId Agent ID -- url use
  * @param params.action Release action -- 'PUBLISH' or 'OFFLINE'
  * @param params.reason Release reason -- empty string
+ * @param params.publishType Publish type -- 'MARKET', 'API', 'MCP', 'WECHAT', 'FEISHU'
  * @returns Release agent response
  */
 export const handleAgentStatus = async (
   botId: number,
-  params: { action: string; reason: '' }
+  params: { action: string; reason: string; publishType: string }
 ): Promise<void> => {
-  return await http.post(`/publish/bots/${botId}/status`, {
+  return await http.post(`/publish/bots/${botId}`, {
     action: params.action,
-    reason: params.reason,
+    publishType: params.publishType,
+    publishData: { reason: params.reason },
   });
 };
 

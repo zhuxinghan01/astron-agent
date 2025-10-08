@@ -1,5 +1,5 @@
-import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
-import useAntModal, { CommonAntModalProps } from '@/hooks/use-ant-modal';
+import { forwardRef, useImperativeHandle, useState } from 'react';
+import useAntModal from '@/hooks/use-ant-modal';
 import { createRpa, getRpaSourceList, updateRpa } from '@/services/rpa';
 import { RpaDetailFormInfo, RpaInfo } from '@/types/rpa';
 import { useRequest } from 'ahooks';

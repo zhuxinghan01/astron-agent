@@ -1,23 +1,24 @@
 package com.iflytek.astron.console.hub.controller.bot;
 
-import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
+import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.TakeoffList;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.response.ApiResult;
+import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
+import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
-import com.iflytek.astron.console.commons.entity.bot.BotCreateForm;
-import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
-import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.hub.dto.bot.MaasDuplicate;
+import com.iflytek.astron.console.hub.service.bot.BotTransactionalService;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
-import com.iflytek.astron.console.commons.util.MaasUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +27,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +60,9 @@ public class BotController {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private BotTransactionalService botTransactionalService;
 
     @Value("${maas.appid:}")
     String tenantId;
@@ -101,7 +102,7 @@ public class BotController {
         String botId = (String) botJson.get("botId");
         botPermissionUtil.checkBot(Integer.parseInt(botId));
         maasUtil.setBotTag(botJson);
-        log.info("***** uid: {}, botId: {} 提交MASS助手", uid, botId);
+        log.info("***** uid: {}, botId: {} submit MASS assistant", uid, botId);
         String flowId = botJson.getString("flowId");
         JSONObject result = maasUtil.createApi(flowId, tenantId);
         if (Objects.isNull(result)) {
@@ -111,7 +112,7 @@ public class BotController {
     }
 
     /**
-     * 申请下架助手
+     * Apply to take down assistant
      *
      * @param request
      * @param takeoffList
@@ -134,31 +135,45 @@ public class BotController {
     @PostMapping("/updateSynchronize")
     @Transactional(rollbackFor = Exception.class)
     public ApiResult<Long> updateSynchronize(@RequestBody MaasDuplicate update) {
-        log.info("----- 星辰画布更新: {}", JSONUtil.toJsonStr(update));
+        log.info("----- Xingchen canvas update: {}", JSON.toJSONString(update));
         Long maasId = update.getMaasId();
         List<UserLangChainInfo> list = userLangChainDataService.findByMaasId(maasId);
         if (Objects.isNull(list) || list.isEmpty()) {
-            log.info("----- 星火未找到星辰的工作流: {}", maasId);
+            log.info("----- Xinghuo did not find Xingchen's workflow: {}", maasId);
             return ApiResult.error(ResponseEnum.DATA_NOT_FOUND);
         }
         Integer botId = list.getFirst().getBotId();
         if (redissonClient.getBucket(MaasUtil.generatePrefix(maasId.toString(), botId)).isExists()) {
-            log.info("----- 星火内部服务,无需处理: {}", JSONUtil.toJsonStr(update));
+            log.info("----- Xinghuo internal service, no processing needed: {}", JSON.toJSONString(update));
             redissonClient.getBucket(MaasUtil.generatePrefix(maasId.toString(), botId)).delete();
             return ApiResult.success(botId.longValue());
         }
 
         String inputExamples = update.getInputExample()
                 .stream()
-                // 限制最多取前 3 个元素
+                // Limit to maximum of first 3 elements
                 .limit(3)
                 .collect(Collectors.joining(","));
-        // 更新描述,开场白,输入示例
+        // Update description, opening remarks, input examples
         boolean updateResult = chatBotDataService.updateBotBasicInfo(botId, update.getBotDesc(), update.getPrologue(), inputExamples);
         if (!updateResult) {
             log.error("Failed to update bot basic info for botId: {}", botId);
             return ApiResult.error(ResponseEnum.UPDATE_BOT_FAILED);
         }
         return ApiResult.success(maasId);
+    }
+
+    /**
+     * Copy assistant to specified assistant
+     */
+    @SpacePreAuth(key = "BotV2Controller_copyBot2_POST")
+    @PostMapping("/copy-bot")
+    public ApiResult<Void> copyBot2(HttpServletRequest request, @RequestParam Long botId) {
+        botPermissionUtil.checkBot(Math.toIntExact(botId));
+        String uid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        log.info("***** uid: {} copy assistant: {}", uid, botId);
+        botTransactionalService.copyBot(uid, Math.toIntExact(botId), request, spaceId);
+        return ApiResult.success();
     }
 }

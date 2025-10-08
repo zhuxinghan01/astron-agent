@@ -74,10 +74,7 @@ def send_telemetry(node_trace):
     if os.getenv(const.OTLP_ENABLE_KEY, "false").lower() == "true":
         kafka_service = get_kafka_producer_service()
         node_trace.start_time = int(round(time.time() * 1000))
-        kafka_service.send(
-            os.getenv(const.KAFKA_TOPIC_KEY),
-            node_trace.to_json()
-        )
+        kafka_service.send(os.getenv(const.KAFKA_TOPIC_KEY), node_trace.to_json())
 
 
 def handle_validation_error(validate_err, span_context, node_trace, m):
@@ -430,8 +427,8 @@ def setup_span_and_trace(run_params_list, app_id, uid, caller):
     node_trace = NodeTraceLog(
         service_id="",
         sid=sid or "",
-        app_id=app_id,
-        uid=uid,
+        app_id=str(app_id) if app_id else "",
+        uid=str(uid) if uid else "",
         chat_id=sid or "",
         sub="spark-link",
         caller=caller,

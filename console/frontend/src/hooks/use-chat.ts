@@ -4,6 +4,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useRef } from 'react';
 import type { Option } from '@/types/chat';
 import { useNavigate } from 'react-router-dom';
+import { baseURL } from '@/utils/http';
 
 // SSE 数据类型定义
 interface SSEData {
@@ -247,20 +248,7 @@ const useChat = () => {
     setIsWorkflowOption(false);
     setWorkflowOption({ option: [], content: '' });
     const { msg, workflowOperation, version, fileUrl, onSendCallback } = params;
-    let esURL = `/chat-message/chat`;
-    if (
-      typeof window !== 'undefined' &&
-      window.location.hostname === 'localhost'
-    ) {
-      esURL = `/xingchen-api/chat-message/chat`;
-    } else {
-      const mode = import.meta.env.VITE_MODE;
-      if (mode === 'development') {
-        esURL = `http://172.29.202.54:8080/chat-message/chat`;
-      } else {
-        esURL = `http://172.29.201.92:8080/chat-message/chat`;
-      }
-    }
+    const esURL = `${baseURL}chat-message/chat`;
     const form = new FormData();
     form.append('text', msg || '');
     form.append('chatId', `${currentChatId}`);
@@ -275,20 +263,7 @@ const useChat = () => {
   //重新回答
   const handleReAnswer = async (params: { requestId: number }) => {
     const { requestId } = params;
-    let esURL = 'http://172.29.201.92:8080/chat-message/chat';
-    if (
-      typeof window !== 'undefined' &&
-      window.location.hostname === 'localhost'
-    ) {
-      esURL = `/xingchen-api/chat-message/re-answer`;
-    } else {
-      const mode = import.meta.env.VITE_MODE;
-      if (mode === 'development') {
-        esURL = `http://172.29.202.54:8080/chat-message/re-answer`;
-      } else {
-        esURL = `http://172.29.201.92:8080/chat-message/re-answer`;
-      }
-    }
+    const esURL = `${baseURL}/chat-message/re-answer`;
     const form = new FormData();
     form.append('requestId', requestId.toString());
     form.append('chatId', `${currentChatId}`);

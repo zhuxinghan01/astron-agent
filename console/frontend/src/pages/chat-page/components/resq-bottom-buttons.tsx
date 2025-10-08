@@ -6,7 +6,6 @@ import { ReactSVG } from 'react-svg';
 import { Tooltip } from 'antd';
 import AudioAnimate from './audio-animate';
 import { useTranslation } from 'react-i18next';
-import { getTtsSign } from '@/services/chat';
 import TtsModule from './tts-module';
 import useChat from '@/hooks/use-chat';
 
@@ -27,7 +26,6 @@ const ResqBottomButtons = ({
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
   };
-  console.log('isLastMessage', isLastMessage);
   return (
     <div className="flex items-center ml-14 w-fit px-2 py-1 h-7">
       <TtsModule
@@ -51,7 +49,7 @@ const ResqBottomButtons = ({
           </div>
         )}
       </Tooltip>
-      {/* <Tooltip
+      <Tooltip
         title={
           isPlaying
             ? t('chatPage.chatBottom.stopReading')
@@ -65,7 +63,7 @@ const ResqBottomButtons = ({
         >
           <AudioAnimate isPlaying={isPlaying} />
         </div>
-      </Tooltip> */}
+      </Tooltip>
       <Tooltip title={t('chatPage.chatBottom.copy')} placement="top">
         <div
           onClick={() => copyText({ text: message.message })}

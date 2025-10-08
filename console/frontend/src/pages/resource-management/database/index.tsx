@@ -6,7 +6,7 @@ import databaseStore from '@/store/database-store';
 import CreateDatabase from './components/create-database';
 import DeleteModal from './components/delete-database';
 import DatabaseGrid from './components/database-grid';
-import { jumpTologin } from '@/utils/http';
+import { jumpToLogin } from '@/utils/http';
 import { DatabaseItem, CreateDbParams } from '@/types/database';
 import { useDatabaseList } from './hooks/use-database-list';
 
@@ -52,7 +52,7 @@ const DataBase = (): JSX.Element => {
   // 创建数据库点击处理
   const handleCreateDatabaseClick = useCallback((): void => {
     if (!user?.uid) {
-      return jumpTologin();
+      return jumpToLogin();
     }
     setCreateDatabaseOpen(!createDatabaseOpen);
   }, [user?.uid, createDatabaseOpen]);

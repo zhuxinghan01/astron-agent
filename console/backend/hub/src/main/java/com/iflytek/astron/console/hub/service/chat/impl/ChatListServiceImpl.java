@@ -1,10 +1,15 @@
 package com.iflytek.astron.console.hub.service.chat.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.iflytek.astron.console.commons.dto.bot.BotModelDto;
 import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatListResponseDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatTreeIndex;
+import com.iflytek.astron.console.commons.enums.bot.DefaultBotModelEnum;
+import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
+import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
+import com.iflytek.astron.console.toolkit.service.model.ModelService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
 import com.iflytek.astron.console.commons.service.data.ChatDataService;
@@ -37,6 +42,9 @@ public class ChatListServiceImpl implements ChatListService {
 
     @Autowired
     private BotService botService;
+
+    @Autowired
+    private ModelService modelService;
 
     @Override
     public ChatListCreateResponse createChatListForRestart(String uid, String chatListName, Integer botId, long chatId) {
@@ -109,6 +117,7 @@ public class ChatListServiceImpl implements ChatListService {
         for (ChatBotListDto botListDto : botChatList) {
             ChatListResponseDto responseDto = new ChatListResponseDto();
             BeanUtils.copyProperties(botListDto, responseDto);
+            responseDto.setBotName(botListDto.getBotTitle());
             chatList.add(responseDto);
         }
 
@@ -240,7 +249,42 @@ public class ChatListServiceImpl implements ChatListService {
             return null;
         }
         // 2. Get bot information based on chatId
-        return botService.getBotInfo(request, botId, chatList.getId(), workflowVersion);
+        BotInfoDto botInfoDto = botService.getBotInfo(request, botId, chatList.getId(), workflowVersion);
+
+        // Return model information, if modelId is empty, it indicates default model
+        if (botInfoDto != null) {
+            BotModelDto modelDto = getBotModelDto(request, botInfoDto.getModelId(), botInfoDto.getModel());
+            botInfoDto.setBotModelDto(modelDto);
+        }
+        return botInfoDto;
+    }
+
+    @Override
+    public BotModelDto getBotModelDto(HttpServletRequest request, Long modelId, String model) {
+        BotModelDto modelDto = new BotModelDto();
+        if (modelId == null && model != null) {
+            DefaultBotModelEnum modelEnum = DefaultBotModelEnum.getByDomain(model);
+            if (modelEnum != null) {
+                modelDto.setModelDomain(modelEnum.getDomain());
+                modelDto.setModelIcon(modelEnum.getIcon());
+                modelDto.setModelName(modelEnum.getName());
+                modelDto.setIsCustom(false);
+            }
+        } else {
+            // Return custom model
+            ApiResult<LLMInfoVo> llmInfoVoObject = modelService.getDetail(0, modelId, request);
+            if (llmInfoVoObject != null) {
+                LLMInfoVo llmInfoVo = llmInfoVoObject.data();
+                if (llmInfoVo != null) {
+                    modelDto.setModelDomain(llmInfoVo.getDomain());
+                    modelDto.setModelIcon(llmInfoVo.getIcon());
+                    modelDto.setModelName(llmInfoVo.getName());
+                    modelDto.setModelId(llmInfoVo.getId());
+                    modelDto.setIsCustom(true);
+                }
+            }
+        }
+        return modelDto;
     }
 
     /**

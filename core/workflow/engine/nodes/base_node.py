@@ -1008,7 +1008,6 @@ class BaseLLMNode(BaseNode):
     This class provides the foundation for all LLM-based nodes in the workflow,
     including configuration, chat AI initialization, and message processing.
 
-    :param model: Model identifier
     :param url: API endpoint URL
     :param domain: Model domain/version
     :param temperature: Sampling temperature for generation
@@ -1031,11 +1030,10 @@ class BaseLLMNode(BaseNode):
     :param chat_ai: Chat AI instance
     """
 
-    model: str = Field(...)
     domain: str = Field(...)
     appId: str = Field(...)
-    apiKey: str = Field(...)
-    apiSecret: str = Field(...)
+    apiKey: str = Field(default="")
+    apiSecret: str = Field(default="")
 
     url: str = Field(default="")
     temperature: float = Field(gt=0, le=1, default=1.0)

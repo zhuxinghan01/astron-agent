@@ -44,8 +44,6 @@ const ArrayDefault: FC<{
     setDefaultParamsData,
   });
 
-  console.log(defaultParamsData, 'defaultParamsData');
-
   return (
     <div className="mask">
       <div className="modalContent min-w-[624px] flex flex-col min-h-[350px] pr-0">
@@ -59,7 +57,7 @@ const ArrayDefault: FC<{
           />
         </div>
         <div
-          className="flex-1 pr-6 overflow-auto"
+          className="flex-1 pr-6 overflow-auto py-[24px]"
           style={{
             maxHeight: '50vh',
           }}

@@ -130,7 +130,11 @@ const AgentList: React.FC<AgentListProps> = ({ AgentType }) => {
       },
       onOk: (close: () => void) => {
         if (releaseType == 1 && botId) {
-          handleAgentStatus(botId, { action: 'OFFLINE', reason: '' })
+          handleAgentStatus(botId, {
+            action: 'OFFLINE',
+            reason: '维护更新',
+            publishType: 'MARKET',
+          })
             .then(() => {
               reasonRef.current = undefined;
               close && close();

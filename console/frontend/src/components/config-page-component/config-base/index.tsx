@@ -40,6 +40,8 @@ import {
   listRepos,
   updateDoneBot,
   quickCreateBot,
+  getModelList,
+  ModelListData,
 } from '@/services/spark-common';
 import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
@@ -236,12 +238,20 @@ const BaseConfig: React.FC<ChatProps> = ({
   const [vcnList, setVcnList] = useState<{ vcn: string }[]>([]);
   const [form] = Form.useForm();
   const [model, setModel] = useState('spark');
+  const [modelOptions, setModelOptions] = useState<ModelListData[]>([]);
 
-  const handleModelChange = (value: string) => {
+  // 获取模型列表
+  const getModelListData = (): void => {
+    getModelList().then((res: ModelListData[]) => {
+      setModelOptions(res || []);
+    });
+  };
+
+  const handleModelChange = (value: string): void => {
     setModel(value);
   };
 
-  const handleModelChangeNew = (e: string, index: number) => {
+  const handleModelChangeNew = (e: string, index: number): void => {
     const updatedModelList = [...modelList];
     updatedModelList[index] = { ...updatedModelList[index], model: e };
     setModelList(updatedModelList);
@@ -253,7 +263,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     api: (params: any) => Promise<any>,
     successMessage: string,
     shouldNavigateToAgent = false
-  ) => {
+  ): Promise<void> => {
     try {
       await api(obj);
       message.success(successMessage);
@@ -289,7 +299,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     isRag: boolean,
     useFormValues: boolean,
     isForPublish: boolean = false
-  ) => {
+  ): any => {
     const datasetKey = isRag ? 'datasetList' : 'maasDatasetList';
     const dataList: string[] = [];
     (selectSource || []).forEach((item: any) => {
@@ -338,6 +348,8 @@ const BaseConfig: React.FC<ChatProps> = ({
         .join(','),
       prologue: prologue,
       model: model,
+      isCustom: modelOptions?.find(item => item.modelDomain === model)
+        ?.isCustom,
       prompt: prompt,
       ...(!useFormValues && { promptStructList: [] }),
     };
@@ -363,14 +375,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     );
 
     const obj = buildRequestObject(isRag, useFormValues);
-    // MARK: 这里用新接口后，无论是否发布，都可以直接调用吗
-    // const api = handleAgentStatus
-    const api =
-      detailInfo.botStatus === 1 ||
-      detailInfo.botStatus === 2 ||
-      detailInfo.botStatus === 4
-        ? updateDoneBot
-        : updateBot;
+    const api = updateBot;
     const successMessage =
       detailInfo.botStatus === 1 ||
       detailInfo.botStatus === 2 ||
@@ -404,18 +409,20 @@ const BaseConfig: React.FC<ChatProps> = ({
         const obj = buildRequestObject(isRag, false, true); // 第三个参数表示用于发布
         handleApiCall(
           obj,
-          updateDoneBot,
+          updateBot,
           t('configBase.updatePublishSuccess'),
           true
         ); // 第四个参数为 true 表示导航到 /space/agent
       } else {
         const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
         const obj = buildRequestObject(isRag, true, true);
+        // MARK: update接口不再需要了吧 、这是发布到星火的吗？ -- 需确认
         updateBot(obj)
           .then(() => {
             handleAgentStatus(Number(botId), {
               action: 'PUBLISH',
               reason: '',
+              publishType: 'MARKET',
             })
               .then(() => {
                 message.success(t('configBase.publishSuccess'));
@@ -439,6 +446,7 @@ const BaseConfig: React.FC<ChatProps> = ({
           handleAgentStatus(Number(res.botId), {
             action: 'PUBLISH',
             reason: '',
+            publishType: 'MARKET',
           })
             .then(() => {
               message.success(t('configBase.publishSuccess'));
@@ -466,6 +474,7 @@ const BaseConfig: React.FC<ChatProps> = ({
   useEffect(() => {
     setShowTipPk(false);
     setShowModelPk(0);
+    getModelListData();
   }, []);
 
   useEffect(() => {
@@ -1055,6 +1064,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
@@ -1104,6 +1116,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
@@ -1484,30 +1499,21 @@ const BaseConfig: React.FC<ChatProps> = ({
                       style={{ width: '100%' }}
                       placeholder={t('configBase.pleaseSelectModel')}
                     >
-                      <Option value="spark">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t('configBase.sparkModel')}</span>
-                        </div>
-                      </Option>
-                      <Option value="x1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t('configBase.sparkX1Model')}</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekv3">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-V3</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekr1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-R1</span>
-                        </div>
-                      </Option>
+                      {modelOptions.map(option => (
+                        <Option
+                          key={option.modelDomain}
+                          value={option.modelDomain}
+                        >
+                          <div className="flex items-center">
+                            <img
+                              className="w-[20px] h-[20px]"
+                              src={option.modelIcon}
+                              alt={option.modelName}
+                            />
+                            <span>{option.modelName}</span>
+                          </div>
+                        </Option>
+                      ))}
                     </Select>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab={t('configBase.highOrderConfig')} key="2">
@@ -1756,36 +1762,21 @@ const BaseConfig: React.FC<ChatProps> = ({
                           style={{ width: '60%' }}
                           placeholder="请选择模型"
                         >
-                          <Option value="spark">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t('configBase.sparkModel')}</span>
-                            </div>
-                          </Option>
-                          <Option value="x1">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t('configBase.sparkX1Model')}</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekv3">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-V3</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekr1">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-R1</span>
-                            </div>
-                          </Option>
+                          {modelOptions.map(option => (
+                            <Option
+                              key={option.modelDomain}
+                              value={option.modelDomain}
+                            >
+                              <div className="flex items-center">
+                                <img
+                                  className="w-[20px] h-[20px]"
+                                  src={option.modelIcon}
+                                  alt={option.modelName}
+                                />
+                                <span>{option.modelName}</span>
+                              </div>
+                            </Option>
+                          ))}
                         </Select>
                       </div>
                       <PromptTry

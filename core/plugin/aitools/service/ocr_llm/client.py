@@ -8,18 +8,18 @@ import logging
 import os
 import queue
 import time
-from typing import List
+from typing import Dict, List
 
 from plugin.aitools.service.ase_sdk.__base.entities.req_data import ReqData
 from plugin.aitools.service.ase_sdk.__base.entities.result import Result
 from plugin.aitools.service.ase_sdk.__base.power import Power
+from plugin.aitools.service.ase_sdk.const.data_status import DataStatusEnum
+from plugin.aitools.service.ase_sdk.exception.CustomException import CustomException
+from plugin.aitools.service.ase_sdk.util.hmac_auth import HMACAuth
 from plugin.aitools.service.ocr_llm.entities.ocr_result import OcrResult
 from plugin.aitools.service.ocr_llm.entities.req_data import (
     OcrLLMReqSourceData,
 )
-from plugin.aitools.service.ase_sdk.const.data_status import DataStatusEnum
-from plugin.aitools.service.ase_sdk.exception.CustomException import CustomException
-from plugin.aitools.service.ase_sdk.util.hmac_auth import HMACAuth
 
 
 class OcrLLMClient(Power):
@@ -30,7 +30,8 @@ class OcrLLMClient(Power):
     def __init__(
         self,
         url: str = os.getenv(
-            "OCR_LLM_WS_URL", "https://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75ocrbm"
+            "OCR_LLM_WS_URL",
+            "https://cbm01.cn-huabei-1.xf-yun.com/v1/private/se75ocrbm",
         ),
         method: str = "GET",
     ):
@@ -92,24 +93,11 @@ class OcrLLMClient(Power):
         try:
             while True:
                 one = self.queue.get(timeout=60)
+
                 if isinstance(one, Result):
-                    data = json.loads(one.data)
-                    payload = data.get("payload")
-                    if not payload:
-                        header = data.get("header", {})
-                        code = header.get("code", 0)
-                        message = header.get("message", "")
-                        if code != 0:
-                            raise CustomException(code=code, message=message)
-                        continue
-                    text = payload.get("result", {}).get("text", "")
-                    if text:
-                        tt = base64.b64decode(text).decode(encoding="utf-8")
-                        yield OcrResult(
-                            name="markdown",
-                            value=OcrRespParse.parse(json.loads(tt)),
-                            source_data=tt,
-                        )
+                    result = self._process_result_data(one)
+                    if result:
+                        yield result
                     if one.status == DataStatusEnum.END.value:
                         break
                 elif issubclass(one.__class__, Exception):
@@ -120,6 +108,29 @@ class OcrLLMClient(Power):
             pass
         except Exception as e:
             raise e
+
+    def _process_result_data(self, result_item):
+        """处理Result类型数据并返回OcrResult或None"""
+        data = json.loads(result_item.data)
+        payload = data.get("payload")
+
+        if not payload:
+            header = data.get("header", {})
+            code = header.get("code", 0)
+            message = header.get("message", "")
+            if code != 0:
+                raise CustomException(code=code, message=message)
+            return None
+
+        text = payload.get("result", {}).get("text", "")
+        if text:
+            tt = base64.b64decode(text).decode(encoding="utf-8")
+            return OcrResult(
+                name="markdown",
+                value=OcrRespParse.parse(json.loads(tt)),
+                source_data=tt,
+            )
+        return None
 
     def handle_generate_response(self) -> OcrResult:
         """
@@ -163,7 +174,7 @@ class OcrRespParse:
         return "\n".join(result)
 
     @staticmethod
-    def _deal_table_data(cells: []):
+    def _deal_table_data(cells: List[Dict[str, int]]):
         max_row = max(item["row"] for item in cells)
         table = "<table border='1'>\n"
 
@@ -210,9 +221,9 @@ class OcrRespParse:
         Returns:
 
         """
-
         child_contents = root_content.get("content", [[{}]])
         child_ocr_texts = []
+
         for child_content in child_contents:
             for child_content2 in child_content:
                 # 获取文本类型
@@ -220,67 +231,90 @@ class OcrRespParse:
 
                 # 获取文本属性
                 if is_get_text_attribute:
-                    if content_type == "text_unit":
-                        attributes = child_content2.get("attribute", [{}])
-                        return [OcrRespParse._deal_text_attributes(attributes)]
-                    else:
-                        return OcrRespParse._deal_one(
-                            child_content2, is_get_text_attribute
-                        )
-
+                    return OcrRespParse._process_text_attribute_mode(child_content2)
                 # 正常处理文本
                 elif content_type == "paragraph":
-                    text_arr = child_content2.get("text", [])
-                    text_str = "\n".join(text_arr).replace("\n", "<br>")
-                    # 获取文本的格式信息
-                    text_format = OcrRespParse._deal_one(child_content2, True)
-                    if text_format:
-                        text_str = text_format[0].format(text=text_str)
-                    child_ocr_texts.append(text_str)
-
+                    result = OcrRespParse._process_paragraph_content(child_content2)
+                    child_ocr_texts.append(result)
                 # 处理表格信息
                 elif content_type == "table":
-                    # 处理表头
-                    note = child_content2.get("note", [])
-                    if note:
-                        header_content = OcrRespParse._deal_one({"content": [note]})
-                        child_ocr_texts.append("<br>".join(header_content))
-                    cells = child_content2.get("cell", [])
-                    table_content = OcrRespParse._deal_table_data(cells)
-                    child_ocr_texts.append(table_content)
-
+                    results = OcrRespParse._process_table_content(child_content2)
+                    child_ocr_texts.extend(results)
                 # 递归获取子内容
                 else:
-                    if child_content2:
-                        content2_result = OcrRespParse._deal_one(child_content2)
-
-                        # 代码块
-                        if content_type == "code":
-                            child_ocr_texts.append("```")
-                            child_ocr_texts.extend(content2_result)
-                            child_ocr_texts.append("```")
-
-                        # 标题
-                        elif content_type == "title":
-                            level = child_content2.get("level", 0)
-                            if level:
-                                text = f'{"#" * level} {"<br>".join(content2_result)}'
-                                child_ocr_texts.append(text)
-                            else:
-                                child_ocr_texts.extend(content2_result)
-
-                        # 列表
-                        elif content_type == "item":
-                            child_ocr_texts.append(f'- {"<br>".join(content2_result)}')
-
-                        # 其他
-                        else:
-                            child_ocr_texts.extend(content2_result)
+                    results = OcrRespParse._process_other_content_types(
+                        child_content2,
+                        content_type
+                    )
+                    child_ocr_texts.extend(results)
 
         return child_ocr_texts
 
     @staticmethod
-    def _deal_text_attributes(attributes: [{}]) -> str:
+    def _process_text_attribute_mode(child_content2):
+        """处理文本属性模式"""
+        content_type = child_content2.get("type", "")
+        if content_type == "text_unit":
+            attributes = child_content2.get("attribute", [{}])
+            return [OcrRespParse._deal_text_attributes(attributes)]
+        else:
+            return OcrRespParse._deal_one(child_content2, True)
+
+    @staticmethod
+    def _process_paragraph_content(child_content2):
+        """处理段落内容"""
+        text_arr = child_content2.get("text", [])
+        text_str = "\n".join(text_arr).replace("\n", "<br>")
+        # 获取文本的格式信息
+        text_format = OcrRespParse._deal_one(child_content2, True)
+        if text_format:
+            text_str = text_format[0].format(text=text_str)
+        return text_str
+
+    @staticmethod
+    def _process_table_content(child_content2):
+        """处理表格内容"""
+        results = []
+        # 处理表头
+        note = child_content2.get("note", [])
+        if note:
+            header_content = OcrRespParse._deal_one({"content": [note]})
+            results.append("<br>".join(header_content))
+        cells = child_content2.get("cell", [])
+        table_content = OcrRespParse._deal_table_data(cells)
+        results.append(table_content)
+        return results
+
+    @staticmethod
+    def _process_other_content_types(child_content2, content_type):
+        """处理其他内容类型（代码、标题、列表等）"""
+        results = []
+        if child_content2:
+            content2_result = OcrRespParse._deal_one(child_content2)
+
+            # 代码块
+            if content_type == "code":
+                results.append("```")
+                results.extend(content2_result)
+                results.append("```")
+            # 标题
+            elif content_type == "title":
+                level = child_content2.get("level", 0)
+                if level:
+                    text = f'{"#" * level} {"<br>".join(content2_result)}'
+                    results.append(text)
+                else:
+                    results.extend(content2_result)
+            # 列表
+            elif content_type == "item":
+                results.append(f'- {"<br>".join(content2_result)}')
+            # 其他
+            else:
+                results.extend(content2_result)
+        return results
+
+    @staticmethod
+    def _deal_text_attributes(attributes: List[Dict[str, str]]) -> str:
         ff = "{text}"
         for attribute in attributes:
             name = attribute.get("name", "")

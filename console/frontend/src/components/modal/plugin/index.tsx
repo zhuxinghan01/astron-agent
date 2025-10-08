@@ -456,6 +456,9 @@ const AuthTypeSelector: React.FC<{
   );
 };
 
+type OneOf<T> = {
+  [K in keyof T]: { [P in K]: T[P] };
+}[keyof T];
 // 基本信息表单组件
 const BasicInfoForm: React.FC<{
   baseForm: FormInstance<BaseFormData>;
@@ -468,6 +471,7 @@ const BasicInfoForm: React.FC<{
   setName: (name: string) => void;
   desc: string;
   setDesc: (desc: string) => void;
+  onValuesChange: (value: OneOf<BaseFormData>, values: BaseFormData) => void;
 }> = ({
   baseForm,
   authType,
@@ -479,10 +483,16 @@ const BasicInfoForm: React.FC<{
   setName,
   desc,
   setDesc,
+  onValuesChange,
 }) => {
   const { t } = useTranslation();
   return (
-    <Form form={baseForm} layout="vertical" className="tool-create-form">
+    <Form
+      form={baseForm}
+      layout="vertical"
+      className="tool-create-form"
+      onValuesChange={onValuesChange}
+    >
       <PluginBasicFields
         botIcon={botIcon}
         botColor={botColor}
@@ -822,6 +832,7 @@ export const CreateTool = forwardRef<
       outputParamsData,
       avatarColor,
       avatarIcon,
+      setBaseFormData,
     } = useCreateTool({
       currentToolInfo,
       handleCreateToolDone,
@@ -889,6 +900,9 @@ export const CreateTool = forwardRef<
               >
                 {step === 1 && (
                   <BasicInfoForm
+                    onValuesChange={(_, values) => {
+                      setBaseFormData({ ...values });
+                    }}
                     baseForm={baseForm}
                     authType={authType}
                     setAuthType={setAuthType}
