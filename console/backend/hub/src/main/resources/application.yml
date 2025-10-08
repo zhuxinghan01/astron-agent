@@ -119,10 +119,12 @@ workflow:
     storage-path: ${WORKFLOW_STORAGE_PATH:/tmp/workflow/uploads}
 
 
+
 maas:
   appId: ${MAAS_APP_ID:your-maas-app-id}
   apiKey: ${MAAS_API_KEY:your-maas-api-key}
   apiSecret: ${MAAS_API_SECRET:your-maas-api-secret}
+  workflowVersion: ${MAAS_WORKFLOW_VERSION:http://localhost:8080}
   synchronizeWorkFlow: http://127.0.0.1:8080/workflow
   publish: http://127.0.0.1:8080/workflow/publish
   cloneWorkFlow: http://127.0.0.1:8080/workflow/internal-clone
@@ -177,3 +179,7 @@ wechat:
     token: ${WECHAT_TOKEN:your_token}
     # Message encryption/decryption key
     encoding-aes-key: ${WECHAT_ENCODING_AES_KEY:your_encoding_aes_key}
+
+tenant:
+  create-app: http://10.1.87.65:5052/v2/app
+  get-app-detail: http://10.1.87.65:5052/v2/app/details

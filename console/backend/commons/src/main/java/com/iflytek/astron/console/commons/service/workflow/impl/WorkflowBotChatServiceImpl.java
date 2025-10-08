@@ -36,6 +36,9 @@ import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * @author mingsuiyongheng
+ */
 @Service
 @Slf4j
 public class WorkflowBotChatServiceImpl implements WorkflowBotChatService {
@@ -79,6 +82,15 @@ public class WorkflowBotChatServiceImpl implements WorkflowBotChatService {
     @Value("${common.apiSecret}")
     private String appSecret;
 
+    /**
+     * Handle chatbot workflow requests
+     *
+     * @param chatBotReqDto Chat bot request data transfer object
+     * @param sseEmitter Server-Sent Events emitter
+     * @param sseId Server-sent event identifier
+     * @param workflowOperation Workflow operation type
+     * @param workflowVersion Workflow version
+     */
     @Override
     public void chatWorkflowBot(ChatBotReqDto chatBotReqDto, SseEmitter sseEmitter, String sseId, String workflowOperation, String workflowVersion) {
         String uid = chatBotReqDto.getUid();
@@ -164,6 +176,11 @@ public class WorkflowBotChatServiceImpl implements WorkflowBotChatService {
         client.createWebSocketConnect(listener);
     }
 
+    /**
+     * Filter chat request content
+     *
+     * @param requestDtoList Chat request list
+     */
     private void filterContent(ChatRequestDtoList requestDtoList) {
         LinkedList<ChatRequestDto> filteredMessages = new LinkedList<>();
         boolean removeNext = false;
@@ -199,6 +216,12 @@ public class WorkflowBotChatServiceImpl implements WorkflowBotChatService {
         requestDtoList.setMessages(filteredMessages);
     }
 
+    /**
+     * Determine whether the given content should be removed
+     *
+     * @param content Content object to be evaluated
+     * @return Returns true if should be removed, otherwise false
+     */
     private boolean shouldRemove(Object content) {
         try {
             WorkflowEventData.EventValue eventValue = JSON.parseObject(String.valueOf(content), WorkflowEventData.EventValue.class);
