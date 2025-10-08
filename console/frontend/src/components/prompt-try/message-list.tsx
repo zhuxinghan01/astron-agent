@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useRef, MutableRefObject } from 'react';
 import type { MessageListType, BotInfoType } from '@/types/chat';
 import errorIcon from '@/assets/imgs/sparkImg/errorIcon.svg';
+import userImg from '@/assets/svgs/user-logo.svg';
 import LoadingAnimate from '@/constants/lottie-react/chat-loading.json';
 import useUserStore from '@/store/user-store';
 import { getLanguageCode } from '@/utils/http';
@@ -96,7 +97,11 @@ const MessageList = (props: {
         key={item.id}
         className="text-white py-2.5 flex leading-[1.4] h-auto"
       >
-        <img src={user?.avatar} alt="" className="h-6 w-6 rounded-full mr-4" />
+        <img
+          src={user?.avatar || userImg}
+          alt=""
+          className="h-6 w-6 rounded-full mr-4"
+        />
         <div className="bg-[#257eff] rounded-[0px_18px_18px_18px] p-[14px_19px] relative max-w-full">
           <div className="text-base font-normal text-white leading-[25px] whitespace-pre-wrap w-auto break-words">
             {item.message}
@@ -116,7 +121,7 @@ const MessageList = (props: {
       >
         <div className="flex w-full mb-3">
           <img
-            src={botInfo.avatar}
+            src={botInfo.avatar || coverUrl}
             alt="avatar"
             className="w-6 h-6 rounded-full mr-4 object-cover"
           />

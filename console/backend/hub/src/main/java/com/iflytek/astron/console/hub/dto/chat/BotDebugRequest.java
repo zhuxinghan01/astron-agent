@@ -2,7 +2,6 @@ package com.iflytek.astron.console.hub.dto.chat;
 
 import lombok.Data;
 
-import java.util.List;
 
 /**
  * Bot debug request DTO
@@ -25,12 +24,12 @@ public class BotDebugRequest {
     /**
      * Whether multi-turn conversation is needed
      */
-    private Integer need;
+    private Boolean multiTurn = false;
 
     /**
      * Array parameters
      */
-    private List<String> arr;
+    private String arr;
 
     /**
      * Dataset list
@@ -55,7 +54,7 @@ public class BotDebugRequest {
     /**
      * MaaS dataset list
      */
-    private String maasDatasetList;
+    private String maasDatasetListStr;
 
     private Long modelId;
 }

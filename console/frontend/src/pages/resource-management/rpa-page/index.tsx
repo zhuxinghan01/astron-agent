@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useNavigate } from 'react-router-dom';
 import RetractableInput from '@/components/ui/global/retract-table-input';
-import { jumpTologin } from '@/utils/http';
+import { jumpToLogin } from '@/utils/http';
 import { useRpaPage } from './hooks/use-rpa-page';
 import { Dropdown, message, Modal } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
@@ -59,7 +59,7 @@ const RpaPage: FC = () => {
               }}
               onClick={() => {
                 if (!user?.login && !user?.uid) {
-                  return jumpTologin();
+                  return jumpToLogin();
                 }
                 modalFormRef.current?.showModal();
               }}
@@ -148,7 +148,7 @@ export const RpaCard = ({
       onClick={() => {
         if (rpa.status == 0) {
           if (!user?.login && !user?.uid) {
-            return jumpTologin();
+            return jumpToLogin();
           }
           showModal?.();
         } else {

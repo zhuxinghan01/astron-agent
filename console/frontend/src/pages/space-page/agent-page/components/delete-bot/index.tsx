@@ -36,7 +36,8 @@ function index({
     if (botDetail?.botStatus === 2) {
       await handleAgentStatus(botDetail.botId as number, {
         action: 'OFFLINE',
-        reason: '',
+        reason: '维护更新',
+        publishType: 'MARKET',
       });
     }
     if (type) {

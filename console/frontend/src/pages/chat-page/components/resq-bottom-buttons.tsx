@@ -6,7 +6,6 @@ import { ReactSVG } from 'react-svg';
 import { Tooltip } from 'antd';
 import AudioAnimate from './audio-animate';
 import { useTranslation } from 'react-i18next';
-import { getTtsSign } from '@/services/chat';
 import TtsModule from './tts-module';
 import useChat from '@/hooks/use-chat';
 
@@ -50,7 +49,7 @@ const ResqBottomButtons = ({
           </div>
         )}
       </Tooltip>
-      {/* <Tooltip
+      <Tooltip
         title={
           isPlaying
             ? t('chatPage.chatBottom.stopReading')
@@ -64,7 +63,7 @@ const ResqBottomButtons = ({
         >
           <AudioAnimate isPlaying={isPlaying} />
         </div>
-      </Tooltip> */}
+      </Tooltip>
       <Tooltip title={t('chatPage.chatBottom.copy')} placement="top">
         <div
           onClick={() => copyText({ text: message.message })}

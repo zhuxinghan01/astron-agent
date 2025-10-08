@@ -1,13 +1,10 @@
 SELECT 'astron_console DATABASE initialization started' AS '';
-CREATE
-DATABASE IF NOT EXISTS astron_console;
+CREATE DATABASE IF NOT EXISTS astron_console;
 
-USE
-astron_console;
+USE astron_console;
 
 SET NAMES utf8mb4;
-SET
-FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for agent_apply_record
@@ -846,6 +843,8 @@ INSERT INTO `agent_space_permission` (`id`, `module`, `point`, `description`, `p
                                       `member`, `available_expired`, `create_time`, `update_time`)
 VALUES (281, 'Agent Details', '', '', 'ChatBotController_botDetail_POST', 1, 1, 1, 0, '2025-01-01 00:00:00',
         '2025-01-01 00:00:00');
+INSERT INTO `astron_console`.`agent_space_permission` (`id`, `module`, `point`, `description`, `permission_key`, `owner`, `admin`, `member`, `available_expired`, `create_time`, `update_time`) VALUES (282, '创建工作流智能体', NULL, NULL, 'BotCreateController_create_POST', 1, 1, 1, 0, '2025-01-01 00:00:00', '2025-01-01 00:00:00');
+INSERT INTO `astron_console`.`agent_space_permission` (`id`, `module`, `point`, `description`, `permission_key`, `owner`, `admin`, `member`, `available_expired`, `create_time`, `update_time`) VALUES (283, '更新工作流智能体', NULL, NULL, 'BotCreateController_update_POST', 1, 1, 1, 0, '2025-01-01 00:00:00', '2025-01-01 00:00:00');
 COMMIT;
 
 -- ----------------------------
@@ -3884,6 +3883,7 @@ CREATE TABLE `user_info`
     `nickname`       varchar(255)                                                  DEFAULT NULL COMMENT 'User nickname',
     `mobile`         varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT 'Mobile number',
     `account_status` tinyint                                                       DEFAULT '0' COMMENT 'Activation status: 0 inactive, 1 active, 2 frozen',
+    `enterprise_service_type` int                                                  DEFAULT '0' COMMENT 'Enterprise service type: 0 none, 1 team, 2 enterprise',
     `user_agreement` tinyint                                                       DEFAULT '0' COMMENT 'Whether agreed to user agreement: 0 not agreed, 1 agreed',
     `deleted`        tinyint                                                       DEFAULT '0' COMMENT 'Logical deletion flag: 0 not deleted, 1 deleted',
     `create_time`    datetime                                                      DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
@@ -4206,7 +4206,6 @@ DROP TABLE IF EXISTS `xingchen_official_prompt`;
 CREATE TABLE `xingchen_official_prompt`
 (
     `id`             bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`     varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `name`           varchar(255) NOT NULL COMMENT 'Prompt name',
     `prompt_key`     varchar(255) NOT NULL COMMENT 'Prompt unique identifier key',
     `uid`            varchar(128) NOT NULL DEFAULT '0' COMMENT 'User ID',
@@ -4221,7 +4220,6 @@ CREATE TABLE `xingchen_official_prompt`
     `create_time`    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     UNIQUE KEY `uk_prompt_key` (`prompt_key`),
     KEY              `idx_uid` (`uid`),
     KEY              `idx_type` (`type`),
@@ -4236,7 +4234,6 @@ DROP TABLE IF EXISTS `xingchen_prompt_manage`;
 CREATE TABLE `xingchen_prompt_manage`
 (
     `id`              bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`      varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `name`            varchar(500) NOT NULL COMMENT 'Prompt name',
     `prompt_key`      varchar(255) NOT NULL COMMENT 'Prompt unique identifier key',
     `uid`             varchar(128) NOT NULL COMMENT 'User ID',
@@ -4252,7 +4249,6 @@ CREATE TABLE `xingchen_prompt_manage`
     `create_time`     datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`     datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     UNIQUE KEY `uk_prompt_key_uid` (`prompt_key`,`uid`),
     KEY               `idx_uid` (`uid`),
     KEY               `idx_type` (`type`),
@@ -4268,7 +4264,6 @@ DROP TABLE IF EXISTS `xingchen_prompt_version`;
 CREATE TABLE `xingchen_prompt_version`
 (
     `id`           bigint       NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `mongodb_id`   varchar(50)  NOT NULL COMMENT 'MongoDB original _id',
     `prompt_id`    varchar(50)  NOT NULL COMMENT 'Associated Prompt ID',
     `uid`          varchar(128) NOT NULL COMMENT 'User ID',
     `version`      varchar(50)  NOT NULL COMMENT 'Version number',
@@ -4282,7 +4277,6 @@ CREATE TABLE `xingchen_prompt_version`
     `create_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
     `update_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_mongodb_id` (`mongodb_id`),
     KEY            `idx_prompt_id` (`prompt_id`),
     KEY            `idx_uid` (`uid`),
     KEY            `idx_version` (`version`),

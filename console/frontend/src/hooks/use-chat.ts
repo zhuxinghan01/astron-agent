@@ -248,7 +248,7 @@ const useChat = () => {
     setIsWorkflowOption(false);
     setWorkflowOption({ option: [], content: '' });
     const { msg, workflowOperation, version, fileUrl, onSendCallback } = params;
-    const esURL = `${baseURL}/chat-message/chat`;
+    const esURL = `${baseURL}chat-message/chat`;
     const form = new FormData();
     form.append('text', msg || '');
     form.append('chatId', `${currentChatId}`);

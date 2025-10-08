@@ -125,7 +125,7 @@ export const downloadFileWithHeaders = (
 /**
  * 跳转到登录页
  */
-export const jumpTologin = (): void => {
+export const jumpToLogin = (): void => {
   handleLoginRedirect();
   // eventBus.emit('openLoginModal');
 };
@@ -149,6 +149,7 @@ export const initServerError = (
   }
   // 判断如果是401错误 直接跳转至登录页
   if (response?.status === 401) {
+    jumpToLogin();
     return {
       code: 101,
       message: '尚未登录，请重新登录',
@@ -185,13 +186,13 @@ export const initBusinessError = (
     });
     // 登陆异常
     if (!specialRouter.includes(window.location.pathname)) {
-      jumpTologin();
+      jumpToLogin();
     }
     if (
       response.config.url &&
       specialRequestUrl.includes(response.config.url)
     ) {
-      jumpTologin();
+      jumpToLogin();
     }
   }
   if (

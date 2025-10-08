@@ -16,7 +16,7 @@ import { debounce } from 'lodash';
 import RetractableInput from '@/components/ui/global/retract-table-input';
 import useChat from '@/hooks/use-chat';
 import useUserStore from '@/store/user-store';
-import { jumpTologin, downloadFileWithHeaders } from '@/utils/http';
+import { jumpToLogin, downloadFileWithHeaders } from '@/utils/http';
 import { getFixedUrl } from '@/components/workflow/utils';
 
 import iconNew from '@/assets/imgs/main/icon_bot_new.png';
@@ -361,7 +361,7 @@ function index() {
                 }}
                 onClick={() => {
                   if (!user?.login && !user?.uid) {
-                    return jumpTologin();
+                    return jumpToLogin();
                   }
                   setCreateModalVisible(true);
                 }}

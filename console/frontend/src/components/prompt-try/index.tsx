@@ -139,7 +139,7 @@ const PromptTry = forwardRef<
 
     // 获取答案
     const getAnswer = (question: string) => {
-      const esURL = `${baseURL}/chat-message/bot-debug`;
+      const esURL = `${baseURL}chat-message/bot-debug`;
       const form = new FormData();
       if (model) {
         form.append('model', newModel ? newModel : model);
