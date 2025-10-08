@@ -158,11 +158,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
-    public static final String PROTOCOL_ADD_PATH = "/sparkflow/v1/protocol/add";
-    public static final String PROTOCOL_UPDATE_PATH = "/sparkflow/v1/protocol/update/";
-    public static final String PROTOCOL_DELETE_PATH = "/sparkflow/v1/protocol/delete";
-    public static final String NODE_DEBUG_PATH = "/sparkflow/v1/node/debug/";
-    public static final String PROTOCOL_BUILD_PATH = "/sparkflow/v1/protocol/build/";
+    public static final String PROTOCOL_ADD_PATH = "/workflow/v1/protocol/add";
+    public static final String PROTOCOL_UPDATE_PATH = "/workflow/v1/protocol/update/";
+    public static final String PROTOCOL_DELETE_PATH = "/workflow/v1/protocol/delete";
+    public static final String NODE_DEBUG_PATH = "/workflow/v1/node/debug/";
+    public static final String PROTOCOL_BUILD_PATH = "/workflow/v1/protocol/build/";
     public static final String CODE_RUN_PATH = "/workflow/v1/run";
     public static final String CLONED_SUFFIX_PATTERN = "[(]\\d+[)]$";
 
@@ -1070,7 +1070,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             configs = Arrays.asList(configInfo.getValue().split(","));
         }
         try {
-            if(!configs.contains(prefix)){
+            if (!configs.contains(prefix)) {
                 bizNodeData.getNodeParam().put("apiKey", aksk.getApiKey());
                 bizNodeData.getNodeParam().put("apiSecret", aksk.getApiSecret());
 
@@ -1857,7 +1857,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
                     if (notFlowNode && fixedAppEnv) {
                         buidKeyInfo(bizNodeData);
                     } else {
-                        if(!configs.contains(prefix)){
+                        if (!configs.contains(prefix)) {
                             bizNodeData.getNodeParam().put("appId", appId);
                             bizNodeData.getNodeParam().put("apiKey", apiKey);
                             bizNodeData.getNodeParam().put("apiSecret", apiSecret);
@@ -1869,7 +1869,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
                         Long modelId = bizNodeData.getNodeParam().getLong("modelId");
                         if (modelId != null) {
                             Model model = modelService.getById(modelId);
-                            if(!configs.contains(prefix)){
+                            if (!configs.contains(prefix)) {
                                 bizNodeData.getNodeParam().put("apiKey", model.getApiKey());
                                 bizNodeData.getNodeParam().put("apiSecret", StringUtils.EMPTY);
                             }

@@ -40,25 +40,38 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for {@link ModelService}.
  *
- * <p>Notes:</p>
+ * <p>
+ * Notes:
+ * </p>
  * <ul>
- *     <li>Use {@code @Spy} + {@code @InjectMocks} to execute real logic with partial stubbing.</li>
- *     <li>Construct different input parameters and mocked results to cover key branches and exception paths.</li>
+ * <li>Use {@code @Spy} + {@code @InjectMocks} to execute real logic with partial stubbing.</li>
+ * <li>Construct different input parameters and mocked results to cover key branches and exception
+ * paths.</li>
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
 class ModelServiceTest {
 
-    @Mock private ModelMapper mapper;
-    @Mock private LLMService llmService;
-    @Mock private ConfigInfoMapper configInfoMapper;
-    @Mock private RestTemplate restTemplate;
-    @Mock private S3Util s3UtilClient;
-    @Mock private WorkflowMapper workflowMapper;
-    @Mock private SparkBotMapper sparkBotMapper;
-    @Mock private ModelCategoryService modelCategoryService;
-    @Mock private ModelCommonService modelCommonService;
-    @Mock private LocalModelHandler modelHandler;
+    @Mock
+    private ModelMapper mapper;
+    @Mock
+    private LLMService llmService;
+    @Mock
+    private ConfigInfoMapper configInfoMapper;
+    @Mock
+    private RestTemplate restTemplate;
+    @Mock
+    private S3Util s3UtilClient;
+    @Mock
+    private WorkflowMapper workflowMapper;
+    @Mock
+    private SparkBotMapper sparkBotMapper;
+    @Mock
+    private ModelCategoryService modelCategoryService;
+    @Mock
+    private ModelCommonService modelCommonService;
+    @Mock
+    private LocalModelHandler modelHandler;
 
     @Spy
     @InjectMocks
@@ -80,12 +93,14 @@ class ModelServiceTest {
      * Test {@link ModelService#validateModel(ModelValidationRequest)} for the bypass-decrypt branch
      * (i.e., id != null and apiKeyMasked == false).
      *
-     * <p>Covers:</p>
+     * <p>
+     * Covers:
+     * </p>
      * <ul>
-     *     <li>URL completion to /v1/chat/completions</li>
-     *     <li>SSRF blacklist lookup</li>
-     *     <li>OpenAI-compatible response validation</li>
-     *     <li>saveOrUpdateModel (update path)</li>
+     * <li>URL completion to /v1/chat/completions</li>
+     * <li>SSRF blacklist lookup</li>
+     * <li>OpenAI-compatible response validation</li>
+     * <li>saveOrUpdateModel (update path)</li>
      * </ul>
      *
      * @throws BusinessException if validation fails unexpectedly
@@ -123,7 +138,8 @@ class ModelServiceTest {
         // 2) second getOne returns null (no duplication)
         doReturn(dbModel)
                 .doReturn(null)
-                .when(modelService).getOne(any(LambdaQueryWrapper.class));
+                .when(modelService)
+                .getOne(any(LambdaQueryWrapper.class));
         // updateById succeeds
         when(mapper.updateById(any(Model.class))).thenReturn(1);
         // category binding
@@ -131,8 +147,8 @@ class ModelServiceTest {
 
         // HTTP success (OpenAI-compatible)
         String okResp = """
-            {"choices":[{"message":{"role":"assistant","content":"hi"}}],"usage":{"prompt_tokens":1,"completion_tokens":1}}
-            """;
+                {"choices":[{"message":{"role":"assistant","content":"hi"}}],"usage":{"prompt_tokens":1,"completion_tokens":1}}
+                """;
         ResponseEntity<String> httpOk = new ResponseEntity<>(okResp, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(httpOk);
@@ -147,8 +163,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#validateModel(ModelValidationRequest)} with a response
-     * that is not OpenAI-compatible (missing "usage" field), expecting a business exception.
+     * Test {@link ModelService#validateModel(ModelValidationRequest)} with a response that is not
+     * OpenAI-compatible (missing "usage" field), expecting a business exception.
      *
      * @throws BusinessException expected
      * @since 1.0
@@ -175,8 +191,8 @@ class ModelServiceTest {
 
         // HTTP response missing "usage"
         String badResp = """
-            {"choices":[{"message":{"role":"assistant","content":"hi"}}]}
-            """;
+                {"choices":[{"message":{"role":"assistant","content":"hi"}}]}
+                """;
         ResponseEntity<String> httpOk = new ResponseEntity<>(badResp, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(httpOk);
@@ -187,8 +203,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#validateModel(ModelValidationRequest)} when HTTP request
-     * throws 401/5xx, which should be mapped to MODEL_APIKEY_ERROR.
+     * Test {@link ModelService#validateModel(ModelValidationRequest)} when HTTP request throws 401/5xx,
+     * which should be mapped to MODEL_APIKEY_ERROR.
      *
      * @throws BusinessException expected
      * @since 1.0
@@ -225,8 +241,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test decrypt branch of {@link ModelService#validateModel(ModelValidationRequest)}
-     * when private key configuration is missing, expecting a business exception.
+     * Test decrypt branch of {@link ModelService#validateModel(ModelValidationRequest)} when private
+     * key configuration is missing, expecting a business exception.
      *
      * @throws BusinessException expected
      * @since 1.0
@@ -286,13 +302,12 @@ class ModelServiceTest {
 
         List<CategoryTreeVO> filtered = modelService.getAllCategoryTree();
         assertEquals(4, filtered.size());
-        assertTrue(filtered.stream().allMatch(v ->
-                Set.of("modelCategory","languageSupport","contextLengthTag","modelScenario").contains(v.getKey())));
+        assertTrue(filtered.stream().allMatch(v -> Set.of("modelCategory", "languageSupport", "contextLengthTag", "modelScenario").contains(v.getKey())));
     }
 
     /**
-     * Test {@link ModelService#(Integer, Long, String)} for the public model path
-     * (avoids static dependencies on user context).
+     * Test {@link ModelService#(Integer, Long, String)} for the public model path (avoids static
+     * dependencies on user context).
      *
      * @throws Exception if invocation fails
      * @since 1.0
@@ -332,8 +347,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#flushStatus(Model)} for the "RUNNING" status update,
-     * verifying endpoint URL propagation and that an update operation is invoked.
+     * Test {@link ModelService#flushStatus(Model)} for the "RUNNING" status update, verifying endpoint
+     * URL propagation and that an update operation is invoked.
      *
      * @since 1.0
      */
@@ -368,26 +383,36 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#flushStatusBatch(String, List)} for batch processing:
-     * only records with {@code type=2} and non-empty remark are considered and updated.
+     * Test {@link ModelService#flushStatusBatch(String, List)} for batch processing: only records with
+     * {@code type=2} and non-empty remark are considered and updated.
      *
      * @since 1.0
      */
     @Test
     void testFlushStatusBatch_batchUpdate() {
-        Model a = new Model(); a.setId(1L); a.setType(2); a.setRemark("svc-a"); a.setStatus(0);
-        Model b = new Model(); b.setId(2L); b.setType(2); b.setRemark("svc-b"); b.setStatus(0);
-        Model c = new Model(); c.setId(3L); c.setType(1); // Should be skipped
+        Model a = new Model();
+        a.setId(1L);
+        a.setType(2);
+        a.setRemark("svc-a");
+        a.setStatus(0);
+        Model b = new Model();
+        b.setId(2L);
+        b.setType(2);
+        b.setRemark("svc-b");
+        b.setStatus(0);
+        Model c = new Model();
+        c.setId(3L);
+        c.setType(1); // Should be skipped
 
-        JSONObject ra = new JSONObject().fluentPut("status","RUNNING").fluentPut("endpoint","https://a");
-        JSONObject rb = new JSONObject().fluentPut("status","FAILED").fluentPut("endpoint","https://b");
+        JSONObject ra = new JSONObject().fluentPut("status", "RUNNING").fluentPut("endpoint", "https://a");
+        JSONObject rb = new JSONObject().fluentPut("status", "FAILED").fluentPut("endpoint", "https://b");
         when(modelHandler.checkDeployStatus("svc-a")).thenReturn(ra);
         when(modelHandler.checkDeployStatus("svc-b")).thenReturn(rb);
 
         // Intercept batch update and mark success
         doReturn(true).when(modelService).updateBatchById(anyList());
 
-        int updated = modelService.flushStatusBatch("u1", Arrays.asList(a,b,c));
+        int updated = modelService.flushStatusBatch("u1", Arrays.asList(a, b, c));
         assertTrue(updated >= 1);
         verify(modelService, times(1)).updateBatchById(anyList());
     }
@@ -406,8 +431,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test creation flow of {@link ModelService#validateModel(ModelValidationRequest)}
-     * when private key decryption succeeds (id == null).
+     * Test creation flow of {@link ModelService#validateModel(ModelValidationRequest)} when private key
+     * decryption succeeds (id == null).
      *
      * @throws BusinessException if validation or persistence fails unexpectedly
      * @since 1.0
@@ -447,16 +472,16 @@ class ModelServiceTest {
                     .thenReturn("DECRYPTED_KEY");
 
             // 3) saveOrUpdateModel: creation branch
-            //    - duplicate check returns null
+            // - duplicate check returns null
             doReturn(null).when(modelService).getOne(any(LambdaQueryWrapper.class));
-            //    - insert success
+            // - insert success
             when(mapper.insert(any(Model.class))).thenAnswer(inv -> 1);
             doNothing().when(modelCategoryService).saveAll(any(ModelCategoryReq.class));
 
             // 4) HTTP returns OpenAI-compatible response
             String okResp = """
-            {"choices":[{"message":{"role":"assistant","content":"hi"}}],"usage":{"prompt_tokens":1,"completion_tokens":1}}
-            """;
+                    {"choices":[{"message":{"role":"assistant","content":"hi"}}],"usage":{"prompt_tokens":1,"completion_tokens":1}}
+                    """;
             when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
                     .thenReturn(new ResponseEntity<>(okResp, HttpStatus.OK));
 
@@ -476,8 +501,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#validateModel(ModelValidationRequest)} when endpoint URL
-     * contains a query string, which should be rejected.
+     * Test {@link ModelService#validateModel(ModelValidationRequest)} when endpoint URL contains a
+     * query string, which should be rejected.
      *
      * @throws BusinessException expected
      * @since 1.0
@@ -493,7 +518,10 @@ class ModelServiceTest {
         req.setUid("u1");
 
         Model m = new Model();
-        m.setId(1L); m.setUid("u1"); m.setApiKey("K"); m.setIsDeleted(false);
+        m.setId(1L);
+        m.setUid("u1");
+        m.setApiKey("K");
+        m.setIsDeleted(false);
         doReturn(m).when(modelService).getById(1L);
 
         when(configInfoMapper.getListByCategory("NETWORK_SEGMENT_BLACK_LIST"))
@@ -504,8 +532,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#(ModelDto, String)} to ensure public and owner models
-     * are merged, sorted and paginated correctly.
+     * Test {@link ModelService#(ModelDto, String)} to ensure public and owner models are merged, sorted
+     * and paginated correctly.
      *
      * @since 1.0
      */
@@ -514,22 +542,42 @@ class ModelServiceTest {
         // Populate public list via llmService
         doAnswer(inv -> {
             List<LLMInfoVo> out = inv.getArgument(0);
-            LLMInfoVo a = new LLMInfoVo(); a.setId(10L); a.setCreateTime(new Date(1000)); a.setName("a");
-            LLMInfoVo b = new LLMInfoVo(); b.setId(11L); b.setCreateTime(new Date(2000)); b.setName("b");
-            out.add(a); out.add(b);
+            LLMInfoVo a = new LLMInfoVo();
+            a.setId(10L);
+            a.setCreateTime(new Date(1000));
+            a.setName("a");
+            LLMInfoVo b = new LLMInfoVo();
+            b.setId(11L);
+            b.setCreateTime(new Date(2000));
+            b.setName("b");
+            out.add(a);
+            out.add(b);
             return null;
         }).when(llmService).getDataFromModelShelfList(anyList(), anyList(), anyString(), any());
 
         // Owner list: mapper.selectList returns two items
-        Model m1 = new Model(); m1.setId(1L); m1.setUid("u1"); m1.setName("self1"); m1.setDomain("d1"); m1.setCreateTime(new Date(1500)); m1.setIsDeleted(false);
-        Model m2 = new Model(); m2.setId(2L); m2.setUid("u1"); m2.setName("self2"); m2.setDomain("d2"); m2.setCreateTime(new Date(2500)); m2.setIsDeleted(false);
+        Model m1 = new Model();
+        m1.setId(1L);
+        m1.setUid("u1");
+        m1.setName("self1");
+        m1.setDomain("d1");
+        m1.setCreateTime(new Date(1500));
+        m1.setIsDeleted(false);
+        Model m2 = new Model();
+        m2.setId(2L);
+        m2.setUid("u1");
+        m2.setName("self2");
+        m2.setDomain("d2");
+        m2.setCreateTime(new Date(2500));
+        m2.setIsDeleted(false);
         when(mapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Arrays.asList(m1, m2));
         when(s3UtilClient.getS3Prefix()).thenReturn("s3://x");
         when(modelCategoryService.getTree(anyLong())).thenReturn(Collections.emptyList());
 
         ModelDto dto = new ModelDto();
         dto.setUid("u1");
-        dto.setPage(1); dto.setPageSize(3);
+        dto.setPage(1);
+        dto.setPageSize(3);
         dto.setType(0); // include both public and owner
 
         ApiResult<Page<LLMInfoVo>> ret = modelService.getList(dto, null);
@@ -541,8 +589,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#localModel(LocalModelDto)} creation flow,
-     * including context length resolution from category (e.g., "128k").
+     * Test {@link ModelService#localModel(LocalModelDto)} creation flow, including context length
+     * resolution from category (e.g., "128k").
      *
      * @since 1.0
      */
@@ -561,7 +609,8 @@ class ModelServiceTest {
         dto.setModelCategoryReq(mcReq);
 
         com.iflytek.astron.console.toolkit.entity.table.model.ModelCategory cat = new com.iflytek.astron.console.toolkit.entity.table.model.ModelCategory();
-        cat.setId(999L); cat.setName("128k");
+        cat.setId(999L);
+        cat.setName("128k");
         when(modelCategoryService.getById(999L)).thenReturn(cat);
 
         // not duplicated
@@ -586,8 +635,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#localModel(LocalModelDto)} edit flow
-     * (existing model found, authorized, and updated).
+     * Test {@link ModelService#localModel(LocalModelDto)} edit flow (existing model found, authorized,
+     * and updated).
      *
      * @since 1.0
      */
@@ -600,7 +649,9 @@ class ModelServiceTest {
         dto.setDomain("d2");
 
         Model exists = new Model();
-        exists.setId(7L); exists.setUid("u1"); exists.setIsDeleted(false);
+        exists.setId(7L);
+        exists.setUid("u1");
+        exists.setIsDeleted(false);
         doReturn(exists).when(modelService).getById(7L);
 
         when(modelHandler.deployModelUpdate(any(), nullable(String.class)))
@@ -615,8 +666,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test {@link ModelService#(Long, Integer, String, String)} for both
-     * authorized enable-on success and unauthorized rejection.
+     * Test {@link ModelService#(Long, Integer, String, String)} for both authorized enable-on success
+     * and unauthorized rejection.
      *
      * @since 1.0
      */
@@ -626,7 +677,9 @@ class ModelServiceTest {
         try (MockedStatic<com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler> u = mockStatic(com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler.class)) {
             u.when(com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler::getUserId).thenReturn("u1");
 
-            Model m = new Model(); m.setId(5L); m.setUid("u1");
+            Model m = new Model();
+            m.setId(5L);
+            m.setUid("u1");
             doReturn(m).when(modelService).getById(5L);
             doReturn(true).when(modelService).updateById(any(Model.class));
 
@@ -639,7 +692,9 @@ class ModelServiceTest {
         try (MockedStatic<com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler> u = mockStatic(com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler.class)) {
             u.when(com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler::getUserId).thenReturn("u2");
 
-            Model m = new Model(); m.setId(6L); m.setUid("owner");
+            Model m = new Model();
+            m.setId(6L);
+            m.setUid("owner");
             doReturn(m).when(modelService).getById(6L);
 
             BusinessException ex = assertThrows(BusinessException.class, () -> modelService.switchModel(6L, 3, "on", null));
@@ -662,8 +717,8 @@ class ModelServiceTest {
     }
 
     /**
-     * Test helpers {@link ModelService#encodeId(long)}, {@link ModelService#decodeId(long)}
-     * and {@link ModelService#generate9DigitRandomFromId(long)}.
+     * Test helpers {@link ModelService#encodeId(long)}, {@link ModelService#decodeId(long)} and
+     * {@link ModelService#generate9DigitRandomFromId(long)}.
      *
      * @since 1.0
      */
