@@ -49,7 +49,7 @@ const ResqBottomButtons = ({
           </div>
         )}
       </Tooltip>
-      <Tooltip
+      {/* <Tooltip
         title={
           isPlaying
             ? t('chatPage.chatBottom.stopReading')
@@ -63,7 +63,7 @@ const ResqBottomButtons = ({
         >
           <AudioAnimate isPlaying={isPlaying} />
         </div>
-      </Tooltip>
+      </Tooltip> */}
       <Tooltip title={t('chatPage.chatBottom.copy')} placement="top">
         <div
           onClick={() => copyText({ text: message.message })}

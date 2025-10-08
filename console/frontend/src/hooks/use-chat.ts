@@ -263,7 +263,7 @@ const useChat = () => {
   //重新回答
   const handleReAnswer = async (params: { requestId: number }) => {
     const { requestId } = params;
-    const esURL = `${baseURL}/chat-message/re-answer`;
+    const esURL = `${baseURL}chat-message/re-answer`;
     const form = new FormData();
     form.append('requestId', requestId.toString());
     form.append('chatId', `${currentChatId}`);
