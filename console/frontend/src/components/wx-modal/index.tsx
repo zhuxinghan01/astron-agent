@@ -46,6 +46,7 @@ interface MultiModeCpnProps {
   setPageInfo?: any;
   agentType?: any;
   moreParams?: any;
+  workflowId?: number;
 }
 
 const WxModal: React.FC<MultiModeCpnProps> = ({
@@ -65,6 +66,7 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
   setPageInfo,
   agentType,
   moreParams,
+  workflowId,
 }) => {
   let i = 0;
   let flag = false;
@@ -211,16 +213,13 @@ const WxModal: React.FC<MultiModeCpnProps> = ({
       setQufabuFlag(true);
     }
 
-    console.log('handlePublish---------', botInfo);
-    //先下架助手 -- NOTE: 用新接口后应该不需要先下架的操作了，会有报错
-    // await handleAgentStatus(botInfo?.botId as number, {
-    //   action: 'OFFLINE',
-    //   reason: '',
-    // });
+    // console.log('handlePublish---------', botInfo);
+
     // 提交审核
-    handleAgentStatus(botInfo?.botId as number, {
+    handleAgentStatus((botInfo?.botId as number) || (workflowId as number), {
       action: 'PUBLISH',
       reason: '',
+      publishType: 'MARKET',
     })
       .then(() => {
         // onCancel();
