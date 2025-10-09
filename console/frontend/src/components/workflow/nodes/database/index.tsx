@@ -249,6 +249,7 @@ const DatabaseSQLPanel = ({
         content={
           <div className="px-[18px]">
             <FlowTemplateEditor
+              id={id}
               data={data}
               onBlur={() => delayCheckNode(id)}
               value={nodeParam?.sql}

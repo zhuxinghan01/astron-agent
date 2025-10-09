@@ -24,6 +24,10 @@ import {
   FlowType,
   PositionType,
   NewNodeType,
+  UseAddNodeReturn,
+  UseAddToolNodeReturn,
+  UseAddFlowNodeReturn,
+  UseAddRpaNodeReturn,
 } from '@/components/workflow/types/hooks';
 
 import { UseFlowCommonReturn } from '@/components/workflow/types/hooks';
@@ -31,188 +35,19 @@ import { RpaNodeParam } from '@/types/rpa';
 import { Edge } from 'reactflow';
 import { transRpaParameters } from '@/utils/rpa';
 
-// 全局类型声明 - 移除重复声明
-export const useFlowCommon = (): UseFlowCommonReturn => {
+const useAddNode = (): UseAddNodeReturn => {
   const { spaceId } = useSpaceStore();
-  const user = useUserStore(state => state.user);
+  const setWillAddNode = useFlowsManager(state => state.setWillAddNode);
   const setShowToolModal = useFlowsManager(state => state.setToolModalInfo);
   const setFlowModal = useFlowsManager(state => state.setFlowModalInfo);
   const setRpaModal = useFlowsManager(state => state.setRpaModalInfo);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
-  const setOpenOperationResult = useFlowsManager(
-    state => state.setOpenOperationResult
-  );
-  const setVersionManagement = useFlowsManager(
-    state => state.setVersionManagement
-  );
-  const willAddNode = useFlowsManager(state => state.willAddNode);
-  const beforeNode = useFlowsManager(state => state.beforeNode);
-  const setBeforeNode = useFlowsManager(state => state.setBeforeNode);
   const nodes = currentStore(state => state.nodes);
-  const setNodes = currentStore(state => state.setNodes);
+  const user = useUserStore(state => state.user);
   const currentFlow = useFlowsManager(state => state.currentFlow);
-  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
-  const setWillAddNode = useFlowsManager(state => state.setWillAddNode);
-  const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    state => state.setNodeInfoEditDrawerlInfo
-  );
-  const checkFlow = useFlowsManager(state => state.checkFlow);
-  const reactFlowInstance = currentStore(state => state.reactFlowInstance);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
-  const setEdges = currentStore(state => state.setEdges);
-  const edgeType = useFlowsManager(state => state.edgeType);
-
-  const addEdge = useMemoizedFn(
-    (
-      sourceHandle: string | null,
-      currentNode: NewNodeType,
-      nextNode: NewNodeType
-    ): void => {
-      const edge = {
-        source: currentNode?.id,
-        sourceHandle: sourceHandle,
-        target: nextNode?.id,
-        targetHandle: null,
-        type: 'customEdge',
-        markerEnd: {
-          type: 'arrow',
-          color: '#275EFF',
-        },
-        data: {
-          edgeType: edgeType,
-        },
-        id: `reactflow__edge-${currentNode?.id}${sourceHandle ?? ''}-${
-          nextNode?.id
-        }`,
-      };
-      setEdges((edges: unknown[]) => {
-        const newEdges = [...edges, edge] as Edge[];
-        return newEdges;
-      });
-    }
-  );
-
-  const handleAddToolNode = useMemoizedFn((tool: ToolType): void => {
-    takeSnapshot();
-    const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.pluginId === tool.toolId
-    );
-    willAddNode.data.nodeParam.pluginId = tool.toolId;
-    willAddNode.data.nodeParam.operationId = tool.operationId;
-    willAddNode.data.nodeParam.toolDescription = tool.description;
-    willAddNode.data.nodeParam.version = tool.version || 'V1.0';
-    willAddNode.data.nodeParam.appId = currentFlow?.appId || '';
-    willAddNode.data.nodeParam.uid = user?.uid?.toString() || '';
-    const toolRequestInput =
-      (isJSON(tool?.webSchema || '') &&
-        JSON.parse(tool.webSchema || '')?.toolRequestInput) ||
-      [];
-    willAddNode.data.inputs = handleModifyToolUrlParams(toolRequestInput);
-    willAddNode.data.nodeParam.businessInput =
-      findFromTwoItems(toolRequestInput);
-    willAddNode.data.outputs = transformTree(
-      (isJSON(tool?.webSchema || '') &&
-        JSON.parse(tool.webSchema || '')?.toolRequestOutput) ||
-        []
-    );
-    const newToolNode = {
-      id: getNodeId(willAddNode.idType),
-      type: 'custom',
-      nodeType: willAddNode?.idType,
-      position: generateRandomPosition(reactFlowInstance?.getViewport()),
-      selected: true,
-      data: {
-        icon: willAddNode.icon,
-        ...copyNodeData(willAddNode.data),
-        label: getNextName(currentTypeList, tool.name),
-        labelEdit: false,
-      },
-    };
-    setNodes(nodes => [
-      ...nodes.map(node => ({ ...node, selected: false })),
-      newToolNode,
-    ]);
-    canPublishSetNot();
-    message.success(`${tool.name} 已添加`);
-    if (beforeNode) {
-      addEdge(beforeNode.sourceHandle, beforeNode, newToolNode);
-    }
-  });
-
-  const handleAddFlowNode = useMemoizedFn((flow: FlowType): void => {
-    takeSnapshot();
-    const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.flowId === flow.flowId
-    );
-    willAddNode.data.nodeParam.toolDescription = flow.description;
-    willAddNode.data.nodeParam.appId = flow?.appId;
-    willAddNode.data.nodeParam.flowId = flow?.flowId;
-    willAddNode.data.nodeParam.uid = user?.uid?.toString() || '';
-    willAddNode.data.nodeParam.version = (flow as unknown)?.version || '';
-    willAddNode.data.inputs = (flow as unknown)?.ioInversion?.inputs || [];
-    willAddNode.data.outputs = (flow as unknown)?.ioInversion?.outputs || [];
-    const newFlowNode = {
-      id: getNodeId(willAddNode.idType),
-      type: 'custom',
-      nodeType: willAddNode?.idType,
-      position: generateRandomPosition(reactFlowInstance?.getViewport()),
-      selected: true,
-      data: {
-        icon: willAddNode.icon,
-        ...copyNodeData(willAddNode.data),
-        label: getNextName(currentTypeList, flow.name),
-        labelEdit: false,
-      },
-    };
-    setNodes(nodes => [
-      ...nodes.map(node => ({ ...node, selected: false })),
-      newFlowNode,
-    ]);
-    canPublishSetNot();
-    message.success(`${flow.name} 已添加`);
-    if (beforeNode) {
-      addEdge(beforeNode.sourceHandle, beforeNode, newFlowNode);
-    }
-  });
-
-  const handleAddRpaNode = useMemoizedFn((rpaParam: RpaNodeParam): void => {
-    takeSnapshot();
-    const currentTypeList = nodes.filter(
-      node => node?.data?.nodeParam?.projectId === rpaParam.project_id
-    );
-    willAddNode.data.nodeParam.projectId = rpaParam.project_id;
-    willAddNode.data.nodeParam.source = rpaParam.platform;
-    willAddNode.data.nodeParam.header = rpaParam.fields;
-    willAddNode.data.inputs = transRpaParameters(
-      rpaParam.parameters?.filter(item => item.varDirection === 0) || []
-    );
-    willAddNode.data.outputs = transRpaParameters(
-      rpaParam.parameters?.filter(item => item.varDirection === 1) || []
-    );
-    const newRpaNode = {
-      id: getNodeId(willAddNode.idType),
-      type: 'custom',
-      nodeType: willAddNode?.idType,
-      position: generateRandomPosition(reactFlowInstance?.getViewport()),
-      selected: true,
-      data: {
-        icon: willAddNode.icon,
-        ...copyNodeData(willAddNode.data),
-        label: getNextName(currentTypeList, rpaParam.name),
-        labelEdit: false,
-      },
-    };
-    setNodes(nodes => [
-      ...nodes.map(node => ({ ...node, selected: false })),
-      newRpaNode,
-    ]);
-    canPublishSetNot();
-    message.success(`${rpaParam?.name} 已添加`);
-    if (beforeNode) {
-      addEdge(beforeNode.sourceHandle, beforeNode, newRpaNode);
-    }
-  });
-
+  const setNodes = currentStore(state => state.setNodes);
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const handleAddNode = useMemoizedFn(
     (addNode: AddNodeType, position: PositionType): NewNodeType[] | null => {
       setWillAddNode(addNode);
@@ -381,6 +216,224 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
       }
     }
   );
+  return {
+    handleAddNode,
+  };
+};
+
+const useAddToolNode = ({ addEdge }): UseAddToolNodeReturn => {
+  const willAddNode = useFlowsManager(state => state.willAddNode);
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const nodes = currentStore(state => state.nodes);
+  const user = useUserStore(state => state.user);
+  const currentFlow = useFlowsManager(state => state.currentFlow);
+  const takeSnapshot = currentStore(state => state.takeSnapshot);
+  const setNodes = currentStore(state => state.setNodes);
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
+  const beforeNode = useFlowsManager(state => state.beforeNode);
+  const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const handleAddToolNode = useMemoizedFn((tool: ToolType): void => {
+    takeSnapshot();
+    const currentTypeList = nodes.filter(
+      node => node?.data?.nodeParam?.pluginId === tool.toolId
+    );
+    willAddNode.data.nodeParam.pluginId = tool.toolId;
+    willAddNode.data.nodeParam.operationId = tool.operationId;
+    willAddNode.data.nodeParam.toolDescription = tool.description;
+    willAddNode.data.nodeParam.version = tool.version || 'V1.0';
+    willAddNode.data.nodeParam.appId = currentFlow?.appId || '';
+    willAddNode.data.nodeParam.uid = user?.uid?.toString() || '';
+    const toolRequestInput =
+      (isJSON(tool?.webSchema || '') &&
+        JSON.parse(tool.webSchema || '')?.toolRequestInput) ||
+      [];
+    willAddNode.data.inputs = handleModifyToolUrlParams(toolRequestInput);
+    willAddNode.data.nodeParam.businessInput =
+      findFromTwoItems(toolRequestInput);
+    willAddNode.data.outputs = transformTree(
+      (isJSON(tool?.webSchema || '') &&
+        JSON.parse(tool.webSchema || '')?.toolRequestOutput) ||
+        []
+    );
+    const newToolNode = {
+      id: getNodeId(willAddNode.idType),
+      type: 'custom',
+      nodeType: willAddNode?.idType,
+      position: generateRandomPosition(reactFlowInstance?.getViewport()),
+      selected: true,
+      data: {
+        icon: willAddNode.icon,
+        ...copyNodeData(willAddNode.data),
+        label: getNextName(currentTypeList, tool.name),
+        labelEdit: false,
+      },
+    };
+    setNodes(nodes => [
+      ...nodes.map(node => ({ ...node, selected: false })),
+      newToolNode,
+    ]);
+    canPublishSetNot();
+    message.success(`${tool.name} 已添加`);
+    if (beforeNode) {
+      addEdge(beforeNode.sourceHandle, beforeNode, newToolNode);
+    }
+  });
+  return {
+    handleAddToolNode,
+  };
+};
+
+const useAddFlowNode = ({ addEdge }): UseAddFlowNodeReturn => {
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const nodes = currentStore(state => state.nodes);
+  const user = useUserStore(state => state.user);
+  const takeSnapshot = currentStore(state => state.takeSnapshot);
+  const setNodes = currentStore(state => state.setNodes);
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
+  const beforeNode = useFlowsManager(state => state.beforeNode);
+  const willAddNode = useFlowsManager(state => state.willAddNode);
+  const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const handleAddFlowNode = useMemoizedFn((flow: FlowType): void => {
+    takeSnapshot();
+    const currentTypeList = nodes.filter(
+      node => node?.data?.nodeParam?.flowId === flow.flowId
+    );
+    willAddNode.data.nodeParam.toolDescription = flow.description;
+    willAddNode.data.nodeParam.appId = flow?.appId;
+    willAddNode.data.nodeParam.flowId = flow?.flowId;
+    willAddNode.data.nodeParam.uid = user?.uid?.toString() || '';
+    willAddNode.data.nodeParam.version = (flow as unknown)?.version || '';
+    willAddNode.data.inputs = (flow as unknown)?.ioInversion?.inputs || [];
+    willAddNode.data.outputs = (flow as unknown)?.ioInversion?.outputs || [];
+    const newFlowNode = {
+      id: getNodeId(willAddNode.idType),
+      type: 'custom',
+      nodeType: willAddNode?.idType,
+      position: generateRandomPosition(reactFlowInstance?.getViewport()),
+      selected: true,
+      data: {
+        icon: willAddNode.icon,
+        ...copyNodeData(willAddNode.data),
+        label: getNextName(currentTypeList, flow.name),
+        labelEdit: false,
+      },
+    };
+    setNodes(nodes => [
+      ...nodes.map(node => ({ ...node, selected: false })),
+      newFlowNode,
+    ]);
+    canPublishSetNot();
+    message.success(`${flow.name} 已添加`);
+    if (beforeNode) {
+      addEdge(beforeNode.sourceHandle, beforeNode, newFlowNode);
+    }
+  });
+  return {
+    handleAddFlowNode,
+  };
+};
+
+const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const nodes = currentStore(state => state.nodes);
+  const takeSnapshot = currentStore(state => state.takeSnapshot);
+  const setNodes = currentStore(state => state.setNodes);
+  const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
+  const beforeNode = useFlowsManager(state => state.beforeNode);
+  const willAddNode = useFlowsManager(state => state.willAddNode);
+  const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const handleAddRpaNode = useMemoizedFn((rpaParam: RpaNodeParam): void => {
+    takeSnapshot();
+    const currentTypeList = nodes.filter(
+      node => node?.data?.nodeParam?.projectId === rpaParam.project_id
+    );
+    willAddNode.data.nodeParam.projectId = rpaParam.project_id;
+    willAddNode.data.nodeParam.source = rpaParam.platform;
+    willAddNode.data.nodeParam.header = rpaParam.fields;
+    willAddNode.data.inputs = transRpaParameters(
+      rpaParam.parameters?.filter(item => item.varDirection === 0) || []
+    );
+    willAddNode.data.outputs = transRpaParameters(
+      rpaParam.parameters?.filter(item => item.varDirection === 1) || []
+    );
+    const newRpaNode = {
+      id: getNodeId(willAddNode.idType),
+      type: 'custom',
+      nodeType: willAddNode?.idType,
+      position: generateRandomPosition(reactFlowInstance?.getViewport()),
+      selected: true,
+      data: {
+        icon: willAddNode.icon,
+        ...copyNodeData(willAddNode.data),
+        label: getNextName(currentTypeList, rpaParam.name),
+        labelEdit: false,
+      },
+    };
+    setNodes(nodes => [
+      ...nodes.map(node => ({ ...node, selected: false })),
+      newRpaNode,
+    ]);
+    canPublishSetNot();
+    message.success(`${rpaParam?.name} 已添加`);
+    if (beforeNode) {
+      addEdge(beforeNode.sourceHandle, beforeNode, newRpaNode);
+    }
+  });
+  return {
+    handleAddRpaNode,
+  };
+};
+
+export const useFlowCommon = (): UseFlowCommonReturn => {
+  const setWillAddNode = useFlowsManager(state => state.setWillAddNode);
+  const setNodeInfoEditDrawerlInfo = useFlowsManager(
+    state => state.setNodeInfoEditDrawerlInfo
+  );
+  const checkFlow = useFlowsManager(state => state.checkFlow);
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const setEdges = currentStore(state => state.setEdges);
+  const edgeType = useFlowsManager(state => state.edgeType);
+  const setBeforeNode = useFlowsManager(state => state.setBeforeNode);
+  const setOpenOperationResult = useFlowsManager(
+    state => state.setOpenOperationResult
+  );
+  const setVersionManagement = useFlowsManager(
+    state => state.setVersionManagement
+  );
+  const addEdge = useMemoizedFn(
+    (
+      sourceHandle: string | null,
+      currentNode: NewNodeType,
+      nextNode: NewNodeType
+    ): void => {
+      const edge = {
+        source: currentNode?.id,
+        sourceHandle: sourceHandle,
+        target: nextNode?.id,
+        targetHandle: null,
+        type: 'customEdge',
+        markerEnd: {
+          type: 'arrow',
+          color: '#275EFF',
+        },
+        data: {
+          edgeType: edgeType,
+        },
+        id: `reactflow__edge-${currentNode?.id}${sourceHandle ?? ''}-${
+          nextNode?.id
+        }`,
+      };
+      setEdges((edges: unknown[]) => {
+        const newEdges = [...edges, edge] as Edge[];
+        return newEdges;
+      });
+    }
+  );
+
+  const { handleAddNode } = useAddNode();
+  const { handleAddToolNode } = useAddToolNode({ addEdge });
+  const { handleAddFlowNode } = useAddFlowNode({ addEdge });
+  const { handleAddRpaNode } = useAddRpaNode({ addEdge });
 
   const handleEdgeAddNode = useMemoizedFn(
     (

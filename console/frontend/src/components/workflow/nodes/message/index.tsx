@@ -50,6 +50,7 @@ export const MessageDetail = memo(props => {
             content={
               <div className="px-[18px] pb-3 pointer-events-auto">
                 <FlowTemplateEditor
+                  id={id}
                   data={data}
                   onBlur={() => delayCheckNode(id)}
                   value={nodeParam?.template}

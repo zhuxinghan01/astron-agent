@@ -722,11 +722,16 @@ function ChatContent({
       />
       {chatList.map((chat, index) =>
         chat.type === 'divider' ? (
-          <MessageDivider chat={chat} t={t} />
+          <MessageDivider key={chat.id} chat={chat} t={t} />
         ) : chat.type === 'ask' ? (
-          <MessageAsk chat={chat} renderInputElement={renderInputElement} />
+          <MessageAsk
+            key={chat.id}
+            chat={chat}
+            renderInputElement={renderInputElement}
+          />
         ) : (
           <MessageReply
+            key={chat.id}
             chat={chat}
             currentFlow={currentFlow}
             debuggering={debuggering}

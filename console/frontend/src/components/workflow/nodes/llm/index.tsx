@@ -83,6 +83,7 @@ const PromptSection = ({
             )}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.systemTemplate}
@@ -117,6 +118,7 @@ const PromptSection = ({
             )}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.template}

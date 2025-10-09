@@ -36,6 +36,7 @@ const AdvancedConfigSection = ({
       content={
         <div className="px-[18px] flex flex-col gap-3">
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.promptPrefix}

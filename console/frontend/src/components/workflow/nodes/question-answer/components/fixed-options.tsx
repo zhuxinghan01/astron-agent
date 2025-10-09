@@ -149,6 +149,7 @@ function index({ id, data, nodeParam }): React.ReactElement {
               </div>
               <div className="flex-1">
                 <FlowTemplateEditor
+                  id={id}
                   data={data}
                   onBlur={() => delayCheckNode(id)}
                   value={item?.content}

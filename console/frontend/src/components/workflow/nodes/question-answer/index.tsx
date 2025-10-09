@@ -29,6 +29,7 @@ const QuestionSection = memo(
         content={
           <div className="rounded-md px-[18px] pb-3 pointer-events-auto">
             <FlowTemplateEditor
+              id={id}
               data={data}
               onBlur={() => delayCheckNode(id)}
               value={data?.nodeParam?.question}

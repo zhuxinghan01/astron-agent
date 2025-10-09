@@ -77,6 +77,7 @@ export const EndDetail = memo(props => {
               content={
                 <div className="px-[14px]">
                   <FlowTemplateEditor
+                    id={id}
                     data={data}
                     value={nodeParam?.reasoningTemplate}
                     onChange={value =>
@@ -124,6 +125,7 @@ export const EndDetail = memo(props => {
               content={
                 <div className="px-[14px]">
                   <FlowTemplateEditor
+                    id={id}
                     data={data}
                     onBlur={() => delayCheckNode(id)}
                     value={nodeParam?.template}

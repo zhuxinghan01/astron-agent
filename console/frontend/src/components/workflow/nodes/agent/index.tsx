@@ -313,6 +313,7 @@ const PromptSection = ({
             {t('workflow.nodes.agentNode.roleSetting')}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             value={data?.nodeParam?.instruction?.answer}
             onChange={value =>
@@ -328,6 +329,7 @@ const PromptSection = ({
             {t('workflow.nodes.agentNode.thinkingSteps')}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.instruction?.reasoning}
@@ -345,6 +347,7 @@ const PromptSection = ({
             <span>{t('workflow.nodes.agentNode.userQuery')}</span>
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.instruction?.query}

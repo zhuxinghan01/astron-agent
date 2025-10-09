@@ -114,7 +114,6 @@ const ToolItem = ({
   currentTab,
   operateId,
   setOperateId,
-  optionsRef,
   handleDeleteModalShow,
 }): React.ReactElement => {
   const { t } = useTranslation();
@@ -262,7 +261,6 @@ const ToolItem = ({
               )}
               {operateId === item?.id && (
                 <div
-                  ref={optionsRef}
                   className="z-10 absolute top-2 right-0 p-1 bg-[#fff] rounded-lg"
                   style={{
                     boxShadow: '0px 2px 8px 0px rgba(0,0,0,0.08)',
@@ -412,6 +410,7 @@ const PluginList = ({
               >
                 {dataSource.map((item: ToolListItem) => (
                   <ToolItem
+                    key={item.id}
                     item={item}
                     setCurrentToolInfo={setCurrentToolInfo}
                     operateId={operateId}
