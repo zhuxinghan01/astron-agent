@@ -416,13 +416,12 @@ const BaseConfig: React.FC<ChatProps> = ({
       } else {
         const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
         const obj = buildRequestObject(isRag, true, true);
-        // MARK: update接口不再需要了吧 、这是发布到星火的吗？ -- 需确认
         updateBot(obj)
           .then(() => {
             handleAgentStatus(Number(botId), {
               action: 'PUBLISH',
-              reason: '',
               publishType: 'MARKET',
+              publishData: {},
             })
               .then(() => {
                 message.success(t('configBase.publishSuccess'));
@@ -445,8 +444,8 @@ const BaseConfig: React.FC<ChatProps> = ({
         .then((res: any) => {
           handleAgentStatus(Number(res.botId), {
             action: 'PUBLISH',
-            reason: '',
             publishType: 'MARKET',
+            publishData: {},
           })
             .then(() => {
               message.success(t('configBase.publishSuccess'));
@@ -1312,7 +1311,6 @@ const BaseConfig: React.FC<ChatProps> = ({
           disjump={true}
           setIsOpenapi={() => {}}
           fabuFlag={fabuFlag}
-          isV1={false}
           show={openWxmol}
           onCancel={() => {
             setOpenWxmol(false);
