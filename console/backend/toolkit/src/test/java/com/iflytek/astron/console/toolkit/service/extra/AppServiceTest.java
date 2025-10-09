@@ -26,11 +26,14 @@ class AppServiceTest {
     @InjectMocks
     private AppService appService;
 
-    @Mock private ApiUrl apiUrl;
-    @Mock private RedisUtil redisUtil;
+    @Mock
+    private ApiUrl apiUrl;
+    @Mock
+    private RedisUtil redisUtil;
     // RedisTemplate 未直接使用，保留默认 Mock 即可
-    @Mock private CommonConfig commonConfig;
-// ↑ 顶部补充这个 import
+    @Mock
+    private CommonConfig commonConfig;
+    // ↑ 顶部补充这个 import
 
     @Test
     @DisplayName("getAkSk - 远程返回空数组：应抛BusinessException（包含APPID提示）")
@@ -65,7 +68,7 @@ class AppServiceTest {
 
         // 静态 mock：HTTP 返回占位响应；解析返回空数组 "[]"
         try (MockedStatic<HeaderAuthHttpTool> http = mockStatic(HeaderAuthHttpTool.class);
-             MockedStatic<CommonTool> common = mockStatic(CommonTool.class)) {
+                MockedStatic<CommonTool> common = mockStatic(CommonTool.class)) {
 
             http.when(() -> HeaderAuthHttpTool.get("http://api/key/" + appId, "ak", "sk"))
                     .thenReturn("resp");
@@ -96,7 +99,7 @@ class AppServiceTest {
 
         try (MockedStatic<HeaderAuthHttpTool> http = mockStatic(HeaderAuthHttpTool.class)) {
             http.when(() -> HeaderAuthHttpTool.get("http://api/key/" + appId, "ak", "sk"))
-                .thenThrow(new IOException("net down"));
+                    .thenThrow(new IOException("net down"));
 
             assertThatThrownBy(() -> appService.getAkSk(appId))
                     .isInstanceOf(RuntimeException.class)

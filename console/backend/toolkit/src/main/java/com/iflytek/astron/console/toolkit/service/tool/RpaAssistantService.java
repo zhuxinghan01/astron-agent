@@ -13,7 +13,6 @@ import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.toolkit.entity.biz.workflow.BizWorkflowData;
 import com.iflytek.astron.console.toolkit.entity.biz.workflow.BizWorkflowNode;
-import com.iflytek.astron.console.toolkit.entity.table.model.Model;
 import com.iflytek.astron.console.toolkit.entity.table.tool.*;
 import com.iflytek.astron.console.toolkit.entity.tool.*;
 import com.iflytek.astron.console.toolkit.handler.RpaHandler;
@@ -352,7 +351,7 @@ public class RpaAssistantService {
      * Check whether the given RPA assistant is being used in any workflow of the user.
      *
      * @param currentUserId current user ID
-     * @param assistantId   assistant ID
+     * @param assistantId assistant ID
      * @throws BusinessException if the assistant is in use by any workflow
      */
     private void checkRpaIsUsage(String currentUserId, Long assistantId) {
@@ -396,7 +395,7 @@ public class RpaAssistantService {
     /**
      * Check if a single node is an RPA node using the specified assistant.
      *
-     * @param node        workflow node
+     * @param node workflow node
      * @param assistantId assistant ID
      * @return true if the node is an RPA node referencing the assistant
      */
