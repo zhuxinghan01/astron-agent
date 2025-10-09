@@ -189,8 +189,8 @@ public class BotCreateController {
     @PostMapping(value = "/generate-input-example")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<List<String>> generateInputExample(@RequestParam String botName,
-                                                        @RequestParam String botDesc,
-                                                        @RequestParam String prompt) {
+            @RequestParam String botDesc,
+            @RequestParam String prompt) {
         try {
             if (botName == null || botName.trim().isEmpty()) {
                 return ApiResult.error(ResponseEnum.PARAMS_ERROR);
