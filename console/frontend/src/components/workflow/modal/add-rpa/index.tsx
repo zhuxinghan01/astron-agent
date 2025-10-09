@@ -190,6 +190,7 @@ export default function index(): React.ReactElement {
                                       handleRpaChangeThrottle({
                                         ...(item || {}),
                                         fields: rpaDetail?.fields,
+                                        rpaId: rpaDetail?.id,
                                       });
                                     }}
                                     className="w-[100px] text-center px-[16px] py-[4px] bg-white rounded-lg box-border border border-gray-200 shadow-sm font-normal text-[14px] text-[#275EFF]"
@@ -217,7 +218,7 @@ export default function index(): React.ReactElement {
                               </div>
                             ))}
                             <div className="text-[12px] text-[#7F7F7F] pt-[12px] text-center font-normal">
-                              没有更多了
+                              {t('workflow.nodes.rpaNode.noMore')}
                             </div>
                           </div>
                         ) : (
