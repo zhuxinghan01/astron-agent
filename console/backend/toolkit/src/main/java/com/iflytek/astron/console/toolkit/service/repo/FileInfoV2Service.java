@@ -646,23 +646,26 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
         Map<String, Object> extMap = new HashMap<>();
         Map<String, Long> fileIdCountMap = new HashMap<>();
         List<PreviewKnowledgeDto> knowledgeDtoList;
+        long totalCount;
 
         if (ProjectContent.isSparkRagCompatible(knowledgeQueryVO.getTag())) {
             // Spark file processing
             SparkResult sparkResult = handleSparkPreviewKnowledge(knowledgeQueryVO);
             knowledgeDtoList = sparkResult.knowledgeDtoList;
             fileIdCountMap = sparkResult.fileIdCountMap;
+            totalCount = sparkResult.totalCount;
         } else {
             // MongoDB file processing
             MongoResult mongoResult = handleMongoPreviewKnowledge(knowledgeQueryVO, spaceId);
             knowledgeDtoList = mongoResult.knowledgeDtoList;
             extMap = mongoResult.extMap;
+            totalCount = mongoResult.totalCount;
         }
 
         PageData<PreviewKnowledgeDto> pageData = new PageData<>();
         pageData.setPageData(knowledgeDtoList);
         pageData.setExtMap(extMap);
-        pageData.setTotalCount((long) knowledgeDtoList.size());
+        pageData.setTotalCount(totalCount);
         pageData.setFileSliceCount(fileIdCountMap);
         return pageData;
     }
@@ -670,6 +673,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
     private static class SparkResult {
         List<PreviewKnowledgeDto> knowledgeDtoList;
         Map<String, Long> fileIdCountMap;
+        long totalCount;
     }
 
     private SparkResult handleSparkPreviewKnowledge(KnowledgeQueryVO vo) {
@@ -691,6 +695,9 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
             }
             result.fileIdCountMap.put(fileId, (long) data.size());
         }
+
+        // Record total count before pagination
+        result.totalCount = result.knowledgeDtoList.size();
 
         // Pagination
         result.knowledgeDtoList = result.knowledgeDtoList.stream()
@@ -716,6 +723,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
     private static class MongoResult {
         List<PreviewKnowledgeDto> knowledgeDtoList;
         Map<String, Object> extMap;
+        long totalCount;
     }
 
     private MongoResult handleMongoPreviewKnowledge(KnowledgeQueryVO vo, Long spaceId) {
@@ -756,6 +764,9 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
         result.extMap.put("auditBlockCount", auditBlockCount);
 
         List<MysqlPreviewKnowledge> knowledges = previewKnowledgeMapper.findByFileIdIn(fileUuIds);
+
+        // Record total count before pagination
+        result.totalCount = knowledges.size();
 
         // Manual pagination
         int start = (pageNo - 1) * pageSize;
