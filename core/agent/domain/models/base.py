@@ -74,7 +74,9 @@ class BaseLLMModel(BaseModel):
                     sp.add_info_events({"llm-chunk": chunk.model_dump_json()})
 
                 if chunk_dict.get("code", 0) != 0:
-                    llm_plugin_error(chunk_dict.get("code"), chunk_dict.get("message"))
+                    llm_plugin_error(
+                        chunk_dict.get("code"), chunk_dict.get("message")
+                    )
 
                 yield chunk
 
@@ -82,5 +84,34 @@ class BaseLLMModel(BaseModel):
             self._handle_api_timeout_error(e)
         except APIError as error:
             self._handle_api_error(error, sp)
-        except (ValueError, TypeError, KeyError) as e:
-            self._handle_general_error(e, sp)
+        except Exception as e:
+            # Catch all other exceptions including SSL and connection errors
+            error_type = type(e).__name__
+            error_msg = str(e)
+
+            if sp is not None:
+                sp.add_error_event(
+                    f"LLM request failed: {error_type}: {error_msg}"
+                )
+
+            # More specific error messages for common issues
+            if "ssl" in error_msg.lower() or "certificate" in error_msg.lower():
+                llm_plugin_error(
+                    "-1",
+                    f"SSL certificate error: {error_msg}. "
+                    "Try setting SKIP_SSL_VERIFY=true for testing."
+                )
+            elif "connection" in error_msg.lower() or "connect" in error_msg.lower():
+                llm_plugin_error(
+                    "-1",
+                    f"Connection error: {error_msg}. "
+                    "Please check network connectivity and API endpoint."
+                )
+            elif "timeout" in error_msg.lower():
+                llm_plugin_error(
+                    "-1",
+                    f"Request timeout: {error_msg}. "
+                    "The server took too long to respond."
+                )
+            else:
+                llm_plugin_error("-1", f"{error_type}: {error_msg}")
