@@ -201,7 +201,9 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
         onCancel={() => {
           setOpenWxmol(false);
         }}
-        workflowId={JSON.parse(currentFlow?.ext)?.botId}
+        workflowId={
+          currentFlow?.ext ? JSON.parse(currentFlow.ext)?.botId : null
+        }
       />
       <Tooltip
         title={t('workflow.nodes.header.export')}
