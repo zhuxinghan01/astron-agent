@@ -481,6 +481,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     obj.botDesc = botTemplateInfoValue.botDesc;
     obj.botName = botTemplateInfoValue.botName;
     obj.botType = botTemplateInfoValue.botType;
+    console.log('🚀 ~ useEffect ~ obj:', obj);
     setBaseinfo(obj);
     const create = searchParams.get('create');
     if (create) {
@@ -496,6 +497,12 @@ const BaseConfig: React.FC<ChatProps> = ({
       setBottypeList(filteredBottypeList);
       const save = searchParams.get('save');
       const botId = searchParams.get('botId');
+      console.log(
+        '🚀 ~ getBotType ~ botId:',
+        botId,
+        '--------',
+        botTemplateInfoValue
+      );
       if (botId) {
         sessionStorage.removeItem('botTemplateInfoValue');
 
