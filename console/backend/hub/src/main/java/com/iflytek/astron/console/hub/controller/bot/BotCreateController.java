@@ -85,7 +85,7 @@ public class BotCreateController {
             // Validate dataset ownership before creating bot
             List<Long> datasetList = bot.getDatasetList();
             List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
                 return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
             }
             boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
@@ -253,7 +253,7 @@ public class BotCreateController {
             // Validate dataset ownership before updating bot
             List<Long> datasetList = bot.getDatasetList();
             List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
                 return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
             }
             boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
