@@ -4,11 +4,16 @@ import com.alibaba.fastjson2.JSON;
 import com.iflytek.astron.console.toolkit.config.properties.RepoAuthorizedConfig;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
 import com.iflytek.astron.console.toolkit.entity.core.knowledge.*;
-import com.iflytek.astron.console.toolkit.tool.http.HttpAuthTool;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -31,6 +36,51 @@ public class KnowledgeV2ServiceCallHandler {
         String post = OkHttpUtil.post(url, reqBody);
         log.info("documentSplit response = {}", post);
         return JSON.parseObject(post, KnowledgeResponse.class);
+    }
+
+    /**
+     * Document upload and chunking (multipart/form-data)
+     *
+     * @param multipartFile multipart file to upload
+     * @param lengthRange chunking length range
+     * @param separator separator list
+     * @param ragType RAG type
+     * @param resourceType resource type (0=file, 1=html)
+     * @return KnowledgeResponse
+     */
+    public KnowledgeResponse documentUpload(MultipartFile multipartFile,
+            List<Integer> lengthRange, List<String> separator, 
+            String ragType, Integer resourceType) {
+        String url = apiUrl.getKnowledgeUrl().concat("/v1/document/upload");
+        
+        try {
+            log.info("documentUpload fileName: {}, fileSize: {} bytes", 
+                multipartFile.getOriginalFilename(), multipartFile.getSize());
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("file", multipartFile);
+            if (lengthRange != null) {
+                params.put("lengthRange", JSON.toJSONString(lengthRange));
+            }
+            if (separator != null && !separator.isEmpty()) {
+                params.put("separator", JSON.toJSONString(separator));
+            }
+            params.put("ragType", ragType);
+            if (resourceType != null) {
+                params.put("resourceType", resourceType.toString());
+            }
+            
+            log.info("documentUpload url = {}, ragType = {}, resourceType = {}", url, ragType, resourceType);
+            String post = OkHttpUtil.postMultipart(url, new HashMap<>(), null, params, null);
+            log.info("documentUpload response = {}", post);
+            return JSON.parseObject(post, KnowledgeResponse.class);
+        } catch (Exception e) {
+            log.error("documentUpload error: {}", e.getMessage(), e);
+            KnowledgeResponse errorResponse = new KnowledgeResponse();
+            errorResponse.setCode(-1);
+            errorResponse.setMessage("Upload failed: " + e.getMessage());
+            return errorResponse;
+        }
     }
 
     public KnowledgeResponse saveChunk(KnowledgeRequest request) {
