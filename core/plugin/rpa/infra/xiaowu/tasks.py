@@ -119,14 +119,22 @@ async def query_task_status(
             status = execution.get("status", "")
             if status in ["COMPLETED"]:
                 result = execution.get("result", {})
+                if not result:
+                    return (ErrorCode.SUCCESS.code, ErrorCode.SUCCESS.message, {})
+
                 data = result.get("data", {})
-                return ErrorCode.SUCCESS.code, ErrorCode.SUCCESS.message, data
+                return (
+                    ErrorCode.SUCCESS.code,
+                    ErrorCode.SUCCESS.message,
+                    data,
+                )
 
             if status in ["FAILED"]:
-                msg = execution.get("error", "")
+                error = execution.get("error", "")
+                expected_message = f"{ErrorCode.QUERY_TASK_ERROR.message}: {error}"
                 return (
                     ErrorCode.QUERY_TASK_ERROR.code,
-                    f"{ErrorCode.QUERY_TASK_ERROR.message}: {msg}",
+                    expected_message,
                     {},
                 )
             if status in ["PENDING"]:
