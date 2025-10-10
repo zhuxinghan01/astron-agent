@@ -17,6 +17,7 @@ import com.iflytek.astron.console.hub.mapper.AiPromptTemplateMapper;
 import com.iflytek.astron.console.hub.service.bot.BotAIService;
 import com.iflytek.astron.console.hub.util.BotAIServiceClient;
 import com.iflytek.astron.console.hub.util.ImageUtil;
+import com.iflytek.astron.console.toolkit.util.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +50,20 @@ public class BotAIServiceImpl implements BotAIService {
     @Autowired
     private AiPromptTemplateMapper promptTemplateMapper;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     /**
-     * Get prompt template from database
+     * Get prompt template from database with Redis cache
      */
     private String getPromptTemplate(String promptKey) {
         String languageCode = I18nUtil.getLanguage();
+        String cacheKey = "prompt_template:" + promptKey + ":" + languageCode;
+
+        String cached = redisUtil.getStr(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
 
         AiPromptTemplate template = promptTemplateMapper.selectOne(
                 new LambdaQueryWrapper<AiPromptTemplate>()
@@ -61,24 +71,31 @@ public class BotAIServiceImpl implements BotAIService {
                         .eq(AiPromptTemplate::getLanguageCode, languageCode)
                         .eq(AiPromptTemplate::getIsActive, 1));
 
+        String result = null;
         if (template != null) {
-            return template.getPromptContent();
+            result = template.getPromptContent();
         }
 
         // Fallback to English if not found
-        if (!"en".equals(languageCode)) {
+        if (result == null && !"en".equals(languageCode)) {
             template = promptTemplateMapper.selectOne(
                     new LambdaQueryWrapper<AiPromptTemplate>()
                             .eq(AiPromptTemplate::getPromptKey, promptKey)
                             .eq(AiPromptTemplate::getLanguageCode, "en")
                             .eq(AiPromptTemplate::getIsActive, 1));
             if (template != null) {
-                return template.getPromptContent();
+                result = template.getPromptContent();
             }
         }
 
         // Fallback to default template
-        return getDefaultPromptTemplate(promptKey);
+        if (result == null) {
+            result = getDefaultPromptTemplate(promptKey);
+        }
+
+        redisUtil.put(cacheKey, result, 86400);
+
+        return result;
     }
 
     /**

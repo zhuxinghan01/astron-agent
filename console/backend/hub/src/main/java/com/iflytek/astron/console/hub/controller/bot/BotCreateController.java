@@ -166,6 +166,7 @@ public class BotCreateController {
      * @return Generated assistant details
      */
     @PostMapping("/ai-sentence-gen")
+    @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<BotGenerationDTO> sentence(@RequestParam String sentence) {
         try {
             if (sentence == null || sentence.trim().isEmpty()) {
