@@ -341,6 +341,7 @@ const useAddFlowNode = ({ addEdge }): UseAddFlowNodeReturn => {
 
 const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
   const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const currentFlow = useFlowsManager(state => state.currentFlow);
   const nodes = currentStore(state => state.nodes);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const setNodes = currentStore(state => state.setNodes);

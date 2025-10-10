@@ -109,24 +109,26 @@ const useChatInput = (
 
   const handleChangeParam = useMemoizedFn(
     (index: number, fn, value: string | number | boolean): void => {
-      const currentInput: StartNodeType | undefined = startNodeParams.find(
-        (_, i) => index === i
-      );
-      if (currentInput) {
-        fn(currentInput, value);
-        if (
-          currentInput?.type === 'object' ||
-          currentInput.type.includes('array')
-        ) {
-          if (currentInput?.validationSchema) {
-            currentInput.errorMsg = validateInputJSON(
-              value as string,
-              currentInput.validationSchema
-            );
+      setStartNodeParams(startNodeParams => {
+        const currentInput: StartNodeType | undefined = startNodeParams.find(
+          (_, i) => index === i
+        );
+        if (currentInput) {
+          fn(currentInput, value);
+          if (
+            currentInput?.type === 'object' ||
+            currentInput.type.includes('array')
+          ) {
+            if (currentInput?.validationSchema) {
+              currentInput.errorMsg = validateInputJSON(
+                value as string,
+                currentInput.validationSchema
+              );
+            }
           }
         }
-      }
-      setStartNodeParams([...startNodeParams]);
+        return cloneDeep(startNodeParams);
+      });
     }
   );
   return {
