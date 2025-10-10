@@ -1,6 +1,6 @@
 package com.iflytek.astron.console.hub.strategy.publish.impl;
 
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.response.ApiResult;
@@ -136,7 +136,7 @@ public class MarketPublishStrategy implements PublishStrategy {
 
     @Override
     public String getPublishType() {
-        return BotPublishTypeEnum.MARKET.getCode();
+        return ReleaseTypeEnum.MARKET.name();
     }
 
     /**
