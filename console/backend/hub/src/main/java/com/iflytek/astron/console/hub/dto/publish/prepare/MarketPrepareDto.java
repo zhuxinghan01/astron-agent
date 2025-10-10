@@ -13,37 +13,37 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class MarketPrepareDto extends BasePrepareDto {
-    
+
     /**
      * Complete workflow configuration JSON
      */
     private String workflowConfigJson;
-    
+
     /**
      * Whether bot supports multi-file parameters
      */
     private Boolean botMultiFileParam;
-    
+
     /**
      * Suggested tags for the bot
      */
     private List<String> suggestedTags;
-    
+
     /**
      * Available category options
      */
     private List<String> categoryOptions;
-    
+
     /**
      * Bot name
      */
     private String botName;
-    
+
     /**
      * Bot description
      */
     private String botDescription;
-    
+
     /**
      * Bot avatar URL
      */
