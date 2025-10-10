@@ -262,19 +262,19 @@ RAGFLOW_TIMEOUT=60
 ### 镜像仓库
 
 所有服务镜像托管在 GitHub Container Registry:
-- `ghcr.io/lyj715824/astron-agent/core-tenant:latest`
-- `ghcr.io/lyj715824/astron-agent/core-memory:latest`
-- `ghcr.io/lyj715824/astron-agent/core-link:latest`
-- `ghcr.io/lyj715824/astron-agent/core-aitools:latest`
-- `ghcr.io/lyj715824/astron-agent/core-agent:latest`
-- `ghcr.io/lyj715824/astron-agent/core-knowledge:latest`
-- `ghcr.io/lyj715824/astron-agent/core-workflow:latest`
-- `ghcr.io/lyj715824/astron-agent/console-frontend:latest`
-- `ghcr.io/lyj715824/astron-agent/console-hub:latest`
+- `ghcr.io/iflytek/astron-agent/core-tenant:latest`
+- `ghcr.io/iflytek/astron-agent/core-memory:latest`
+- `ghcr.io/iflytek/astron-agent/core-link:latest`
+- `ghcr.io/iflytek/astron-agent/core-aitools:latest`
+- `ghcr.io/iflytek/astron-agent/core-agent:latest`
+- `ghcr.io/iflytek/astron-agent/core-knowledge:latest`
+- `ghcr.io/iflytek/astron-agent/core-workflow:latest`
+- `ghcr.io/iflytek/astron-agent/console-frontend:latest`
+- `ghcr.io/iflytek/astron-agent/console-hub:latest`
 
 ## 📚 其他资源
 
-- [astronAgent 官方文档](https://github.com/lyj715824/astron-agent)
+- [astronAgent 官方文档](https://github.com/iflytek/astron-agent)
 - [Docker Compose 官方文档](https://docs.docker.com/compose/)
 - [PostgreSQL 官方文档](https://www.postgresql.org/docs/)
 - [MySQL 官方文档](https://dev.mysql.com/doc/)

@@ -483,18 +483,38 @@ services:
   # astron-agent Console Services
   # ============================================================================
 
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: astron-agent-nginx
+    ports:
+      - "${EXPOSE_NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - console-frontend
+      - console-hub
+    networks:
+      - astron-agent-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-60}
+
   # Console Frontend
   console-frontend:
     image: ghcr.io/iflytek/astron-agent/console-frontend:latest
     container_name: astron-agent-console-frontend
     environment:
-      CONSOLE_API_URL: "${CONSOLE_API_URL:-http://console-hub:8080/}"
       CONSOLE_CASDOOR_URL: "${CONSOLE_CASDOOR_URL:-}"
       CONSOLE_CASDOOR_ID: "${CONSOLE_CASDOOR_ID:-}"
       CONSOLE_CASDOOR_APP: "${CONSOLE_CASDOOR_APP:-}"
       CONSOLE_CASDOOR_ORG: "${CONSOLE_CASDOOR_ORG:-}"
-    ports:
-      - "${CONSOLE_FRONTEND_PORT:-1881}:1881"
+    expose:
+      - "1881"
     networks:
       - astron-agent-network
     restart: always
@@ -535,8 +555,8 @@ services:
       MAAS_CONSUMER_ID: "${MAAS_CONSUMER_ID:-your-maas-consumer-id}"
       MAAS_CONSUMER_SECRET: "${MAAS_CONSUMER_SECRET:-your-maas-consumer-secret}"
       MAAS_CONSUMER_KEY: "${MAAS_CONSUMER_KEY:-your-maas-consumer-key}"
-    ports:
-      - "${CONSOLE_HUB_PORT:-8080}:8080"
+    expose:
+      - "8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -579,4 +599,6 @@ volumes:
   kafka_data:
     driver: local
   minio_data:
+    driver: local
+  nginx_logs:
     driver: local
