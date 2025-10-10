@@ -1,6 +1,6 @@
 package com.iflytek.astron.console.hub.strategy.publish.impl;
 
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
@@ -155,7 +155,7 @@ public class McpPublishStrategy implements PublishStrategy {
 
     @Override
     public String getPublishType() {
-        return BotPublishTypeEnum.MCP.getCode();
+        return ReleaseTypeEnum.MCP.name();
     }
 
     /**

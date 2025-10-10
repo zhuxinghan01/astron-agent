@@ -1,6 +1,6 @@
 package com.iflytek.astron.console.hub.service.workflow.impl;
 
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
@@ -423,12 +423,15 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
      * Get publish channel code
      */
     private Integer getPublishChannelCode(String publishType) {
-        BotPublishTypeEnum publishTypeEnum = BotPublishTypeEnum.getByCode(publishType);
-        if (publishTypeEnum != null) {
-            return publishTypeEnum.getChannelCode();
+        try {
+            Integer typeCode = Integer.parseInt(publishType);
+            // Direct return since ReleaseTypeEnum code is the channel code
+            return typeCode;
+        } catch (NumberFormatException e) {
+            log.warn("Invalid publish type format: {}", publishType);
+            // Default to market
+            return ReleaseTypeEnum.MARKET.getCode();
         }
-        // Default to market
-        return BotPublishTypeEnum.MARKET.getChannelCode();
     }
 
     /**

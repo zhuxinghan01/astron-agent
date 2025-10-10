@@ -14,7 +14,8 @@ import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
 import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
 import com.iflytek.astron.console.hub.dto.publish.prepare.*;
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.hub.dto.publish.prepare.WechatPrepareDto;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.entity.model.McpData;
 import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
 import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
@@ -464,7 +465,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         try {
             // Validate publish type
-            BotPublishTypeEnum publishTypeEnum = BotPublishTypeEnum.getByCode(type);
+            ReleaseTypeEnum publishTypeEnum = ReleaseTypeEnum.getByName(type);
             if (publishTypeEnum == null) {
                 return createErrorPrepareResponse("Invalid publish type: " + type);
             }
@@ -486,8 +487,11 @@ public class BotPublishServiceImpl implements BotPublishService {
                 case FEISHU:
                     prepareData = getFeishuPrepareData(botId, botDetail, currentUid, spaceId);
                     break;
-                case API:
+                case BOT_API:
                     prepareData = getApiPrepareData(botId, botDetail, currentUid, spaceId);
+                    break;
+                case WECHAT:
+                    prepareData = getWechatPrepareData(botId, botDetail, currentUid, spaceId);
                     break;
                 default:
                     return createErrorPrepareResponse("Unsupported publish type: " + type);
@@ -515,7 +519,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting market prepare data: botId={}", botId);
 
         MarketPrepareDto marketData = new MarketPrepareDto();
-        marketData.setPublishType(BotPublishTypeEnum.MARKET.getCode());
+        marketData.setPublishType(ReleaseTypeEnum.MARKET.name());
 
         // Get workflow configuration JSON
         try {
@@ -548,7 +552,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting MCP prepare data: botId={}", botId);
 
         McpPrepareDto result = new McpPrepareDto();
-        result.setPublishType(BotPublishTypeEnum.MCP.getCode());
+        result.setPublishType(ReleaseTypeEnum.MCP.name());
 
         // 1. Set workflow input types
         result.setInputTypes(getWorkflowInputTypes(botId, currentUid, spaceId));
@@ -659,7 +663,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting Feishu prepare data: botId={}", botId);
 
         FeishuPrepareDto feishuData = new FeishuPrepareDto();
-        feishuData.setPublishType(BotPublishTypeEnum.FEISHU.getCode());
+        feishuData.setPublishType(ReleaseTypeEnum.FEISHU.name());
 
         // TODO: Get actual Feishu app configuration
         feishuData.setAppId("cli_xxx");
@@ -683,7 +687,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting API prepare data: botId={}", botId);
 
         ApiPrepareDto apiData = new ApiPrepareDto();
-        apiData.setPublishType(BotPublishTypeEnum.API.getCode());
+        apiData.setPublishType(ReleaseTypeEnum.BOT_API.name());
 
         // Set API endpoint
         apiData.setApiEndpoint("/api/v1/chat/" + botId);
@@ -698,6 +702,21 @@ public class BotPublishServiceImpl implements BotPublishService {
         apiData.setSuggestedConfig(suggestedConfig);
 
         return apiData;
+    }
+
+    private WechatPrepareDto getWechatPrepareData(Integer botId, BotDetailResponseDto botDetail, String currentUid, Long spaceId) {
+        log.info("Getting WeChat prepare data: botId={}", botId);
+
+        WechatPrepareDto wechatData = new WechatPrepareDto();
+        wechatData.setPublishType(ReleaseTypeEnum.WECHAT.name());
+
+        // TODO: Get actual WeChat configuration
+        wechatData.setAppId("wx_xxx");
+        wechatData.setAppSecret("xxx");
+        wechatData.setToken("xxx");
+        wechatData.setEncodingAESKey("xxx");
+
+        return wechatData;
     }
 
     private UnifiedPrepareDto createErrorPrepareResponse(String errorMessage) {
