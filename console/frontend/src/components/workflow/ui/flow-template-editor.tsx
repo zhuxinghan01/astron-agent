@@ -1,8 +1,8 @@
 import React, { useRef, useState, useMemo, useEffect, memo } from 'react';
 import { cloneDeep, debounce } from 'lodash';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import FlowTree from './flow-tree';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import {
   getCurrentLineContent,
   handleReplaceInput,

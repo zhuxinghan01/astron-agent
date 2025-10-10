@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { Drawer, message, Spin, Tooltip, Input } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { codeRun } from '@/services/flow';
 import useUserStore from '@/store/user-store';
 import { isJSON } from '@/utils';
@@ -11,7 +11,7 @@ import { getCommonConfig } from '@/services/common';
 import MonacoEditor from '@/components/monaco-editor';
 import { useMemoizedFn } from 'ahooks';
 import JsonMonacoEditor from '@/components/monaco-editor/JsonMonacoEditor';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import { getFixedUrl, getAuthorization } from '@/components/workflow/utils';
 import { useAICodeInputBoxProps } from '@/components/workflow/types';
 

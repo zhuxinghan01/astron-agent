@@ -2,13 +2,13 @@ import React, { memo } from 'react';
 import { Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import Inputs from '@/components/workflow/nodes/components/inputs';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import {
   FlowSelect,
   FLowCollapse,
   FlowTemplateEditor,
 } from '@/components/workflow/ui';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 
 export const EndDetail = memo(props => {
   const { id, data } = props;

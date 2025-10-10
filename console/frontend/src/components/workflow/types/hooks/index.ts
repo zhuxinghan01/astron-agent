@@ -85,6 +85,7 @@ export interface UseNodeFuncReturn {
   ) => void;
   handleAddOutputLine: () => void;
   handleRemoveOutputLine: (outputId: string) => void;
+  isFixedOutputComponentFunc: (output: OutputItem) => boolean;
 }
 
 export interface UseNodeOutputRenderReturn {

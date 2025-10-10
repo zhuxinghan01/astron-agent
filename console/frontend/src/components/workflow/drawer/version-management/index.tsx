@@ -6,8 +6,8 @@ import {
   getPublicResult,
 } from '@/services/common';
 import { useMemoizedFn } from 'ahooks';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
-import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
+import { useFlowCommon } from '@/components/workflow/hooks/use-flow-common';
 
 // 类型导入
 import {
@@ -29,7 +29,7 @@ import { Icons } from '@/components/workflow/icons';
 const icons = Icons.versionManagement;
 
 import './version-management.css';
-import useFlowStore from '@/components/workflow/store/useFlowStore';
+import useFlowStore from '@/components/workflow/store/use-flow-store';
 import dayjs from 'dayjs';
 import FeedbackDialog from '@/components/workflow/modal/feedback-dialog';
 import { getFeedbackList } from '@/services/common';

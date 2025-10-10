@@ -6,7 +6,7 @@ import { saveFlowAPI } from '@/services/flow';
 import { getAgentType } from '@/services/agent-square';
 import MoreIcons from './more-icons';
 import globalStore from '@/store/global-store';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import copy from 'copy-to-clipboard';
 
 import formSelect from '@/assets/imgs/main/icon_nav_dropdown.svg';

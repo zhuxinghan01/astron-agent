@@ -1,17 +1,9 @@
-import React, {
-  useMemo,
-  useCallback,
-  useRef,
-  useState,
-  useEffect,
-  memo,
-} from 'react';
+import React, { useMemo, useRef, useState, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer, Button, message } from 'antd';
 import { cloneDeep } from 'lodash';
-import { v4 as uuid } from 'uuid';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
-import useFlowStore from '@/components/workflow/store/useFlowStore';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
+import useFlowStore from '@/components/workflow/store/use-flow-store';
 import { isJSON } from '@/utils';
 import {
   validateInputJSON,
@@ -22,16 +14,12 @@ import DeleteChatHistory from '@/components/workflow/modal/delete-chat-history';
 import ChatContent from './components/chat-content';
 import ChatInput from './components/chat-input';
 import { getPublicResult } from '@/services/common';
-import useChatStore from '@/components/workflow/store/useChatStore';
+import useChatStore from '@/components/workflow/store/use-chat-store';
+import { UseChatDebuggerContentProps } from '@/components/workflow/types';
 
 // 类型导入
 import {
-  FlowType,
-  StartNodeType,
   InterruptChatType,
-  ChatInfoType,
-  ChatListItem,
-  ChatDebuggerAdvancedConfig,
   ChatDebuggerContentProps,
   ReactFlowNode,
 } from '@/components/workflow/types';
@@ -51,17 +39,6 @@ const initInterruptChat: InterruptChatType = {
   needReply: true,
 };
 
-const initChatInfo: ChatInfoType = {
-  question: [],
-  answer: {
-    messageContent: '',
-    reasoningContent: '',
-    content: '',
-  },
-  answerItem: '',
-  option: null,
-};
-
 const ChatFooter = ({
   trialRun,
   debuggering,
@@ -73,11 +50,15 @@ const ChatFooter = ({
   handleRunDebugger,
   startNodeParams,
   interruptChat,
-  textareRef,
+  userInput,
 }: {
   trialRun: boolean;
-}) => {
+}): React.ReactElement | null => {
   const canRunDebugger = useChatStore(state => state.canRunDebugger);
+  const canRunChat = useMemo(
+    () => canRunDebugger(),
+    [debuggering, startNodeParams]
+  );
   if (!trialRun) return null;
   return (
     <div className="flex items-center justify-between mt-4 px-5">
@@ -106,14 +87,14 @@ const ChatFooter = ({
           onClick={() => {
             if (startNodeParams?.length === 1 || interruptChat?.interrupt) {
               if (interruptChat?.interrupt) {
-                handleResumeChat(textareRef?.current?.value);
+                handleResumeChat(userInput);
               } else {
                 const { nodes, edges } = resetNodesAndEdges();
                 handleRunDebugger(nodes, edges, [
                   {
                     name: 'AGENT_USER_INPUT',
                     type: 'string',
-                    default: textareRef?.current?.value,
+                    default: userInput,
                     description: t(
                       'workflow.nodes.chatDebugger.userCurrentRoundInput'
                     ),
@@ -129,7 +110,7 @@ const ChatFooter = ({
               handleRunDebugger(nodes, edges);
             }
           }}
-          disabled={!canRunDebugger()}
+          disabled={!canRunChat}
         >
           <img src={icons.trialRun} className="w-3 h-3" alt="" />
           <span>{t('workflow.nodes.chatDebugger.send')}</span>
@@ -145,7 +126,7 @@ const useChatDebuggerEffect = ({
   startNode,
   setShowChatDebuggerPage,
   setStartNodeParams,
-}) => {
+}): void => {
   const isMounted = useRef<boolean>(false);
   const historyVersion = useFlowsManager(state => state.historyVersion);
   const flowResult = useFlowsManager(state => state.flowResult);
@@ -158,20 +139,15 @@ const useChatDebuggerEffect = ({
   );
   const debuggering = useChatStore(state => state.debuggering);
   const buildPassRef = useChatStore(state => state.buildPassRef);
-  const messageNodeTextQueue = useChatStore(
-    state => state.messageNodeTextQueue
-  );
-  const endNodeReasoningTextQueue = useChatStore(
-    state => state.endNodeReasoningTextQueue
-  );
-  const endNodeTextQueue = useChatStore(state => state.endNodeTextQueue);
+  const getTextQueueContent = useChatStore(state => state.getTextQueueContent);
+  const getChatKey = useChatStore(state => state.getChatKey);
+  const isChatEnd = useChatStore(state => state.isChatEnd);
   const setDebuggering = useChatStore(state => state.setDebuggering);
   const getDialogues = useChatStore(state => state.getDialogues);
   const setChatList = useChatStore(state => state.setChatList);
   const chatInfoRef = useChatStore(state => state.chatInfoRef);
   const interruptChat = useChatStore(state => state.interruptChat);
   const controllerRef = useChatStore(state => state.controllerRef);
-  const wsMessageStatus = useChatStore(state => state.wsMessageStatus);
   const setWsMessageStatus = useChatStore(state => state.setWsMessageStatus);
   const setQueue = useChatStore(state => state.setQueue);
   const chatList = useChatStore(state => state.chatList);
@@ -276,33 +252,19 @@ const useChatDebuggerEffect = ({
     let timer: ReturnType<typeof setTimeout> | null = null;
     if (debuggering) {
       timer = setInterval((): void => {
-        const content = messageNodeTextQueue
-          ? messageNodeTextQueue
-          : endNodeReasoningTextQueue
-            ? endNodeReasoningTextQueue
-            : endNodeTextQueue;
-        const contentKey = messageNodeTextQueue
-          ? 'messageContent'
-          : endNodeReasoningTextQueue
-            ? 'reasoningContent'
-            : 'content';
+        const content = getTextQueueContent();
+        const chatKey = getChatKey();
         const value = content.slice(0, 10);
         if (value) {
           setQueue(10);
           setChatList(chatList => {
-            chatInfoRef.current.answer[contentKey] =
-              chatInfoRef.current.answer[contentKey] + value;
-            chatList[chatList.length - 1][contentKey] =
-              chatList[chatList.length - 1][contentKey] + value;
+            chatInfoRef.answer[chatKey] = chatInfoRef.answer[chatKey] + value;
+            chatList[chatList.length - 1][chatKey] =
+              chatList[chatList.length - 1][chatKey] + value;
             return [...chatList];
           });
         }
-        if (
-          !messageNodeTextQueue &&
-          !endNodeReasoningTextQueue &&
-          !endNodeTextQueue &&
-          wsMessageStatus === 'end'
-        ) {
+        if (isChatEnd()) {
           setDebuggering(false);
           setChatList(chatList => {
             if (chatList[chatList.length - 1]) {
@@ -326,7 +288,9 @@ const useChatDebuggerEffect = ({
   }, [debuggering, chatList, interruptChat]);
 };
 
-const useChatDebuggerContent = ({ currentFlow }) => {
+const useChatDebuggerContent = ({
+  currentFlow,
+}): UseChatDebuggerContentProps => {
   const nodes = useFlowStore(state => state.nodes);
   const errNodes = useFlowsManager(state => state.errNodes);
   const startNode = useMemo(() => {
@@ -368,7 +332,8 @@ export function ChatDebuggerContent({
 }: ChatDebuggerContentProps): React.ReactElement {
   const { t } = useTranslation();
   const currentFlow = useFlowsManager(state => state.currentFlow);
-  const textareRef = useChatStore(state => state.textareRef);
+  const userInput = useChatStore(state => state.userInput);
+  const setUserInput = useChatStore(state => state.setUserInput);
   const historyVersion = useFlowsManager(state => state.historyVersion);
   const historyVersionData = useFlowsManager(state => state.historyVersionData);
   const startNodeParams = useChatStore(state => state.startNodeParams);
@@ -406,7 +371,6 @@ export function ChatDebuggerContent({
     setShowChatDebuggerPage,
     setStartNodeParams,
   });
-  console.log('startNodeParams@@', startNodeParams);
   return (
     <div
       className="w-full h-full py-4 flex flex-col overflow-hidden"
@@ -499,7 +463,8 @@ export function ChatDebuggerContent({
           interruptChat={interruptChat}
           startNodeParams={startNodeParams}
           setStartNodeParams={setStartNodeParams}
-          textareRef={textareRef}
+          userInput={userInput}
+          setUserInput={setUserInput}
           handleEnterKey={handleEnterKey}
         />
         <ChatFooter
@@ -513,7 +478,7 @@ export function ChatDebuggerContent({
           handleRunDebugger={handleRunDebugger}
           startNodeParams={startNodeParams}
           interruptChat={interruptChat}
-          textareRef={textareRef}
+          userInput={userInput}
         />
       </div>
     </div>

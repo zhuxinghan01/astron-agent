@@ -15,7 +15,7 @@ import {
   handleModifyToolUrlParams,
   filterTreeNodes,
 } from '@/components/workflow/utils/reactflowUtils';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import DeletePlugin from './delete-plugin';
 import {
   ToolDebugger,
@@ -23,7 +23,7 @@ import {
   ToolDetail,
 } from '@/components/modal/plugin';
 import { useTranslation } from 'react-i18next';
-import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
+import { useFlowCommon } from '@/components/workflow/hooks/use-flow-common';
 import {
   ToolListItem,
   Pagination,

@@ -15,8 +15,8 @@ import {
   canPublishSetNotAPI,
 } from '@/services/flow';
 import { getModelConfigDetail } from '@/services/common';
-import useFlowStore from './useFlowStore';
-import useIteratorFlowStore from './useIteratorFlowStore';
+import useFlowStore from './use-flow-store';
+import useIteratorFlowStore from './use-iterator-flow-store';
 import { FlowStoreType } from '../types/zustand/flow';
 import { UseBoundStore, StoreApi } from 'zustand';
 
@@ -129,6 +129,10 @@ export const initialStatus = {
   historyVersion: false,
   historyVersionData: {},
   controlMode: 'mouse',
+  singleNodeDebuggingInfo: {
+    nodeId: '',
+    controller: null,
+  },
 };
 
 export interface ModelConfig {

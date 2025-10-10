@@ -11,14 +11,14 @@ import { useTranslation } from 'react-i18next';
 import { useMemoizedFn } from 'ahooks';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import Inputs from '../components/inputs';
 import Outputs from '../components/outputs';
 import ModelSelect from './components/model-select';
 import AddTools from './components/add-tool';
 import ExceptionHandling from '../components/exception-handling';
 import { getToolLatestVersion } from '@/services/plugin';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import { isValidURL } from '@/components/workflow/utils/reactflowUtils';
 import {
   AgentProps,

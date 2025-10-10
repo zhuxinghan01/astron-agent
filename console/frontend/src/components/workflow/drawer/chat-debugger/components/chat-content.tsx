@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'antd';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { isJSON } from '@/utils';
 import MarkdownRender from '@/components/markdown-render';
 import JSONPretty from 'react-json-view';

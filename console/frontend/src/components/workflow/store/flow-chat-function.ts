@@ -18,13 +18,14 @@ import {
   WebSocketMessageData,
   FlowResultType,
   StartNodeType,
+  InterruptChatType,
 } from '../types';
 import {
   generateDefaultInput,
   generateInputsAndOutputsOrder,
 } from '../utils/reactflowUtils';
-import useFlowsManager from './useFlowsManager';
-import useFlowStore from './useFlowStore';
+import useFlowsManager from './use-flows-manager';
+import useFlowStore from './use-flow-store';
 import { isJSON } from '@/utils';
 import i18n from 'i18next';
 import { cloneDeep } from 'lodash';
@@ -52,7 +53,7 @@ const initChatInfo: ChatInfoType = {
 };
 
 export const initialStatus = {
-  textareRef: null,
+  userInput: '',
   chatList: [],
   chatInfoRef: initChatInfo,
   messageNodeTextQueue: '',
@@ -70,6 +71,7 @@ export const initialStatus = {
   suggestProblem: [],
   userWheel: false,
   deleteAllModal: false,
+  chatIdRef: uuid().replace(/-/g, ''),
 };
 
 const getDialogues = (id: string, set, shouldAddDivider = false): void => {
@@ -134,7 +136,7 @@ const pushAskToChatList = (inputs, nodes, nodeId, get): void => {
   });
   handleMoveToPosition(nodeId, nodes);
 };
-const pushAnswerToChatList = get => {
+const pushAnswerToChatList = (get): unknown => {
   get().setChatList(chatList => {
     const answerParams: ChatListItem = {
       id: uuid(),
@@ -150,10 +152,10 @@ const pushAnswerToChatList = get => {
 const pushContentToAnswer = (key, content, get): void => {
   get()[key] = get()[key] + content;
 };
-const clearNodeStatus = get => {
+const clearNodeStatus = (get): void => {
   get().chatInfoRef = cloneDeep(initChatInfo);
-  if (get().textareRef) {
-    get().textareRef.value = '';
+  if (get().userInput) {
+    get().setUserInput('');
   }
   //@ts-ignore
   get().setStartNodeParams(startNodeParams =>
@@ -170,13 +172,13 @@ const clearNodeStatus = get => {
     }))
   );
 };
-const handleSaveDialogue = (get, set) => {
+const handleSaveDialogue = (get, set): void => {
   const currentFlow = useFlowsManager.getState().currentFlow;
   const params = {
     chatId: get().chatIdRef,
     type: 1,
     workflowId: currentFlow?.id,
-    sid: get().chatInfoRef?.current?.sid,
+    sid: get().chatInfoRef?.sid,
     questionItem: JSON.stringify(get().chatInfoRef?.question),
     answerItem: JSON.stringify(get().chatInfoRef?.answerItem),
     question: JSON.stringify(get().chatInfoRef?.question),
@@ -186,7 +188,7 @@ const handleSaveDialogue = (get, set) => {
     () => currentFlow?.id && getDialogues(currentFlow.id, set)
   );
 };
-const handleAuditFailed = (data, get) => {
+const handleAuditFailed = (data, get): void => {
   get().messageNodeTextQueue = '';
   get().endNodeReasoningTextQueue = '';
   get().endNodeTextQueue = '';
@@ -211,10 +213,17 @@ const handleInterrupt = ({
   nodeStatus,
   responseResult,
   get,
-}) => {
+}): void => {
   const content = data?.['event_data']?.value?.content;
-  handleNodeStatusChange(nodes, edges, nodeId, nodeStatus, responseResult);
-  pushContentToAnswer('content', content, get);
+  handleNodeStatusChange({
+    nodes,
+    edges,
+    nodeId,
+    nodeStatus,
+    responseResult,
+    get,
+  });
+  pushContentToAnswer('endNodeTextQueue', content, get);
   get().wsMessageStatus = 'end';
   get().setInterruptChat({
     interrupt: true,
@@ -231,13 +240,13 @@ const handleInterrupt = ({
     item => item.id !== 'default'
   );
 };
-const handleFlowStop = (data, get) => {
+const handleFlowStop = (data, get): void => {
   if (data.code !== 0) {
-    pushContentToAnswer('content', data?.message, get);
+    pushContentToAnswer('endNodeTextQueue', data?.message, get);
   }
   handleMessageEnd(data, get);
 };
-const extractNodeInfo = data => {
+const extractNodeInfo = (data): unknown => {
   const flowResult = data.choices?.[0]?.['finish_reason'];
   const node = data?.['workflow_step']?.node;
   const nodeId = node?.id;
@@ -265,32 +274,36 @@ const extractNodeInfo = data => {
     responseResult,
   };
 };
-const handleAnswerContent = (nodeId, responseResult, get) => {
+const handleAnswerContent = (nodeId, responseResult, get): void => {
   if (nodeId?.startsWith('node-end') && responseResult?.reasoningContent) {
     pushContentToAnswer(
-      'reasoningContent',
+      'endNodeReasoningTextQueue',
       responseResult?.reasoningContent,
       get
     );
   }
   if (nodeId?.startsWith('message')) {
     pushContentToAnswer(
-      'messageContent',
+      'messageNodeTextQueue',
       responseResult?.nodeAnswerContent,
       get
     );
   }
   if (nodeId?.startsWith('node-end')) {
-    pushContentToAnswer('content', responseResult?.nodeAnswerContent, get);
+    pushContentToAnswer(
+      'endNodeTextQueue',
+      responseResult?.nodeAnswerContent,
+      get
+    );
   }
 };
-const updateAnswerItem = (nodeId, responseResult, get) => {
+const updateAnswerItem = (nodeId, responseResult, get): void => {
   if (nodeId?.startsWith('node-end') || nodeId?.startsWith('message')) {
     get().chatInfoRef.answerItem =
       get().chatInfoRef.answerItem + responseResult?.nodeAnswerContent;
   }
 };
-const handleRunningNode = (currentNode, responseResult, get) => {
+const handleRunningNode = (currentNode, responseResult, get): void => {
   currentNode.data.status = 'running';
   const beforeContent = currentNode?.data?.debuggerResult?.done
     ? ''
@@ -305,7 +318,7 @@ const handleRunningNode = (currentNode, responseResult, get) => {
     done: false,
   };
 };
-const handleFinishedNode = (nodeId, currentNode, responseResult, get) => {
+const handleFinishedNode = (nodeId, currentNode, responseResult, get): void => {
   const beforeContent = currentNode?.data?.debuggerResult?.answerContent ?? '';
   const beforeReasoningContent =
     currentNode?.data?.debuggerResult?.reasoningContent ?? '';
@@ -338,14 +351,14 @@ const handleFinishedNode = (nodeId, currentNode, responseResult, get) => {
   }
   if (nodeId?.startsWith('node-end') && responseResult?.answerMode === 0) {
     pushContentToAnswer(
-      'content',
+      'endNodeTextQueue',
       JSON.stringify(responseResult?.outputs),
       get
     );
     get().chatInfoRef.answerItem = JSON.stringify(responseResult?.outputs);
   }
   if (nodeId?.startsWith('message')) {
-    pushContentToAnswer('messageContent', '\n', get);
+    pushContentToAnswer('messageNodeTextQueue', '\n', get);
   }
 };
 const handleNodeStatusChange = ({
@@ -356,10 +369,10 @@ const handleNodeStatusChange = ({
   responseResult,
   get,
 }): void => {
-  const setEdges = useFlowStore(state => state.setEdges);
-  const setNode = useFlowStore(state => state.setNode);
+  const setEdges = useFlowStore.getState().setEdges;
+  const setNode = useFlowStore.getState().setNode;
   const currentNode = nodes.find(node => node.id === nodeId);
-  const autonomousMode = useFlowsManager(state => state.autonomousMode);
+  const autonomousMode = useFlowsManager.getState().autonomousMode;
   handleAnswerContent(nodeId, responseResult, get);
   updateAnswerItem(nodeId, responseResult, get);
   if (nodeStatus === 'ing' || nodeStatus === 'interrupt') {
@@ -416,7 +429,7 @@ const handleMessage = (
   e: MessageEvent,
   get,
   set
-) => {
+): void => {
   if (!e.data || !isJSON(e.data)) return;
   const data: WebSocketMessageData = JSON.parse(e.data);
   const { flowResult, nodeId, nodeStatus, responseResult } =
@@ -443,14 +456,13 @@ const handleMessage = (
       nodeStatus,
       responseResult,
       get,
-      set,
     });
   } else if (flowResult === 'stop') {
     handleFlowStop(data, get);
   }
 };
-const handleRunningNodeStatus = () => {
-  const setNodes = useFlowStore(state => state.setNodes);
+const handleRunningNodeStatus = (): void => {
+  const setNodes = useFlowStore.getState().setNodes;
   setNodes(nodes => {
     nodes.forEach(node => {
       if (node?.data?.status === 'running') {
@@ -463,8 +475,8 @@ const handleRunningNodeStatus = () => {
     return cloneDeep(nodes);
   });
 };
-const handleSynchronizeDataToXfyun = () => {
-  const currentFlow = useFlowsManager(state => state.currentFlow);
+const handleSynchronizeDataToXfyun = (): void => {
+  const currentFlow = useFlowsManager.getState().currentFlow;
   const botId = isJSON(currentFlow?.ext)
     ? JSON.parse(currentFlow?.ext)?.botId
     : '';
@@ -473,14 +485,12 @@ const handleSynchronizeDataToXfyun = () => {
   };
   getInputsType(params);
 };
-const handleMessageEnd = (data: WebSocketMessageData, get) => {
-  const setShowNodeList = useFlowsManager(state => state.setShowNodeList);
-  const setFlowResult = useFlowsManager(state => state.setFlowResult);
-  const setCanvasesDisabled = useFlowsManager(
-    state => state.setCanvasesDisabled
-  );
-  const historyVersion = useFlowsManager(state => state.historyVersion);
-  const setEdges = useFlowStore(state => state.setEdges);
+const handleMessageEnd = (data: WebSocketMessageData, get): void => {
+  const setShowNodeList = useFlowsManager.getState().setShowNodeList;
+  const setFlowResult = useFlowsManager.getState().setFlowResult;
+  const setCanvasesDisabled = useFlowsManager.getState().setCanvasesDisabled;
+  const historyVersion = useFlowsManager.getState().historyVersion;
+  const setEdges = useFlowStore.getState().setEdges;
   const flowResult: FlowResultType = {
     status: data.code === 0 ? 'success' : 'failed',
     timeCost: (data?.executedTime || 0).toString(),
@@ -504,8 +514,9 @@ const handleMessageEnd = (data: WebSocketMessageData, get) => {
   handleRunningNodeStatus();
 };
 const handleResumeChat = (content, get, set): void => {
-  const currentFlow = useFlowsManager(state => state.currentFlow);
-  const nodes = useFlowStore(state => state.nodes);
+  const currentFlow = useFlowsManager.getState().currentFlow;
+  const nodes = useFlowStore.getState().nodes;
+  const edges = useFlowStore.getState().edges;
   set({
     wsMessageStatus: 'start',
     debuggering: true,
@@ -560,8 +571,7 @@ const handleResumeChat = (content, get, set): void => {
     },
   });
 };
-const runDebugger = (obj): void => {
-  console.log('执行chat');
+const runDebugger = (obj: unknown): void => {
   const { nodes, edges, get, set, enters, regen = false } = obj;
   const currentFlow = useFlowsManager.getState().currentFlow;
   const historyVersion = useFlowsManager.getState().historyVersion;
@@ -594,7 +604,7 @@ const runDebugger = (obj): void => {
     regen,
   };
   if (historyVersion) {
-    params.version = versionId.current;
+    params.version = get().versionId;
     params.promptDebugger = true;
   }
   fetchEventSource(url, {
@@ -614,7 +624,7 @@ const runDebugger = (obj): void => {
     },
   });
 };
-const advancedConfig = () => {
+const advancedConfig = (): unknown => {
   const currentFlow = useFlowsManager.getState().currentFlow;
   if (currentFlow?.advancedConfig && isJSON(currentFlow?.advancedConfig)) {
     const parsedConfig = JSON.parse(currentFlow?.advancedConfig);
@@ -704,49 +714,44 @@ const handleRunDebugger = ({
     };
     api = buildFlowAPI;
   }
-  api(params)
-    .then(() => {
-      setCanPublish(true);
-      setShowNodeList(false);
-      set({
-        preRunningNodeIds: [],
-        buildPassRef: true,
-        userWheel: false,
-      });
-      setFlowResult({
-        status: 'running',
-        timeCost: '',
-        totalTokens: '',
-      });
-      clearNodeStatus(get);
-      const nodeId = nodes?.find(node => node?.nodeType === 'node-start')?.id;
-      pushAskToChatList(inputs, nodes, nodeId, get);
-      !historyVersion && setCanvasesDisabled(true);
-      pushAnswerToChatList(get);
-      runDebugger({
-        nodes,
-        edges,
-        get,
-        set,
-        enters: inputs,
-        regen,
-      });
-      //同步数据到开放平台
-      handleSynchronizeDataToXfyun();
-    })
-    .catch(() => {
-      get().setDebuggering(false);
-      get().wsMessageStatus = 'end';
+  api(params).then(() => {
+    setCanPublish(true);
+    setShowNodeList(false);
+    set({
+      preRunningNodeIds: [],
+      buildPassRef: true,
+      userWheel: false,
     });
+    setFlowResult({
+      status: 'running',
+      timeCost: '',
+      totalTokens: '',
+    });
+    clearNodeStatus(get);
+    const nodeId = nodes?.find(node => node?.nodeType === 'node-start')?.id;
+    pushAskToChatList(inputs, nodes, nodeId, get);
+    !historyVersion && setCanvasesDisabled(true);
+    pushAnswerToChatList(get);
+    runDebugger({
+      nodes,
+      edges,
+      get,
+      set,
+      enters: inputs,
+      regen,
+    });
+    //同步数据到开放平台
+    handleSynchronizeDataToXfyun();
+  });
 };
-const clearData = (setOpen, get) => {
+const clearData = (setOpen, get): void => {
   const setFlowResult = useFlowsManager.getState().setFlowResult;
   const setShowNodeList = useFlowsManager.getState().setShowNodeList;
   const setCanvasesDisabled = useFlowsManager.getState().setCanvasesDisabled;
   get().preRunningNodeIds = [];
   get().setStartNodeParams([]);
-  if (get().textareRef) {
-    get().textareRef.value = '';
+  if (get().userInput) {
+    get().setUserInput('');
   }
   setOpen(false);
   if (get().debuggering) {
@@ -760,7 +765,7 @@ const clearData = (setOpen, get) => {
   setCanvasesDisabled(false);
 };
 
-const canRunDebugger = get => {
+const canRunDebugger = (get): boolean => {
   if (!get().debuggering && get().interruptChat?.type === 'option')
     return false;
   if (
@@ -793,7 +798,7 @@ const canRunDebugger = get => {
   if (
     !get().debuggering &&
     get().startNodeParams?.length === 1 &&
-    get().textareRef?.value?.trim()
+    get().userInput?.trim()
   ) {
     return true;
   }
@@ -813,7 +818,7 @@ const handleEnterKey = (
   ) {
     e.preventDefault();
     if (get().interruptChat?.interrupt) {
-      handleResumeChat(get().textareRef?.value, get, set);
+      handleResumeChat(get().userInput, get, set);
     } else {
       const { nodes, edges } = resetNodesAndEdges(get);
       handleRunDebugger({
@@ -825,7 +830,7 @@ const handleEnterKey = (
           {
             name: 'AGENT_USER_INPUT',
             type: 'string',
-            default: get().textareRef?.value,
+            default: get().userInput,
             description: i18n.t(
               'workflow.nodes.chatDebugger.userCurrentRoundInput'
             ),
@@ -840,7 +845,7 @@ const handleEnterKey = (
   } else if (e.nativeEvent.keyCode === 13 && !e.nativeEvent.shiftKey) {
     e.preventDefault();
   } else if (e.key === 'Tab') {
-    get().textareRef.value = get().textareRef?.value + '\t';
+    get().setUserInput(get().userInput + '\t');
     get().setStartNodeParams(startNodeParams => {
       startNodeParams[0].default = startNodeParams[0].default + '\t';
       return [...startNodeParams];
@@ -873,14 +878,12 @@ const resetNodesAndEdges = (
 };
 
 const handleStopConversation = (get): void => {
-  const currentFlow = useFlowsManager(state => state.currentFlow);
-  const setCanvasesDisabled = useFlowsManager(
-    state => state.setCanvasesDisabled
-  );
-  const historyVersion = useFlowsManager(state => state.historyVersion);
-  const setShowNodeList = useFlowsManager(state => state.setShowNodeList);
-  const setEdges = useFlowStore(state => state.setEdges);
-  const setFlowResult = useFlowsManager(state => state.setFlowResult);
+  const currentFlow = useFlowsManager.getState().currentFlow;
+  const setCanvasesDisabled = useFlowsManager.getState().setCanvasesDisabled;
+  const historyVersion = useFlowsManager.getState().historyVersion;
+  const setShowNodeList = useFlowsManager.getState().setShowNodeList;
+  const setEdges = useFlowStore.getState().setEdges;
+  const setFlowResult = useFlowsManager.getState().setFlowResult;
   get().chatIdRef = uuid().replace(/-/g, '');
   if (get().interruptChat?.interrupt) {
     const url = getFixedUrl('/workflow/resume');
@@ -931,11 +934,9 @@ const handleStopConversation = (get): void => {
 };
 
 const deleteAllChat = (get): void => {
-  const currentFlow = useFlowsManager(state => state.currentFlow);
-  const historyVersion = useFlowsManager(state => state.historyVersion);
-  const setCanvasesDisabled = useFlowsManager(
-    state => state.setCanvasesDisabled
-  );
+  const currentFlow = useFlowsManager.getState().currentFlow;
+  const historyVersion = useFlowsManager.getState().historyVersion;
+  const setCanvasesDisabled = useFlowsManager.getState().setCanvasesDisabled;
   workflowDialogClear(currentFlow?.id, 1).then(() => {
     get().chatIdRef = uuid().replace(/-/g, '');
     get().setDeleteAllModal(false);
@@ -945,7 +946,7 @@ const deleteAllChat = (get): void => {
   });
 };
 
-const handleWorkflowDeleteComparisons = get => {
+const handleWorkflowDeleteComparisons = (get): void => {
   const currentFlow = useFlowsManager.getState().currentFlow;
   if (!get().versionId) return;
   const parmas = {
@@ -964,10 +965,8 @@ const setChatList = (change: unknown, get, set): void => {
 };
 
 const setStartNodeParams = (change: unknown, get, set): void => {
-  console.log('change@@', change);
   const newChange =
     typeof change === 'function' ? change(get().startNodeParams) : change;
-  console.log('newChange@@', newChange);
   set({
     startNodeParams: newChange,
   });
@@ -1021,13 +1020,19 @@ const setDeleteAllModal = (change: unknown, get, set): void => {
   });
 };
 
-const setWsMessageStatus = (status: string, set) => {
+const setWsMessageStatus = (status: string, set): void => {
   set({
     wsMessageStatus: status,
   });
 };
 
-const setQueue = (number, get, set) => {
+const setUserInput = (value: string, set): void => {
+  set({
+    userInput: value,
+  });
+};
+
+const setQueue = (number, get, set): void => {
   const key = get().messageNodeTextQueue
     ? 'messageNodeTextQueue'
     : get().endNodeReasoningTextQueue
@@ -1036,6 +1041,31 @@ const setQueue = (number, get, set) => {
   set({
     [key]: get()[key].slice(number),
   });
+};
+
+const getTextQueueContent = (get): string => {
+  return (
+    get().messageNodeTextQueue ||
+    get().endNodeReasoningTextQueue ||
+    get().endNodeTextQueue
+  );
+};
+
+const getChatKey = (get): string => {
+  return get().messageNodeTextQueue
+    ? 'messageContent'
+    : get().endNodeReasoningTextQueue
+      ? 'reasoningContent'
+      : 'content';
+};
+
+const isChatEnd = (get): boolean => {
+  return (
+    !get().messageNodeTextQueue &&
+    !get().endNodeReasoningTextQueue &&
+    !get().endNodeTextQueue &&
+    get().wsMessageStatus === 'end'
+  );
 };
 
 export {
@@ -1061,4 +1091,8 @@ export {
   canRunDebugger,
   setWsMessageStatus,
   setQueue,
+  setUserInput,
+  getTextQueueContent,
+  isChatEnd,
+  getChatKey,
 };

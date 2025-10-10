@@ -80,6 +80,7 @@ export type {
   PositionType,
   NewNodeType,
   IFlyCollectorType,
+  UseChatDebuggerContentProps,
 } from './chat-debugger';
 
 // Chat Debugger 相关类型

@@ -141,7 +141,8 @@ function ChatInput({
   interruptChat,
   startNodeParams,
   setStartNodeParams,
-  textareRef,
+  userInput,
+  setUserInput,
   handleEnterKey,
 }: ChatInputProps): React.ReactElement {
   const { t } = useTranslation();
@@ -165,7 +166,7 @@ function ChatInput({
           <textarea
             disabled={interruptChat?.type === 'option'}
             className="user-chat-input pr-3.5 w-full py-3"
-            ref={textareRef}
+            value={userInput}
             style={{
               resize: 'none',
             }}
@@ -176,6 +177,7 @@ function ChatInput({
                 startNodeParams[0].default = value;
                 setStartNodeParams([...startNodeParams]);
               }
+              setUserInput(value);
             }}
             onKeyDown={handleEnterKey}
             placeholder={

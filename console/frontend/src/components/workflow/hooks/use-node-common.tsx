@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { cloneDeep } from 'lodash';
 import { useMemoizedFn } from 'ahooks';
 import { Tooltip, Checkbox } from 'antd';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import {
   renderType,
   findPathById,
@@ -27,7 +27,7 @@ import {
   AgentNodeOneClickUpdate,
   ToolNodeOneClickUpdate,
   FlowNodeOneClickUpdate,
-} from '@/components/workflow/hooks/useOneClickUpdate';
+} from '@/components/workflow/hooks/use-one-click-update';
 import {
   NodeCommonProps,
   NodeDataType,
@@ -134,7 +134,9 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
   const references = useMemo(() => {
     return generateReferences(nodes, edges, id);
   }, [id, nodes, edges]);
-
+  const isFixedInputsNode = useMemo(() => {
+    return ['plugin', 'flow', 'rpa'].includes(nodeType);
+  }, [nodeType]);
   const inputs = useMemo(() => {
     return data?.inputs || [];
   }, [data?.inputs]);
@@ -205,6 +207,7 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
     showOutputs,
     showExceptionFlow,
     references,
+    isFixedInputsNode,
     inputs,
     outputs,
     showNodeOperation,
@@ -217,7 +220,7 @@ const useNodeInfo = ({ id, data }): UseNodeInfoReturn => {
 };
 
 const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
-  const { isIteratorNode } = useNodeInfo({ id, data });
+  const { isIteratorNode, nodeType } = useNodeInfo({ id, data });
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
     state => state.setNodeInfoEditDrawerlInfo
   );
@@ -370,6 +373,9 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
     canPublishSetNot();
     handleIteratorEndChange('remove', outputId);
   });
+  const isFixedOutputComponentFunc = useMemoizedFn(output => {
+    return nodeType === 'database' && !output?.isChild;
+  });
   return {
     handleNodeClick,
     handleChangeNodeParam,
@@ -377,12 +383,18 @@ const useNodeFunc = ({ id, data }): UseNodeFuncReturn => {
     handleIteratorEndChange,
     handleAddOutputLine,
     handleRemoveOutputLine,
+    isFixedOutputComponentFunc,
   };
 };
 
 const OutputNameInput = ({ id, data, output }): React.ReactElement => {
   const { handleChangeOutputParam } = useNodeFunc({ id, data });
   const { handleCustomOutputGenerate } = useNodeOutputRender({ id, data });
+  const { isFixedOutputComponentFunc } = useNodeFunc({ id, data });
+  const isFixedOutputComponent = isFixedOutputComponentFunc(output);
+  if (isFixedOutputComponent) {
+    return <div>{output.name}</div>;
+  }
   const handleChange = useMemoizedFn((value: string) => {
     handleChangeOutputParam(
       output.id,
@@ -416,7 +428,11 @@ const OutputTypeSelector = ({ id, data, output }): React.ReactElement => {
   const { outputTypeList } = useNodeOutputRender({ id, data });
   const currentStore = useFlowsManager(state => state.getCurrentStore());
   const delayUpdateNodeRef = currentStore(state => state.delayUpdateNodeRef);
-
+  const { isFixedOutputComponentFunc } = useNodeFunc({ id, data });
+  const isFixedOutputComponent = isFixedOutputComponentFunc(output);
+  if (isFixedOutputComponent) {
+    return <div>{renderType(output)}</div>;
+  }
   const handleTypeChange = useMemoizedFn((value: unknown) => {
     handleChangeOutputParam(
       output.id,
@@ -477,6 +493,11 @@ const OutputTypeSelector = ({ id, data, output }): React.ReactElement => {
 // 描述/类型输入
 const OutputDescription = ({ id, data, output }): React.ReactElement => {
   const { renderTypeInput } = useNodeInputRender({ id, data });
+  const { isFixedOutputComponentFunc } = useNodeFunc({ id, data });
+  const isFixedOutputComponent = isFixedOutputComponentFunc(output);
+  if (isFixedOutputComponent) {
+    return <div>{output?.schema?.default || output?.default}</div>;
+  }
   return (
     <div
       className={`flex flex-col flex-1 h-full ${
@@ -554,7 +575,6 @@ const useNodeOutputRender = ({ id, data }): UseNodeOutputRenderReturn => {
   const renderOutputComponent = useMemoizedFn(
     (output: OutputItem): React.ReactElement => {
       const type = output?.schema?.type || output?.type;
-
       return (
         <div className="w-full flex flex-col gap-1">
           <div className="flex items-start gap-3">

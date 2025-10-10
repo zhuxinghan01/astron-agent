@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { message } from 'antd';
 import useUserStore from '@/store/user-store';
 import {
@@ -47,6 +47,7 @@ const useAddNode = (): UseAddNodeReturn => {
   const currentFlow = useFlowsManager(state => state.currentFlow);
   const takeSnapshot = currentStore(state => state.takeSnapshot);
   const setNodes = currentStore(state => state.setNodes);
+  const checkNode = currentStore(state => state.checkNode);
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const handleAddNode = useMemoizedFn(
     (addNode: AddNodeType, position: PositionType): NewNodeType[] | null => {
@@ -212,6 +213,7 @@ const useAddNode = (): UseAddNodeReturn => {
         );
         canPublishSetNot();
         setWillAddNode(null);
+        checkNode(addNodes[0].id);
         return addNodes;
       }
     }
@@ -232,6 +234,7 @@ const useAddToolNode = ({ addEdge }): UseAddToolNodeReturn => {
   const canPublishSetNot = useFlowsManager(state => state.canPublishSetNot);
   const beforeNode = useFlowsManager(state => state.beforeNode);
   const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const checkNode = currentStore(state => state.checkNode);
   const handleAddToolNode = useMemoizedFn((tool: ToolType): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
@@ -277,6 +280,7 @@ const useAddToolNode = ({ addEdge }): UseAddToolNodeReturn => {
     if (beforeNode) {
       addEdge(beforeNode.sourceHandle, beforeNode, newToolNode);
     }
+    checkNode(newToolNode.id);
   });
   return {
     handleAddToolNode,
@@ -293,6 +297,7 @@ const useAddFlowNode = ({ addEdge }): UseAddFlowNodeReturn => {
   const beforeNode = useFlowsManager(state => state.beforeNode);
   const willAddNode = useFlowsManager(state => state.willAddNode);
   const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const checkNode = currentStore(state => state.checkNode);
   const handleAddFlowNode = useMemoizedFn((flow: FlowType): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
@@ -327,6 +332,7 @@ const useAddFlowNode = ({ addEdge }): UseAddFlowNodeReturn => {
     if (beforeNode) {
       addEdge(beforeNode.sourceHandle, beforeNode, newFlowNode);
     }
+    checkNode(newFlowNode.id);
   });
   return {
     handleAddFlowNode,
@@ -342,6 +348,7 @@ const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
   const beforeNode = useFlowsManager(state => state.beforeNode);
   const willAddNode = useFlowsManager(state => state.willAddNode);
   const reactFlowInstance = currentStore(state => state.reactFlowInstance);
+  const checkNode = currentStore(state => state.checkNode);
   const handleAddRpaNode = useMemoizedFn((rpaParam: RpaNodeParam): void => {
     takeSnapshot();
     const currentTypeList = nodes.filter(
@@ -378,6 +385,7 @@ const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
     if (beforeNode) {
       addEdge(beforeNode.sourceHandle, beforeNode, newRpaNode);
     }
+    checkNode(newRpaNode.id);
   });
   return {
     handleAddRpaNode,

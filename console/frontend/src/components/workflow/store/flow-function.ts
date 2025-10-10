@@ -15,7 +15,7 @@ import {
 import { v4 as uuid } from 'uuid';
 import { message } from 'antd';
 import { cloneDeep } from 'lodash';
-import useFlowsManager from './useFlowsManager';
+import useFlowsManager from './use-flows-manager';
 import {
   Edge,
   EdgeChange,

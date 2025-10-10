@@ -26,6 +26,32 @@ export const getFixedUrl = (path: string): string => {
   return `${baseURL()}${path}`;
 };
 
+const baseWsURL = (): string => {
+  // 在客户端环境下检查是否为localhost
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'localhost'
+  ) {
+    return 'ws://172.29.201.92:8080';
+  }
+
+  // 通过import.meta.env.MODE获取构建时的环境模式
+  const mode = import.meta.env.MODE;
+  switch (mode) {
+    case 'development':
+      return 'ws://172.29.202.54:8080';
+    case 'test':
+      return 'ws://172.29.201.92:8080';
+    default:
+      // production和其他环境保持原有逻辑
+      return 'ws://172.29.201.92:8080';
+  }
+};
+
+export const getWsFixedUrl = (path: string): string => {
+  return `${baseWsURL()}${path}`;
+};
+
 export const getAuthorization = (): string => {
   return `Bearer ${localStorage.getItem('accessToken')}`;
 };

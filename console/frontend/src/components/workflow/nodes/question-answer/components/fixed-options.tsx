@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { FlowSelect, FlowTemplateEditor } from '@/components/workflow/ui';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
 
 import inputAddIcon from '@/assets/imgs/workflow/input-add-icon.png';

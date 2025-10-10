@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from 'react';
 import { createPortal } from 'react-dom';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import {
   getKnowledgeDetail,
   queryFileList,

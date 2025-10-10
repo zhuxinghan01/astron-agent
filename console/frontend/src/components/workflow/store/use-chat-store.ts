@@ -24,6 +24,10 @@ import {
   setWsMessageStatus,
   resetNodesAndEdges,
   setQueue,
+  setUserInput,
+  getTextQueueContent,
+  isChatEnd,
+  getChatKey,
 } from './flow-chat-function';
 
 const useChatStore = create<ChatStoreType>((set, get) => ({
@@ -54,6 +58,10 @@ const useChatStore = create<ChatStoreType>((set, get) => ({
   resetNodesAndEdges: (): { nodes: ReactFlowNode[]; edges: ReactFlowEdge[] } =>
     resetNodesAndEdges(get),
   setQueue: (number: number): void => setQueue(number, get, set),
+  setUserInput: (value: string): void => setUserInput(value, set),
+  getTextQueueContent: (): string => getTextQueueContent(get),
+  isChatEnd: (): boolean => isChatEnd(get),
+  getChatKey: (): string => getChatKey(get),
 }));
 
 export default useChatStore;

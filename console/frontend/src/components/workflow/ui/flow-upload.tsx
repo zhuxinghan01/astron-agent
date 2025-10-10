@@ -1,6 +1,6 @@
 import React from 'react';
 import { Upload, message } from 'antd';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { v4 as uuid } from 'uuid';
 import { getFixedUrl, getAuthorization } from '@/components/workflow/utils';
 
