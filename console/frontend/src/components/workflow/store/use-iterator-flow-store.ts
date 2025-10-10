@@ -40,7 +40,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
   undo: (): void => undo(get),
   takeSnapshot: (): void => takeSnapshot(get),
   setHistorys: (change: unknown): void => setHistorys(change, get, set),
-  moveToPosition: (viewport: unknown): void => moveToPosition(viewport, get),
+  moveToPosition: (viewport: unknown): void => moveToPosition(viewport),
   setReactFlowInstance: (newState: unknown): void =>
     setReactFlowInstance(newState, set),
   onNodesChange: (changes: NodeChange[]): void =>

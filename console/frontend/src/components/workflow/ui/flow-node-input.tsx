@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, memo, useState } from 'react';
 import { cn } from '@/utils';
 import { debounce } from 'lodash';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
 import { useMemoizedFn } from 'ahooks';
 

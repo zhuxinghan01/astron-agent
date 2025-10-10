@@ -2,7 +2,7 @@ import React, { useState, useCallback, memo } from 'react';
 import { Cascader, Empty } from 'antd';
 import { cn } from '@/utils';
 import { useTranslation } from 'react-i18next';
-import FlowTree from './FlowTree';
+import FlowTree from './flow-tree';
 
 import formSelect from '@/assets/imgs/main/icon_nav_dropdown.svg';
 
