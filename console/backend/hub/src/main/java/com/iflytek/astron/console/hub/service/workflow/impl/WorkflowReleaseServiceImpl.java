@@ -151,13 +151,18 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             }
 
             try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
                     log.error("Failed to get next version name: flowId={}, responseCode={}", flowId, response.code());
                     // Fallback strategy - generate timestamp-based version
                     return "v" + System.currentTimeMillis();
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("Response body is null for flowId: {}", flowId);
+                    return "v" + System.currentTimeMillis();
+                }
                 log.debug("Get next version name response: {}", responseBody);
 
                 // Parse response
@@ -203,13 +208,17 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
                     .build();
 
             try (Response response = okHttpClient.newCall(httpRequest).execute()) {
-                if (!response.isSuccessful()) {
-                    log.error("Failed to create workflow version: statusCode={}, response={}",
-                            response.code(), response.body().string());
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
+                    log.error("Failed to create workflow version: statusCode={}", response.code());
                     return createErrorResponse("Failed to create version: HTTP " + response.code());
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("Response body is null when creating workflow version");
+                    return createErrorResponse("Response body is null");
+                }
                 log.debug("Create workflow version response: {}", responseBody);
 
                 // Parse response
@@ -275,13 +284,18 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
                     .build();
 
             try (Response response = okHttpClient.newCall(publishRequest).execute()) {
-                if (!response.isSuccessful()) {
-                    log.error("发布Mass API失败: botId={}, responseCode={}, response={}",
-                            botId, response.code(), response.body().string());
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
+                    log.error("发布Mass API失败: botId={}, responseCode={}",
+                            botId, response.code());
                     return;
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("Response body is null when publishing Mass API: botId={}", botId);
+                    return;
+                }
                 log.debug("发布Mass API响应: {}", responseBody);
 
                 // 解析响应检查是否成功
@@ -370,13 +384,18 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
                     .build();
 
             try (Response response = okHttpClient.newCall(httpRequest).execute()) {
-                if (!response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
                     log.error("Failed to update audit result: versionId={}, auditResult={}, responseCode={}",
                             versionId, auditResult, response.code());
                     return false;
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("Response body is null when updating audit result: versionId={}", versionId);
+                    return false;
+                }
                 log.debug("Update audit result response: {}", responseBody);
 
                 // Parse response to check result
