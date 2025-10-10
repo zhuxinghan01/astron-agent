@@ -576,36 +576,37 @@ public class BotAIServiceImpl implements BotAIService {
                     Please generate a friendly and professional opening message for an AI assistant named "{0}". \
                     Requirements: 1.Friendly and natural tone 2.Highlight professional capabilities \
                     3.Guide users to start conversation 4.Keep within 50 words""";
-            case "input_example_generation" -> """
-                    Assistant name as follows:
-                    ```
-                    {0}
-                    ```
-                    Assistant description as follows:
-                    ```
-                    {1}
-                    ```
-                    Assistant instructions as follows:
-                    ```
-                    {2}
-                    ```
-                    Note:
-                    An assistant sends an instruction template together with the user's detailed input to a large language model to complete a specific task. The assistant description states what the assistant should accomplish and what the user needs to provide. The assistant instructions are the template sent to the model; the template plus the user's detailed input enable the model to complete the task.
+            case "input_example_generation" ->
+                """
+                        Assistant name as follows:
+                        ```
+                        {0}
+                        ```
+                        Assistant description as follows:
+                        ```
+                        {1}
+                        ```
+                        Assistant instructions as follows:
+                        ```
+                        {2}
+                        ```
+                        Note:
+                        An assistant sends an instruction template together with the user's detailed input to a large language model to complete a specific task. The assistant description states what the assistant should accomplish and what the user needs to provide. The assistant instructions are the template sent to the model; the template plus the user's detailed input enable the model to complete the task.
 
-                    Please follow these steps:
-                    1. Carefully read the assistant name, description, and instructions to understand the intended task.
-                    2. Based on the above, generate three short task descriptions that a user would input when using this assistant.
-                    3. Ensure each output matches the assistant task and does not repeat.
-                    4. Be specific; avoid vague dimensions only.
-                    5. Return results line by line, one description per line.
-                    6. Each description must be no more than 20 words. [VERY IMPORTANT!!]
-                    7. Be concise and avoid verbosity; use short phrases.
+                        Please follow these steps:
+                        1. Carefully read the assistant name, description, and instructions to understand the intended task.
+                        2. Based on the above, generate three short task descriptions that a user would input when using this assistant.
+                        3. Ensure each output matches the assistant task and does not repeat.
+                        4. Be specific; avoid vague dimensions only.
+                        5. Return results line by line, one description per line.
+                        6. Each description must be no more than 20 words. [VERY IMPORTANT!!]
+                        7. Be concise and avoid verbosity; use short phrases.
 
-                    Ensure the three user input task descriptions are appropriate for this assistant.
-                    Return results in the following format:
-                    1.context1
-                    2.context2
-                    3.context3""";
+                        Ensure the three user input task descriptions are appropriate for this assistant.
+                        Return results in the following format:
+                        1.context1
+                        2.context2
+                        3.context3""";
             default -> throw new BusinessException(ResponseEnum.SYSTEM_ERROR);
         };
     }
@@ -672,10 +673,8 @@ public class BotAIServiceImpl implements BotAIService {
     }
 
     /**
-     * Parse text content and extract up to 3 numbered examples.
-     * Supports patterns like:
-     *  1. xxx\n2. yyy\n3. zzz (optional 4. ... will be ignored)
-     * Fallback: take first 3 non-empty lines.
+     * Parse text content and extract up to 3 numbered examples. Supports patterns like: 1. xxx\n2.
+     * yyy\n3. zzz (optional 4. ... will be ignored) Fallback: take first 3 non-empty lines.
      */
     private List<String> parseNumberedExamples(String text) {
         List<String> result = new ArrayList<>();
@@ -705,13 +704,15 @@ public class BotAIServiceImpl implements BotAIService {
         String[] lines = text.split("\r?\n");
         for (String line : lines) {
             String s = StringUtils.trimToEmpty(line);
-            if (s.isEmpty()) continue;
+            if (s.isEmpty())
+                continue;
             // leading numbering or dash
             s = s.replaceFirst("^\\s*(?:[0-9]+[\\.)]|[-•])\\s*", "").trim();
             if (!s.isEmpty()) {
                 result.add(s);
             }
-            if (result.size() == 3) break;
+            if (result.size() == 3)
+                break;
         }
         return result;
     }
