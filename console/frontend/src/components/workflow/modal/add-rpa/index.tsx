@@ -161,11 +161,11 @@ export default function index(): React.ReactElement {
                                 key={item?.project_id}
                                 className="bg-[#F7F7FA] p-4 rounded-lg flex mb-[10px] "
                               >
-                                {/* <img
+                                <img
                                   className="w-[28px] h-[28px] rounded-lg"
                                   src={item?.icon}
                                   alt=""
-                                /> */}
+                                />
                                 <div className="flex-1 pl-[14px]">
                                   <div className="flex  flex-col">
                                     <p className="text-sm font-medium pb-[8px]">

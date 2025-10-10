@@ -25,12 +25,14 @@ export const RpaDetail = () => {
       render: (_, record) => {
         return (
           <div className="flex items-center">
-            {/* <img
+            <img
               src={record.icon}
               className="w-[28px] h-[28px] rounded-lg"
               alt=""
-            /> */}
-            <div className="flex-1 truncate max-w-[166px]">{record.name}</div>
+            />
+            <div className="flex-1 pl-[12px] truncate max-w-[166px]">
+              {record.name}
+            </div>
           </div>
         );
       },
