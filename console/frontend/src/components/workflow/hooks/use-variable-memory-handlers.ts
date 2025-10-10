@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { cloneDeep } from 'lodash';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { isRefKnowledgeBase } from '@/components/workflow/utils/reactflowUtils';
 import { UseVariableMemoryHandlersReturn } from '../types/hooks';
 
