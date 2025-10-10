@@ -120,13 +120,13 @@ const ChatFooter = ({
   );
 };
 
-const useChatDebuggerEffect = ({
+const useChatDebuggerEffect = (
   currentFlow,
   open,
   startNode,
   setShowChatDebuggerPage,
-  setStartNodeParams,
-}): void => {
+  setStartNodeParams
+): void => {
   const isMounted = useRef<boolean>(false);
   const historyVersion = useFlowsManager(state => state.historyVersion);
   const flowResult = useFlowsManager(state => state.flowResult);
@@ -193,6 +193,7 @@ const useChatDebuggerEffect = ({
   }, [currentFlow?.flowId]);
   useEffect(() => {
     open &&
+      !isMounted.current &&
       setStartNodeParams(
         startNode?.data?.outputs?.map(input => {
           const errorMsg =
@@ -364,13 +365,13 @@ export function ChatDebuggerContent({
       currentFlow,
     }
   );
-  useChatDebuggerEffect({
+  useChatDebuggerEffect(
     currentFlow,
     open,
     startNode,
     setShowChatDebuggerPage,
-    setStartNodeParams,
-  });
+    setStartNodeParams
+  );
   return (
     <div
       className="w-full h-full py-4 flex flex-col overflow-hidden"
