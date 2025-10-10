@@ -169,7 +169,7 @@ public class MaasUtil {
     }
 
     public JSONObject synchronizeWorkFlow(UserLangChainInfo userLangChainInfo, BotCreateForm botCreateForm,
-            HttpServletRequest request, Long spaceId) {
+                                          HttpServletRequest request, Long spaceId) {
         AdvancedConfig advancedConfig = new AdvancedConfig(botCreateForm.getPrologue(), botCreateForm.getInputExample(), botCreateForm.getAppBackground());
         JSONObject param = new JSONObject();
         param.put("avatarIcon", botCreateForm.getAvatar());
@@ -363,7 +363,7 @@ public class MaasUtil {
      * Create API (without version)
      *
      * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param appid  Application ID
      * @return JSONObject response result
      */
     public JSONObject createApi(String flowId, String appid) {
@@ -377,8 +377,8 @@ public class MaasUtil {
     /**
      * Create API (with version)
      *
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param flowId  Workflow ID
+     * @param appid   Application ID
      * @param version Version number
      * @return JSONObject response result
      */
@@ -389,8 +389,8 @@ public class MaasUtil {
     /**
      * Internal generic method for creating API
      *
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param flowId  Workflow ID
+     * @param appid   Application ID
      * @param version Version number (can be null)
      * @return JSONObject response result
      */
@@ -412,7 +412,7 @@ public class MaasUtil {
     /**
      * Execute HTTP POST request and return response string
      *
-     * @param url Request URL
+     * @param url      Request URL
      * @param bodyData Request body data object
      * @return String representation of response content
      */
@@ -427,10 +427,10 @@ public class MaasUtil {
                 .post(requestBody)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .headers(Headers.of(authMap))
+                .headers(buildHeaders(authMap))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .build();
-
+        log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), JSONObject.toJSONString(authMap), request.headers());
         try (Response httpResponse = HTTP_CLIENT.newCall(request).execute()) {
             ResponseBody responseBody = httpResponse.body();
             if (responseBody != null) {
@@ -448,9 +448,9 @@ public class MaasUtil {
      * Validate whether the response is successful
      *
      * @param responseStr Response content string representation
-     * @param action Description of current operation being performed (e.g., "publish", "bind")
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param action      Description of current operation being performed (e.g., "publish", "bind")
+     * @param flowId      Workflow ID
+     * @param appid       Application ID
      */
     private void validateResponse(String responseStr, String action, String flowId, String appid) {
         log.info("----- {} maas api response: {}", action, responseStr);
@@ -639,9 +639,9 @@ public class MaasUtil {
     /**
      * Register MCP server (mock implementation) Corresponds to massUtil.registerMcp in original project
      *
-     * @param cookie HTTP cookies from request
-     * @param chainInfo workflow chain information
-     * @param mcpRequest MCP publish request data
+     * @param cookie      HTTP cookies from request
+     * @param chainInfo   workflow chain information
+     * @param mcpRequest  MCP publish request data
      * @param versionName workflow version name
      * @return JSONObject containing MCP registration result
      */
@@ -711,5 +711,17 @@ public class MaasUtil {
         }
 
         return result;
+    }
+
+    public static Headers buildHeaders(Map<String, String> headerMap) {
+        Headers.Builder headerBuilder = new Headers.Builder();
+        if (headerMap != null) {
+            for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    headerBuilder.add(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return headerBuilder.build();
     }
 }
