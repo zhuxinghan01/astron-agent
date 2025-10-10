@@ -134,6 +134,7 @@ public class WorkflowBotChatServiceImpl implements WorkflowBotChatService {
         ChatRequestDtoList requestDtoList = chatHistoryService.getHistory(uid, chatId, reqList);
         filterContent(requestDtoList);
         WorkflowApiRequest workflowApiRequest = new WorkflowApiRequest(flowId, uid, inputs, requestDtoList.getMessages(), workflowVersion);
+        log.info("workflowApiRequest:{}", workflowApiRequest);
         RequestBody body = RequestBody.create(JSON.toJSONString(workflowApiRequest), MediaType.parse("application/json; charset=utf-8"));
 
         // Check if already published
