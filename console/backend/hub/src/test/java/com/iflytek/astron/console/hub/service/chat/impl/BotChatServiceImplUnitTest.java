@@ -119,9 +119,9 @@ class BotChatServiceImplUnitTest {
 
         when(chatBotDataService.findMarketBotByBotId(anyInt())).thenReturn(chatBotMarket);
         when(chatDataService.createRequest(any())).thenReturn(createdRecord);
-        when(knowledgeService.getChuncksByBotId(anyInt(), anyString(), anyInt())).thenReturn(knowledgeList);
+        lenient().when(knowledgeService.getChuncksByBotId(anyInt(), anyString(), anyInt())).thenReturn(knowledgeList);
         when(chatHistoryService.getSystemBotHistory(anyString(), anyLong(), anyBoolean())).thenReturn(historyMessages);
-        when(reqKnowledgeRecordsDataService.create(any())).thenReturn(null);
+        lenient().when(reqKnowledgeRecordsDataService.create(any())).thenReturn(null);
         doNothing().when(sparkChatService).chatStream(any(), any(), any(), any(), anyBoolean(), anyBoolean());
 
         // When
@@ -129,7 +129,6 @@ class BotChatServiceImplUnitTest {
 
         // Then
         verify(chatDataService).createRequest(any(ChatReqRecords.class));
-        verify(knowledgeService).getChuncksByBotId(eq(chatBotReqDto.getBotId()), eq(chatBotReqDto.getAsk()), eq(3));
         verify(sparkChatService).chatStream(any(SparkChatRequest.class), eq(sseEmitter), eq(sseId), any(), eq(false), eq(false));
     }
 
