@@ -193,12 +193,17 @@ public class McpPublishStrategy implements PublishStrategy {
 
             // Execute request
             try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
                     log.error("getVersionName - HTTP request failed: flowId={}, responseCode={}", flowId, response.code());
                     return generateDefaultVersion();
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("getVersionName - Response body is null: flowId={}", flowId);
+                    return generateDefaultVersion();
+                }
                 log.debug("getVersionName response: {}", responseBody);
 
                 // Parse response (same as original project)
@@ -296,12 +301,17 @@ public class McpPublishStrategy implements PublishStrategy {
 
             // Execute request
             try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (!response.isSuccessful() || body == null) {
                     log.error("recordMcpRelease - HTTP request failed: botId={}, responseCode={}", botId, response.code());
                     return;
                 }
 
-                String responseBody = response.body().string();
+                String responseBody = body.string();
+                if (responseBody == null) {
+                    log.error("recordMcpRelease - Response body is null: botId={}", botId);
+                    return;
+                }
                 log.debug("recordMcpRelease response: {}", responseBody);
 
                 // Parse response (same as original project)
