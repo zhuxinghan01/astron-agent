@@ -24,7 +24,7 @@ import java.util.Map;
  * 2. User messages from official accounts
  * 3. Authorization callbacks from frontend
  * 
- * @author Assistant
+ * @author Omuigix
  */
 @Slf4j
 @RestController

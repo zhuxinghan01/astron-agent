@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 /**
  * API publish prepare data DTO
  * 
- * @author Assistant
+ * @author Omuigix
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
