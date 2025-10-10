@@ -153,6 +153,7 @@ const pushContentToAnswer = (key, content, get): void => {
   get()[key] = get()[key] + content;
 };
 const clearNodeStatus = (get): void => {
+  console.log('清除数据');
   get().chatInfoRef = cloneDeep(initChatInfo);
   if (get().userInput) {
     get().setUserInput('');
@@ -542,7 +543,6 @@ const handleResumeChat = (content, get, set): void => {
     get
   );
   pushAnswerToChatList(get);
-  clearNodeStatus(get);
   const url = getFixedUrl('/workflow/resume');
   const params = {
     flow_id: currentFlow?.flowId,
@@ -570,6 +570,7 @@ const handleResumeChat = (content, get, set): void => {
       handleMessage(nodes, edges, e, get, set);
     },
   });
+  clearNodeStatus(get);
 };
 const runDebugger = (obj: unknown): void => {
   const { nodes, edges, get, set, enters, regen = false } = obj;
@@ -580,6 +581,8 @@ const runDebugger = (obj: unknown): void => {
     controllerRef: new AbortController(),
   });
   const inputs = {};
+  console.log('enters@@', enters);
+  console.log('get().startNodeParams@@', get().startNodeParams);
   const enterlist = enters ?? get().startNodeParams;
   enterlist.forEach(params => {
     if (
@@ -623,6 +626,7 @@ const runDebugger = (obj: unknown): void => {
       handleMessage(nodes, edges, e, get, set);
     },
   });
+  clearNodeStatus(get);
 };
 const advancedConfig = (): unknown => {
   const currentFlow = useFlowsManager.getState().currentFlow;
@@ -727,7 +731,6 @@ const handleRunDebugger = ({
       timeCost: '',
       totalTokens: '',
     });
-    clearNodeStatus(get);
     const nodeId = nodes?.find(node => node?.nodeType === 'node-start')?.id;
     pushAskToChatList(inputs, nodes, nodeId, get);
     !historyVersion && setCanvasesDisabled(true);
@@ -967,6 +970,7 @@ const setChatList = (change: unknown, get, set): void => {
 const setStartNodeParams = (change: unknown, get, set): void => {
   const newChange =
     typeof change === 'function' ? change(get().startNodeParams) : change;
+  console.log('newChange@@', newChange);
   set({
     startNodeParams: newChange,
   });
