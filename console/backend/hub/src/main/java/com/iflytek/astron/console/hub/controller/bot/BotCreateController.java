@@ -85,7 +85,7 @@ public class BotCreateController {
             // Validate dataset ownership before creating bot
             List<Long> datasetList = bot.getDatasetList();
             List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
                 return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
             }
             boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
@@ -166,6 +166,7 @@ public class BotCreateController {
      * @return Generated assistant details
      */
     @PostMapping("/ai-sentence-gen")
+    @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<BotGenerationDTO> sentence(@RequestParam String sentence) {
         try {
             if (sentence == null || sentence.trim().isEmpty()) {
@@ -252,7 +253,7 @@ public class BotCreateController {
             // Validate dataset ownership before updating bot
             List<Long> datasetList = bot.getDatasetList();
             List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
                 return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
             }
             boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
@@ -263,13 +264,8 @@ public class BotCreateController {
             Boolean result = botService.updateBotBasicInfo(uid, bot, spaceId);
 
             // Handle dataset associations update
-            if (selfDocumentExist) {
-                botDatasetService.updateDatasetByBot(uid, bot.getBotId(), datasetList, supportDocument);
-            }
-
-            if (maasDocumentExist) {
-                botDatasetMaasService.updateDatasetByBot(uid, bot.getBotId(), maasDatasetList, supportDocument);
-            }
+            botDatasetService.updateDatasetByBot(uid, bot.getBotId(), datasetList, supportDocument);
+            botDatasetMaasService.updateDatasetByBot(uid, bot.getBotId(), maasDatasetList, supportDocument);
 
             return ApiResult.success(result);
         } catch (Exception e) {
