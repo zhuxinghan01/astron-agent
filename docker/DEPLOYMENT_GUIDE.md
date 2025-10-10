@@ -14,10 +14,15 @@ The astronAgent project consists of three main components:
 
 ### Prerequisites
 
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- At least 16GB available memory
-- At least 50GB available disk space
+**Agent System Requirements**
+- CPU >= 2 Core
+- RAM >= 4 GiB
+- Disk >= 50 GB
+
+**RAGFlow Requirements**
+- CPU >= 4 Core
+- RAM >= 16 GB
+- Disk >= 50 GB
 
 ### Step 1: Start Casdoor Identity Authentication Service (Deploy as needed)
 
@@ -77,7 +82,6 @@ docker-compose logs -f ragflow
 
 **Access URLs:**
 - RagFlow Web Interface: http://localhost:9380
-- MinIO Console: http://localhost:9001
 
 **Important Configuration Notes:**
 - Uses Elasticsearch by default. To use opensearch、infinity, modify the DOC_ENGINE configuration in .env
@@ -85,7 +89,7 @@ docker-compose logs -f ragflow
 
 ### Step 3: Configure astronAgent Core Services
 
-Before starting astronAgent services, you need to configure connection information to integrate with Casdoor and RagFlow.
+Before starting astronAgent services, configure the relevant connection information to integrate with Casdoor and RagFlow as needed.
 
 #### 3.1 Configure Knowledge Base Service Connection
 
@@ -109,11 +113,23 @@ RAGFLOW_DEFAULT_GROUP=Astron Knowledge Base
 
 #### 3.2 Configure Casdoor Authentication Integration
 
-Configure Casdoor authentication integration according to your needs, mainly including:
+Edit `docker/astronAgent/.env` file to configure Casdoor connection information:
 
+**Key Configuration Items:**
+
+```env
+# Casdoor Configuration
+CONSOLE_CASDOOR_URL=http://your-casdoor-server:8000
+CONSOLE_CASDOOR_ID=your-casdoor-client-id
+CONSOLE_CASDOOR_APP=your-casdoor-app-name
+CONSOLE_CASDOOR_ORG=your-casdoor-org-name
+```
+
+**Configure Casdoor authentication integration according to your needs, mainly including:**
 1. **OAuth Application Registration**: Register astronAgent application in Casdoor
 2. **Callback URL Configuration**: Set correct callback URLs
 3. **Permission Configuration**: Configure user roles and permissions
+4. **Configuration File Update**
 
 ### Step 4: Start astronAgent Core Services
 
@@ -148,8 +164,7 @@ After startup is complete, you can access various services through the following
 - **RagFlow Web Interface**: http://localhost:9380
 
 ### AstronAgent Core Services
-- **Console Frontend**: http://localhost:1881
-- **Console Hub API**: http://localhost:8080
+- **Console Frontend (nginx proxy)**: http://localhost:80
 
 ### Middleware Services
 - **PostgreSQL**: localhost:5432
