@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { getToolLatestVersion, getToolVersionList } from '@/services/plugin';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { Popconfirm } from 'antd';
 import { cloneDeep } from 'lodash';
 import { useTranslation } from 'react-i18next';

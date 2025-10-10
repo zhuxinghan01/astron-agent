@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Tooltip, Button } from 'antd';
 import { useMemoizedFn } from 'ahooks';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
+import { useFlowCommon } from '@/components/workflow/hooks/use-flow-common';
 import { downloadFileWithHeaders } from '@/utils/http';
 import { getFixedUrl } from '@/components/workflow/utils';
 import WxModal from '@/components/wx-modal';
