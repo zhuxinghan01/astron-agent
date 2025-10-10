@@ -262,19 +262,19 @@ All astronAgent core services depend on the health status of middleware services
 ### Image Registry
 
 All service images are hosted on GitHub Container Registry:
-- `ghcr.io/lyj715824/astron-agent/core-tenant:latest`
-- `ghcr.io/lyj715824/astron-agent/core-memory:latest`
-- `ghcr.io/lyj715824/astron-agent/core-link:latest`
-- `ghcr.io/lyj715824/astron-agent/core-aitools:latest`
-- `ghcr.io/lyj715824/astron-agent/core-agent:latest`
-- `ghcr.io/lyj715824/astron-agent/core-knowledge:latest`
-- `ghcr.io/lyj715824/astron-agent/core-workflow:latest`
-- `ghcr.io/lyj715824/astron-agent/console-frontend:latest`
-- `ghcr.io/lyj715824/astron-agent/console-hub:latest`
+- `ghcr.io/iflytek/astron-agent/core-tenant:latest`
+- `ghcr.io/iflytek/astron-agent/core-memory:latest`
+- `ghcr.io/iflytek/astron-agent/core-link:latest`
+- `ghcr.io/iflytek/astron-agent/core-aitools:latest`
+- `ghcr.io/iflytek/astron-agent/core-agent:latest`
+- `ghcr.io/iflytek/astron-agent/core-knowledge:latest`
+- `ghcr.io/iflytek/astron-agent/core-workflow:latest`
+- `ghcr.io/iflytek/astron-agent/console-frontend:latest`
+- `ghcr.io/iflytek/astron-agent/console-hub:latest`
 
 ## 📚 Additional Resources
 
-- [astronAgent Official Documentation](https://github.com/lyj715824/astron-agent)
+- [astronAgent Official Documentation](https://github.com/iflytek/astron-agent)
 - [Docker Compose Official Documentation](https://docs.docker.com/compose/)
 - [PostgreSQL Official Documentation](https://www.postgresql.org/docs/)
 - [MySQL Official Documentation](https://dev.mysql.com/doc/)
