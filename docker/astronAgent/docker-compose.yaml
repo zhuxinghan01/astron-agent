@@ -524,6 +524,10 @@ services:
     image: ghcr.io/iflytek/astron-agent/console-hub:latest
     container_name: astron-agent-console-hub
     environment:
+      CONSOLE_CASDOOR_URL: "${CONSOLE_CASDOOR_URL:-}"
+      CONSOLE_CASDOOR_ID: "${CONSOLE_CASDOOR_ID:-}"
+      CONSOLE_CASDOOR_APP: "${CONSOLE_CASDOOR_APP:-}"
+      CONSOLE_CASDOOR_ORG: "${CONSOLE_CASDOOR_ORG:-}"
       CONSOLE_DOMAIN: "${CONSOLE_DOMAIN:-https://your.deployment.domain}"
       MYSQL_URL: "${MYSQL_URL:-jdbc:mysql://mysql:3306/astron_console}"
       MYSQL_USER: "${MYSQL_USER:-root}"
