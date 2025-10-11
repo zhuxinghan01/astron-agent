@@ -10,22 +10,20 @@ import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
 import com.iflytek.astron.console.commons.mapper.UserLangChainInfoMapper;
-import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.hub.dto.publish.mcp.McpPublishRequestDto;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
+import com.iflytek.astron.console.hub.service.workflow.WorkflowReleaseService;
+import com.iflytek.astron.console.hub.dto.workflow.WorkflowReleaseResponseDto;
 import com.iflytek.astron.console.commons.util.MaasUtil;
-import okhttp3.*;
-import org.springframework.beans.factory.annotation.Value;
-import com.iflytek.astron.console.hub.strategy.publish.PublishStrategy;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import com.iflytek.astron.console.commons.util.MaasUtil;
+import com.iflytek.astron.console.hub.strategy.publish.PublishStrategy;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,21 +42,9 @@ public class McpPublishStrategy implements PublishStrategy {
 
     private final ChatBotBaseMapper chatBotBaseMapper;
     private final UserLangChainInfoMapper userLangChainInfoMapper;
-    private final UserLangChainDataService userLangChainDataService;
     private final McpDataMapper mcpDataMapper;
     private final BotPublishService botPublishService;
-
-    @Value("${maas.workflowVersion}")
-    private String baseUrl;
-
-    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-            .build();
-
-    private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
-    private static final String GET_VERSION_NAME_URL = "/get-version-name";
+    private final WorkflowReleaseService workflowReleaseService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -88,9 +74,17 @@ public class McpPublishStrategy implements PublishStrategy {
             }
 
 
-            // 4. Get version name (corresponds to releaseManageClientService.getVersionNameByBotId)
-            String versionName = getVersionName(botId, currentUid, spaceId);
-            log.info("Got version name for MCP publish: botId={}, versionName={}", botId, versionName);
+            // 4. Use WorkflowReleaseService to handle version management and publishing
+            // This replaces the separate getVersionName and recordMcpRelease calls
+            WorkflowReleaseResponseDto publishResult = workflowReleaseService.publishWorkflow(botId, currentUid, spaceId, ReleaseTypeEnum.MCP.name());
+            
+            if (!publishResult.getSuccess()) {
+                throw new BusinessException(ResponseEnum.SYSTEM_ERROR, 
+                    "Failed to publish workflow for MCP: " + publishResult.getErrorMessage());
+            }
+            
+            String versionName = publishResult.getWorkflowVersionName();
+            log.info("Workflow published for MCP: botId={}, versionName={}", botId, versionName);
 
             // 5. Get cookies (corresponds to MassUtil.getRequestCookies(request))
             // Use RequestContextHolder to get current request context
@@ -101,8 +95,6 @@ public class McpPublishStrategy implements PublishStrategy {
             log.info("MCP registration result: {}", mcpResult);
 
             // 7. Save MCP data (corresponds to mcpDataDao.insert(mcp) in original project)
-            // Original project: mcp.set("createTime", LocalDateTime.now()); mcp.set("uid", uid);
-            // mcpDataDao.insert(mcp);
             mcpResult.put("createTime", LocalDateTime.now());
             mcpResult.put("uid", currentUid);
             mcpResult.put("spaceId", spaceId);
@@ -116,9 +108,6 @@ public class McpPublishStrategy implements PublishStrategy {
             if (insertResult == 0) {
                 throw new BusinessException(ResponseEnum.SYSTEM_ERROR);
             }
-
-            // 7. Record the release (corresponds to releaseManageClientService.releaseMCP)
-            recordMcpRelease(botId, versionName, currentUid, spaceId);
 
             // 8. Update publish channel
             botPublishService.updatePublishChannel(botId, currentUid, spaceId, PublishChannelEnum.MCP, true);
@@ -160,73 +149,6 @@ public class McpPublishStrategy implements PublishStrategy {
     }
 
     /**
-     * Get version name for MCP publishing Corresponds to
-     * releaseManageClientService.getVersionNameByBotId -> getVersionName in original project Sends HTTP
-     * request to BASE_URL + GET_VERSION_NAME_URL (/get-version-name)
-     */
-    private String getVersionName(Integer botId, String currentUid, Long spaceId) {
-        try {
-            // 1. Get flowId from botId
-            String flowId = userLangChainDataService.findFlowIdByBotId(botId);
-            if (flowId == null || flowId.trim().isEmpty()) {
-                log.error("getVersionName - Failed to get flowId by botId, botId={}", botId);
-                return generateDefaultVersion();
-            }
-
-            // 2. Send HTTP request to get version name
-            log.info("Getting version name for MCP publish: botId={}, flowId={}", botId, flowId);
-
-            // Build request body
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("flowId", flowId);
-            String jsonBody = requestBody.toJSONString();
-
-            // Build HTTP request
-            String authHeader = getCurrentAuthorizationHeader();
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(baseUrl + GET_VERSION_NAME_URL)
-                    .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("Authorization", authHeader);
-
-            // Add spaceId to header
-            if (spaceId != null) {
-                requestBuilder.addHeader("space-id", spaceId.toString());
-            }
-
-            // Execute request
-            try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
-                    log.error("getVersionName - HTTP request failed: flowId={}, responseCode={}", flowId, response.code());
-                    return generateDefaultVersion();
-                }
-
-                String responseBody = response.body().string();
-                log.debug("getVersionName response: {}", responseBody);
-
-                // Parse response
-                JSONObject responseJson = JSON.parseObject(responseBody);
-                JSONObject data = responseJson.getJSONObject("data");
-
-                if (data != null && data.containsKey("workflowVersionName")) {
-                    String versionName = data.getString("workflowVersionName");
-                    log.info("Successfully got version name for MCP: botId={}, versionName={}", botId, versionName);
-                    return versionName;
-                }
-
-                log.warn("getVersionName - workflowVersionName not found in response: flowId={}", flowId);
-                return generateDefaultVersion();
-            }
-
-        } catch (Exception e) {
-            log.error("getVersionName - Exception occurred: botId={}, flowId={}", botId,
-                    userLangChainDataService.findFlowIdByBotId(botId), e);
-            return generateDefaultVersion();
-        }
-    }
-
-
-    /**
      * Insert MCP data to database Corresponds to mcpDataDao.insert(mcp) in original project
      */
     private int insertMcpData(JSONObject mcpResult) {
@@ -261,81 +183,6 @@ public class McpPublishStrategy implements PublishStrategy {
     }
 
     /**
-     * Record MCP release Corresponds to releaseManageClientService.releaseMCP -> releaseBot in original
-     * project Sends HTTP request to BASE_URL + ADD_VERSION_URL (empty string, so just BASE_URL)
-     */
-    private void recordMcpRelease(Integer botId, String versionName, String currentUid, Long spaceId) {
-        try {
-            // Get flowId
-            String flowId = userLangChainDataService.findFlowIdByBotId(botId);
-            if (flowId == null || flowId.trim().isEmpty()) {
-                log.error("recordMcpRelease - Failed to get flowId by botId, botId={}", botId);
-                return;
-            }
-
-            log.info("Recording MCP release: botId={}, flowId={}, versionName={}", botId, flowId, versionName);
-
-            // Build release bot request
-            JSONObject releaseBotDto = new JSONObject();
-            releaseBotDto.put("botId", botId.toString());
-            releaseBotDto.put("flowId", flowId);
-            releaseBotDto.put("publishChannel", 3); // ReleaseTypeEnum.MCP.getCode() = 3
-            releaseBotDto.put("publishResult", "成功"); // RELEASE_SUCCESS = "成功"
-            releaseBotDto.put("description", "");
-            releaseBotDto.put("name", versionName);
-
-            String jsonParams = releaseBotDto.toJSONString();
-
-            // Build HTTP request
-            String authHeader = getCurrentAuthorizationHeader();
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(baseUrl) // ADD_VERSION_URL is empty string, so just use baseUrl
-                    .post(RequestBody.create(jsonParams, JSON_MEDIA_TYPE))
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("Authorization", authHeader);
-
-            // Add spaceId to header
-            if (spaceId != null) {
-                requestBuilder.addHeader("space-id", spaceId.toString());
-            }
-
-            // Execute request
-            try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                if (!response.isSuccessful()) {
-                    log.error("recordMcpRelease - HTTP request failed: botId={}, responseCode={}", botId, response.code());
-                    return;
-                }
-
-                String responseBody = response.body().string();
-                log.debug("recordMcpRelease response: {}", responseBody);
-
-                // Parse response
-                JSONObject responseJson = JSON.parseObject(responseBody);
-                JSONObject data = responseJson.getJSONObject("data");
-
-                if (data != null) {
-                    log.info("MCP release recorded successfully: botId={}, versionName={}, workflowVersionId={}",
-                            botId, versionName, data.get("workflowVersionId"));
-                } else {
-                    log.warn("recordMcpRelease - No data in response: botId={}", botId);
-                }
-            }
-
-        } catch (Exception e) {
-            log.error("recordMcpRelease - Exception occurred: botId={}, versionName={}", botId, versionName, e);
-            // Don't throw exception here as the main MCP data has already been saved
-        }
-    }
-
-
-    /**
-     * Generate default version name as fallback
-     */
-    private String generateDefaultVersion() {
-        return "v" + System.currentTimeMillis();
-    }
-
-    /**
      * Get cookies from current HTTP request context This is a better practice than passing
      * HttpServletRequest directly to strategy
      */
@@ -360,25 +207,6 @@ public class McpPublishStrategy implements PublishStrategy {
                     
         } catch (Exception e) {
             log.error("Failed to get request cookies", e);
-            return "";
-        }
-    }
-
-    /**
-     * Get Authorization header from current request context
-     */
-    private String getCurrentAuthorizationHeader() {
-        try {
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attributes == null) {
-                log.warn("No request context available for Authorization header");
-                return "";
-            }
-            
-            HttpServletRequest request = attributes.getRequest();
-            return MaasUtil.getAuthorizationHeader(request);
-        } catch (Exception e) {
-            log.error("Failed to get Authorization header from request context", e);
             return "";
         }
     }
