@@ -136,8 +136,8 @@ maas:
   consumerId: ${MAAS_CONSUMER_ID:your-maas-consumer-id}
   consumerSecret: ${MAAS_CONSUMER_SECRET:your-maas-consumer-secret}
   consumerKey: ${MAAS_CONSUMER_KEY:your-maas-consumer-key}
-  publishApi: ${MAAS_PUBLISH_API:http://10.1.87.65:7880/workflow/v1/publish}
-  authApi: ${MAAS_AUTH_API:http://10.1.87.65:7880/workflow/v1/auth}
+  publishApi: ${MAAS_PUBLISH_API:http://localhost:7880/workflow/v1/publish}
+  authApi: ${MAAS_AUTH_API:http://localhost:7880/workflow/v1/auth}
   mcpHost: ${MAAS_MCP_HOST:https://xingchen-api.xf-yun.com/mcp/xingchen/flow/%s/sse}
   mcpRegister: ${MAAS_MCP_REGISTER:http://127.0.0.1:8080/workflow/release}
   workflowConfig: ${MAAS_WORKFLOW_CONFIG:http://127.0.0.1:8080/workflow/get-flow-advanced-config}
@@ -176,5 +176,5 @@ wechat:
     encoding-aes-key: ${WECHAT_ENCODING_AES_KEY:your_encoding_aes_key}
 
 tenant:
-  create-app: ${TENANT_CREATE_APP:http://10.1.87.65:5052/v2/app}
-  get-app-detail: ${TENANT_GET_APP_DETAIL:http://10.1.87.65:5052/v2/app/details}
+  create-app: ${TENANT_CREATE_APP:http://localhost:5052/v2/app}
+  get-app-detail: ${TENANT_GET_APP_DETAIL:http://localhost:5052/v2/app/details}
