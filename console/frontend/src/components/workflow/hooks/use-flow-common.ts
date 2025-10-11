@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useMemoizedFn } from 'ahooks';
 import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { message } from 'antd';
@@ -411,6 +412,16 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
   const setVersionManagement = useFlowsManager(
     state => state.setVersionManagement
   );
+  const showToolModal = useFlowsManager(state => state.toolModalInfo.open);
+  const showIterativeModal = useFlowsManager(
+    state => state.knowledgeModalInfo.open
+  );
+  const knowledgeModalInfoOpen = useFlowsManager(
+    state => state.knowledgeModalInfo.open
+  );
+  const showKnowledgeDetailModal = useFlowsManager(
+    state => state.knowledgeDetailModalInfo.open
+  );
   const addEdge = useMemoizedFn(
     (
       sourceHandle: string | null,
@@ -477,7 +488,22 @@ export const useFlowCommon = (): UseFlowCommonReturn => {
     setWillAddNode(null);
   });
 
+  const startWorkflowKeydownEvent = useMemo(() => {
+    return (
+      !showToolModal &&
+      !showIterativeModal &&
+      !knowledgeModalInfoOpen &&
+      !showKnowledgeDetailModal
+    );
+  }, [
+    showToolModal,
+    showIterativeModal,
+    knowledgeModalInfoOpen,
+    showKnowledgeDetailModal,
+  ]);
+
   return {
+    startWorkflowKeydownEvent,
     handleAddNode,
     handleAddToolNode,
     handleAddFlowNode,
