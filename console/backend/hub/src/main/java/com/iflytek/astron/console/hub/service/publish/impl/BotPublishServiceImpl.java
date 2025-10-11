@@ -14,12 +14,10 @@ import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesStatsVO;
 import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
-import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
 import com.iflytek.astron.console.hub.dto.publish.prepare.*;
 import com.iflytek.astron.console.hub.dto.publish.prepare.WechatPrepareDto;
 import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
-import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
@@ -71,7 +69,6 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final PublishChannelService publishChannelService;
     private final WechatThirdpartyService wechatThirdpartyService;
     private final ApplicationEventPublisher eventPublisher;
-    private final WorkflowInputService workflowInputService;
     private final UserLangChainDataService userLangChainDataService;
 
     // Version management related
@@ -224,13 +221,13 @@ public class BotPublishServiceImpl implements BotPublishService {
     }
 
     @Override
-    public void recordConversationStats(String uid, Long spaceId, Integer botId, Long chatId,
+    public void recordDashboardCountLog(String uid, Long spaceId, Integer botId, Long chatId,
             String sid, Integer tokenConsumed, Integer messageRounds) {
-        log.info("Record conversation statistics: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}, messageRounds={}",
+        log.info("Record dashboard count log: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}, messageRounds={}",
                 uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
 
         try {
-            BotDashboardCountLog stats = BotDashboardCountLog.createBuilder()
+            BotDashboardCountLog countLog = BotDashboardCountLog.createBuilder()
                     .uid(uid)
                     .botId(botId)
                     .channel(1) // Default channel
@@ -239,16 +236,16 @@ public class BotPublishServiceImpl implements BotPublishService {
                     .token(tokenConsumed)
                     .sid(sid)
                     .build();
-            int result = botDashboardCountLogMapper.insert(stats);
+            int result = botDashboardCountLogMapper.insert(countLog);
 
             if (result > 0) {
-                log.info("Conversation statistics recorded successfully: chatId={}, statsId={}", chatId, stats.getId());
+                log.info("Dashboard count log recorded successfully: chatId={}, logId={}", chatId, countLog.getId());
 
             } else {
-                log.warn("Conversation statistics record failed: chatId={}", chatId);
+                log.warn("Dashboard count log record failed: chatId={}", chatId);
             }
         } catch (Exception e) {
-            log.error("Record conversation statistics exception: chatId={}", chatId, e);
+            log.error("Record dashboard count log exception: chatId={}", chatId, e);
             // Do not throw exception to avoid affecting main business flow
         }
     }
@@ -437,21 +434,6 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // Return empty result for now
         return PageResponse.of(requestDto.getPage(), requestDto.getPageSize(), 0L, new ArrayList<>());
-    }
-
-    // ==================== Workflow Input Management ====================
-
-    @Override
-    public WorkflowInputsResponseDto getInputsType(Integer botId, String uid, Long spaceId) {
-        log.info("Getting workflow input parameters: botId={}, uid={}, spaceId={}", botId, uid, spaceId);
-
-        // Delegate to WorkflowInputService
-        WorkflowInputsResponseDto result = workflowInputService.getInputsType(botId, uid, spaceId);
-
-        log.info("Workflow input parameters retrieved successfully: botId={}, paramCount={}",
-                botId, result.getParameters().size());
-
-        return result;
     }
 
     // ==================== Publish Prepare Data Management ====================
