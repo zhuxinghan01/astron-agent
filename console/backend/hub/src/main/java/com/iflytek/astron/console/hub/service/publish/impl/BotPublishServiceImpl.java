@@ -277,8 +277,8 @@ public class BotPublishServiceImpl implements BotPublishService {
     }
 
     /**
-     * Create market record (for publish channel)
-     * Note: This method now delegates to event-driven architecture
+     * Create market record (for publish channel) Note: This method now delegates to event-driven
+     * architecture
      */
     private void createMarketRecordForChannel(Integer botId, String uid, Long spaceId, String channels) {
         // Publish event to create market record - handled by InstructionalBotPublishListener

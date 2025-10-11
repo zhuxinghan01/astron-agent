@@ -82,6 +82,9 @@ spark:
     password: ${SPARK_API_PASSWORD:xxx}
   lfasr-key: ${SPARK_LFASR_KEY:xxx}
   lfasr-appId: ${SPARK_LFASR_APPID:xxx}
+  image-appId: ${SPARK_IMAGE_APP_ID:xxx}
+  image-apiKey: ${SPARK_IMAGE_API_KEY:xxx}
+  image-apiSecret: ${SPARK_IMAGE_API_SECRET:xxx}
 
 # DeepSeek configuration example
 deepseek:
@@ -158,7 +161,7 @@ space:
       space-count: 10000
       user-count: 500
   invite-message-template:
-    url: https://${CONSOLE_DOMAIN:localhost:3000}/sharepage?param=
+    url: ${CONSOLE_DOMAIN:localhost:3000}/sharepage?param=
 
 # WeChat third-party platform configuration
 wechat:
