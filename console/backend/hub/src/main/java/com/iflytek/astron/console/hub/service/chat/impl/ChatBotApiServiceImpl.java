@@ -48,4 +48,13 @@ public class ChatBotApiServiceImpl implements ChatBotApiService {
         chatBotApiMapper.insert(chatBotApi);
     }
 
+    @Override
+    public ChatBotApi getOneByUidAndBotId(String uid, Long botId) {
+        return chatBotApiMapper.selectOne(Wrappers.lambdaQuery(ChatBotApi.class)
+                .eq(ChatBotApi::getBotId, botId)
+                .eq(ChatBotApi::getUid, uid)
+                .orderByDesc(ChatBotApi::getId)
+                .last("limit 1"));
+    }
+
 }
