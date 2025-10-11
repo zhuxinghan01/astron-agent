@@ -1,6 +1,6 @@
 package com.iflytek.astron.console.hub.strategy.publish.impl;
 
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.iflytek.astron.console.commons.util.MaasUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +58,7 @@ public class McpPublishStrategy implements PublishStrategy {
             .build();
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
-    private static final String GET_VERSION_NAME_URL = "/getVersionName";
+    private static final String GET_VERSION_NAME_URL = "/get-version-name";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -155,38 +156,40 @@ public class McpPublishStrategy implements PublishStrategy {
 
     @Override
     public String getPublishType() {
-        return BotPublishTypeEnum.MCP.getCode();
+        return ReleaseTypeEnum.MCP.name();
     }
 
     /**
      * Get version name for MCP publishing Corresponds to
      * releaseManageClientService.getVersionNameByBotId -> getVersionName in original project Sends HTTP
-     * request to BASE_URL + GET_VERSION_NAME_URL (/getVersionName)
+     * request to BASE_URL + GET_VERSION_NAME_URL (/get-version-name)
      */
     private String getVersionName(Integer botId, String currentUid, Long spaceId) {
         try {
-            // 1. Get flowId from botId (same as original project)
+            // 1. Get flowId from botId
             String flowId = userLangChainDataService.findFlowIdByBotId(botId);
             if (flowId == null || flowId.trim().isEmpty()) {
                 log.error("getVersionName - Failed to get flowId by botId, botId={}", botId);
                 return generateDefaultVersion();
             }
 
-            // 2. Send HTTP request to get version name (same as original project)
+            // 2. Send HTTP request to get version name
             log.info("Getting version name for MCP publish: botId={}, flowId={}", botId, flowId);
 
-            // Build request body (same as original project)
+            // Build request body
             JSONObject requestBody = new JSONObject();
             requestBody.put("flowId", flowId);
             String jsonBody = requestBody.toJSONString();
 
             // Build HTTP request
+            String authHeader = getCurrentAuthorizationHeader();
             Request.Builder requestBuilder = new Request.Builder()
                     .url(baseUrl + GET_VERSION_NAME_URL)
                     .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
-                    .addHeader("Content-Type", "application/json");
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", authHeader);
 
-            // Add spaceId to header (same as original project)
+            // Add spaceId to header
             if (spaceId != null) {
                 requestBuilder.addHeader("space-id", spaceId.toString());
             }
@@ -201,7 +204,7 @@ public class McpPublishStrategy implements PublishStrategy {
                 String responseBody = response.body().string();
                 log.debug("getVersionName response: {}", responseBody);
 
-                // Parse response (same as original project)
+                // Parse response
                 JSONObject responseJson = JSON.parseObject(responseBody);
                 JSONObject data = responseJson.getJSONObject("data");
 
@@ -263,7 +266,7 @@ public class McpPublishStrategy implements PublishStrategy {
      */
     private void recordMcpRelease(Integer botId, String versionName, String currentUid, Long spaceId) {
         try {
-            // Get flowId (same as original project)
+            // Get flowId
             String flowId = userLangChainDataService.findFlowIdByBotId(botId);
             if (flowId == null || flowId.trim().isEmpty()) {
                 log.error("recordMcpRelease - Failed to get flowId by botId, botId={}", botId);
@@ -272,7 +275,7 @@ public class McpPublishStrategy implements PublishStrategy {
 
             log.info("Recording MCP release: botId={}, flowId={}, versionName={}", botId, flowId, versionName);
 
-            // Build release bot request (same as original project)
+            // Build release bot request
             JSONObject releaseBotDto = new JSONObject();
             releaseBotDto.put("botId", botId.toString());
             releaseBotDto.put("flowId", flowId);
@@ -283,13 +286,15 @@ public class McpPublishStrategy implements PublishStrategy {
 
             String jsonParams = releaseBotDto.toJSONString();
 
-            // Build HTTP request (same as original project)
+            // Build HTTP request
+            String authHeader = getCurrentAuthorizationHeader();
             Request.Builder requestBuilder = new Request.Builder()
                     .url(baseUrl) // ADD_VERSION_URL is empty string, so just use baseUrl
                     .post(RequestBody.create(jsonParams, JSON_MEDIA_TYPE))
-                    .addHeader("Content-Type", "application/json");
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", authHeader);
 
-            // Add spaceId to header (same as original project)
+            // Add spaceId to header
             if (spaceId != null) {
                 requestBuilder.addHeader("space-id", spaceId.toString());
             }
@@ -304,7 +309,7 @@ public class McpPublishStrategy implements PublishStrategy {
                 String responseBody = response.body().string();
                 log.debug("recordMcpRelease response: {}", responseBody);
 
-                // Parse response (same as original project)
+                // Parse response
                 JSONObject responseJson = JSON.parseObject(responseBody);
                 JSONObject data = responseJson.getJSONObject("data");
 
@@ -341,20 +346,39 @@ public class McpPublishStrategy implements PublishStrategy {
                 log.warn("No request context available, using empty cookies");
                 return "";
             }
-
+            
             HttpServletRequest request = attributes.getRequest();
             Cookie[] cookies = request.getCookies();
-
+            
             if (cookies == null || cookies.length == 0) {
                 return "";
             }
-
+            
             return Arrays.stream(cookies)
                     .map(cookie -> cookie.getName() + "=" + cookie.getValue())
                     .collect(Collectors.joining("; "));
-
+                    
         } catch (Exception e) {
             log.error("Failed to get request cookies", e);
+            return "";
+        }
+    }
+
+    /**
+     * Get Authorization header from current request context
+     */
+    private String getCurrentAuthorizationHeader() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                log.warn("No request context available for Authorization header");
+                return "";
+            }
+            
+            HttpServletRequest request = attributes.getRequest();
+            return MaasUtil.getAuthorizationHeader(request);
+        } catch (Exception e) {
+            log.error("Failed to get Authorization header from request context", e);
             return "";
         }
     }
