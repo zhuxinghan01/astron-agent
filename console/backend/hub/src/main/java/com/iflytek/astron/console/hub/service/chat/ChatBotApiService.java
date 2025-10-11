@@ -14,4 +14,6 @@ public interface ChatBotApiService {
 
     void insertOrUpdate(String uid, Integer botId, String assistantId, String appId, String appSecret, String appKey,
                         String prompt, String pluginIds, String embeddingIds, String apiPath, String description);
+
+    ChatBotApi getOneByUidAndBotId(String uid, Long botId);
 }
