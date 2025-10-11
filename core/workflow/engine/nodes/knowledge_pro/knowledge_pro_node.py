@@ -219,9 +219,9 @@ class KnowledgeProNode(BaseNode):
         """
 
         # Collection of knowledge base content frames
-        content_list = []
+        content_list: list = []
         # Knowledge base metadata
-        knowledge_metadata = []
+        knowledge_metadata: list = []
 
         # Process streaming response line by line
         async for line in response.content:
