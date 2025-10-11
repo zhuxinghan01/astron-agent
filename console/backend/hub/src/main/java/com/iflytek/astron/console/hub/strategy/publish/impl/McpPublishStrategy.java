@@ -356,18 +356,18 @@ public class McpPublishStrategy implements PublishStrategy {
                 log.warn("No request context available, using empty cookies");
                 return "";
             }
-            
+
             HttpServletRequest request = attributes.getRequest();
             Cookie[] cookies = request.getCookies();
-            
+
             if (cookies == null || cookies.length == 0) {
                 return "";
             }
-            
+
             return Arrays.stream(cookies)
                     .map(cookie -> cookie.getName() + "=" + cookie.getValue())
                     .collect(Collectors.joining("; "));
-                    
+
         } catch (Exception e) {
             log.error("Failed to get request cookies", e);
             return "";
@@ -384,7 +384,7 @@ public class McpPublishStrategy implements PublishStrategy {
                 log.warn("No request context available for Authorization header");
                 return "";
             }
-            
+
             HttpServletRequest request = attributes.getRequest();
             return MaasUtil.getAuthorizationHeader(request);
         } catch (Exception e) {
