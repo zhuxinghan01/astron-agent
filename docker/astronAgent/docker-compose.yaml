@@ -218,27 +218,34 @@ services:
     restart: always
 
   # RPA Plugin Service
-#  core-rpa:
-#    image: ghcr.io/iflytek/astron-agent/astron-agent-core-rpa:latest
-#    container_name: astron-agent-core-rpa
-#    ports:
-#      - "${CORE_RPA_PORT:-8003}:8000"
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      mysql:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      elasticsearch:
-#        condition: service_healthy
-#      kafka:
-#        condition: service_healthy
-#      minio:
-#        condition: service_healthy
-#    networks:
-#      - astron-agent-network
-#    restart: always
+  core-rpa:
+    image: ghcr.io/iflytek/astron-agent/core-rpa:latest
+    container_name: astron-agent-core-rpa
+    environment:
+      OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
+      KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
+      XIAOWU_RPA_TASK_CREATE_URL: "${XIAOWU_RPA_TASK_CREATE_URL:-}"
+      XIAOWU_RPA_TASK_QUERY_URL: "${XIAOWU_RPA_TASK_QUERY_URL:-}"
+    ports:
+      - "${CORE_RPA_PORT:-17198}:17198"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./config/rpa/config.env:/opt/rpa/plugin/rpa/config.env
+    networks:
+      - astron-agent-network
+    restart: always
 
   # Link Plugin Service
   core-link:
