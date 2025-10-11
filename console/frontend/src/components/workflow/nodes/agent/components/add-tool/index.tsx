@@ -804,6 +804,7 @@ const OperationContent = ({
   botColor,
   setBotColor,
   currentTab,
+  setOperate,
 }): React.ReactElement => {
   return (
     <>
@@ -832,6 +833,7 @@ const OperationContent = ({
             <ToolDetail
               currentToolInfo={currentToolInfo}
               handleClearData={handleClearData}
+              handleToolDebugger={() => setOperate('test')}
             />
           )}
           {operate === 'mcpDetail' && (
@@ -1035,6 +1037,7 @@ function AddTools({
                 botColor={botColor}
                 setBotColor={setBotColor}
                 currentTab={currentTab}
+                setOperate={setOperate}
               />
             </div>
           </div>
