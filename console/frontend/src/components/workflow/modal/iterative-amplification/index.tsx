@@ -335,7 +335,7 @@ const useIterativeAmplification = ({
           })),
         ...edges.map(edge => ({
           ...edge,
-          zIndex: 100,
+          zIndex: 1001,
           data: {
             edgeType: edgeType,
           },

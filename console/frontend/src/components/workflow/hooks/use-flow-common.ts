@@ -112,7 +112,7 @@ const useAddNode = (): UseAddNodeReturn => {
               zIndex: 1,
               draggable: false,
               type: 'custom',
-              nodeType: 'node-start',
+              nodeType: 'iteration-node-start',
               selected: false,
               position: { x: 100, y: 150 },
               data: {
@@ -149,7 +149,7 @@ const useAddNode = (): UseAddNodeReturn => {
               draggable: false,
               zIndex: 1,
               type: 'custom',
-              nodeType: 'node-end',
+              nodeType: 'iteration-node-end',
               selected: false,
               position: { x: 250, y: 150 },
               data: {
@@ -358,8 +358,10 @@ const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
     willAddNode.data.nodeParam.projectId = rpaParam.project_id;
     willAddNode.data.nodeParam.source = rpaParam.platform;
     willAddNode.data.nodeParam.header = rpaParam.fields;
+    willAddNode.data.nodeParam.version = rpaParam.version;
     willAddNode.data.nodeParam.appId = currentFlow?.appId || '';
     willAddNode.data.nodeParam.assistantId = rpaParam.rpaId;
+    willAddNode.data.nodeParam.rpaDescription = rpaParam.description;
     willAddNode.data.inputs = transRpaParameters(
       rpaParam.parameters?.filter(item => item.varDirection === 0) || []
     );
