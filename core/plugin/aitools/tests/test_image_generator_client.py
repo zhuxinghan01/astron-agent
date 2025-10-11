@@ -11,7 +11,6 @@ from plugin.aitools.service.image_generator.image_generator_client import (
     AssembleHeaderException,
     ImageGenerator,
     Url,
-    assemble_ws_auth_url,
     get_body,
     parse_url,
     sha256base64,
