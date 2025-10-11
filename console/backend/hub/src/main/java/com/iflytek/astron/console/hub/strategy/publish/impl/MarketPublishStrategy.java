@@ -55,12 +55,12 @@ public class MarketPublishStrategy implements PublishStrategy {
             // 3. Calculate new status and channels
             Integer effectiveStatus = currentStatus != null ? currentStatus : ShelfStatusEnum.OFF_SHELF.getCode();
 
+            // Allow re-publishing even if already on shelf
             if (ShelfStatusEnum.isOnShelf(effectiveStatus)) {
-                log.warn("Bot already published, no need to repeat operation: botId={}", botId);
-                return ApiResult.success(null);
+                log.info("Bot already published, performing re-publish operation: botId={}", botId);
             }
 
-            if (!ShelfStatusEnum.isOffShelf(effectiveStatus)) {
+            if (!ShelfStatusEnum.isOffShelf(effectiveStatus) && !ShelfStatusEnum.isOnShelf(effectiveStatus)) {
                 throw new BusinessException(ResponseEnum.BOT_STATUS_NOT_ALLOW_PUBLISH);
             }
 
