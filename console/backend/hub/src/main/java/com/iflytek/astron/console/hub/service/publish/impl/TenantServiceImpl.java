@@ -57,10 +57,6 @@ public class TenantServiceImpl implements TenantService {
                 return null;
             }
             String responseBody = body.string();
-            if (responseBody == null) {
-                log.error("tenant-service-create-app response body is null, request: {}", requestBody);
-                return null;
-            }
             reqJson = JSONObject.parseObject(responseBody);
             if (reqJson.getInteger("code") == 0 && reqJson.containsKey("data") && reqJson.getJSONObject("data").containsKey("app_id")) {
                 return reqJson.getJSONObject("data").getString("app_id");
@@ -89,10 +85,6 @@ public class TenantServiceImpl implements TenantService {
                 return null;
             }
             String responseBody = body.string();
-            if (responseBody == null) {
-                log.error("tenant-service-get-app-detail response body is null, requestUrl: {}", requestUrl);
-                return null;
-            }
             reqJson = JSONObject.parseObject(responseBody);
             if (reqJson.getInteger("code") == 0 && reqJson.containsKey("data")
                     && reqJson.getJSONArray("data").getJSONObject(0).containsKey("auth_list")) {
