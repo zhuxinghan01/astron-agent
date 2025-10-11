@@ -60,7 +60,7 @@ class RPANode(BaseNode):
                 "Authorization": self.header.get("apiKey", ""),
             }
 
-            data = {}
+            data: Dict[str, Any] = {}
             if event_log_node_trace:
                 event_log_node_trace.append_config_data(
                     {
