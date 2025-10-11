@@ -358,8 +358,10 @@ const useAddRpaNode = ({ addEdge }): UseAddRpaNodeReturn => {
     willAddNode.data.nodeParam.projectId = rpaParam.project_id;
     willAddNode.data.nodeParam.source = rpaParam.platform;
     willAddNode.data.nodeParam.header = rpaParam.fields;
+    willAddNode.data.nodeParam.version = rpaParam.version;
     willAddNode.data.nodeParam.appId = currentFlow?.appId || '';
     willAddNode.data.nodeParam.assistantId = rpaParam.rpaId;
+    willAddNode.data.nodeParam.rpaDescription = rpaParam.description;
     willAddNode.data.inputs = transRpaParameters(
       rpaParam.parameters?.filter(item => item.varDirection === 0) || []
     );
