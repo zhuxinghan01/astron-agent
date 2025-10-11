@@ -5,6 +5,8 @@ API data type definitions module containing request and response data structures
 import base64
 import re
 
+from typing import Any, Optional
+
 from fastapi import HTTPException
 from plugin.aitools.const.translation_constants import (
     CHINESE_LANGUAGE_CODE,
@@ -21,7 +23,7 @@ class GenText2Img(BaseModel):
     height: int = 1024
 
 
-class SuccessDataResponse:
+class SuccessDataResponse(BaseModel):
     """Standard success response wrapper for API endpoints.
 
     This class has intentionally few public methods as it serves as a simple
@@ -35,23 +37,13 @@ class SuccessDataResponse:
     to create properly formatted success responses.
     """
 
-    code: int
-    message: str
-    data: object
-
-    def __init__(self, data, message="success", sid=None):
-        """
-
-        :param data: json
-        """
-        self.code = 0
-        self.data = data
-        self.message = message
-        if sid is not None:
-            self.sid = sid
+    code: int = 0
+    message: str = "success"
+    data: Any
+    sid: Optional[str] = None
 
 
-class ErrorResponse:
+class ErrorResponse(BaseModel):
     """Standard error response wrapper for API endpoints using error enums.
 
     This class intentionally has few public methods as it serves as a simple
@@ -66,17 +58,21 @@ class ErrorResponse:
 
     code: int
     message: str
+    sid: Optional[str] = None
 
-    def __init__(self, code_enum, sid=None, message=None):
-        self.code = code_enum.code
-        self.message = code_enum.msg
+    @classmethod
+    def from_enum(
+        cls, code_enum: Any, sid: Optional[str] = None, message: Optional[str] = None
+    ) -> "ErrorResponse":
+        base_message = code_enum.msg
         if message:
-            self.message = f"{self.message}({message})"
-        if sid is not None:
-            self.sid = sid
+            final_message = f"{base_message}({message})"
+        else:
+            final_message = base_message
+        return cls(code=code_enum.code, message=final_message, sid=sid)
 
 
-class ErrorCResponse:
+class ErrorCResponse(BaseModel):
     """Custom error response wrapper for API endpoints with direct error codes.
 
     This class has intentionally few public methods as it serves as a simple
@@ -91,13 +87,8 @@ class ErrorCResponse:
     """
 
     code: int
-    message: str
-
-    def __init__(self, code, sid=None, message=None):
-        self.code = code
-        self.message = message
-        if sid is not None:
-            self.sid = sid
+    message: Optional[str] = None
+    sid: Optional[str] = None
 
 
 class OCRLLM(BaseModel):
@@ -143,7 +134,7 @@ class ArXivInput(BaseModel):
 
     @validator("search_query")
     @classmethod
-    def check_english(cls, v):
+    def check_english(cls, v: str) -> str:
         return validate_english(v)
 
 
@@ -160,7 +151,7 @@ class ISEInput(BaseModel):
 
     @field_validator("group")
     @classmethod
-    def validate_group(cls, value):
+    def validate_group(cls, value: str) -> str:
         valid_groups = ["pupil", "youth", "adult"]
         if value not in valid_groups:
             raise ValueError(f"Invalid group: {value}. Valid options: {valid_groups}")
@@ -168,7 +159,7 @@ class ISEInput(BaseModel):
 
     @field_validator("audio_data")
     @classmethod
-    def validate_audio_data(cls, value):
+    def validate_audio_data(cls, value: str) -> str:
         if not value:
             raise ValueError("audio_data cannot be empty")
         try:
@@ -185,7 +176,7 @@ class TranslationInput(BaseModel):
 
     @field_validator("text")
     @classmethod
-    def validate_text(cls, value):
+    def validate_text(cls, value: str) -> str:
         if not value or not value.strip():
             raise ValueError("Translation text cannot be empty")
         if len(value) > 5000:
@@ -194,7 +185,7 @@ class TranslationInput(BaseModel):
 
     @field_validator("target_language")
     @classmethod
-    def validate_target_language(cls, value):
+    def validate_target_language(cls, value: str) -> str:
         if value not in VALID_LANGUAGE_CODES:
             raise ValueError(
                 f"Invalid target language: {value}.\n"
@@ -204,7 +195,7 @@ class TranslationInput(BaseModel):
 
     @field_validator("source_language")
     @classmethod
-    def validate_source_language(cls, value):
+    def validate_source_language(cls, value: str) -> str:
         if value not in VALID_LANGUAGE_CODES:
             raise ValueError(
                 f"Invalid source language: {value}.\n"
@@ -213,7 +204,7 @@ class TranslationInput(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_language_combination(self):
+    def validate_language_combination(self) -> "TranslationInput":
         """Validate that at least one language is Chinese (cn)"""
         if not is_valid_language_pair(self.source_language, self.target_language):
             raise ValueError(
