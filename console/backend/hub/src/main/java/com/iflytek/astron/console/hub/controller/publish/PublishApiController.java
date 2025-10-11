@@ -9,6 +9,7 @@ import com.iflytek.astron.console.hub.dto.publish.CreateBotApiVo;
 import com.iflytek.astron.console.hub.service.publish.PublishApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +49,8 @@ public class PublishApiController {
     @Operation(summary = "Create Bot Api", description = "create bot api with user app")
     @RateLimit(limit = 30, window = 60, dimension = "USER")
     @PostMapping("/create-bot-api")
-    public ApiResult<BotApiInfoDTO> createBotApi(@RequestBody CreateBotApiVo requestBody) {
-        return ApiResult.success(null);
+    public ApiResult<BotApiInfoDTO> createBotApi(HttpServletRequest request, @RequestBody CreateBotApiVo createBotApiVo) {
+        return ApiResult.success(publishApiService.createBotApi(createBotApiVo, request));
     }
 
     @Operation(summary = "Get Bot Api Info", description = "Get Bot Api Info")
@@ -57,14 +58,6 @@ public class PublishApiController {
     @GetMapping("/get-bot-api-info")
     public ApiResult<BotApiInfoDTO> usageRealTime(@RequestParam Long botId) {
         return ApiResult.success(publishApiService.getApiInfo(botId));
-    }
-
-    @Operation(summary = "Get Api History Usage", description = "User api history usage")
-    @RateLimit(limit = 30, window = 60, dimension = "USER")
-    @GetMapping("/usage-history")
-    public ApiResult<BotApiHistoryUsageDTO> usageHistory(@RequestParam Integer botId,
-            @RequestParam Integer type) {
-        return ApiResult.success(null);
     }
 
 }

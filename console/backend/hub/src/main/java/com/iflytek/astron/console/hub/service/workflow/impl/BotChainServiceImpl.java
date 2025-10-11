@@ -38,7 +38,7 @@ public class BotChainServiceImpl implements BotChainService {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source assistant does not exist, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
@@ -69,7 +69,7 @@ public class BotChainServiceImpl implements BotChainService {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
-            log.info("***** source assistant does not exist, id: {}", sourceId);
+            log.info("***** Source assistant does not exist, id: {}", sourceId);
             return;
         }
 
@@ -94,14 +94,14 @@ public class BotChainServiceImpl implements BotChainService {
         }
         chain.setUpdateTime(LocalDateTime.now());
         userLangChainDataService.insertUserLangChainInfo(chain);
-        log.info("----- Source assistant: {}, Target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
+        log.info("----- Source assistant: {}, target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
     }
 
     /**
-    * Replace node ID
-    *
-    * @param botMap User language chain information object
-    */
+     * Replace node ID
+     *
+     * @param botMap UserLangChainInfo object containing open and GCY strings
+     */
     public static void replaceNodeId(UserLangChainInfo botMap) {
         JSONObject open = JSONObject.parseObject(botMap.getOpen());
         String openStr = botMap.getOpen();
@@ -112,7 +112,7 @@ public class BotChainServiceImpl implements BotChainService {
             JSONObject node = (JSONObject) o;
             String oldNodeId = node.getString("id");
             String newNodeId = getNewNodeId(oldNodeId);
-            // Direct string matching and replacement
+            // Directly match string and replace
             openStr = openStr.replace(oldNodeId, newNodeId);
             gcyStr = gcyStr.replace(oldNodeId, newNodeId);
         }
@@ -121,17 +121,19 @@ public class BotChainServiceImpl implements BotChainService {
     }
 
     /**
-    * Get new node ID
-    * @param original Original node ID, format like "prefix:suffix"
-    * @return New node ID, throws exception if colon is not found
-    */
+     * Get new node ID
+     *
+     * @param original Original node ID string
+     * @return New node ID string, if the original string contains a colon, add a random UUID after the
+     *         colon, otherwise throw an exception
+     */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');
         if (colonIndex != -1) {
             return original.substring(0, colonIndex + 1) + UUID.randomUUID();
         }
-        // If no colon is found, return original string
-        log.info("***** {} colon not found", original);
+        // If no colon is found, return the original string
+        log.info("***** {} no colon found", original);
         throw new RuntimeException("Assistant backend data does not conform to specifications");
     }
 }

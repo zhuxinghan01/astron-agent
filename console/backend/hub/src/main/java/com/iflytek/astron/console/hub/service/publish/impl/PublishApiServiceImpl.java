@@ -194,7 +194,7 @@ public class PublishApiServiceImpl implements PublishApiService {
 
         releaseManageClientService.releaseBotApi(botId, flowId, versionName, spaceId, request);
 
-        chatBotApiService.insert(ChatBotApi.builder()
+        ChatBotApi chatBotApi = ChatBotApi.builder()
                 .uid(uid)
                 .botId(botId)
                 .assistantId(flowId)
@@ -206,7 +206,9 @@ public class PublishApiServiceImpl implements PublishApiService {
                 .embeddingId("")
                 .apiPath("/workflow/v1/chat/completions")
                 .description(botBase.getBotName())
-                .build());
+                .build();
+
+        chatBotApiService.insertOrUpdate(chatBotApi);
 
         return BotApiInfoDTO.builder()
                 .botId(botId)
@@ -232,10 +234,9 @@ public class PublishApiServiceImpl implements PublishApiService {
         List<Long> datasetIdList = datasetInfos.stream().map(DatasetInfo::getId).toList();
         String embeddingIds = StringUtils.defaultString(datasetIdList.stream().map(Objects::toString).collect(Collectors.joining(",")), "");
 
-        chatBotApiService.insert(ChatBotApi.builder()
+        ChatBotApi chatBotApi = ChatBotApi.builder()
                 .uid(uid)
                 .botId(botId)
-                .assistantId(null)
                 .appId(appMst.getAppId())
                 .apiSecret(appMst.getAppSecret())
                 .apiKey(appMst.getAppKey())
@@ -244,7 +245,9 @@ public class PublishApiServiceImpl implements PublishApiService {
                 .embeddingId(embeddingIds)
                 .apiPath(null)
                 .description(botBase.getBotName())
-                .build());
+                .build();
+
+        chatBotApiService.insertOrUpdate(chatBotApi);
 
         // TODO: capability authorization
 

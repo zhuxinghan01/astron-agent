@@ -43,9 +43,18 @@ public class ChatBotApiServiceImpl implements ChatBotApiService {
     }
 
     @Override
-    public void insert(ChatBotApi chatBotApi) {
-        chatBotApi.setCreateTime(LocalDateTime.now());
-        chatBotApiMapper.insert(chatBotApi);
+    public void insertOrUpdate(ChatBotApi chatBotApi) {
+        if (chatBotApi.getCreateTime() == null) {
+            chatBotApi.setCreateTime(LocalDateTime.now());
+        }
+
+        String assistantId = chatBotApi.getAssistantId();
+        if (assistantId != null && chatBotApiMapper.exists(Wrappers.lambdaQuery(ChatBotApi.class).eq(ChatBotApi::getAssistantId, assistantId))) {
+            chatBotApiMapper.updateById(chatBotApi);
+        } else {
+            chatBotApiMapper.insert(chatBotApi);
+        }
+
     }
 
     @Override

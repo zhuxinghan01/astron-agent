@@ -1,5 +1,7 @@
 package com.iflytek.astron.console.hub.service.publish.impl;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.hub.dto.PageResponse;
@@ -31,6 +33,7 @@ import com.iflytek.astron.console.hub.entity.BotDashboardCountLog;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.util.BotFileParamUtil;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
 import lombok.RequiredArgsConstructor;
@@ -514,8 +517,18 @@ public class BotPublishServiceImpl implements BotPublishService {
         marketData.setBotDescription(botDetail.getBotDesc());
         marketData.setBotAvatar(null);
 
-        // Set multi-file parameter support
-        marketData.setBotMultiFileParam(true); // TODO: Get actual value
+        // Set multi-file parameter support based on extraInputsConfig
+        boolean isMultiFileParam = false;
+        try {
+            UserLangChainInfo chainInfo = userLangChainDataService.findOneByBotId(botId);
+            if (chainInfo != null && chainInfo.getExtraInputsConfig() != null) {
+                List<JSONObject> extraInputsConfig = JSONArray.parseArray(chainInfo.getExtraInputsConfig(), JSONObject.class);
+                isMultiFileParam = BotFileParamUtil.isMultiFileParam(botId, extraInputsConfig);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to determine multi-file parameter support: botId={}", botId, e);
+        }
+        marketData.setBotMultiFileParam(isMultiFileParam);
 
         // Set suggested tags and categories
         marketData.setSuggestedTags(List.of("智能助手", "效率工具"));

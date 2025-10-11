@@ -12,5 +12,7 @@ public interface ChatBotApiService {
 
     Long selectCount(Integer botId);
 
-    void insert(ChatBotApi chatBotApi);
+    void insertOrUpdate(ChatBotApi chatBotApi);
+
+    ChatBotApi getOneByUidAndBotId(String uid, Long botId);
 }

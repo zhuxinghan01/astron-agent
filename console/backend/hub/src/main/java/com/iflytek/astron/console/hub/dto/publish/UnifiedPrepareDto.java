@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * Unified prepare response DTO for all publish types
  *
- * @author Assistant
+ * @author Omuigix
  */
 @Data
 public class UnifiedPrepareDto {
