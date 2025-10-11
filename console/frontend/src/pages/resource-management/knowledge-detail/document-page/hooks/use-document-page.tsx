@@ -174,7 +174,7 @@ const useDocumentSearch = ({
       }
 
       await fetchEventSource(
-        `/xingchen-api/file/search-file?fileName=${encodeURIComponent(
+        `/file/search-file?fileName=${encodeURIComponent(
           searchValue
         )}&repoId=${repoId}&pid=${parentId}&tag=${tag}`,
         {
