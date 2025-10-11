@@ -176,6 +176,8 @@ INSERT INTO `agent_enterprise_permission` (`id`, `module`, `description`, `permi
                                            `staff`, `available_expired`, `create_time`, `update_time`)
 VALUES (51, 'Invitation Management', 'Enterprise invitation batch search user', 'InviteRecordController_enterpriseBatchSearchUser_POST', 1, 1, 1, 0,
         '2025-01-01 00:00:00', '2025-01-01 00:00:00');
+INSERT INTO `astron_console`.`agent_enterprise_permission` (`module`, `description`, `permission_key`, `officer`, `governor`, `staff`, `available_expired`, `create_time`, `update_time`) VALUES ('邀请管理', '企业邀请批量搜索用户', 'InviteRecordController_enterpriseBatchSearchUsername_POST', 1, 1, 1, 0, '2025-01-01 00:00:00', '2025-01-01 00:00:00');
+INSERT INTO `astron_console`.`agent_enterprise_permission` (`module`, `description`, `permission_key`, `officer`, `governor`, `staff`, `available_expired`, `create_time`, `update_time`) VALUES ('邀请管理', '企业邀请搜索用户', 'InviteRecordController_enterpriseSearchUsername_GET', 1, 1, 0, 0, '2025-01-01 00:00:00', '2025-01-01 00:00:00');
 COMMIT;
 
 -- ----------------------------
@@ -955,29 +957,25 @@ CREATE TABLE `bot_chat_file_param`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Bot chat file parameter info table';
 
 -- ----------------------------
--- Table structure for bot_conversation_stats
+-- Table structure for bot_dashboard_count_log
 -- ----------------------------
-DROP TABLE IF EXISTS `bot_conversation_stats`;
-CREATE TABLE `bot_conversation_stats`
+DROP TABLE IF EXISTS `bot_dashboard_count_log`;
+CREATE TABLE `bot_dashboard_count_log`
 (
-    `id`                bigint                                                        NOT NULL AUTO_INCREMENT COMMENT 'Primary key ID',
-    `uid`               varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'User ID',
-    `space_id`          bigint                                                                 DEFAULT NULL COMMENT 'Space ID, NULL for personal agents',
-    `bot_id`            int                                                           NOT NULL COMMENT 'Agent ID',
-    `chat_id`           bigint                                                        NOT NULL COMMENT 'Conversation ID',
-    `sid`               varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci          DEFAULT NULL COMMENT 'Session identifier',
-    `token_consumed`    int                                                           NOT NULL DEFAULT '0' COMMENT 'Token count consumed in this conversation',
-    `message_rounds`    int                                                           NOT NULL DEFAULT '1' COMMENT 'Message rounds in this conversation',
-    `conversation_date` date                                                          NOT NULL COMMENT 'Conversation date',
-    `create_time`       datetime                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
-    `is_delete`         tinyint                                                       NOT NULL DEFAULT '0' COMMENT 'Whether deleted: 0=not deleted, 1=deleted',
+    `id`          bigint(20) NOT NULL AUTO_INCREMENT,
+    `uid`         bigint(20) DEFAULT NULL COMMENT 'User UID',
+    `bot_id`      varchar(64) DEFAULT NULL COMMENT 'Bot ID (flowid/botId)',
+    `channel`     int(11) DEFAULT NULL COMMENT 'Client channel',
+    `chat_id`     bigint(20) DEFAULT NULL COMMENT 'Chat session ID',
+    `chat_time`   int(11) DEFAULT NULL COMMENT 'Chat duration in seconds',
+    `token`       int(11) DEFAULT NULL COMMENT 'Token consumed in this conversation',
+    `sid`         varchar(32) DEFAULT NULL COMMENT 'Session identifier',
+    `create_time` date DEFAULT NULL COMMENT 'Creation date',
     PRIMARY KEY (`id`),
-    KEY                 `idx_bot_id_date` (`bot_id`,`conversation_date`),
-    KEY                 `idx_uid_bot_id` (`uid`,`bot_id`),
-    KEY                 `idx_space_id_bot_id` (`space_id`,`bot_id`),
-    KEY                 `idx_chat_id` (`chat_id`),
-    KEY                 `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Bot conversation statistics table';
+    KEY           `idx_bot_id` (`bot_id`),
+    KEY           `idx_chat_id` (`chat_id`),
+    KEY           `idx_create_time` (`create_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=315776 DEFAULT CHARSET=utf8mb4 COMMENT='Bot conversation channel collection table';
 
 -- ----------------------------
 -- Table structure for bot_dataset
@@ -1353,6 +1351,7 @@ CREATE TABLE `chat_bot_market`
     `opened_tool`      varchar(255)                                                 DEFAULT NULL COMMENT 'Enabled tools',
     `publish_channels` varchar(255)                                                 DEFAULT NULL COMMENT 'Publishing channels: MARKET,API,WECHAT,MCP comma separated',
     `model_id`         bigint                                                       DEFAULT NULL COMMENT 'Custom model ID',
+    `support_document` tinyint NOT NULL                                             DEFAULT '0' COMMENT 'Does it support the knowledge base? 0 - Not supported, 1 - Supported',
     PRIMARY KEY (`id`),
     KEY                `idx_bot_id` (`bot_id`),
     KEY                `idx_create_time3` (`create_time`),
@@ -1684,7 +1683,7 @@ CREATE TABLE `chat_resp_records`
     KEY           `idx_reqId` (`req_id`),
     KEY           `idx_sid` (`sid`),
     KEY           `idx_uid_chatId` (`uid`,`chat_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=406 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat response record table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat response record table';
 
 -- ----------------------------
 -- Table structure for chat_token_records
@@ -1723,7 +1722,7 @@ CREATE TABLE `chat_trace_source`
     KEY           `chat_trace_source_chat_id_IDX` (`chat_id`) USING BTREE,
     KEY           `chat_trace_source_type_IDX` (`type`) USING BTREE,
     KEY           `chat_trace_source_uid_IDX` (`uid`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat trace information storage table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat trace information storage table';
 
 -- ----------------------------
 -- Table structure for chat_tree_index
@@ -1742,31 +1741,7 @@ CREATE TABLE `chat_tree_index`
     KEY              `chat_tree_index_uid_IDX` (`uid`),
     KEY              `chat_tree_index_root_chat_id_IDX` (`root_chat_id`),
     KEY              `idx_child_chat_id` (`child_chat_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=957447502 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat history tree linked list information';
-
--- ----------------------------
--- Table structure for chat_user
--- ----------------------------
-DROP TABLE IF EXISTS `chat_user`;
-CREATE TABLE `chat_user`
-(
-    `id`             bigint       NOT NULL AUTO_INCREMENT COMMENT 'Non-business primary key',
-    `uid`            varchar(128) DEFAULT NULL COMMENT 'Empty if user is not logged in or not registered',
-    `name`           varchar(255) DEFAULT NULL COMMENT 'User name',
-    `avatar`         varchar(512) DEFAULT NULL COMMENT 'Avatar',
-    `nickname`       varchar(255) DEFAULT NULL COMMENT 'User nickname',
-    `mobile`         varchar(255) NOT NULL COMMENT 'Mobile number, no authenticity check, only duplicate check',
-    `is_able`        tinyint      DEFAULT '0' COMMENT 'Activation status: 0 for active, 1 for inactive, 2 for frozen',
-    `create_time`    datetime     DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
-    `update_time`    datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
-    `user_agreement` tinyint      DEFAULT '0' COMMENT 'Whether agreed to user agreement: 0 not agreed, 1 agreed',
-    `date_stamp`     int          DEFAULT NULL COMMENT 'cmp_core.BigdataServicesMonitorDaily',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uid_unique_index` (`uid`),
-    KEY              `idx_create_time` (`create_time`),
-    KEY              `index_mobile` (`mobile`),
-    KEY              `idx_nickname` (`nickname`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='GPT user authorization information table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Chat history tree linked list information';
 
 -- ----------------------------
 -- Table structure for config_info
@@ -1784,7 +1759,7 @@ CREATE TABLE `config_info`
     `create_time` datetime      DEFAULT '2000-01-01 00:00:00' COMMENT 'Creation time',
     `update_time` datetime      DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1823 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Configuration table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Configuration table';
 
 -- ----------------------------
 -- Records of config_info
@@ -2172,7 +2147,7 @@ CREATE TABLE `config_info_en`
     `create_time` datetime      DEFAULT '2000-01-01 00:00:00' COMMENT 'Creation time',
     `update_time` datetime      DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1791 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Configuration table - EN';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Configuration table - EN';
 
 -- ----------------------------
 -- Records of config_info_en
@@ -2550,7 +2525,7 @@ CREATE TABLE `core_system_error_code`
     `error_code` int          NOT NULL,
     `error_msg`  varchar(100) NOT NULL,
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1841 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for create_bot_context
@@ -4458,3 +4433,23 @@ mp3 html播放器
   "updateTime": "2025-02-08T21:50:01.000+08:00"
 }',1);
 
+-- ----------------------------
+-- Table structure for app_mst
+-- ----------------------------
+DROP TABLE IF EXISTS `app_mst`;
+CREATE TABLE `app_mst` (
+  `id`           bigint         NOT NULL        AUTO_INCREMENT,
+  `uid`          varchar(128)   NOT NULL        COMMENT 'User ID',
+  `app_name`     varchar(128)   DEFAULT NULL,   COMMENT 'App name',
+  `app_describe` varchar(512)   DEFAULT NULL,   COMMENT 'App Describe',
+  `app_id`       varchar(128)   DEFAULT NULL,   COMMENT 'App ID',
+  `app_key`      varchar(128)   DEFAULT NULL,   COMMENT 'App Key',
+  `app_secret`   varchar(128)   DEFAULT NULL,   COMMENT 'App Secret',
+  `is_delete`    tinyint        DEFAULT '0',    COMMENT 'Is Delete',
+  `create_time`  datetime       DEFAULT NULL,   COMMENT 'Create Time',
+  `update_time`  datetime       DEFAULT NULL,   COMMENT 'Update Time',
+  PRIMARY KEY (`id`),
+  KEY `idx_uid` (`uid`),
+  KEY `idx_app_id` (`app_id`),
+  KEY `idx_app_name` (`app_name`)
+) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci;
