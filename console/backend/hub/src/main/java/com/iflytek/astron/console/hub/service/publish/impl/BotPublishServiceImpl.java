@@ -24,14 +24,14 @@ import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotMarketMapper;
-import com.iflytek.astron.console.hub.mapper.BotConversationStatsMapper;
+import com.iflytek.astron.console.hub.mapper.BotDashboardCountLogMapper;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.hub.converter.BotPublishConverter;
 import com.iflytek.astron.console.hub.converter.WorkflowVersionConverter;
 import com.iflytek.astron.console.hub.service.publish.PublishChannelService;
 import com.iflytek.astron.console.hub.service.wechat.WechatThirdpartyService;
 import com.iflytek.astron.console.commons.dto.bot.BotPublishQueryResult;
-import com.iflytek.astron.console.hub.entity.BotConversationStats;
+import com.iflytek.astron.console.hub.entity.BotDashboardCountLog;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
@@ -79,7 +79,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final WorkflowVersionConverter workflowVersionConverter;
 
     // Statistics data related
-    private final BotConversationStatsMapper botConversationStatsMapper;
+    private final BotDashboardCountLogMapper botDashboardCountLogMapper;
 
     @Override
     public PageResponse<BotPublishInfoDto> getBotList(
@@ -181,7 +181,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         }
 
         // 2. Query summary statistics data
-        BotSummaryStatsVO summaryStats = botConversationStatsMapper.selectSummaryStats(botId, null, null);
+        BotSummaryStatsVO summaryStats = botDashboardCountLogMapper.selectSummaryStats(botId, null, null);
         if (summaryStats == null) {
             // If no statistics data, return default values (using primitive type long, will be 0 automatically)
             summaryStats = new BotSummaryStatsVO();
@@ -207,7 +207,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // 2. Query time series statistics data
         LocalDate startDate = LocalDate.now().minusDays(overviewDays);
-        List<BotTimeSeriesStatsVO> timeSeriesStats = botConversationStatsMapper.selectTimeSeriesStats(
+        List<BotTimeSeriesStatsVO> timeSeriesStats = botDashboardCountLogMapper.selectTimeSeriesStats(
                 botId, startDate, null, null);
 
         // 3. Build time series data response
@@ -230,16 +230,16 @@ public class BotPublishServiceImpl implements BotPublishService {
                 uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
 
         try {
-            BotConversationStats stats = BotConversationStats.createBuilder()
+            BotDashboardCountLog stats = BotDashboardCountLog.createBuilder()
                     .uid(uid)
-                    .spaceId(spaceId)
                     .botId(botId)
+                    .channel(1) // Default channel
                     .chatId(chatId)
+                    .chatTime(0) // Default chat time
+                    .token(tokenConsumed)
                     .sid(sid)
-                    .tokenConsumed(tokenConsumed)
-                    .messageRounds(messageRounds)
                     .build();
-            int result = botConversationStatsMapper.insert(stats);
+            int result = botDashboardCountLogMapper.insert(stats);
 
             if (result > 0) {
                 log.info("Conversation statistics recorded successfully: chatId={}, statsId={}", chatId, stats.getId());
