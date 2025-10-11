@@ -20,8 +20,8 @@ import {
   setKnowledgeProStrategy,
   setHistorys,
 } from './flow-manager-function';
-import useFlowStore from './useFlowStore';
-import useIteratorFlowStore from './useIteratorFlowStore';
+import useFlowStore from './use-flow-store';
+import useIteratorFlowStore from './use-iterator-flow-store';
 
 const useFlowsManagerStore = create<FlowsManagerStoreType>((set, get) => ({
   ...initialStatus,
@@ -40,6 +40,10 @@ const useFlowsManagerStore = create<FlowsManagerStoreType>((set, get) => ({
   setAutonomousMode: (autonomousMode: boolean): void => set({ autonomousMode }),
   setShowAiuiTips: (showAiuiTips: boolean): void => set({ showAiuiTips }),
   setCurrentStore: (type): void => setCurrentStore(type, set),
+  setSingleNodeDebuggingInfo: (singleNodeDebuggingInfo: {
+    nodeId: string;
+    controller: unknown;
+  }): void => set({ singleNodeDebuggingInfo }),
   getCurrentStore: (): typeof useFlowStore | typeof useIteratorFlowStore =>
     getCurrentStore(get),
   setFlowResult: (flowResult): void => setFlowResult(flowResult, set),
