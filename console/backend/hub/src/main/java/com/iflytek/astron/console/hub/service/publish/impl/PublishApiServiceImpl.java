@@ -1,7 +1,6 @@
 package com.iflytek.astron.console.hub.service.publish.impl;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
-import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.DatasetInfo;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
@@ -162,19 +161,9 @@ public class PublishApiServiceImpl implements PublishApiService {
 
         releaseManageClientService.releaseBotApi(botId, flowId, versionName, spaceId, request);
 
-        chatBotApiService.insert(ChatBotApi.builder()
-                .uid(uid)
-                .botId(botId)
-                .assistantId(flowId)
-                .appId(appMst.getAppId())
-                .apiSecret(appMst.getAppSecret())
-                .apiKey(appMst.getAppKey())
-                .prompt("")
-                .pluginId("")
-                .embeddingId("")
-                .apiPath("/workflow/v1/chat/completions")
-                .description(botBase.getBotName())
-                .build());
+        chatBotApiService.insertOrUpdate(uid, botId, flowId, appMst.getAppId(),
+                appMst.getAppSecret(), appMst.getAppKey(), "", "", "",
+                "/workflow/v1/chat/completions", botBase.getBotName());
 
         return BotApiInfoDTO.builder()
                 .botId(botId)
@@ -200,19 +189,9 @@ public class PublishApiServiceImpl implements PublishApiService {
         List<Long> datasetIdList = datasetInfos.stream().map(DatasetInfo::getId).toList();
         String embeddingIds = StringUtils.defaultString(datasetIdList.stream().map(Objects::toString).collect(Collectors.joining(",")), "");
 
-        chatBotApiService.insert(ChatBotApi.builder()
-                .uid(uid)
-                .botId(botId)
-                .assistantId(null)
-                .appId(appMst.getAppId())
-                .apiSecret(appMst.getAppSecret())
-                .apiKey(appMst.getAppKey())
-                .prompt(prompt)
-                .pluginId("")
-                .embeddingId(embeddingIds)
-                .apiPath(null)
-                .description(botBase.getBotName())
-                .build());
+        chatBotApiService.insertOrUpdate(uid, botId, null, appMst.getAppId(),
+                appMst.getAppSecret(), appMst.getAppKey(), prompt, "", embeddingIds,
+                null, botBase.getBotName());
 
         // TODO: capability authorization
 
