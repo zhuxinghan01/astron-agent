@@ -6,9 +6,9 @@
 
 astronAgent 项目包含以下三个主要组件：
 
-1. **Casdoor** - 身份认证和单点登录服务
-2. **RagFlow** - 知识库和文档检索服务
-3. **astronAgent** - 核心业务服务集群
+1. **Casdoor** - 身份认证和单点登录服务(非必要部署组件,根据需要部署)
+2. **RagFlow** - 知识库和文档检索服务(非必要部署组件,根据需要部署)
+3. **astronAgent** - 核心业务服务集群(必要部署组件)
 
 ## 🚀 部署步骤
 
@@ -54,7 +54,7 @@ docker-compose logs -f
 - 配置文件：`./conf` 目录
 - 日志文件：`./logs` 目录
 
-### 第二步：启动 RagFlow 知识库服务
+### 第二步：启动 RagFlow 知识库服务（根据需要部署）
 
 RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档理解技术提供准确的问答服务。
 
@@ -87,7 +87,7 @@ docker-compose logs -f ragflow
 - 默认使用 Elasticsearch，如需使用 opensearch、infinity，请修改 .env 中的 DOC_ENGINE 配置
 - 支持GPU加速，使用 `docker-compose-gpu.yml` 启动
 
-### 第三步：配置 astronAgent 核心服务
+### 第三步：集成配置 Casdoor、RagFlow 服务（根据需要配置相关信息）
 
 在启动 astronAgent 服务之前，根据需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
 
@@ -131,7 +131,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 3. **权限配置**：配置用户角色和权限
 4. **配置文件更新**
 
-### 第四步：启动 astronAgent 核心服务
+### 第四步：启动 astronAgent 核心服务（必要部署步骤）
 
 ```bash
 # 进入 astronAgent 目录
@@ -170,62 +170,9 @@ docker-compose logs -f
 - **PostgreSQL**：localhost:5432
 - **MySQL**：localhost:3306
 - **Redis**：localhost:6379
-- **Elasticsearch**：http://localhost:9200
+- **Elasticsearch**：localhost:9200
 - **Kafka**：localhost:9092
-- **MinIO**：http://localhost:9000
-
-## 🔍 故障排除
-
-### 1. 服务启动失败
-
-```bash
-# 查看详细错误日志
-docker-compose logs service-name
-
-# 检查端口占用
-netstat -tlnp | grep :端口号
-
-# 检查资源使用
-docker stats
-```
-
-### 2. 服务间连接问题
-
-**常见问题：**
-- 确保所有服务都在同一网络中
-- 检查服务名称解析是否正确
-- 验证端口配置是否一致
-
-**解决方案：**
-```bash
-# 查看网络配置
-docker network ls
-docker network inspect [network-name]
-
-# 测试服务连通性
-docker exec -it container-name ping target-service-name
-```
-
-### 3. 配置文件问题
-
-**检查配置文件语法：**
-```bash
-# 验证 docker-compose 文件
-docker-compose config
-
-# 检查环境变量
-docker-compose config --services
-```
-
-### 4. 数据持久化问题
-
-```bash
-# 查看数据卷
-docker volume ls
-
-# 检查数据卷挂载
-docker volume inspect volume-name
-```
+- **MinIO**：localhost:9000
 
 ## 📚 更多资源
 
