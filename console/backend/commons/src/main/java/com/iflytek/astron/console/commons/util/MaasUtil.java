@@ -8,8 +8,13 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
-import com.iflytek.astron.console.commons.entity.bot.*;
-import com.iflytek.astron.console.commons.entity.workflow.MaasApi;
+import com.iflytek.astron.console.commons.dto.bot.AdvancedConfig;
+import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
+import com.iflytek.astron.console.commons.dto.bot.BotTag;
+import com.iflytek.astron.console.commons.dto.workflow.MaasApi;
+import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
+import com.iflytek.astron.console.commons.entity.bot.ChatBotTag;
+import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.enums.bot.BotUploadEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
@@ -419,7 +424,7 @@ public class MaasUtil {
     private String executeRequest(String url, MaasApi bodyData) {
         Map<String, String> authMap = AuthStringUtil.authMap(url, "POST", consumerKey, consumerSecret, JSONObject.toJSONString(bodyData));
         RequestBody requestBody = RequestBody.create(
-                JSONObject.toJSONString(authMap),
+                JSONObject.toJSONString(bodyData),
                 MediaType.parse("application/json; charset=utf-8"));
 
         Request request = new Request.Builder()
@@ -427,7 +432,7 @@ public class MaasUtil {
                 .post(requestBody)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .headers(Headers.of(authMap))
+                .addHeader("Authorization", "Bearer %s:%s".formatted(consumerKey, consumerSecret))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .build();
         log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), JSONObject.toJSONString(authMap), request.headers());
@@ -711,5 +716,17 @@ public class MaasUtil {
         }
 
         return result;
+    }
+
+    public static Headers buildHeaders(Map<String, String> headerMap) {
+        Headers.Builder headerBuilder = new Headers.Builder();
+        if (headerMap != null) {
+            for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    headerBuilder.add(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return headerBuilder.build();
     }
 }
