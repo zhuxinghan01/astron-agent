@@ -151,7 +151,7 @@ services:
     container_name: astron-agent-core-tenant
     environment:
       SERVICE_PORT: "${CORE_TENANT_PORT:-5052}"
-      SERVICE_LOCATION: "${SERVICE_LOCATION:-localhost}"
+      SERVICE_LOCATION: "${SERVICE_LOCATION:-hf}"
       DATABASE_DB_TYPE: "${DATABASE_DB_TYPE:-mysql}"
       DATABASE_USERNAME: "${DATABASE_USERNAME:-root}"
       DATABASE_PASSWORD: "${DATABASE_PASSWORD:-root123}"
@@ -320,13 +320,7 @@ services:
     image: ghcr.io/iflytek/astron-agent/core-agent:latest
     container_name: astron-agent-core-agent
     environment:
-      PYTHONUNBUFFERED: "${PYTHONUNBUFFERED:-1}"
-      RUN_ENVIRON: "${RUN_ENVIRON:-dev}"
-      USE_POLARIS: "${USE_POLARIS:-false}"
-      SERVICE_NAME: "${SERVICE_NAME:-Agent}"
-      SERVICE_SUB: "${SERVICE_SUB:-sag}"
       SERVICE_LOCATION: "${SERVICE_LOCATION:-hf}"
-      SERVICE_APP: "${SERVICE_APP:-app:app}"
       SERVICE_HOST: "${SERVICE_HOST:-0.0.0.0}"
       SERVICE_PORT: "${CORE_AGENT_PORT:-17870}"
       SERVICE_WORKERS: "${SERVICE_WORKERS:-1}"
@@ -365,7 +359,6 @@ services:
       LIST_MCP_PLUGIN_URL: "${LIST_MCP_PLUGIN_URL:-http://core-link:18888/api/v1/mcp/tool_list}"
       RUN_MCP_PLUGIN_URL: "${RUN_MCP_PLUGIN_URL:-http://core-link:18888/api/v1/mcp/call_tool}"
       APP_AUTH_HOST: "${APP_AUTH_HOST:-core-tenant}"
-      APP_AUTH_ROUTER: "${APP_AUTH_ROUTER:-/api-services/v2/app/details}"
       APP_AUTH_PROT: "${APP_AUTH_PROT:-http}"
       APP_AUTH_API_KEY: "${APP_AUTH_API_KEY:-YOUR_APP_AUTH_API_KEY}"
       APP_AUTH_SECRET: "${APP_AUTH_SECRET:-YOUR_APP_AUTH_SECRET}"
