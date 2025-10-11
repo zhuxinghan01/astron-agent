@@ -136,7 +136,6 @@ function Index({ zoom, setZoom }: IndexProps): React.ReactElement {
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const [lastSelection, setLastSelection] =
     useState<OnSelectionChangeParams | null>(null);
-
   const nodes = useFlowStore(state => state.nodes);
   const edges = useFlowStore(state => state.edges);
   const reactFlowInstance = useFlowStore(state => state.reactFlowInstance);
