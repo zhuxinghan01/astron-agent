@@ -1,6 +1,9 @@
 package com.iflytek.astron.console.hub.service.publish.impl;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.hub.dto.PageResponse;
 import com.iflytek.astron.console.commons.dto.bot.BotListRequestDto;
 import com.iflytek.astron.console.hub.dto.publish.BotPublishInfoDto;
@@ -14,7 +17,8 @@ import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
 import com.iflytek.astron.console.commons.dto.workflow.WorkflowInputsResponseDto;
 import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
 import com.iflytek.astron.console.hub.dto.publish.prepare.*;
-import com.iflytek.astron.console.commons.enums.bot.BotPublishTypeEnum;
+import com.iflytek.astron.console.hub.dto.publish.prepare.WechatPrepareDto;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.entity.model.McpData;
 import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
 import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
@@ -33,6 +37,7 @@ import com.iflytek.astron.console.hub.entity.BotConversationStats;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.util.BotFileParamUtil;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
 import lombok.RequiredArgsConstructor;
@@ -282,8 +287,8 @@ public class BotPublishServiceImpl implements BotPublishService {
     }
 
     /**
-     * Create market record (for publish channel)
-     * Note: This method now delegates to event-driven architecture
+     * Create market record (for publish channel) Note: This method now delegates to event-driven
+     * architecture
      */
     private void createMarketRecordForChannel(Integer botId, String uid, Long spaceId, String channels) {
         // Publish event to create market record - handled by InstructionalBotPublishListener
@@ -464,7 +469,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         try {
             // Validate publish type
-            BotPublishTypeEnum publishTypeEnum = BotPublishTypeEnum.getByCode(type);
+            ReleaseTypeEnum publishTypeEnum = ReleaseTypeEnum.getByName(type);
             if (publishTypeEnum == null) {
                 return createErrorPrepareResponse("Invalid publish type: " + type);
             }
@@ -486,8 +491,11 @@ public class BotPublishServiceImpl implements BotPublishService {
                 case FEISHU:
                     prepareData = getFeishuPrepareData(botId, botDetail, currentUid, spaceId);
                     break;
-                case API:
+                case BOT_API:
                     prepareData = getApiPrepareData(botId, botDetail, currentUid, spaceId);
+                    break;
+                case WECHAT:
+                    prepareData = getWechatPrepareData(botId, botDetail, currentUid, spaceId);
                     break;
                 default:
                     return createErrorPrepareResponse("Unsupported publish type: " + type);
@@ -515,7 +523,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting market prepare data: botId={}", botId);
 
         MarketPrepareDto marketData = new MarketPrepareDto();
-        marketData.setPublishType(BotPublishTypeEnum.MARKET.getCode());
+        marketData.setPublishType(ReleaseTypeEnum.MARKET.name());
 
         // Get workflow configuration JSON
         try {
@@ -534,8 +542,18 @@ public class BotPublishServiceImpl implements BotPublishService {
         marketData.setBotDescription(botDetail.getBotDesc());
         marketData.setBotAvatar(null); // TODO: Get bot avatar from appropriate source
 
-        // Set multi-file parameter support
-        marketData.setBotMultiFileParam(true); // TODO: Get actual value
+        // Set multi-file parameter support based on extraInputsConfig
+        boolean isMultiFileParam = false;
+        try {
+            UserLangChainInfo chainInfo = userLangChainDataService.findOneByBotId(botId);
+            if (chainInfo != null && chainInfo.getExtraInputsConfig() != null) {
+                List<JSONObject> extraInputsConfig = JSONArray.parseArray(chainInfo.getExtraInputsConfig(), JSONObject.class);
+                isMultiFileParam = BotFileParamUtil.isMultiFileParam(botId, extraInputsConfig);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to determine multi-file parameter support: botId={}", botId, e);
+        }
+        marketData.setBotMultiFileParam(isMultiFileParam);
 
         // Set suggested tags and categories
         marketData.setSuggestedTags(List.of("智能助手", "效率工具"));
@@ -548,7 +566,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting MCP prepare data: botId={}", botId);
 
         McpPrepareDto result = new McpPrepareDto();
-        result.setPublishType(BotPublishTypeEnum.MCP.getCode());
+        result.setPublishType(ReleaseTypeEnum.MCP.name());
 
         // 1. Set workflow input types
         result.setInputTypes(getWorkflowInputTypes(botId, currentUid, spaceId));
@@ -659,7 +677,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting Feishu prepare data: botId={}", botId);
 
         FeishuPrepareDto feishuData = new FeishuPrepareDto();
-        feishuData.setPublishType(BotPublishTypeEnum.FEISHU.getCode());
+        feishuData.setPublishType(ReleaseTypeEnum.FEISHU.name());
 
         // TODO: Get actual Feishu app configuration
         feishuData.setAppId("cli_xxx");
@@ -683,7 +701,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         log.info("Getting API prepare data: botId={}", botId);
 
         ApiPrepareDto apiData = new ApiPrepareDto();
-        apiData.setPublishType(BotPublishTypeEnum.API.getCode());
+        apiData.setPublishType(ReleaseTypeEnum.BOT_API.name());
 
         // Set API endpoint
         apiData.setApiEndpoint("/api/v1/chat/" + botId);
@@ -698,6 +716,21 @@ public class BotPublishServiceImpl implements BotPublishService {
         apiData.setSuggestedConfig(suggestedConfig);
 
         return apiData;
+    }
+
+    private WechatPrepareDto getWechatPrepareData(Integer botId, BotDetailResponseDto botDetail, String currentUid, Long spaceId) {
+        log.info("Getting WeChat prepare data: botId={}", botId);
+
+        WechatPrepareDto wechatData = new WechatPrepareDto();
+        wechatData.setPublishType(ReleaseTypeEnum.WECHAT.name());
+
+        // TODO: Get actual WeChat configuration
+        wechatData.setAppId("wx_xxx");
+        wechatData.setAppSecret("xxx");
+        wechatData.setToken("xxx");
+        wechatData.setEncodingAESKey("xxx");
+
+        return wechatData;
     }
 
     private UnifiedPrepareDto createErrorPrepareResponse(String errorMessage) {

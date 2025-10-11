@@ -194,9 +194,21 @@ public class PublishApiServiceImpl implements PublishApiService {
 
         releaseManageClientService.releaseBotApi(botId, flowId, versionName, spaceId, request);
 
-        chatBotApiService.insertOrUpdate(uid, botId, flowId, appMst.getAppId(),
-                appMst.getAppSecret(), appMst.getAppKey(), "", "", "",
-                "/workflow/v1/chat/completions", botBase.getBotName());
+        ChatBotApi chatBotApi = ChatBotApi.builder()
+                .uid(uid)
+                .botId(botId)
+                .assistantId(flowId)
+                .appId(appMst.getAppId())
+                .apiSecret(appMst.getAppSecret())
+                .apiKey(appMst.getAppKey())
+                .prompt("")
+                .pluginId("")
+                .embeddingId("")
+                .apiPath("/workflow/v1/chat/completions")
+                .description(botBase.getBotName())
+                .build();
+
+        chatBotApiService.insertOrUpdate(chatBotApi);
 
         return BotApiInfoDTO.builder()
                 .botId(botId)
@@ -222,9 +234,20 @@ public class PublishApiServiceImpl implements PublishApiService {
         List<Long> datasetIdList = datasetInfos.stream().map(DatasetInfo::getId).toList();
         String embeddingIds = StringUtils.defaultString(datasetIdList.stream().map(Objects::toString).collect(Collectors.joining(",")), "");
 
-        chatBotApiService.insertOrUpdate(uid, botId, null, appMst.getAppId(),
-                appMst.getAppSecret(), appMst.getAppKey(), prompt, "", embeddingIds,
-                null, botBase.getBotName());
+        ChatBotApi chatBotApi = ChatBotApi.builder()
+                .uid(uid)
+                .botId(botId)
+                .appId(appMst.getAppId())
+                .apiSecret(appMst.getAppSecret())
+                .apiKey(appMst.getAppKey())
+                .prompt(prompt)
+                .pluginId("")
+                .embeddingId(embeddingIds)
+                .apiPath(null)
+                .description(botBase.getBotName())
+                .build();
+
+        chatBotApiService.insertOrUpdate(chatBotApi);
 
         // TODO: capability authorization
 
