@@ -848,7 +848,7 @@ const useNodeHandle = ({ id, data }): UseNodeHandleReturn => {
   }, [data?.parentId, showIterativeModal]);
 
   const hasSourceHandle = useMemo(() => {
-    if (nodeType === 'node-end') {
+    if (nodeType === 'node-end' || nodeType === 'iteration-node-end') {
       return false;
     }
     if (nodeType === 'decision-making') {
@@ -974,7 +974,7 @@ const useNodeInputRender = ({ id, data }): UseNodeInputRenderReturn => {
           }));
           const iteratorStartNode = nodes?.find(
             node =>
-              node?.data?.parentId === id && node?.nodeType === 'node-start'
+              node?.data?.parentId === id && node?.nodeType === 'iteration-node-start'
           );
           setNode(iteratorStartNode?.id, old => {
             old.data.outputs = outputs;

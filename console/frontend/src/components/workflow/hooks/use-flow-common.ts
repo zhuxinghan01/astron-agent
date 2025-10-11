@@ -112,7 +112,7 @@ const useAddNode = (): UseAddNodeReturn => {
               zIndex: 1,
               draggable: false,
               type: 'custom',
-              nodeType: 'node-start',
+              nodeType: 'iteration-node-start',
               selected: false,
               position: { x: 100, y: 150 },
               data: {
@@ -149,7 +149,7 @@ const useAddNode = (): UseAddNodeReturn => {
               draggable: false,
               zIndex: 1,
               type: 'custom',
-              nodeType: 'node-end',
+              nodeType: 'iteration-node-end',
               selected: false,
               position: { x: 250, y: 150 },
               data: {
