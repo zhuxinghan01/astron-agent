@@ -2,6 +2,8 @@ package com.iflytek.astron.console.hub.service.workflow.impl;
 
 import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
+import com.iflytek.astron.console.commons.mapper.bot.ChatBotApiMapper;
+import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -16,6 +18,10 @@ import org.springframework.util.StringUtils;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import okhttp3.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import com.iflytek.astron.console.commons.util.MaasUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.Duration;
 
@@ -30,6 +36,7 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
 
     private final UserLangChainDataService userLangChainDataService;
     private final WorkflowVersionMapper workflowVersionMapper;
+    private final ChatBotApiMapper chatBotApiMapper;
 
     // Workflow version management base URL
     @Value("${maas.workflowVersion}")
@@ -38,9 +45,17 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
     // MAAS API configuration
     @Value("${maas.publishApi}")
     private String massPublishApi;
-
+    
     @Value("${maas.authApi}")
     private String massAuthApi;
+
+    // MaaS appId configuration
+    @Value("${maas.appId}")
+    private String maasAppId;
+
+    // MaaS consumer configuration
+    @Value("${maas.consumerId}")
+    private String consumerId;
 
     // API endpoints for workflow version management
     private static final String ADD_VERSION_URL = ""; // Create new version
@@ -199,12 +214,14 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
 
         try {
             String jsonBody = JSON.toJSONString(request);
+            String authHeader = getCurrentAuthorizationHeader();
 
             // Send request using OkHttp
             Request httpRequest = new Request.Builder()
                     .url(baseUrl + ADD_VERSION_URL)
                     .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
                     .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", authHeader)
                     .build();
 
             try (Response response = okHttpClient.newCall(httpRequest).execute()) {
@@ -266,21 +283,25 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
                 return;
             }
 
-            // 2. Build Mass API request parameters
+            // 2. Build Mass API request parameters with required fields
             JSONObject massApiRequest = new JSONObject();
-            massApiRequest.put("flowId", flowId);
-            massApiRequest.put("appId", appId);
+            massApiRequest.put("flow_id", flowId);  // Use underscore naming
+            massApiRequest.put("app_id", appId);    // Use underscore naming
             massApiRequest.put("version", versionName);
             massApiRequest.put("data", versionData);
+            massApiRequest.put("release_status", 1); // Required field: 1 = publish
+            massApiRequest.put("plat", 2);          // Required field: 2 = open platform
 
             String jsonBody = massApiRequest.toJSONString();
+            String authHeader = getCurrentAuthorizationHeader();
 
             // 3. 发布API到Mass系统
             Request publishRequest = new Request.Builder()
                     .url(massPublishApi)
                     .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
                     .addHeader("Content-Type", "application/json")
-                    .addHeader("X-Consumer-Username", "workflow-publisher") // 模拟消费者ID
+                    .addHeader("X-Consumer-Username", consumerId) // Use configured consumer ID
+                    .addHeader("Authorization", authHeader)
                     .build();
 
             try (Response response = okHttpClient.newCall(publishRequest).execute()) {
@@ -303,10 +324,12 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
                 Integer code = responseJson.getInteger("code");
 
                 if (code != null && code.equals(0)) {
-                    log.info("同步工作流到API系统成功: botId={}, flowId={}, versionName={}",
-                            botId, flowId, versionName);
+                    log.info("发布Mass API成功: botId={}, flowId={}, versionName={}", botId, flowId, versionName);
+                    
+                    // 4. Bind API to Mass system
+                    bindMassApi(massApiRequest, authHeader, botId, flowId, versionName);
                 } else {
-                    log.error("发布Mass API失败: botId={}, response={}", botId, responseBody);
+                    log.error("发布Mass API失败: botId={}, 传参 = {}, response={}", botId, jsonBody, responseBody);
                 }
             }
 
@@ -375,12 +398,14 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             requestBody.put("publishResult", auditResult);
 
             String jsonBody = requestBody.toJSONString();
+            String authHeader = getCurrentAuthorizationHeader();
 
             // Send request using OkHttp
             Request httpRequest = new Request.Builder()
                     .url(baseUrl + UPDATE_RESULT_URL)
                     .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
                     .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", authHeader)
                     .build();
 
             try (Response response = okHttpClient.newCall(httpRequest).execute()) {
@@ -435,11 +460,91 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
     }
 
     /**
-     * Get appId by botId
+     * Get appId by botId from chat_bot_api table, fallback to configured maas appId
      */
     private String getAppIdByBotId(Integer botId) {
-        // TODO: Implement logic to get appId
-        return "app_" + botId;
+        try {
+            // Query chat_bot_api table to find appId for the given botId
+            LambdaQueryWrapper<ChatBotApi> queryWrapper = new LambdaQueryWrapper<ChatBotApi>()
+                    .eq(ChatBotApi::getBotId, botId)
+                    .last("LIMIT 1");
+            
+            ChatBotApi chatBotApi = chatBotApiMapper.selectOne(queryWrapper);
+            
+            if (chatBotApi != null && chatBotApi.getAppId() != null) {
+                log.debug("Found appId for botId {}: {}", botId, chatBotApi.getAppId());
+                return chatBotApi.getAppId();
+            } else {
+                // Fallback to configured maas appId
+                log.debug("No appId found for botId: {}, using configured maas appId: {}", botId, maasAppId);
+                return maasAppId;
+            }
+        } catch (Exception e) {
+            // Fallback to configured maas appId on error
+            log.error("Failed to get appId for botId: {}, using configured maas appId: {}", botId, maasAppId, e);
+            return maasAppId;
+        }
+    }
+
+    /**
+     * Get Authorization header from current request context
+     */
+    private String getCurrentAuthorizationHeader() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                log.warn("No request context available for Authorization header");
+                return "";
+            }
+            
+            HttpServletRequest request = attributes.getRequest();
+            return MaasUtil.getAuthorizationHeader(request);
+        } catch (Exception e) {
+            log.error("Failed to get Authorization header from request context", e);
+            return "";
+        }
+    }
+
+    /**
+     * Bind Mass API for workflow bot publishing
+     */
+    private void bindMassApi(JSONObject massApiRequest, String authHeader, Integer botId, String flowId, String versionName) {
+        try {
+            String jsonBody = massApiRequest.toJSONString();
+            
+            // Build bind API request (same structure as publish request)
+            Request bindRequest = new Request.Builder()
+                    .url(massAuthApi)  // Use auth API URL
+                    .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("X-Consumer-Username", consumerId)
+                    .addHeader("Authorization", authHeader)
+                    .build();
+
+            try (Response response = okHttpClient.newCall(bindRequest).execute()) {
+                if (!response.isSuccessful()) {
+                    log.error("绑定Mass API失败: botId={}, responseCode={}, response={}",
+                            botId, response.code(), response.body().string());
+                    return;
+                }
+
+                String responseBody = response.body().string();
+                log.debug("绑定Mass API响应: {}", responseBody);
+
+                // Parse response to check success
+                JSONObject responseJson = JSON.parseObject(responseBody);
+                Integer code = responseJson.getInteger("code");
+
+                if (code != null && code.equals(0)) {
+                    log.info("绑定Mass API成功: botId={}, flowId={}, versionName={}", botId, flowId, versionName);
+                } else {
+                    log.error("绑定Mass API失败: botId={}, response={}", botId, responseBody);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("绑定Mass API异常: botId={}, flowId={}, versionName={}", botId, flowId, versionName, e);
+        }
     }
 
     /**
