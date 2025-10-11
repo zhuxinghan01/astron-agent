@@ -230,9 +230,9 @@ public class BotPublishServiceImpl implements BotPublishService {
             BotDashboardCountLog countLog = BotDashboardCountLog.createBuilder()
                     .uid(uid)
                     .botId(botId)
-                    .channel(1) // Default channel
+                    .channel(1)
                     .chatId(chatId)
-                    .chatTime(0) // Default chat time
+                    .chatTime(0)
                     .token(tokenConsumed)
                     .sid(sid)
                     .build();
@@ -506,7 +506,7 @@ public class BotPublishServiceImpl implements BotPublishService {
             if (flowId != null) {
                 // TODO: Get complete workflow configuration JSON
                 // This should call the workflow service to get the full configuration
-                marketData.setWorkflowConfigJson("{}"); // Placeholder
+                marketData.setWorkflowConfigJson("{}");
             }
         } catch (Exception e) {
             log.warn("Failed to get workflow config for market prepare: botId={}", botId, e);
@@ -515,7 +515,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         // Set bot basic info
         marketData.setBotName(botDetail.getBotName());
         marketData.setBotDescription(botDetail.getBotDesc());
-        marketData.setBotAvatar(null); // TODO: Get bot avatar from appropriate source
+        marketData.setBotAvatar(null);
 
         // Set multi-file parameter support based on extraInputsConfig
         boolean isMultiFileParam = false;
@@ -565,7 +565,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         // Set bot info
         feishuData.setBotName(botDetail.getBotName());
         feishuData.setBotDescription(botDetail.getBotDesc());
-        feishuData.setBotAvatar(null); // TODO: Get bot avatar from appropriate source
+        feishuData.setBotAvatar(null);
 
         // Set suggested configuration
         FeishuPrepareDto.SuggestedConfig suggestedConfig = new FeishuPrepareDto.SuggestedConfig();
@@ -585,7 +585,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         // Set API endpoint
         apiData.setApiEndpoint("/api/v1/chat/" + botId);
         apiData.setDocumentation("API文档URL");
-        apiData.setApiKey("生成的API Key"); // TODO: Generate actual API key
+        apiData.setApiKey("生成的API Key");
         apiData.setAuthType("Bearer");
 
         // Set suggested configuration
