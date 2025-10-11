@@ -517,12 +517,12 @@ const ListItem = ({
               style={{
                 background: item?.avatarColor
                   ? item?.avatarColor
-                  : `url(${item?.address + item?.icon}) no-repeat center / cover`,
+                  : `url(${item?.icon}) no-repeat center / cover`,
               }}
             >
               {item?.avatarColor && (
                 <img
-                  src={item?.address + item?.icon}
+                  src={item?.icon || ''}
                   className="w-[28px] h-[28px]"
                   alt=""
                 />
