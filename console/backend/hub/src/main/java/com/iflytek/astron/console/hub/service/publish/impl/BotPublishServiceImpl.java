@@ -19,8 +19,6 @@ import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
 import com.iflytek.astron.console.hub.dto.publish.prepare.*;
 import com.iflytek.astron.console.hub.dto.publish.prepare.WechatPrepareDto;
 import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
-import com.iflytek.astron.console.commons.entity.model.McpData;
-import com.iflytek.astron.console.commons.mapper.model.McpDataMapper;
 import com.iflytek.astron.console.hub.service.publish.WorkflowInputService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
@@ -52,7 +50,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Bot Publishing Management Service Implementation
@@ -75,10 +72,6 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final WechatThirdpartyService wechatThirdpartyService;
     private final ApplicationEventPublisher eventPublisher;
     private final WorkflowInputService workflowInputService;
-    private final McpDataMapper mcpDataMapper;
-
-    @Value("${maas.mcpHost}")
-    private String mcpHost;
     private final UserLangChainDataService userLangChainDataService;
 
     // Version management related
@@ -568,109 +561,13 @@ public class BotPublishServiceImpl implements BotPublishService {
         McpPrepareDto result = new McpPrepareDto();
         result.setPublishType(ReleaseTypeEnum.MCP.name());
 
-        // 1. Set workflow input types
-        result.setInputTypes(getWorkflowInputTypes(botId, currentUid, spaceId));
-
-        // 2. Set suggested configuration
-        result.setSuggestedConfig(buildMcpSuggestedConfig(botId, botDetail));
-
-        // 3. Set MCP content (existing or default)
-        result.setContentInfo(getMcpContentInfo(botId, botDetail));
+        // TODO: Implement MCP prepare data logic
+        // For now, return basic structure
+        result.setInputTypes(new ArrayList<>());
+        result.setSuggestedConfig(new McpPrepareDto.SuggestedConfig());
+        result.setContentInfo(new McpPrepareDto.McpContentInfo());
 
         return result;
-    }
-
-    private List<McpPrepareDto.InputTypeDto> getWorkflowInputTypes(Integer botId, String currentUid, Long spaceId) {
-        try {
-            WorkflowInputsResponseDto inputsResponse = getInputsType(botId, currentUid, spaceId);
-            if (inputsResponse != null && inputsResponse.getParameters() != null) {
-                return inputsResponse.getParameters()
-                        .stream()
-                        .map(param -> {
-                            McpPrepareDto.InputTypeDto inputType = new McpPrepareDto.InputTypeDto();
-                            inputType.setName(param.getName());
-                            inputType.setType(param.getType());
-                            inputType.setDescription(param.getDescription());
-                            inputType.setRequired(param.getRequired());
-                            return inputType;
-                        })
-                        .collect(Collectors.toList());
-            }
-        } catch (Exception e) {
-            log.warn("Failed to get input types for MCP prepare: botId={}", botId, e);
-        }
-        return new ArrayList<>();
-    }
-
-    private McpPrepareDto.SuggestedConfig buildMcpSuggestedConfig(Integer botId, BotDetailResponseDto botDetail) {
-        String botName = botDetail.getBotName();
-        String botDesc = botDetail.getBotDesc();
-
-        McpPrepareDto.SuggestedConfig suggestedConfig = new McpPrepareDto.SuggestedConfig();
-        suggestedConfig.setServiceName(botName != null ? botName : "bot-" + botId);
-        suggestedConfig.setOverview("基于工作流的智能助手");
-        suggestedConfig.setContent(botDesc != null ? botDesc : "提供智能对话和任务处理能力");
-        return suggestedConfig;
-    }
-
-    private McpPrepareDto.McpContentInfo getMcpContentInfo(Integer botId, BotDetailResponseDto botDetail) {
-        // Try to get existing MCP data from database
-        McpPrepareDto.McpContentInfo contentInfo = loadExistingMcpContent(botId);
-
-        if (contentInfo != null) {
-            log.info("Using existing MCP content: botId={}, released={}", botId, contentInfo.getReleased());
-            return contentInfo;
-        }
-
-        // Generate default MCP content for new setup
-        log.info("Generating default MCP content: botId={}", botId);
-        return generateDefaultMcpContent(botId, botDetail);
-    }
-
-    private McpPrepareDto.McpContentInfo loadExistingMcpContent(Integer botId) {
-        try {
-            McpData mcpData = mcpDataMapper.selectLatestByBotId(botId);
-            if (mcpData != null) {
-                McpPrepareDto.McpContentInfo contentInfo = new McpPrepareDto.McpContentInfo();
-                contentInfo.setServerName(mcpData.getServerName());
-                contentInfo.setDescription(mcpData.getDescription());
-                contentInfo.setContent(mcpData.getContent());
-                contentInfo.setIcon(mcpData.getIcon());
-                contentInfo.setServerUrl(mcpData.getServerUrl());
-                contentInfo.setArgs(mcpData.getArgs());
-                contentInfo.setVersionName(mcpData.getVersionName());
-                contentInfo.setReleased(mcpData.getReleased() != null && mcpData.getReleased() == 1 ? "1" : "0");
-                return contentInfo;
-            }
-        } catch (Exception e) {
-            log.warn("Failed to load existing MCP content: botId={}", botId, e);
-        }
-        return null;
-    }
-
-    private McpPrepareDto.McpContentInfo generateDefaultMcpContent(Integer botId, BotDetailResponseDto botDetail) {
-        String botName = botDetail.getBotName();
-        String botDesc = botDetail.getBotDesc();
-
-        McpPrepareDto.McpContentInfo contentInfo = new McpPrepareDto.McpContentInfo();
-        contentInfo.setServerName(botName != null ? botName : "bot-" + botId);
-        contentInfo.setDescription("基于工作流的智能助手");
-        contentInfo.setContent(botDesc != null ? botDesc : "提供智能对话和任务处理能力");
-        contentInfo.setReleased("0"); // Not published yet
-
-        // Generate MCP server URL using mcpHost configuration
-        try {
-            String flowId = userLangChainDataService.findFlowIdByBotId(botId);
-            if (flowId != null && mcpHost != null) {
-                String serverUrl = String.format(mcpHost, flowId);
-                contentInfo.setServerUrl(serverUrl);
-                log.info("Generated MCP server URL: botId={}, flowId={}, serverUrl={}", botId, flowId, serverUrl);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to generate MCP server URL: botId={}", botId, e);
-        }
-
-        return contentInfo;
     }
 
     private FeishuPrepareDto getFeishuPrepareData(Integer botId, BotDetailResponseDto botDetail, String currentUid, Long spaceId) {
