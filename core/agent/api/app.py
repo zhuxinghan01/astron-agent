@@ -15,7 +15,8 @@ from api.v1.workflow_agent import workflow_agent_router
 from common_imports import initialize_services, logger, sid_generator2
 from infra.config import agent_config
 
-logger.remove()  # Remove handler after importing logger to avoid duplicate output
+# Remove handler after importing logger to avoid duplicate output
+logger.remove()
 handler_id = logger.add(sys.stderr, level="ERROR")  # Add a modifiable handler
 
 app = FastAPI()
@@ -32,11 +33,17 @@ async def validation_exception_handler(
     except (IndexError, AttributeError):
         err = exc.body or {}
     message = f"{err['type']}, {err['loc'][-1]}, {err['msg']}"
+
+    # Generate ID safely - fallback if sid_generator2 not initialized
+    request_id = (
+        sid_generator2.gen() if sid_generator2 is not None else "validation-error"
+    )
+
     rs = JSONResponse(
         content=ReasonChatCompletionChunk(
             code=40002,
             message=message,
-            id=sid_generator2.gen(),
+            id=request_id,
             choices=[],
             created=int(time.time()),
             model="",
@@ -51,8 +58,16 @@ app.include_router(workflow_agent_router)
 app.include_router(bot_config_mgr_router)
 
 if __name__ == "__main__":
-    # Initialize common services (equivalent to xingchen_utils initialization)
-    services_to_init = ["otlp_sid_service", "otlp_metric_service", "settings_service"]
+
+    # Initialize common services (xingchen_utils initialization)
+    # Note: otlp_span_service enables distributed tracing
+    services_to_init = [
+        "otlp_sid_service",     # Service ID generator for request tracking
+        "otlp_metric_service",  # Metrics collection and export
+        "otlp_span_service",    # Distributed tracing and span export
+        "settings_service"      # Configuration management
+    ]
+
     initialize_services(services=services_to_init)
 
     uvicorn_server = uvicorn.Server(

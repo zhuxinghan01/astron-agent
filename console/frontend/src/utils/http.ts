@@ -51,6 +51,13 @@ const localeConfig: {
   [key: string]: Record<string, string>;
 };
 
+const getRuntimeBaseURL = (): string | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  return window.__APP_CONFIG__?.BASE_URL;
+};
+
 /**
  * 带请求头的文件下载函数 -- a标签使用
  * @param url 下载地址
@@ -419,6 +426,17 @@ axios.interceptors.response.use(
 
 //根据环境设置baseURL：本地localhost走 /xingchen-api，dev环境和test环境分别对应不同服务器
 const getBaseURL = (): string => {
+  const mode = import.meta.env.MODE;
+
+  if (mode === 'production') {
+    return '/console-api';
+  }
+
+  const runtimeBaseUrl = getRuntimeBaseURL();
+  if (runtimeBaseUrl) {
+    return runtimeBaseUrl;
+  }
+
   // 在客户端环境下检查是否为localhost
   if (
     typeof window !== 'undefined' &&
@@ -428,13 +446,13 @@ const getBaseURL = (): string => {
   }
 
   // 从环境变量读取baseURL
-  const baseUrlFromEnv = import.meta.env.VITE_BASE_URL;
+  const baseUrlFromEnv =
+    import.meta.env.CONSOLE_API_URL || import.meta.env.VITE_BASE_URL;
   if (baseUrlFromEnv) {
     return baseUrlFromEnv;
   }
 
   // 兜底逻辑：通过import.meta.env.MODE获取构建时的环境模式
-  const mode = import.meta.env.MODE;
   switch (mode) {
     case 'development':
       return 'http://172.29.202.54:8080/';
