@@ -67,7 +67,6 @@ def extract_tool_calls_content(tool_calls: List[Dict[str, Any]]) -> str:
         function = cast(Dict[str, Any], tool.get("function") or {})
         response_json_str = function.get("response") or "{}"
         response_json = json.loads(response_json_str)
-        response_dict: dict = {}
         if type_value == ToolType.TOOL.value:
             if response_json.get("header"):
                 # Handle tool type response
