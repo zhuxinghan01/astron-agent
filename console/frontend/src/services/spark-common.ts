@@ -54,7 +54,7 @@ export interface ModelListData {
   isCustom: boolean;
   modelDomain: string;
   modelName: string;
-  modeId: string;
+  modelId: string;
   modelIcon: string;
 }
 // 获取模型列表
