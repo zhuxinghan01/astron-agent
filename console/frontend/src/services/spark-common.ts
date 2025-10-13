@@ -467,12 +467,25 @@ export const deletePrompt = (params: any) => {
 // export const getInter = (params: any): Promise<any> => {
 //   return http.post(`/llm/inter1?id=${params.id}&llmSource=${params.llmSource}`);
 // };
-//获取分析页数据
+//获取分析页数据 -- unused
 export const getAnalysisData = (params: any) => {
   return http.get(
     `/dashboard/details?botId=${params.botId}&overviewDays=${params.overviewDays}&channelDays=${params.channelDays}`
   );
 };
+
+/** 获取分析页数据01  */
+export const getAnalysisData01 = (params: any) => {
+  return http.get(
+    `/publish/bots/${params.botId}/timeseries?days=${params.overviewDays}`
+  );
+};
+
+/** 获取分析页数据02  */
+export const getAnalysisData02 = (params: any) => {
+  return http.get(`/publish/bots/${params.botId}/summary`);
+};
+
 // prompt详情
 export const promptDetail = (params: any) => {
   return http({
