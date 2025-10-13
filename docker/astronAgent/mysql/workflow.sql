@@ -1,4 +1,3 @@
-select 'workflow DATABASE initialization started' as '';
 CREATE DATABASE IF NOT EXISTS workflow;
 
 USE workflow;
@@ -114,5 +113,3 @@ VALUES (1, '星辰', '680ab54f', '7b709739e8da44536127a333c7603a83', 'NjhmY2NmM2
 
 INSERT INTO `workflow`.`app_source` (`id`, `source`, `source_id`, `description`, `create_at`, `update_at`)
 VALUES (1, 1, 'admin', '星辰', '2025-10-11 09:21:11', '2025-10-11 09:21:11');
-
-select 'workflow DATABASE initialization completed' as '';
