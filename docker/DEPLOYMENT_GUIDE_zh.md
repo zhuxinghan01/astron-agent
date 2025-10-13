@@ -138,10 +138,10 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 获取文档详见：https://www.xfyun.cn/doc/platform/quickguide.html
 
 创建应用完成后可能需要购买或领取相应能力的API授权服务量
-星火大模型API: https://xinghuo.xfyun.cn/sparkapi
-(对于大模型API会有额外的SPARK_API_PASSWORD需要在页面上获取)
-语音转写API: https://www.xfyun.cn/services/lfasr
-图片生成API: https://www.xfyun.cn/services/wtop
+- 星火大模型API: https://xinghuo.xfyun.cn/sparkapi
+  (对于大模型API会有额外的SPARK_API_PASSWORD需要在页面上获取)
+- 语音转写API: https://www.xfyun.cn/services/lfasr
+- 图片生成API: https://www.xfyun.cn/services/wtop
 
 最后编辑 `docker/astronAgent/.env` 文件，更新相关环境变量：
 ```env
