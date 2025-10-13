@@ -295,8 +295,8 @@ export const getOrderList = (): Promise<any[]> => {
 };
 
 // api详情
-export const getApiInfo = (botId: any) => {
-  return http.post(`/bot/api/info?botId=${botId}`);
+export const getApiInfo = (botId: string) => {
+  return http.get(`/publish-api/get-bot-api-info?botId=${botId}`);
 };
 
 // 获取api 实时用量
@@ -305,7 +305,7 @@ export const getApiUsage = (botId: any) => {
 };
 
 // 创建助手api
-export const createApi = (params: any) => {
+export const createApi = (params: { botId: string; appId: string }) => {
   return http.post(`/publish-api/create-bot-api`, params);
 };
 
@@ -414,8 +414,8 @@ export const listRepos = () => {
 };
 
 // 获取模版数据
-export const getBotTemplate = (botId: any) => {
-  return http.get(`/bot/template?botId=${botId}`);
+export const getBotTemplate = (botId?: any) => {
+  return http.get(`/bot/template${botId ? `?botId=${botId}` : ''}`);
 };
 
 // 生成开场白

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, ReactNode, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import FlowEdit from '@/components/workflow/modal/flow-edit';
 import dayjs from 'dayjs';
 
@@ -137,7 +137,7 @@ const FlowHeader: React.FC<FlowHeaderProps> = ({
             src={arrowLeft}
             className="w-[28px] cursor-pointer"
             alt=""
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/space/agent')}
           />
           <div className="relative flex items-center gap-4">
             <img

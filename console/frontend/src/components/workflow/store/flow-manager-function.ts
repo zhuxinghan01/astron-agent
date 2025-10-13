@@ -15,8 +15,8 @@ import {
   canPublishSetNotAPI,
 } from '@/services/flow';
 import { getModelConfigDetail } from '@/services/common';
-import useFlowStore from './useFlowStore';
-import useIteratorFlowStore from './useIteratorFlowStore';
+import useFlowStore from './use-flow-store';
+import useIteratorFlowStore from './use-iterator-flow-store';
 import { FlowStoreType } from '../types/zustand/flow';
 import { UseBoundStore, StoreApi } from 'zustand';
 
@@ -129,6 +129,10 @@ export const initialStatus = {
   historyVersion: false,
   historyVersionData: {},
   controlMode: 'mouse',
+  singleNodeDebuggingInfo: {
+    nodeId: '',
+    controller: null,
+  },
 };
 
 export interface ModelConfig {
@@ -475,8 +479,8 @@ function addErrNode({ errNodes, currentNode, msg }): void {
   if (isExist) return;
   const errNode = {
     id: currentNode?.id,
-    icon: currentNode?.data?.icon,
     name: currentNode?.data?.label,
+    nodeType: currentNode?.nodeType,
     errorMsg: msg,
     childErrList: currentNode?.childErrList || [],
   };
@@ -627,7 +631,7 @@ function validateOutgoingEdges({
   errNodes,
   cycleEdges,
   dfs,
-}): void {
+}): void | boolean {
   if (outgoingEdges?.length === 0) {
     addErrNode({
       errNodes,
@@ -641,8 +645,6 @@ function validateOutgoingEdges({
     const targetNode = nodes.find(node => node.id === edge.target);
     if (!targetNode) return false;
     if (!targetNode.data.label.trim()) return false;
-    console.log('targetNode', targetNode);
-    console.log('recStack', recStack);
     if (recStack.has(targetNode.id)) {
       cycleEdges.push(edge);
       addErrNode({
@@ -674,8 +676,10 @@ function checkIteratorNode({ iteratorId, outerErrNodes, get }): void {
     edge => nodeIds?.includes(edge?.source) || nodeIds?.includes(edge?.target)
   );
 
-  const startNode = nodes.find(node => node.nodeType === 'node-start');
-  const endNode = nodes.find(node => node.nodeType === 'node-end');
+  const startNode = nodes.find(
+    node => node.nodeType === 'iteration-node-start'
+  );
+  const endNode = nodes.find(node => node.nodeType === 'iteration-node-end');
 
   const visitedNodes = new Set();
   const errNodes: unknown = [];
@@ -796,13 +800,11 @@ export function checkFlow(get): boolean {
     validateNodeBase({ currentCheckNode, variableNodes, checkNode, errNodes });
 
     if (currentCheckNode?.nodeType === 'iteration') {
-      checkIteratorNode(
-        {
-          iteratorId: currentCheckNode.id,
-          outerErrNodes: errNodes,
-        },
-        get
-      );
+      checkIteratorNode({
+        iteratorId: currentCheckNode.id,
+        outerErrNodes: errNodes,
+        get,
+      });
     }
 
     if (nodeId === endNode.id) {

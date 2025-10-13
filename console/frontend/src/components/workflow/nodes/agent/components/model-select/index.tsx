@@ -1,10 +1,10 @@
 import React, { memo } from 'react';
 import { Tooltip } from 'antd';
 import { FlowSelect } from '@/components/workflow/ui';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import useUserStore from '@/store/user-store';
 import { useTranslation } from 'react-i18next';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 
 function index({ id, data }): React.ReactElement {
   const { handleChangeNodeParam, nodeParam, models } = useNodeCommon({
@@ -50,28 +50,7 @@ function index({ id, data }): React.ReactElement {
               }, currentModel);
             }}
             dropdownRender={menu => (
-              <div
-                className="overscroll-contain"
-                onWheel={e => e.stopPropagation()}
-              >
-                {menu}
-                <div
-                  className="text-[#275EFF] text-center text-xs cursor-pointer"
-                  onClick={e => {
-                    e.stopPropagation();
-                    window.open(
-                      'https://training.xfyun.cn/modelSquare',
-                      '_blank'
-                    );
-                  }}
-                  style={{
-                    height: '30px',
-                    lineHeight: '30px',
-                  }}
-                >
-                  {t('workflow.nodes.modelSelect.selectMoreModels')}
-                </div>
-              </div>
+              <div className="overscroll-contain">{menu}</div>
             )}
           >
             {models.map(model => (

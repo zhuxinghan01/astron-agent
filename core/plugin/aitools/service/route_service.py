@@ -13,10 +13,6 @@ import time
 import uuid
 from typing import Any, Union
 
-from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
-from common.otlp.metrics.meter import Meter
-from common.otlp.trace.span import Span
-from common.service import get_kafka_producer_service
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
 from plugin.aitools.common.sid_generator2 import new_sid
 from plugin.aitools.const.err_code.code import CodeEnum
@@ -26,6 +22,11 @@ from plugin.aitools.service.image_understanding.image_understanding_client impor
 from plugin.aitools.service.translation.translation_client import (
     TranslationClient,
 )
+
+from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
+from common.otlp.metrics.meter import Meter
+from common.otlp.trace.span import Span
+from common.service import get_kafka_producer_service
 
 
 # 图片理解 - 开放平台
@@ -92,7 +93,7 @@ def image_understanding_main(
 
                     return response
                 else:
-                    response = ErrorResponse(CodeEnum.UNAUTHORIZED_ERROR)
+                    response = ErrorResponse.from_enum(CodeEnum.UNAUTHORIZED_ERROR)
                     m.in_error_count(response.code)
 
                     node_trace.answer = response.message
@@ -113,7 +114,7 @@ def image_understanding_main(
             return response
     except Exception as e:
         logging.error("图片理解请求error: %s", str(e))
-        response = ErrorResponse(CodeEnum.INTERNAL_ERROR)
+        response = ErrorResponse.from_enum(CodeEnum.INTERNAL_ERROR)
         m.in_error_count(response.code)
 
         node_trace.answer = response.message
@@ -208,7 +209,7 @@ async def ise_evaluate_main(
                 )
                 kafka_service.send("spark-agent-builder", node_trace.to_json())
 
-                return ErrorResponse(
+                return ErrorResponse.from_enum(
                     code_enum=CodeEnum.INTERNAL_ERROR,
                     message=f"ISE评测失败: {message}",
                     sid=sid,
@@ -222,7 +223,7 @@ async def ise_evaluate_main(
         node_trace.status = Status(code=CodeEnum.INTERNAL_ERROR.code, message=str(e))
         kafka_service.send("spark-agent-builder", node_trace.to_json())
 
-        return ErrorResponse(
+        return ErrorResponse.from_enum(
             code_enum=CodeEnum.INTERNAL_ERROR, message=f"ISE评测异常: {str(e)}", sid=sid
         )
 
@@ -305,7 +306,7 @@ def translation_main(
                     error_code = CodeEnum.TRANSLATION_API_ERROR
 
                 m.in_error_count(error_code.code)
-                return ErrorResponse(
+                return ErrorResponse.from_enum(
                     code_enum=error_code,
                     message=f"Translation failed: {message}",
                     sid=sid,
@@ -314,7 +315,7 @@ def translation_main(
     except Exception as e:
         logging.error("Translation service error: %s", str(e))
         m.in_error_count(CodeEnum.INTERNAL_ERROR.code)
-        return ErrorResponse(
+        return ErrorResponse.from_enum(
             code_enum=CodeEnum.INTERNAL_ERROR,
             message=f"Translation service error: {str(e)}",
             sid=sid,

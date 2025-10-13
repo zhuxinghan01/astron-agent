@@ -15,7 +15,7 @@ import {
   FlowUpload,
   FlowInputNumber,
 } from '@/components/workflow/ui';
-import { useFlowTypeRender } from '@/components/workflow/hooks/useFlowTypeRender';
+import { useFlowTypeRender } from '@/components/workflow/hooks/use-flow-type-render';
 import {
   SourceHandle,
   TargetHandle,
@@ -23,9 +23,9 @@ import {
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
 import { Dropdown } from 'antd';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import { Iterator } from '@/components/workflow/nodes/iterator';
 import { IfElse } from '@/components/workflow/nodes/if-else';
 import { DecisionMaking } from '@/components/workflow/nodes/decision-making';
@@ -364,16 +364,21 @@ interface IteratorChildNodeProps {
 // 迭代器子节点组件
 export const IteratorChildNode = memo<IteratorChildNodeProps>(
   ({ id, data }) => {
-    const { isConnectable } = useNodeCommon({ id, data });
+    const { isConnectable, hasTargetHandle, hasSourceHandle } = useNodeCommon({
+      id,
+      data,
+    });
     return (
       <div className="px-4 py-2 iterator-child-node">
         <span>{data?.label}</span>
-        <TargetHandle isConnectable={isConnectable} />
-        <SourceHandle
-          nodeId={id}
-          isConnectable={isConnectable}
-          id={data?.nodeParam?.handlingEdge}
-        />
+        {hasTargetHandle && <TargetHandle isConnectable={isConnectable} />}
+        {hasSourceHandle && (
+          <SourceHandle
+            nodeId={id}
+            isConnectable={isConnectable}
+            id={data?.nodeParam?.handlingEdge}
+          />
+        )}
       </div>
     );
   }

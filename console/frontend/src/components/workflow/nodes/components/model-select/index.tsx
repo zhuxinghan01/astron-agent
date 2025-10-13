@@ -5,7 +5,7 @@ import { Tooltip } from 'antd';
 import { v4 as uuid } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import { FlowSelect } from '@/components/workflow/ui';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import ModelParams from '../model-params';
 import useUserStore from '@/store/user-store';
 import {
@@ -17,7 +17,7 @@ import {
   generateOrUpdateObject,
 } from '@/components/workflow/utils/reactflowUtils';
 import { isJSON } from '@/utils';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import dayjs from 'dayjs';
 
 import debuggerIcon from '@/assets/imgs/workflow/debugger-icon.png';
@@ -140,6 +140,9 @@ const useModelSelect = (
   const { t } = useTranslation();
   const user = useUserStore(state => state.user);
   const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const autoSaveCurrentFlow = useFlowsManager(
+    state => state.autoSaveCurrentFlow
+  );
   const updateNodeRef = currentStore(state => state.updateNodeRef);
   const setNode = currentStore(state => state.setNode);
   const handleResetModelParams = useMemoizedFn(currentSelectModel => {
@@ -164,6 +167,7 @@ const useModelSelect = (
             ...cloneDeep(old),
           };
         });
+        autoSaveCurrentFlow();
       });
     } else {
       getModelConfigDetail(
@@ -196,6 +200,7 @@ const useModelSelect = (
             ...cloneDeep(old),
           };
         });
+        autoSaveCurrentFlow();
       });
     }
   });

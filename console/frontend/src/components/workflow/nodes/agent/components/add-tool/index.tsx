@@ -17,7 +17,7 @@ import { debounce, throttle } from 'lodash';
 import dayjs from 'dayjs';
 import { isJSON } from '@/utils';
 import { capitalizeFirstLetter } from '@/components/workflow/utils/reactflowUtils';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import DeletePlugin from '@/components/workflow/modal/add-plugin/delete-plugin';
 import {
   CreateTool,
@@ -517,12 +517,12 @@ const ListItem = ({
               style={{
                 background: item?.avatarColor
                   ? item?.avatarColor
-                  : `url(${item?.address + item?.icon}) no-repeat center / cover`,
+                  : `url(${item?.icon}) no-repeat center / cover`,
               }}
             >
               {item?.avatarColor && (
                 <img
-                  src={item?.address + item?.icon}
+                  src={item?.icon || ''}
                   className="w-[28px] h-[28px]"
                   alt=""
                 />
@@ -804,6 +804,7 @@ const OperationContent = ({
   botColor,
   setBotColor,
   currentTab,
+  setOperate,
 }): React.ReactElement => {
   return (
     <>
@@ -832,6 +833,7 @@ const OperationContent = ({
             <ToolDetail
               currentToolInfo={currentToolInfo}
               handleClearData={handleClearData}
+              handleToolDebugger={() => setOperate('test')}
             />
           )}
           {operate === 'mcpDetail' && (
@@ -1035,6 +1037,7 @@ function AddTools({
                 botColor={botColor}
                 setBotColor={setBotColor}
                 currentTab={currentTab}
+                setOperate={setOperate}
               />
             </div>
           </div>
