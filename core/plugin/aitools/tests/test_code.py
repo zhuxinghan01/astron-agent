@@ -1,24 +1,25 @@
 """Unit tests for error code definition module."""
 
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import pytest
+import sys
+
 from const.err_code.code import CodeEnum
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestCodeEnum:
     """Test cases for CodeEnum class."""
 
-    def test_code_enum_has_required_attributes(self):
+    def test_code_enum_has_required_attributes(self) -> None:
         """Test that CodeEnum entries have code and msg properties."""
         for code_enum in CodeEnum:
-            assert hasattr(code_enum, 'code')
-            assert hasattr(code_enum, 'msg')
+            assert hasattr(code_enum, "code")
+            assert hasattr(code_enum, "msg")
             assert isinstance(code_enum.code, int)
             assert isinstance(code_enum.msg, str)
 
-    def test_ocr_error_codes(self):
+    def test_ocr_error_codes(self) -> None:
         """Test OCR-related error codes."""
         assert CodeEnum.OCR_FILE_HANDLING_ERROR.code == 45000
         assert CodeEnum.OCR_FILE_HANDLING_ERROR.msg == "OCR文件处理失败"
@@ -35,12 +36,12 @@ class TestCodeEnum:
         assert CodeEnum.OCR_UNKNOWN_FILE_ERROR.code == 45203
         assert CodeEnum.OCR_UNKNOWN_FILE_ERROR.msg == "未知的文件类型"
 
-    def test_qwen_vl_error_codes(self):
+    def test_qwen_vl_error_codes(self) -> None:
         """Test QWEN VL-related error codes."""
         assert CodeEnum.QWEN_VL_72B_INSTRUCT_ERROR.code == 45050
         assert CodeEnum.QWEN_VL_72B_INSTRUCT_ERROR.msg == "QWEN_VL_72B_INSTRUCT处理失败"
 
-    def test_image_generate_error_codes(self):
+    def test_image_generate_error_codes(self) -> None:
         """Test image generation error codes."""
         assert CodeEnum.IMAGE_GENERATE_ERROR.code == 45100
         assert CodeEnum.IMAGE_GENERATE_ERROR.msg == "图片生成失败"
@@ -64,32 +65,49 @@ class TestCodeEnum:
         assert CodeEnum.IMAGE_GENERATE_INPUT_AUDIT_ERROR.msg == "输入审核不通过"
 
         assert CodeEnum.IMAGE_GENERATE_IMAGE_SENSITIVENESS_ERROR.code == 45108
-        assert CodeEnum.IMAGE_GENERATE_IMAGE_SENSITIVENESS_ERROR.msg == "模型生产的图片涉及敏感信息，审核不通过"
+        assert (
+            CodeEnum.IMAGE_GENERATE_IMAGE_SENSITIVENESS_ERROR.msg
+            == "模型生产的图片涉及敏感信息，审核不通过"
+        )
 
         assert CodeEnum.IMAGE_GENERATE_IMAGE_TIMEOUT_ERROR.code == 45109
         assert CodeEnum.IMAGE_GENERATE_IMAGE_TIMEOUT_ERROR.msg == "文生图超时"
 
-    def test_textin_ocr_error_codes(self):
+    def test_textin_ocr_error_codes(self) -> None:
         """Test TEXTIN OCR error codes."""
         assert CodeEnum.TEXTIN_OCR_REQUESTURL_ERROR.code == 45150
-        assert CodeEnum.TEXTIN_OCR_REQUESTURL_ERROR.msg == "TEXTIN_OCR_RequestURL处理失败"
+        assert (
+            CodeEnum.TEXTIN_OCR_REQUESTURL_ERROR.msg == "TEXTIN_OCR_RequestURL处理失败"
+        )
 
         assert CodeEnum.TEXTIN_OCR_ERROR.code == 45151
         assert CodeEnum.TEXTIN_OCR_ERROR.msg == "TEXTIN_OCR_Request处理OCR识别失败"
 
         assert CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_ERROR.code == 45152
-        assert CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_ERROR.msg == "TEXTIN_OCR_ENTITY_EXTRACTION 处理OCR识别失败"
+        assert (
+            CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_ERROR.msg
+            == "TEXTIN_OCR_ENTITY_EXTRACTION 处理OCR识别失败"
+        )
 
         assert CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_PARAMS_ERROR.code == 45153
-        assert CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_PARAMS_ERROR.msg == "TEXTIN_OCR_ENTITY_EXTRACTION 用户参数值有错误"
+        assert (
+            CodeEnum.TEXTIN_OCR_ENTITY_EXTRACTION_PARAMS_ERROR.msg
+            == "TEXTIN_OCR_ENTITY_EXTRACTION 用户参数值有错误"
+        )
 
         assert CodeEnum.TEXTIN_OCR_UNSUPPORTED_FILE_TYPE_ERROR.code == 45154
-        assert CodeEnum.TEXTIN_OCR_UNSUPPORTED_FILE_TYPE_ERROR.msg == "传入文件类型错误，支持pdf和图片文件"
+        assert (
+            CodeEnum.TEXTIN_OCR_UNSUPPORTED_FILE_TYPE_ERROR.msg
+            == "传入文件类型错误，支持pdf和图片文件"
+        )
 
         assert CodeEnum.TEXTIN_OCR_INSUFFICIENT_BALANCE_ERROR.code == 45155
-        assert CodeEnum.TEXTIN_OCR_INSUFFICIENT_BALANCE_ERROR.msg == "合合接口余额不足，请充值后使用"
+        assert (
+            CodeEnum.TEXTIN_OCR_INSUFFICIENT_BALANCE_ERROR.msg
+            == "合合接口余额不足，请充值后使用"
+        )
 
-    def test_tts_and_voice_error_codes(self):
+    def test_tts_and_voice_error_codes(self) -> None:
         """Test TTS and voice-related error codes."""
         assert CodeEnum.OSS_STORAGE_ERROR.code == 45160
         assert CodeEnum.OSS_STORAGE_ERROR.msg == "OSS存储失败"
@@ -104,10 +122,15 @@ class TestCodeEnum:
         assert CodeEnum.TRAIN_ERROR.msg == "一句话复刻API训练失败"
 
         assert CodeEnum.AUDIO_URLS_ERROR.code == 46003
-        assert CodeEnum.AUDIO_URLS_ERROR.msg == "用户上传的音频识别失败,请检查录音文件URL"
+        assert (
+            CodeEnum.AUDIO_URLS_ERROR.msg == "用户上传的音频识别失败,请检查录音文件URL"
+        )
 
         assert CodeEnum.UNAUTHORIZED_ERROR.code == 46004
-        assert CodeEnum.UNAUTHORIZED_ERROR.msg == "鉴权失败,请联系系统人员检查appid授权信息"
+        assert (
+            CodeEnum.UNAUTHORIZED_ERROR.msg
+            == "鉴权失败,请联系系统人员检查appid授权信息"
+        )
 
         assert CodeEnum.ARXIV_SEARCH_ERROR.code == 46005
         assert CodeEnum.ARXIV_SEARCH_ERROR.msg == "论文搜索失败"
@@ -115,12 +138,12 @@ class TestCodeEnum:
         assert CodeEnum.WEB_SEARCH_ERROR.code == 46006
         assert CodeEnum.WEB_SEARCH_ERROR.msg == "博查websearch搜索失败"
 
-    def test_internal_error_code(self):
+    def test_internal_error_code(self) -> None:
         """Test internal error code."""
         assert CodeEnum.INTERNAL_ERROR.code == 46020
         assert CodeEnum.INTERNAL_ERROR.msg == "服务内部报错"
 
-    def test_excel_error_codes(self):
+    def test_excel_error_codes(self) -> None:
         """Test Excel-related error codes."""
         assert CodeEnum.EXCEL_READ_ERROR.code == 46100
         assert CodeEnum.EXCEL_READ_ERROR.msg == "excel读取失败"
@@ -131,7 +154,7 @@ class TestCodeEnum:
         assert CodeEnum.EXCEL_WRITE_ERROR.code == 46102
         assert CodeEnum.EXCEL_WRITE_ERROR.msg == "excel写入失败"
 
-    def test_echart_error_codes(self):
+    def test_echart_error_codes(self) -> None:
         """Test EChart-related error codes."""
         assert CodeEnum.ECHART_GENERATE_ERROR.code == 46200
         assert CodeEnum.ECHART_GENERATE_ERROR.msg == "echart生成失败"
@@ -154,7 +177,7 @@ class TestCodeEnum:
         assert CodeEnum.ECHART_PIE_GENERATE_ERROR.code == 46207
         assert CodeEnum.ECHART_PIE_GENERATE_ERROR.msg == "echart饼图生成失败"
 
-    def test_database_error_codes(self):
+    def test_database_error_codes(self) -> None:
         """Test database-related error codes."""
         assert CodeEnum.DATABASE_UNSUPPORTED_ERROR.code == 46300
         assert CodeEnum.DATABASE_UNSUPPORTED_ERROR.msg == "不支持的数据库类型"
@@ -171,7 +194,7 @@ class TestCodeEnum:
         assert CodeEnum.DATABASE_SQL_EXECUTE_ERROR.code == 46304
         assert CodeEnum.DATABASE_SQL_EXECUTE_ERROR.msg == "SQL执行失败"
 
-    def test_panshi_error_codes(self):
+    def test_panshi_error_codes(self) -> None:
         """Test Panshi-related error codes."""
         assert CodeEnum.PANSHI_EXCEL_ERROR.code == 46400
         assert CodeEnum.PANSHI_EXCEL_ERROR.msg == "磐石excel调用失败"
@@ -188,7 +211,7 @@ class TestCodeEnum:
         assert CodeEnum.PANSHI_AUTH_ERROR.code == 46404
         assert CodeEnum.PANSHI_AUTH_ERROR.msg == "磐石获取授权令牌失败"
 
-    def test_amap_error_codes(self):
+    def test_amap_error_codes(self) -> None:
         """Test AMAP (高德地图) error codes."""
         assert CodeEnum.AMAP_API_REQUEST_ERROR.code == 46500
         assert CodeEnum.AMAP_API_REQUEST_ERROR.msg == "高德地图API调用请求失败"
@@ -199,37 +222,37 @@ class TestCodeEnum:
         assert CodeEnum.AMAP_API_PLAN_ROUTE_ERROR.code == 46502
         assert CodeEnum.AMAP_API_PLAN_ROUTE_ERROR.msg == "高德地图出行路线规划失败"
 
-    def test_weather_error_codes(self):
+    def test_weather_error_codes(self) -> None:
         """Test weather-related error codes."""
         assert CodeEnum.WEATHER_API_REQUEST_ERROR.code == 46600
         assert CodeEnum.WEATHER_API_REQUEST_ERROR.msg == "30天天气API调用请求失败"
 
-    def test_scenery_error_codes(self):
+    def test_scenery_error_codes(self) -> None:
         """Test scenery-related error codes."""
         assert CodeEnum.SCENERY_API_REQUEST_ERROR.code == 46700
         assert CodeEnum.SCENERY_API_REQUEST_ERROR.msg == "景点列表API请求调用失败"
 
-    def test_image_understanding_error_codes(self):
+    def test_image_understanding_error_codes(self) -> None:
         """Test image understanding error codes."""
         assert CodeEnum.IMAGE_UNDERSTANDING_ERROR.code == 46800
         assert CodeEnum.IMAGE_UNDERSTANDING_ERROR.msg == "请求图片地址失败"
 
-    def test_ixf_doc_error_codes(self):
+    def test_ixf_doc_error_codes(self) -> None:
         """Test IXF document error codes."""
         assert CodeEnum.IXF_DOC_ERROR.code == 46900
         assert CodeEnum.IXF_DOC_ERROR.msg == "i讯飞文档文件挂载失败"
 
-    def test_aiui_weather_error_codes(self):
+    def test_aiui_weather_error_codes(self) -> None:
         """Test AIUI weather error codes."""
         assert CodeEnum.AIUI_WEATHER_ERROR.code == 47000
         assert CodeEnum.AIUI_WEATHER_ERROR.msg == "天气查询失败"
 
-    def test_code_uniqueness(self):
+    def test_code_uniqueness(self) -> None:
         """Test that all error codes are unique."""
         codes = [enum_item.code for enum_item in CodeEnum]
         assert len(codes) == len(set(codes)), "Found duplicate error codes"
 
-    def test_code_range_validation(self):
+    def test_code_range_validation(self) -> None:
         """Test that error codes are in expected ranges."""
         for code_enum in CodeEnum:
             # All codes should be positive integers
@@ -237,13 +260,13 @@ class TestCodeEnum:
             # All codes should be in the 45000-47000 range based on the current definitions
             assert 45000 <= code_enum.code <= 47000
 
-    def test_message_not_empty(self):
+    def test_message_not_empty(self) -> None:
         """Test that all error messages are not empty."""
         for code_enum in CodeEnum:
             assert code_enum.msg
             assert len(code_enum.msg.strip()) > 0
 
-    def test_enum_iteration(self):
+    def test_enum_iteration(self) -> None:
         """Test that enum can be iterated properly."""
         codes = []
         messages = []
@@ -264,7 +287,7 @@ class TestCodeEnum:
         for msg in messages:
             assert isinstance(msg, str)
 
-    def test_enum_value_access(self):
+    def test_enum_value_access(self) -> None:
         """Test accessing enum values directly."""
         # Test accessing the tuple value directly
         ocr_error = CodeEnum.OCR_FILE_HANDLING_ERROR
@@ -274,7 +297,7 @@ class TestCodeEnum:
         assert ocr_error.value[0] == ocr_error.code
         assert ocr_error.value[1] == ocr_error.msg
 
-    def test_enum_comparison(self):
+    def test_enum_comparison(self) -> None:
         """Test enum comparison operations."""
         error1 = CodeEnum.OCR_FILE_HANDLING_ERROR
         error2 = CodeEnum.OCR_FILE_HANDLING_ERROR
@@ -288,17 +311,17 @@ class TestCodeEnum:
         assert error1 != error3
         assert error1 is not error3
 
-    def test_enum_hash(self):
+    def test_enum_hash(self) -> None:
         """Test that enum values can be used as dictionary keys."""
         error_dict = {
             CodeEnum.OCR_FILE_HANDLING_ERROR: "OCR Error Handler",
-            CodeEnum.IMAGE_GENERATE_ERROR: "Image Error Handler"
+            CodeEnum.IMAGE_GENERATE_ERROR: "Image Error Handler",
         }
 
         assert error_dict[CodeEnum.OCR_FILE_HANDLING_ERROR] == "OCR Error Handler"
         assert error_dict[CodeEnum.IMAGE_GENERATE_ERROR] == "Image Error Handler"
 
-    def test_enum_string_representation(self):
+    def test_enum_string_representation(self) -> None:
         """Test string representation of enum values."""
         error = CodeEnum.OCR_FILE_HANDLING_ERROR
 
@@ -311,7 +334,7 @@ class TestCodeEnum:
         assert "CodeEnum" in repr_str
         assert "OCR_FILE_HANDLING_ERROR" in repr_str
 
-    def test_code_categorization(self):
+    def test_code_categorization(self) -> None:
         """Test that error codes are properly categorized by ranges."""
         ocr_codes = []
         image_codes = []
