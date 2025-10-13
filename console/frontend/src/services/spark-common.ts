@@ -54,7 +54,7 @@ export interface ModelListData {
   isCustom: boolean;
   modelDomain: string;
   modelName: string;
-  modeId: string;
+  modelId: string;
   modelIcon: string;
 }
 // 获取模型列表
@@ -359,7 +359,7 @@ export const quickCreateBot = (str: string) => {
 
 // 模板创建
 export const createFromTemplate = (params: any) => {
-  return http.post(`/u/bot/mass/createFromTemplate`, params);
+  return http.post(`/workflow/bot/createFromTemplate`, params);
 };
 
 // 获取星辰模版
@@ -467,12 +467,25 @@ export const deletePrompt = (params: any) => {
 // export const getInter = (params: any): Promise<any> => {
 //   return http.post(`/llm/inter1?id=${params.id}&llmSource=${params.llmSource}`);
 // };
-//获取分析页数据
+//获取分析页数据 -- unused
 export const getAnalysisData = (params: any) => {
   return http.get(
     `/dashboard/details?botId=${params.botId}&overviewDays=${params.overviewDays}&channelDays=${params.channelDays}`
   );
 };
+
+/** 获取分析页数据01  */
+export const getAnalysisData01 = (params: any) => {
+  return http.get(
+    `/publish/bots/${params.botId}/timeseries?days=${params.overviewDays}`
+  );
+};
+
+/** 获取分析页数据02  */
+export const getAnalysisData02 = (params: any) => {
+  return http.get(`/publish/bots/${params.botId}/summary`);
+};
+
 // prompt详情
 export const promptDetail = (params: any) => {
   return http({
@@ -522,7 +535,7 @@ export const promptBack = (params: any) => {
 /** ## 工作流发布版本列表 */
 export const getVersionList = (params: any) => {
   return http.get(
-    `/workflow/version/list_botId?botId=${params.botId}&size=${params.size}&current=${params.current}`
+    `/publish/bots/${params.botId}/versions?size=${params.size}&page=${params.current}`
   );
 };
 
