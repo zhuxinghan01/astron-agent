@@ -10,6 +10,7 @@ import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
 import com.iflytek.astron.console.toolkit.config.properties.CommonConfig;
 import com.iflytek.astron.console.toolkit.tool.OpenPlatformTool;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
+import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -53,12 +54,12 @@ class OpenPlatformServiceTest {
     void syncWorkflowClone_shouldBuildDto_andDelegate() {
         ArgumentCaptor<CloneSynchronize> cap =
                 ArgumentCaptor.forClass(CloneSynchronize.class);
-        when(botMassService.massCopySynchronize(any())).thenReturn(123);
+        when(botMassService.maasCopySynchronize(any())).thenReturn(123);
 
         Integer ret = service.syncWorkflowClone("u1", 11L, 22L, "F-1", 33L);
 
         assertThat(ret).isEqualTo(123);
-        verify(botMassService).massCopySynchronize(cap.capture());
+        verify(botMassService).maasCopySynchronize(cap.capture());
         var dto = cap.getValue();
         assertThat(dto.getUid()).isEqualTo("u1");
         assertThat(dto.getOriginId()).isEqualTo(11L);
@@ -70,7 +71,7 @@ class OpenPlatformServiceTest {
     @Test
     @DisplayName("syncWorkflowClone - exception from downstream should propagate outward")
     void syncWorkflowClone_shouldPropagateException() {
-        when(botMassService.massCopySynchronize(any()))
+        when(botMassService.maasCopySynchronize(any()))
                 .thenThrow(new RuntimeException("down"));
 
         assertThatThrownBy(() -> service.syncWorkflowClone("u", 1L, 2L, "F", 3L))
