@@ -179,10 +179,17 @@ public class DBExcelReadListener extends AnalysisEventListener<Map<Integer, Stri
 
     private Boolean parseBoolean(String s) {
         String x = s.trim().toLowerCase(Locale.ROOT);
-        if (x.equals("1") || x.equals("true") || x.equals("t") || x.equals("yes") || x.equals("y"))
+
+        // Support various true values (case-insensitive)
+        if (x.equals("true")) {
             return Boolean.TRUE;
-        if (x.equals("0") || x.equals("false") || x.equals("f") || x.equals("no") || x.equals("n"))
+        }
+
+        // Support various false values (case-insensitive)
+        if (x.equals("false")) {
             return Boolean.FALSE;
-        throw new IllegalArgumentException("Unable to parse boolean value: " + s);
+        }
+
+        throw new IllegalArgumentException("Unable to parse boolean value: '" + s);
     }
 }
