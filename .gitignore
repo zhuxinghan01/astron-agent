@@ -83,6 +83,9 @@ tmp/
 # Claude Code (user-specific)
 .claude/
 
+# Serena MCP cache
+.serena/
+
 # =============================================================================
 # Operating Systems
 # =============================================================================
@@ -114,6 +117,7 @@ ehthumbs.db
 
 !console/frontend/.env.production
 !console/frontend/.env.development
+!console/frontend/.env.test
 
 # Logs
 *.log
@@ -174,3 +178,9 @@ core/.serena/project.yml
 
 # local ci
 .localci.toml
+
+# =============================================================================
+# cache
+# =============================================================================
+.mypy_cache
+.pytest_cache

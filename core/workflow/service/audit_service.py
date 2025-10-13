@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable
 
 from workflow.cache import event_registry
 from workflow.cache.event_registry import Event, EventRegistry
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.callbacks.openai_types_sse import LLMGenerate, WorkflowStep
 from workflow.exception.e import CustomException, CustomExceptionCM
 from workflow.exception.errors.err_code import CodeEnum
@@ -47,7 +48,8 @@ def parse_frame_audit(response: LLMGenerate) -> OutputFrameAudit:
         if (
             response.workflow_step
             and response.workflow_step.node
-            and response.workflow_step.node.finish_reason == "stop"
+            and response.workflow_step.node.finish_reason
+            == ChatStatus.FINISH_REASON.value
         ):
             none_need_audit = True
     return OutputFrameAudit(
@@ -92,7 +94,8 @@ async def response_resume_audit(
     event: Event, audit_strategy: AuditStrategy, span: Span
 ) -> None:
     """
-    Process LLMGenerate objects from interrupted response queue and submit them for audit.
+    Process LLMGenerate objects from interrupted response queue and submit them
+    for audit.
 
     :param event: Event object containing workflow queue information
     :param audit_strategy: Audit strategy to use for processing
@@ -121,7 +124,8 @@ async def _common_response_audit(
     initial_index: int = 0,
 ) -> None:
     """
-    Common handler for processing LLMGenerate objects from response queue and submitting for audit.
+    Common handler for processing LLMGenerate objects from response queue
+    and submitting for audit.
 
     :param fetch_fn: Function to fetch LLMGenerate objects from the queue
     :param audit_strategy: Audit strategy to use for processing

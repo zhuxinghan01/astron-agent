@@ -2,8 +2,8 @@ package com.iflytek.astron.console.hub.controller.user;
 
 import com.iflytek.astron.console.commons.annotation.space.SpacePreAuth;
 import com.iflytek.astron.console.commons.dto.bot.BotModelDto;
-import com.iflytek.astron.console.commons.entity.bot.BotDetail;
-import com.iflytek.astron.console.commons.entity.bot.PromptBotDetail;
+import com.iflytek.astron.console.commons.dto.bot.BotDetail;
+import com.iflytek.astron.console.commons.dto.bot.PromptBotDetail;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
@@ -71,8 +71,7 @@ public class MyBotController {
     /**
      * Get bot detail information
      */
-    // todo 此处需要打开注解,为了方便测试暂时关闭
-    // @SpacePreAuth(key = "ChatBotController_botDetail_POST")
+    @SpacePreAuth(key = "ChatBotController_botDetail_POST")
     @PostMapping("/bot-detail")
     @Operation(summary = "Get bot detail information")
     public ApiResult<BotDetail> getBotDetail(HttpServletRequest request, @RequestParam("botId") Integer botId) {

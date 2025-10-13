@@ -1,4 +1,5 @@
 import asyncio
+import json
 import multiprocessing
 import traceback
 import warnings
@@ -13,6 +14,7 @@ from RestrictedPython import (
 )
 from RestrictedPython.Eval import default_guarded_getattr  # type: ignore
 from RestrictedPython.Eval import default_guarded_getitem
+
 from workflow.engine.nodes.code.executor.base_executor import BaseExecutor
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -139,5 +141,6 @@ class LocalExecutor(BaseExecutor):
             "map": map,
             "type": type,
             "sum": sum,
+            "json": json,
         }
         return restricted_globals

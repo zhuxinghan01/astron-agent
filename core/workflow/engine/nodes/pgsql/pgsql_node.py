@@ -1,6 +1,9 @@
 import json
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from workflow.consts.database import DBMode, ExecuteEnv
 from workflow.engine.entities.variable_pool import ParamKey, VariablePool
@@ -26,6 +29,44 @@ ZERO = {
 }
 
 
+class Condition(BaseModel):
+    # Column/field name used in WHERE clause
+    fieldName: str = Field(min_length=1)
+    # Variable index placeholder, e.g. ${varIndex}
+    varIndex: str = Field(min_length=1)
+    # SQL comparison operator
+    selectCondition: Literal[
+        "=",
+        "!=",
+        "like",
+        "not like",
+        "in",
+        "not in",
+        "null",
+        "not null",
+        "<",
+        "<=",
+        ">",
+        ">=",
+    ]
+    # Optional data type hint for the field
+    fieldType: str = ""
+
+
+class Case(BaseModel):
+    # Logical operator that combines multiple conditions
+    logicalOperator: Literal["and", "or"]
+    # List of individual WHERE conditions
+    conditions: List[Condition]
+
+
+class OrderItem(BaseModel):
+    # Column name used in ORDER BY clause
+    fieldName: str = Field(min_length=1)
+    # Sort direction: ascending or descending
+    order: Literal["asc", "desc"]
+
+
 class PGSqlNode(BaseNode):
     """PostgreSQL database operation node for workflow execution.
 
@@ -33,41 +74,72 @@ class PGSqlNode(BaseNode):
     SELECT, DELETE, and custom SQL execution through the PostgreSQL service.
     """
 
-    # Node configuration attributes
-    appId: str  # Application identifier for authentication
-    apiKey: str  # API key for service authentication
-    uid: str  # User identifier for the operation
-    dbId: int  # Database identifier
-    tableName: Optional[str] = ""  # Target table name for operations
-    spaceId: Union[int, str] = ""  # Workspace or space identifier
-    sql: Optional[str] = ""  # Custom SQL statement for CUSTOM mode
-    mode: int  # Operation mode (ADD, UPDATE, SEARCH, DELETE, CUSTOM)
-    cases: Optional[list[dict[str, Any]]] = []  # Query conditions for WHERE clauses
-    assignmentList: Optional[list[str]] = (
-        []
-    )  # Column names for SELECT/UPDATE operations
-    orderData: Optional[list[dict]] = []  # ORDER BY clause configuration
-    limit: Optional[int] = 0  # LIMIT clause value
+    # --- authentication & basic settings ---
+    appId: str = Field(min_length=1, max_length=10)  # App identifier for API auth
+    apiKey: str = Field(min_length=1)  # API key for service auth
+    uid: str = Field(max_length=64, pattern=r"^[0-9a-zA-Z]+")  # User identifier
+    dbId: int  # Target database ID
+    mode: Literal[0, 1, 2, 3, 4]  # 0=CUSTOM,1=ADD,2=UPDATE,3=SEARCH,4=DELETE
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """Get the current node configuration as a dictionary.
+    # --- optional SQL building blocks ---
+    tableName: str | None = None  # Table name (required except for CUSTOM)
+    spaceId: int | str | None = None  # Workspace/space identifier
+    sql: str | None = Field(default=None, min_length=1)  # Raw SQL for CUSTOM mode
+    cases: List[Case] = Field(default_factory=list)  # WHERE conditions
+    assignmentList: List[str] = Field(default_factory=list)  # Columns for SELECT/UPDATE
+    orderData: List[OrderItem] = Field(default_factory=list)  # ORDER BY configuration
+    limit: int = Field(default=0, ge=0)  # LIMIT clause for SELECT
 
-        :return: Dictionary containing all node configuration parameters
+    # --- conditional validation ---
+    @field_validator("sql", mode="after")
+    def _check_custom_sql(cls, v: str | None, info: ValidationInfo) -> str | None:
         """
-        return {
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "uid": self.uid,
-            "dbId": self.dbId,
-            "tableName": self.tableName,
-            "spaceId": str(self.spaceId),
-            "sql": self.sql,
-            "mode": self.mode,
-            "cases": self.cases,
-            "assignment_list": self.assignmentList,
-            "orderData": self.orderData,
-            "limit": self.limit,
-        }
+        Check if the SQL is valid for CUSTOM mode.
+
+        :param v: SQL string
+        :param info: ValidationInfo
+        :return: SQL string
+        :raises ValueError: If the SQL is invalid
+        """
+        if info.data.get("mode") == 0 and (v is None or v.strip() == ""):
+            raise ValueError(
+                "When mode=0 (CUSTOM), sql is required and must not be empty."
+            )
+        return v
+
+    @field_validator("tableName", mode="after")
+    def _check_table_name(cls, v: str | None, info: ValidationInfo) -> str | None:
+        """
+        Check if the table name is valid for the given mode.
+
+        :param v: Table name string
+        :param info: ValidationInfo
+        :return: Table name string
+        :raises ValueError: If the table name is invalid
+        """
+        mode = info.data.get("mode")
+        if mode in (1, 2, 3, 4) and (v is None or v.strip() == ""):
+            raise ValueError(f"When mode={mode}, tableName is required.")
+        return v
+
+    @field_validator("cases", mode="after")
+    def _check_cases_for_update_delete(
+        cls, v: List[Case], info: ValidationInfo
+    ) -> List[Case]:
+        """
+        Check if the cases are valid for the given mode.
+
+        :param v: Cases list
+        :param info: ValidationInfo
+        :return: Cases list
+        :raises ValueError: If the cases are invalid
+        """
+        mode = info.data.get("mode")
+        if mode in (2, 4) and not v:
+            raise ValueError(
+                "When mode=2 (UPDATE) or mode=4 (DELETE), cases cannot be empty."
+            )
+        return v
 
     @property
     def run_s(self) -> WorkflowNodeExecutionStatus:
@@ -118,7 +190,7 @@ class PGSqlNode(BaseNode):
         )
         return f"INSERT INTO {self.tableName} ({columns}) VALUES ({values});"
 
-    def generate_update_statement(self, data: dict, condition: dict) -> str:
+    def generate_update_statement(self, data: dict, case: Case) -> str:
         """Generate UPDATE SQL statement with SET clause and WHERE conditions.
 
         :param data: Dictionary containing column names and new values to update
@@ -135,20 +207,22 @@ class PGSqlNode(BaseNode):
         )
         # Build WHERE clause conditions
         parts = []
-        for c in condition["conditions"]:
+        for condition in case.conditions:
             # Process each condition in the WHERE clause
-            var_index = c.get("varIndex")
-            if c["selectCondition"] in ["null", "not null"]:
+            var_index = condition.varIndex
+            if condition.selectCondition in ["null", "not null"]:
                 # Handle NULL/NOT NULL conditions with zero value fallback
-                part = f"{c['fieldName']} IS {c['selectCondition'].upper()}"
-                field_type = c.get("fieldType")
+                part = f"{condition.fieldName} IS {condition.selectCondition.upper()}"
+                field_type = condition.fieldType
                 if field_type:
                     field_type = field_type.lower()
                     zero_value = ZERO.get(field_type)
                     if zero_value is not None:
                         # Add zero value comparison for better null handling
-                        logic_op = "OR" if c["selectCondition"] == "null" else "AND"
-                        comp_op = "=" if c["selectCondition"] == "null" else "!="
+                        logic_op = (
+                            "OR" if condition.selectCondition == "null" else "AND"
+                        )
+                        comp_op = "=" if condition.selectCondition == "null" else "!="
                         zero_str = {
                             "string": f"'{zero_value}'",
                             "integer": str(zero_value),
@@ -159,20 +233,20 @@ class PGSqlNode(BaseNode):
                             part = (
                                 "("
                                 + part
-                                + f" {logic_op} {c['fieldName']} {comp_op} {zero_str})"
+                                + f" {logic_op} {condition.fieldName} {comp_op} {zero_str})"
                             )
             elif isinstance(var_index, str):
                 # Handle string comparisons with LIKE/NOT LIKE support
-                if c["selectCondition"] in ["like", "not like"]:
+                if condition.selectCondition in ["like", "not like"]:
                     var_index = f"%{var_index}%"
-                part = f"{c['fieldName']} {c['selectCondition'].upper()} '{var_index}'"
+                part = f"{condition.fieldName} {condition.selectCondition.upper()} '{var_index}'"
             else:
                 # Handle numeric and other comparisons
-                part = f"{c['fieldName']} {c['selectCondition'].upper()} {var_index}"
+                part = f"{condition.fieldName} {condition.selectCondition.upper()} {var_index}"
             parts.append(part)
 
         # Combine conditions with logical operator
-        where_clause = f" {condition['logicalOperator'].upper()} ".join(parts)
+        where_clause = f" {case.logicalOperator.upper()} ".join(parts)
         if where_clause:
             return f"UPDATE {self.tableName} SET {set_clause} WHERE {where_clause};"
         else:
@@ -182,7 +256,7 @@ class PGSqlNode(BaseNode):
                 cause_error="Database DML statement generation failed: WHERE condition is empty",
             )
 
-    def generate_delete_statement(self, condition: dict) -> str:
+    def generate_delete_statement(self, case: Case) -> str:
         """Generate DELETE SQL statement with WHERE conditions.
 
         :param condition: Dictionary containing WHERE clause conditions
@@ -191,20 +265,22 @@ class PGSqlNode(BaseNode):
         """
         # Build WHERE clause conditions for DELETE statement
         parts = []
-        for c in condition["conditions"]:
+        for condition in case.conditions:
             # Process each condition in the WHERE clause
-            var_index = c.get("varIndex")
-            if c["selectCondition"] in ["null", "not null"]:
+            var_index = condition.varIndex
+            if condition.selectCondition in ["null", "not null"]:
                 # Handle NULL/NOT NULL conditions with zero value fallback
-                part = f"{c['fieldName']} IS {c['selectCondition'].upper()}"
-                field_type = c.get("fieldType")
+                part = f"{condition.fieldName} IS {condition.selectCondition.upper()}"
+                field_type = condition.fieldType
                 if field_type:
                     field_type = field_type.lower()
                     zero_value = ZERO.get(field_type)
                     if zero_value is not None:
                         # Add zero value comparison for better null handling
-                        logic_op = "OR" if c["selectCondition"] == "null" else "AND"
-                        comp_op = "=" if c["selectCondition"] == "null" else "!="
+                        logic_op = (
+                            "OR" if condition.selectCondition == "null" else "AND"
+                        )
+                        comp_op = "=" if condition.selectCondition == "null" else "!="
                         zero_str = {
                             "string": f"'{zero_value}'",
                             "integer": str(zero_value),
@@ -214,20 +290,20 @@ class PGSqlNode(BaseNode):
                             part = (
                                 "("
                                 + part
-                                + f" {logic_op} {c['fieldName']} {comp_op} {zero_str})"
+                                + f" {logic_op} {condition.fieldName} {comp_op} {zero_str})"
                             )
             elif isinstance(var_index, str):
                 # Handle string comparisons with LIKE/NOT LIKE support
-                if c["selectCondition"] in ["like", "not like"]:
+                if condition.selectCondition in ["like", "not like"]:
                     var_index = f"%{var_index}%"
-                part = f"{c['fieldName']} {c['selectCondition'].upper()} '{var_index}'"
+                part = f"{condition.fieldName} {condition.selectCondition.upper()} '{var_index}'"
             else:
                 # Handle numeric and other comparisons
-                part = f"{c['fieldName']} {c['selectCondition'].upper()} {var_index}"
+                part = f"{condition.fieldName} {condition.selectCondition.upper()} {var_index}"
             parts.append(part)
 
         # Combine conditions with logical operator
-        where_clause = f" {condition['logicalOperator'].upper()} ".join(parts)
+        where_clause = f" {case.logicalOperator.upper()} ".join(parts)
         if where_clause:
             return f"DELETE FROM {self.tableName} WHERE {where_clause};"
         else:
@@ -237,65 +313,38 @@ class PGSqlNode(BaseNode):
                 cause_error="Database DML statement generation failed: WHERE condition is empty",
             )
 
-    def _is_order_list(self, value: Any) -> List[Dict[str, Any]]:
-        """Validate and return order list if it's a valid list.
-
-        :param value: Value to check if it's a list
-        :return: List if valid, empty list otherwise
-        """
-        return value if isinstance(value, list) else []
-
-    def _is_condition_dict(self, value: Any) -> Dict[str, Any]:
-        """Validate and return condition dictionary if it's a valid dict.
-
-        :param value: Value to check if it's a dictionary
-        :return: Dictionary if valid, empty dictionary otherwise
-        """
-        return value if isinstance(value, dict) else {}
-
     # ---------- Helper Methods for SQL Generation ----------
-    def _build_where(self, condition: Dict[str, Any]) -> str:
+    def _build_where(
+        self,
+        case: Optional[Case] = None,
+    ) -> str:
         """Build WHERE clause from condition dictionary.
 
         :param condition: Dictionary containing conditions and logical operator
         :return: Formatted WHERE clause string
         """
-        # Extract conditions from the condition dictionary
-        conditions = condition.get("conditions", [])
-        if not conditions:
+        if not case:
             return ""
+        # Extract conditions from the condition dictionary
+        conditions = case.conditions
         # Build condition parts, filtering out invalid conditions
-        parts = [
-            self._build_condition(c) for c in conditions if self._is_valid_condition(c)
-        ]
+        parts = [self._build_condition(c) for c in conditions]
         if not parts:
             return ""
         # Join conditions with logical operator
-        logical_op = f" {condition.get('logicalOperator', 'and').upper()} "
+        logical_op = f" {case.logicalOperator.upper()} "
         return f" WHERE {logical_op.join(parts)}"
 
-    def _is_valid_condition(self, c: Any) -> bool:
-        """Check if a condition dictionary is valid.
-
-        :param c: Condition to validate
-        :return: True if condition is valid, False otherwise
-        """
-        return (
-            isinstance(c, dict)
-            and bool(c.get("fieldName"))
-            and bool(c.get("selectCondition"))
-        )
-
-    def _build_condition(self, c: Dict[str, Any]) -> str:
+    def _build_condition(self, condition: Condition) -> str:
         """Build a single SQL condition from condition dictionary.
 
         :param c: Condition dictionary containing field, operator, and value
         :return: Formatted SQL condition string
         """
-        field = c["fieldName"]
-        op = c["selectCondition"].upper()
-        var = c.get("varIndex")
-        ft = c.get("fieldType", "").lower()
+        field = condition.fieldName
+        op = condition.selectCondition.upper()
+        var = condition.varIndex
+        ft = condition.fieldType.lower()
 
         # Handle NULL/NOT NULL conditions with zero value fallback
         if op in ("NULL", "NOT NULL"):
@@ -330,18 +379,14 @@ class PGSqlNode(BaseNode):
             return str(z).upper()
         return str(z)
 
-    def _build_order(self, order_by: Any) -> str:
+    def _build_order(self, order_by: List[OrderItem]) -> str:
         """Build ORDER BY clause from order configuration.
 
         :param order_by: Order configuration (list of dictionaries or string)
         :return: Formatted ORDER BY clause string
         """
         # Build order items from order configuration
-        items = [
-            f"{it['fieldName']} {it.get('order', 'asc').upper()}"
-            for it in self._is_order_list(order_by)
-            if isinstance(it, dict) and it.get("fieldName")
-        ]
+        items = [f"{it.fieldName} {it.order.upper()}" for it in order_by]
         return f" ORDER BY {', '.join(items)}" if items else ""
 
     def _build_columns(self, columns: Union[str, List[str]]) -> str:
@@ -357,8 +402,8 @@ class PGSqlNode(BaseNode):
     def generate_select_statement(
         self,
         columns: Union[str, List[str]] = "*",
-        condition: Optional[Dict[str, Any]] = None,
-        order_by: Optional[Union[str, List[Dict[str, Any]]]] = None,
+        case: Optional[Case] = None,
+        order_by: List[OrderItem] = [],
         limit: Optional[int] = None,
     ) -> str:
         """Generate SELECT SQL statement with optional WHERE, ORDER BY, and LIMIT clauses.
@@ -371,7 +416,7 @@ class PGSqlNode(BaseNode):
         """
         # Build all components of the SELECT statement
         cols = self._build_columns(columns)
-        where = self._build_where(self._is_condition_dict(condition))
+        where = self._build_where(case)
         order = self._build_order(order_by)
         lim = f" LIMIT {limit}" if isinstance(limit, int) else ""
         return f"SELECT {cols} FROM {self.tableName}{where}{order}{lim};"
@@ -389,27 +434,19 @@ class PGSqlNode(BaseNode):
         ) as request_span:
             try:
                 # Replace variable placeholders in conditions with actual values
-                if (
-                    self.cases
-                    and isinstance(self.cases[0], dict)
-                    and "conditions" in self.cases[0]
-                ):
-                    for case in self.cases[0]["conditions"]:
-                        if isinstance(case, dict) and case.get("varIndex") in inputs:
-                            case["varIndex"] = inputs[case["varIndex"]]
+                if self.cases:
+                    for case in self.cases[0].conditions:
+                        if case.varIndex in inputs:
+                            case.varIndex = inputs[case.varIndex]
                 # Build update values from assignment list
-                update_values = {f: inputs[f] for f in self.assignmentList or []}
-                # Get first case for WHERE conditions
-                first_case = (
-                    self.cases[0]
-                    if self.cases and isinstance(self.cases[0], dict)
-                    else {}
-                )
+                if self.mode == DBMode.UPDATE.value:
+                    update_values = {f: inputs[f] for f in self.assignmentList or []}
+                first_case = self.cases[0] if self.cases else None
                 # Generate SQL based on operation mode
                 compiled_sql = {
                     DBMode.ADD.value: lambda: self.generate_insert_statement(inputs),
                     DBMode.UPDATE.value: lambda: self.generate_update_statement(
-                        update_values, first_case
+                        update_values, self.cases[0]
                     ),
                     DBMode.SEARCH.value: lambda: self.generate_select_statement(
                         self.assignmentList or [],
@@ -418,7 +455,7 @@ class PGSqlNode(BaseNode):
                         self.limit,
                     ),
                     DBMode.DELETE.value: lambda: self.generate_delete_statement(
-                        first_case
+                        self.cases[0]
                     ),
                 }.get(
                     self.mode,
@@ -474,7 +511,7 @@ class PGSqlNode(BaseNode):
             apiKey=self.apiKey,
             database_id=self.dbId,
             uid=self.uid,
-            spaceId=str(self.spaceId),
+            spaceId=str(self.spaceId) if self.spaceId else "",
             dml="",
         )
         # Set environment based on release status
@@ -486,24 +523,6 @@ class PGSqlNode(BaseNode):
         else:
             pgsql_config.dml = await self.generate_dml(inputs, span)
         return pgsql_config
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """Synchronous execution method (not implemented).
-
-        :param variable_pool: Variable pool containing input/output data
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node log trace
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises NotImplementedError: Synchronous execution is not supported
-        """
-        raise NotImplementedError("Synchronous execution is not implemented")
 
     async def async_execute(
         self,

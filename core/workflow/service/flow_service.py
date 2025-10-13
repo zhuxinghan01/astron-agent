@@ -10,6 +10,7 @@ import time
 from typing import Any, Dict, cast
 
 from sqlmodel import Session  # type: ignore
+
 from workflow.cache import flow as flow_cache
 from workflow.cache.engine import ENGINE_CACHE_PREFIX
 from workflow.domain.entities.flow import FlowUpdate
@@ -81,7 +82,8 @@ def update(
     :param flow: The flow update object containing new values
     :param flow_id: The ID of the flow being updated
     :param current_span: Tracing span for logging operations
-    :raises Exception: If update fails, transaction is rolled back and exception is re-raised
+    :raises Exception: If update fails, transaction is rolled back and exception
+                       is re-raised
     """
     try:
         # Update flow properties if provided
@@ -106,7 +108,8 @@ def update(
         cache_service = get_cache_service()
         cache_service.delete(key=f"{ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}")
         current_span.add_info_event(
-            f"Cleared engine instance from redis: {ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}"
+            f"Cleared engine instance from redis: "
+            f"{ENGINE_CACHE_PREFIX}:{flow_id}:{flow.app_id}"
         )
     except Exception as e:
         current_span.record_exception(e)
@@ -124,10 +127,13 @@ def get(flow_id: str, session: Session, span: Span) -> Flow:
     :return: The flow object if found
     :raises CustomException: If flow with the given ID is not found
     """
-    # TODO: Implement caching mechanism for better performance
+    db_flow = flow_cache.get_flow_by_id(flow_id)
+    if db_flow:
+        return db_flow
     db_flow = session.query(Flow).filter_by(id=int(flow_id)).first()
     if not db_flow:
         raise CustomException(CodeEnum.FLOW_NOT_FOUND_ERROR)
+    flow_cache.set_flow_by_id(flow_id, db_flow)
     return db_flow
 
 
@@ -193,7 +199,8 @@ def gen_mcp_input_schema(flow: Flow) -> dict:
     and generates a JSON schema that can be used for MCP integration.
 
     :param flow: The flow object containing workflow definition
-    :return: Dictionary containing MCP input schema with name, description, and inputSchema
+    :return: Dictionary containing MCP input schema with name, description,
+             and inputSchema
     """
     # Extract basic flow information
     flow_name = flow.name

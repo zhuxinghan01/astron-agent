@@ -1,25 +1,26 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { Input, Button, Select, message } from "antd";
-import { useTranslation } from "react-i18next";
-import { saveFlowAPI, workflowCategories } from "@/services/flow";
-import MoreIcons from "./more-icons";
-import globalStore from "@/store/global-store";
-import useFlowsManager from "@/components/workflow/store/useFlowsManager";
-import copy from "copy-to-clipboard";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { Input, Button, Select, message } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { saveFlowAPI } from '@/services/flow';
+import { getAgentType } from '@/services/agent-square';
+import MoreIcons from './more-icons';
+import globalStore from '@/store/global-store';
+import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import copy from 'copy-to-clipboard';
 
-import formSelect from "@/assets/imgs/main/icon_nav_dropdown.svg";
-import close from "@/assets/imgs/workflow/modal-close.png";
-import flowIdCopyIcon from "@/assets/imgs/workflow/flowId-copy-icon.svg";
+import formSelect from '@/assets/imgs/main/icon_nav_dropdown.svg';
+import close from '@/assets/imgs/workflow/modal-close.png';
+import flowIdCopyIcon from '@/assets/imgs/workflow/flowId-copy-icon.svg';
 
 const { TextArea } = Input;
 
-function EditModal({ currentFlow, setEditModal }): void {
+function EditModal({ currentFlow, setEditModal }): React.ReactElement {
   const { t } = useTranslation();
-  const setCurrentFlow = useFlowsManager((state) => state.setCurrentFlow);
-  const avatarIcon = globalStore((state) => state.avatarIcon);
-  const avatarColor = globalStore((state) => state.avatarColor);
-  const getAvatarConfig = globalStore((state) => state.getAvatarConfig);
+  const setCurrentFlow = useFlowsManager(state => state.setCurrentFlow);
+  const avatarIcon = globalStore(state => state.avatarIcon);
+  const avatarColor = globalStore(state => state.avatarColor);
+  const getAvatarConfig = globalStore(state => state.getAvatarConfig);
   const [showModal, setShowModal] = useState(false);
   const [tempFlow, setTempFlow] = useState({});
   const [loading, setLoading] = useState(false);
@@ -31,12 +32,10 @@ function EditModal({ currentFlow, setEditModal }): void {
 
   useEffect(() => {
     getAvatarConfig();
-    workflowCategories().then((data) =>
+    getAgentType().then(data =>
       setTypeList(
-        data
-          ?.filter((item) => item.name !== "发现" && item?.name !== "活动")
-          ?.map((item) => ({ label: item.name, value: item.key })),
-      ),
+        data?.map(item => ({ label: item.typeName, value: item.typeKey }))
+      )
     );
   }, []);
 
@@ -52,9 +51,9 @@ function EditModal({ currentFlow, setEditModal }): void {
       category: tempFlow.category,
     };
     saveFlowAPI(params)
-      .then((data) => {
+      .then(data => {
         setEditModal(false);
-        setCurrentFlow((currentFlow) => ({
+        setCurrentFlow(currentFlow => ({
           ...currentFlow,
           name: tempFlow.name,
           description: tempFlow.description,
@@ -74,7 +73,12 @@ function EditModal({ currentFlow, setEditModal }): void {
   return (
     <>
       {createPortal(
-        <div className="mask">
+        <div
+          className="mask"
+          style={{
+            zIndex: 1001,
+          }}
+        >
           {showModal && (
             <MoreIcons
               icons={avatarIcon}
@@ -83,16 +87,16 @@ function EditModal({ currentFlow, setEditModal }): void {
                 name: tempFlow?.address,
                 value: tempFlow?.avatarIcon,
               }}
-              setBotIcon={(appIcon) =>
-                setTempFlow((tempFlow) => ({
+              setBotIcon={appIcon =>
+                setTempFlow(tempFlow => ({
                   ...tempFlow,
                   address: appIcon.name,
                   avatarIcon: appIcon.value,
                 }))
               }
               botColor={currentFlow?.color}
-              setBotColor={(value) =>
-                setTempFlow((tempFlow) => ({
+              setBotColor={value =>
+                setTempFlow(tempFlow => ({
                   ...tempFlow,
                   color: value,
                 }))
@@ -104,7 +108,7 @@ function EditModal({ currentFlow, setEditModal }): void {
           <div className="absolute bg-[#fff] rounded-2xl p-6 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[640px]">
             <div className="flex items-center justify-between font-medium">
               <span className="font-semibold text-base">
-                {t("workflow.nodes.flowModal.editWorkflow")}
+                {t('workflow.nodes.flowModal.editWorkflow')}
               </span>
               <img
                 src={close}
@@ -118,7 +122,7 @@ function EditModal({ currentFlow, setEditModal }): void {
                 <div className="flex flex-col flex-1">
                   <div className="text-second font-medium text-sm flex gap-0.5">
                     <span className="text-[#F74E43]">*</span>
-                    <span>{t("workflow.nodes.flowModal.workflowName")}</span>
+                    <span>{t('workflow.nodes.flowModal.workflowName')}</span>
                   </div>
                   <div className="flex items-center mt-1.5">
                     <div
@@ -132,13 +136,13 @@ function EditModal({ currentFlow, setEditModal }): void {
                       value={tempFlow?.name}
                       maxLength={20}
                       showCount
-                      onChange={(e) =>
+                      onChange={e =>
                         setTempFlow({
                           ...tempFlow,
                           name: e.target.value,
                         })
                       }
-                      placeholder={t("common.inputPlaceholder")}
+                      placeholder={t('common.inputPlaceholder')}
                       className="global-input flex-1"
                     />
                   </div>
@@ -146,16 +150,16 @@ function EditModal({ currentFlow, setEditModal }): void {
                 <div className="flex flex-col flex-1">
                   <div className="text-second font-medium text-sm flex gap-0.5">
                     <span>
-                      {t("workflow.nodes.flowModal.workflowCategory")}
+                      {t('workflow.nodes.flowModal.workflowCategory')}
                     </span>
                   </div>
                   <Select
                     className="global-select w-full mt-1.5"
                     suffixIcon={<img src={formSelect} className="w-4 h-4 " />}
-                    placeholder={t("common.pleaseSelect")}
+                    placeholder={t('common.pleaseSelect')}
                     options={typeList}
                     value={tempFlow?.category}
-                    onChange={(value) =>
+                    onChange={value =>
                       setTempFlow({
                         ...tempFlow,
                         category: value,
@@ -166,15 +170,15 @@ function EditModal({ currentFlow, setEditModal }): void {
               </div>
               <div className="mt-6 text-second font-medium text-sm flex gap-0.5">
                 <span className="text-[#F74E43]">*</span>
-                <span>{t("workflow.nodes.flowModal.workflowDescription")}</span>
+                <span>{t('workflow.nodes.flowModal.workflowDescription')}</span>
               </div>
               <p className="mt-1.5 text-xs font-medium desc-color">
-                {t("workflow.nodes.flowModal.workflowDescriptionTip")}
+                {t('workflow.nodes.flowModal.workflowDescriptionTip')}
               </p>
               <div className="relative">
                 <TextArea
                   value={tempFlow?.description}
-                  onChange={(e) =>
+                  onChange={e =>
                     setTempFlow({
                       ...tempFlow,
                       description: e.target.value,
@@ -183,7 +187,7 @@ function EditModal({ currentFlow, setEditModal }): void {
                   className="mt-1.5 global-textarea"
                   style={{ height: 104 }}
                   maxLength={200}
-                  placeholder={t("common.inputPlaceholder")}
+                  placeholder={t('common.inputPlaceholder')}
                 />
                 <div className="absolute bottom-3 right-3 ant-input-limit ">
                   {tempFlow?.description?.length} / 200
@@ -193,7 +197,7 @@ function EditModal({ currentFlow, setEditModal }): void {
             <div className="flex items-end justify-between mt-10">
               <div className="flex items-center gap-3">
                 <p className="text-desc text-[#7F7F7F]">
-                  {t("workflow.nodes.flowModal.flowId")}：{currentFlow?.flowId}
+                  {t('workflow.nodes.flowModal.flowId')}：{currentFlow?.flowId}
                 </p>
                 <img
                   src={flowIdCopyIcon}
@@ -201,7 +205,7 @@ function EditModal({ currentFlow, setEditModal }): void {
                   alt=""
                   onClick={() => {
                     copy(currentFlow?.flowId);
-                    message.success(t("workflow.nodes.flowModal.copySuccess"));
+                    message.success(t('workflow.nodes.flowModal.copySuccess'));
                   }}
                 />
               </div>
@@ -212,20 +216,20 @@ function EditModal({ currentFlow, setEditModal }): void {
                   onClick={handleOk}
                   disabled={!canSubmit}
                 >
-                  {t("common.save")}
+                  {t('common.save')}
                 </Button>
                 <Button
                   type="text"
                   className="origin-btn px-6"
                   onClick={() => setEditModal(false)}
                 >
-                  {t("common.cancel")}
+                  {t('common.cancel')}
                 </Button>
               </div>
             </div>
           </div>
         </div>,
-        document.body,
+        document.body
       )}
     </>
   );

@@ -1,9 +1,10 @@
 import copy
 import json
 import re
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import Field
+
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.variable_pool import VariablePool
@@ -50,50 +51,6 @@ class ParamsExtractorNode(BaseLLMNode):
         "properties": {},
         "required": [],
     }  # Function calling schema
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration parameters for this node.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "topK": self.topK,
-            "patch_id": self.patch_id,
-            "question_type": self.question_type,
-            "extractor_params": self.extractor_params,
-            "reasonMode": self.reasonMode,
-            "instruction": self.instruction,
-            "fc_schema_params": self.fc_schema_params,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        :param variable_pool: Pool of variables for the workflow
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises NotImplementedError: This method is not implemented
-        """
-        raise NotImplementedError
 
     def assemble_schema_info(self) -> dict:
         """

@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import {
   Form,
@@ -11,18 +17,20 @@ import {
   Row,
   Col,
   Tabs,
-} from "antd";
+} from 'antd';
 
-import ConfigHeader from "@/components/config-page-component/config-header/ConfigHeader";
-import CapabilityDevelopment from "@/components/config-page-component/config-base/components/CapabilityDevelopment";
-import UploadCover from "@/components/upload-avatar/index";
-import { DeleteIcon } from "@/components/svg-icons";
-import PromptModel from "@/components/prompt-model";
-import PromptTip from "@/components/prompt-tip";
-import PromptTry from "@/components/prompt-try";
-import WxModal from "@/components/wx-modal";
+import ConfigHeader from '@/components/config-page-component/config-header/ConfigHeader';
+import CapabilityDevelopment from '@/components/config-page-component/config-base/components/CapabilityDevelopment';
+import UploadCover from '@/components/upload-avatar/index';
+import { DeleteIcon } from '@/components/svg-icons';
+import PromptModel from '@/components/prompt-model';
+import PromptTip from '@/components/prompt-tip';
+import PromptTry, { PromptTryRef } from '@/components/prompt-try';
+import InputBox from '@/components/prompt-try/input-box';
+import WxModal from '@/components/wx-modal';
 
-import { configListRepos } from "@/services/knowledge";
+import { configListRepos } from '@/services/knowledge';
+import { handleAgentStatus } from '@/services/release-management';
 import {
   getBotInfo,
   getBotType,
@@ -32,39 +40,40 @@ import {
   listRepos,
   updateDoneBot,
   quickCreateBot,
-} from "@/services/spark-common";
+  getModelList,
+  ModelListData,
+} from '@/services/spark-common';
+import { useSparkCommonStore } from '@/store/spark-store/spark-common';
+import { useBotStateStore } from '@/store/spark-store/bot-state';
+import usePrompt from '@/hooks/use-prompt';
+import { v4 as uuid } from 'uuid';
+import eventBus from '@/utils/event-bus';
+import { debounce } from 'lodash';
+import { useTranslation } from 'react-i18next';
+import { getLanguageCode } from '@/utils/http';
+
+import spark from '@/assets/imgs/sparkImg/icon_spark.png';
+import deepseek from '@/assets/imgs/sparkImg/icon_deepseek.png';
+import starIcon from '@/assets/imgs/sparkImg/star.svg';
+import promptIcon from '@/assets/imgs/sparkImg/prompt.svg';
+import tipIcon from '@/assets/imgs/sparkImg/tip.svg';
+
+import styles from './index.module.scss';
+
 import {
-  useTipPkStore,
-  useModelPkStore,
-} from "@/store/spark-store/config-page-store";
-import { useSparkCommonStore } from "@/store/spark-store/spark-common";
-import { useBotStateStore } from "@/store/spark-store/bot-state";
-import usePrompt from "@/hooks/use-prompt";
-import { v4 as uuid } from "uuid";
-import { robotType } from "@/types/typesServices";
-import eventBus from "@/utils/event-bus";
-import { debounce } from "lodash";
-import { useTranslation } from "react-i18next";
-import { getLanguageCode } from "@/utils/http";
-
-import spark from "@/assets/imgs/sparkImg/icon_spark.png";
-import deepseek from "@/assets/imgs/sparkImg/icon_deepseek.png";
-import starIcon from "@/assets/imgs/sparkImg/star.svg";
-import promptIcon from "@/assets/imgs/sparkImg/prompt.svg";
-import tipIcon from "@/assets/imgs/sparkImg/tip.svg";
-
-import styles from "./index.module.scss";
-
-interface ChatProps {
-  currentRobot: robotType;
-  setCurrentRobot: (value: any) => void;
-  currentTab: string;
-  setCurrentTab: (value: string) => void;
-}
+  ChatProps,
+  BaseModelConfig,
+  DatasetItem,
+  PageDataItem,
+  MaasDatasetItem,
+  TreeNode,
+  KnowledgeLeaf,
+  Knowledge,
+} from './types';
 
 const { Option } = Select;
 
-const baseModelConfig = {
+const baseModelConfig: BaseModelConfig = {
   visible: false,
   isSending: false,
   optionsVisible: false,
@@ -73,63 +82,28 @@ const baseModelConfig = {
       hasAuthorization: true,
       llmId: -99,
       modelId: 0,
-      api: "",
-      llmSource: "",
+      api: '',
+      llmSource: '',
       patchId: [],
-      serviceId: "",
-      name: "",
-      value: "",
+      serviceId: '',
+      name: '',
+      value: '',
       configs: [],
     },
     summary: {
       hasAuthorization: true,
       llmId: -99,
       modelId: 0,
-      api: "",
-      llmSource: "",
+      api: '',
+      llmSource: '',
       patchId: [],
-      serviceId: "",
-      name: "",
-      value: "",
+      serviceId: '',
+      name: '',
+      value: '',
       configs: [],
     },
   },
 };
-
-interface TreeNode {
-  id?: string | number;
-  files?: TreeNode[];
-  [key: string]: any;
-}
-
-interface KnowledgeLeaf {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface Knowledge {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface DatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface PageDataItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface MaasDatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
 
 const BaseConfig: React.FC<ChatProps> = ({
   currentRobot,
@@ -137,60 +111,59 @@ const BaseConfig: React.FC<ChatProps> = ({
   currentTab,
   setCurrentTab,
 }) => {
-  const backgroundImg = useSparkCommonStore((state) => state.backgroundImg);
-  const setBackgroundImg = useSparkCommonStore(
-    (state) => state.setBackgroundImg,
-  );
-  const backgroundImgApp = useSparkCommonStore(
-    (state) => state.backgroundImgApp,
-  );
+  const backgroundImg = useSparkCommonStore(state => state.backgroundImg);
+  const setBackgroundImg = useSparkCommonStore(state => state.setBackgroundImg);
+  const backgroundImgApp = useSparkCommonStore(state => state.backgroundImgApp);
   const setBackgroundImgApp = useSparkCommonStore(
-    (state) => state.setBackgroundImgApp,
+    state => state.setBackgroundImgApp
   );
-  const configPageData = useSparkCommonStore((state) => state.configPageData);
+  const configPageData = useSparkCommonStore(state => state.configPageData);
   const setConfigPageData = useSparkCommonStore(
-    (state) => state.setConfigPageData,
+    state => state.setConfigPageData
   );
-  const answerCompleted = useSparkCommonStore((state) => state.answerCompleted);
-  const inputExampleTip = useSparkCommonStore((state) => state.inputExampleTip);
+
   const setInputExampleTip = useSparkCommonStore(
-    (state) => state.setInputExampleTip,
+    state => state.setInputExampleTip
   );
   const inputExampleModel = useSparkCommonStore(
-    (state) => state.inputExampleModel,
+    state => state.inputExampleModel
   );
   const setInputExampleModel = useSparkCommonStore(
-    (state) => state.setInputExampleModel,
+    state => state.setInputExampleModel
   );
-  const setBotInfo = useBotStateStore((state) => state.setBotDetailInfo); // 助手详细信息
+  const setBotInfo = useBotStateStore(state => state.setBotDetailInfo); // 助手详细信息
 
   const [fabuFlag, setFabuFlag] = useState<boolean>(false);
   const [openWxmol, setOpenWxmol] = useState<boolean>(false);
   const { t } = useTranslation();
-  const [askValue, setAskValue] = useState("");
+  const [askValue, setAskValue] = useState('');
   const [sentence, setSentence] = useState(0); //是否是一句话创建
-  const $inputConfirmFlag = useRef<boolean>(true); // 是否完成输入
+  const [globalLoading, setGlobalLoading] = useState(false); // 全局loading状态
+  const loadingInstances = useRef(new Set<string>()); // 跟踪正在loading的实例
+
+  // PromptTry实例的refs
+  const defaultPromptTryRef = useRef<PromptTryRef>(null);
+  const tipPromptTryRefs = useRef<(PromptTryRef | null)[]>([]);
+  const modelPromptTryRefs = useRef<(PromptTryRef | null)[]>([]);
   const [botCreateActiveV, setBotCreateActiveV] = useState<{
     cn: string;
     en: string;
     speed: number;
   }>({
-    cn: "x4_lingxiaoqi",
-    en: "x4_EnUs_Luna",
+    cn: 'x4_lingxiaoqi',
+    en: 'x4_EnUs_Luna',
     speed: 50,
   });
   const [modelList, setModelList]: any = useState([
-    { model: "spark", promptAnswerCompleted: true },
-    { model: "spark", promptAnswerCompleted: true },
+    { model: 'spark', promptAnswerCompleted: true },
+    { model: 'spark', promptAnswerCompleted: true },
   ]);
   const [questionTipActive, setQuestionTipActive] = useState(-1);
-  const [questionTip, setQuestionTip] = useState("");
-  const $ask = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
-  const [prologue, setPrologue] = useState("");
+  const [prologue, setPrologue] = useState('');
   const [createBotton, setCreateBotton] = useState<any>(false);
   const [botTemplateInfoValue, _setBotTemplateInfoValue] = useState<any>(
-    JSON.parse(sessionStorage.getItem("botTemplateInfoValue") ?? "{}"),
+    JSON.parse(sessionStorage.getItem('botTemplateInfoValue') ?? '{}')
   );
   const [detailInfo, setDetailInfo] = useState<any>({});
   const [baseinfo, setBaseinfo] = useState<any>({});
@@ -198,7 +171,7 @@ const BaseConfig: React.FC<ChatProps> = ({
   const [bottypeList, setBottypeList] = useState<any>([]);
   const [searchParams] = useSearchParams();
   const [selectSource, setSelectSource] = useState<any>([]);
-  const [prompt, setPrompt] = useState(t("configBase.prompt"));
+  const [prompt, setPrompt] = useState(t('configBase.prompt'));
   const [promptList, setPromptList]: any = useState([
     { prompt: prompt, promptAnswerCompleted: true },
     { prompt: prompt, promptAnswerCompleted: true },
@@ -211,20 +184,20 @@ const BaseConfig: React.FC<ChatProps> = ({
   const [supportSystemFlag, setSupportSystemFlag] = useState(false);
   const [supportContextFlag, setSupportContextFlag] = useState(false);
   const [promptNow, setPromptNow] = useState();
-  const [coverUrl, setCoverUrl] = useState<string>(""); // 助手封面图
+  const [coverUrl, setCoverUrl] = useState<string>(''); // 助手封面图
   const isMounted = useRef(false);
   const [isChanged, setIsChanged] = useState(false);
-  const [promptData, setPromptData] = useState("");
+  const [promptData, setPromptData] = useState('');
   const [speechToText, setSpeechToText] = useState(false);
   const [suggest, setSuggest] = useState(false);
   const [resource, setResource] = useState(false);
-  const [conversationStarter, setConversationStarter] = useState("");
+  const [conversationStarter, setConversationStarter] = useState('');
   const [conversation, setConversation] = useState(false);
-  const [presetQuestion, setPresetQuestion] = useState([""]);
+  const [presetQuestion, setPresetQuestion] = useState(['']);
   const [feedback, setFeedback] = useState(false);
   const [textToSpeech, setTextToSpeech] = useState({
     enabled: false,
-    vcn: "",
+    vcn: '',
   });
   const [files, setFiles] = useState<any[]>([]);
   const [repoConfig, setRepoConfig] = useState({
@@ -264,12 +237,21 @@ const BaseConfig: React.FC<ChatProps> = ({
   const [publishModalShow, setPublishModalShow] = useState(false);
   const [vcnList, setVcnList] = useState<{ vcn: string }[]>([]);
   const [form] = Form.useForm();
-  const [model, setModel] = useState("spark");
-  const handleModelChange = (value: string) => {
+  const [model, setModel] = useState('spark');
+  const [modelOptions, setModelOptions] = useState<ModelListData[]>([]);
+
+  // 获取模型列表
+  const getModelListData = (): void => {
+    getModelList().then((res: ModelListData[]) => {
+      setModelOptions(res || []);
+    });
+  };
+
+  const handleModelChange = (value: string): void => {
     setModel(value);
   };
 
-  const handleModelChangeNew = (e: string, index: number) => {
+  const handleModelChangeNew = (e: string, index: number): void => {
     const updatedModelList = [...modelList];
     updatedModelList[index] = { ...updatedModelList[index], model: e };
     setModelList(updatedModelList);
@@ -280,8 +262,8 @@ const BaseConfig: React.FC<ChatProps> = ({
     obj: any,
     api: (params: any) => Promise<any>,
     successMessage: string,
-    shouldNavigateToAgent = false,
-  ) => {
+    shouldNavigateToAgent = false
+  ): Promise<void> => {
     try {
       await api(obj);
       message.success(successMessage);
@@ -294,12 +276,12 @@ const BaseConfig: React.FC<ChatProps> = ({
           detailInfo.botStatus !== 4
         ) {
           const currentLang = getLanguageCode();
-          currentLang === "zh";
+          currentLang === 'zh';
         }
-        navigate("/space/agent");
+        navigate('/space/agent');
       } else {
         // 保留原有的导航逻辑
-        navigate(`/space/config/overview?botId=${searchParams.get("botId")}`, {
+        navigate(`/space/config/overview?botId=${searchParams.get('botId')}`, {
           replace: true,
         });
         if (detailInfo.botStatus == 2) {
@@ -316,9 +298,9 @@ const BaseConfig: React.FC<ChatProps> = ({
   const buildRequestObject = (
     isRag: boolean,
     useFormValues: boolean,
-    isForPublish: boolean = false,
-  ) => {
-    const datasetKey = isRag ? "datasetList" : "maasDatasetList";
+    isForPublish: boolean = false
+  ): any => {
+    const datasetKey = isRag ? 'datasetList' : 'maasDatasetList';
     const dataList: string[] = [];
     (selectSource || []).forEach((item: any) => {
       dataList.push(item.id);
@@ -337,17 +319,17 @@ const BaseConfig: React.FC<ChatProps> = ({
     return {
       ...(backgroundImgApp && {
         appBackground:
-          typeof backgroundImgApp === "string"
-            ? backgroundImgApp.replace(/\?.*$/, "")
+          typeof backgroundImgApp === 'string'
+            ? backgroundImgApp.replace(/\?.*$/, '')
             : backgroundImgApp,
       }),
       ...(backgroundImg && {
         pcBackground:
-          typeof backgroundImg === "string"
-            ? backgroundImg.replace(/\?.*$/, "")
+          typeof backgroundImg === 'string'
+            ? backgroundImg.replace(/\?.*$/, '')
             : backgroundImg,
       }),
-      botId: searchParams.get("botId"),
+      botId: searchParams.get('botId'),
       name: name,
       botType: botType,
       botDesc: botDesc,
@@ -363,9 +345,11 @@ const BaseConfig: React.FC<ChatProps> = ({
       isSentence: 0,
       openedTool: Object.keys(choosedAlltool)
         .filter((key: any) => choosedAlltool[key])
-        .join(","),
+        .join(','),
       prologue: prologue,
       model: model,
+      isCustom: modelOptions?.find(item => item.modelDomain === model)
+        ?.isCustom,
       prompt: prompt,
       ...(!useFormValues && { promptStructList: [] }),
     };
@@ -373,17 +357,17 @@ const BaseConfig: React.FC<ChatProps> = ({
 
   const savebot = (e: any) => {
     if (!coverUrl) {
-      return message.warning(t("configBase.defaultAvatar"));
+      return message.warning(t('configBase.defaultAvatar'));
     }
     if (
-      baseinfo?.botName === "" ||
-      baseinfo?.botType === "" ||
-      baseinfo?.botDesc === ""
+      baseinfo?.botName === '' ||
+      baseinfo?.botType === '' ||
+      baseinfo?.botDesc === ''
     ) {
-      return message.warning(t("configBase.requiredInfoNotFilled"));
+      return message.warning(t('configBase.requiredInfoNotFilled'));
     }
 
-    const isRag = selectSource[0]?.tag === "SparkDesk-RAG";
+    const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
     const useFormValues = !(
       detailInfo.botStatus === 1 ||
       detailInfo.botStatus === 2 ||
@@ -391,18 +375,13 @@ const BaseConfig: React.FC<ChatProps> = ({
     );
 
     const obj = buildRequestObject(isRag, useFormValues);
-    const api =
-      detailInfo.botStatus === 1 ||
-      detailInfo.botStatus === 2 ||
-      detailInfo.botStatus === 4
-        ? updateDoneBot
-        : updateBot;
+    const api = updateBot;
     const successMessage =
       detailInfo.botStatus === 1 ||
       detailInfo.botStatus === 2 ||
       detailInfo.botStatus === 4
-        ? "更新发布成功"
-        : "保存成功";
+        ? '更新发布成功'
+        : '保存成功';
 
     handleApiCall(obj, api, successMessage, false); // 第四个参数为 false 表示使用原有的导航逻辑
     return;
@@ -411,14 +390,14 @@ const BaseConfig: React.FC<ChatProps> = ({
   // 发布
   const releaseFn = (e: any) => {
     if (!coverUrl) {
-      return message.warning(t("configBase.defaultAvatar"));
+      return message.warning(t('configBase.defaultAvatar'));
     }
     if (!baseinfo?.botName || !baseinfo?.botType || !baseinfo?.botDesc) {
-      return message.warning(t("configBase.requiredInfoNotFilled"));
+      return message.warning(t('configBase.requiredInfoNotFilled'));
     }
     closeModal();
     setPublishModalShow(true);
-    const botId = searchParams.get("botId");
+    const botId = searchParams.get('botId');
 
     if (botId) {
       if (
@@ -426,45 +405,58 @@ const BaseConfig: React.FC<ChatProps> = ({
         detailInfo.botStatus === 2 ||
         detailInfo.botStatus === 4
       ) {
-        const isRag = selectSource[0]?.tag === "SparkDesk-RAG";
+        const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
         const obj = buildRequestObject(isRag, false, true); // 第三个参数表示用于发布
         handleApiCall(
           obj,
-          updateDoneBot,
-          t("configBase.updatePublishSuccess"),
-          true,
+          updateBot,
+          t('configBase.updatePublishSuccess'),
+          true
         ); // 第四个参数为 true 表示导航到 /space/agent
       } else {
-        const isRag = selectSource[0]?.tag === "SparkDesk-RAG";
+        const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
         const obj = buildRequestObject(isRag, true, true);
+        // MARK: update接口不再需要了吧 、这是发布到星火的吗？ -- 需确认
         updateBot(obj)
           .then(() => {
-            handleApiCall(
-              { botId },
-              sendApplyBot,
-              t("configBase.publishSuccess"),
-              true, // 导航到 /space/agent
-            );
+            handleAgentStatus(Number(botId), {
+              action: 'PUBLISH',
+              reason: '',
+              publishType: 'MARKET',
+            })
+              .then(() => {
+                message.success(t('configBase.publishSuccess'));
+                navigate('/space/agent');
+              })
+              .catch(err => {
+                message.error(err?.msg);
+              });
           })
-          .catch((err) => {
+          .catch(err => {
             message.error(err?.msg);
           });
       }
 
       return;
     } else {
-      const isRag = selectSource[0]?.tag === "SparkDesk-RAG";
+      const isRag = selectSource[0]?.tag === 'SparkDesk-RAG';
       const obj = buildRequestObject(isRag, false, true);
       insertBot(obj)
         .then((res: any) => {
-          handleApiCall(
-            { botId: res.botId },
-            sendApplyBot,
-            t("configBase.publishSuccess"),
-            true, // 导航到 /space/agent
-          );
+          handleAgentStatus(Number(res.botId), {
+            action: 'PUBLISH',
+            reason: '',
+            publishType: 'MARKET',
+          })
+            .then(() => {
+              message.success(t('configBase.publishSuccess'));
+              navigate('/space/agent');
+            })
+            .catch(err => {
+              message.error(err?.msg);
+            });
         })
-        .catch((err) => {
+        .catch(err => {
           message.error(err.msg);
         });
 
@@ -473,15 +465,16 @@ const BaseConfig: React.FC<ChatProps> = ({
   };
 
   useEffect(() => {
-    eventBus.on("releaseFn", releaseFn);
+    eventBus.on('releaseFn', releaseFn);
     return () => {
-      eventBus.off("releaseFn", releaseFn);
+      eventBus.off('releaseFn', releaseFn);
     };
   }, [coverUrl, baseinfo, selectSource, form.getFieldsValue()]);
 
   useEffect(() => {
     setShowTipPk(false);
     setShowModelPk(0);
+    getModelListData();
   }, []);
 
   useEffect(() => {
@@ -490,145 +483,145 @@ const BaseConfig: React.FC<ChatProps> = ({
     obj.botName = botTemplateInfoValue.botName;
     obj.botType = botTemplateInfoValue.botType;
     setBaseinfo(obj);
-    const create = searchParams.get("create");
+    const create = searchParams.get('create');
     if (create) {
       setCreateBotton(true);
-      setBackgroundImg("");
-      setBackgroundImgApp("");
+      setBackgroundImg('');
+      setBackgroundImgApp('');
     }
     getBotType().then((resp: any) => {
-      const arr = [...resp].map((item) => {
+      const arr = [...resp].map(item => {
         return { value: item.typeKey, label: item.typeName };
       });
-      const filteredBottypeList = arr.filter((item) => item.value !== 25);
+      const filteredBottypeList = arr.filter(item => item.value !== 25);
       setBottypeList(filteredBottypeList);
-      const save = searchParams.get("save");
-      const botId = searchParams.get("botId");
+      const save = searchParams.get('save');
+      const botId = searchParams.get('botId');
       if (botId) {
-        sessionStorage.removeItem("botTemplateInfoValue");
+        sessionStorage.removeItem('botTemplateInfoValue');
 
         getBotInfo({ botId: botId }).then((res: any) => {
           setBackgroundImgApp(res.appBackground);
           setBackgroundImg(res.pcBackground);
           setBotInfo(res);
           setBotCreateActiveV({
-            cn: save == "true" ? configPageData?.vcnCn : res.vcnCn,
-            en: save == "true" ? configPageData?.vcnEn : res.vcnEn,
-            speed: save == "true" ? configPageData?.vcnSpeed : res.vcnSpeed,
+            cn: save == 'true' ? configPageData?.vcnCn : res.vcnCn,
+            en: save == 'true' ? configPageData?.vcnEn : res.vcnEn,
+            speed: save == 'true' ? configPageData?.vcnSpeed : res.vcnSpeed,
           });
           const obj: any = {};
           if (
-            save == "true"
-              ? typeof configPageData?.openedTool === "string" &&
-                configPageData.openedTool.indexOf("ifly_search") !== -1
-              : typeof res.openedTool === "string" &&
-                res.openedTool.indexOf("ifly_search") !== -1
+            save == 'true'
+              ? typeof configPageData?.openedTool === 'string' &&
+                configPageData.openedTool.indexOf('ifly_search') !== -1
+              : typeof res.openedTool === 'string' &&
+                res.openedTool.indexOf('ifly_search') !== -1
           ) {
             obj.ifly_search = true;
           } else {
             obj.ifly_search = false;
           }
           if (
-            save == "true"
-              ? typeof configPageData?.openedTool === "string" &&
-                configPageData.openedTool.indexOf("text_to_image") !== -1
-              : typeof res.openedTool === "string" &&
-                res.openedTool.indexOf("text_to_image") !== -1
+            save == 'true'
+              ? typeof configPageData?.openedTool === 'string' &&
+                configPageData.openedTool.indexOf('text_to_image') !== -1
+              : typeof res.openedTool === 'string' &&
+                res.openedTool.indexOf('text_to_image') !== -1
           ) {
             obj.text_to_image = true;
           } else {
             obj.text_to_image = false;
           }
           if (
-            save == "true"
-              ? typeof configPageData?.openedTool === "string" &&
-                configPageData.openedTool.indexOf("codeinterpreter") !== -1
-              : typeof res.openedTool === "string" &&
-                res.openedTool.indexOf("codeinterpreter") !== -1
+            save == 'true'
+              ? typeof configPageData?.openedTool === 'string' &&
+                configPageData.openedTool.indexOf('codeinterpreter') !== -1
+              : typeof res.openedTool === 'string' &&
+                res.openedTool.indexOf('codeinterpreter') !== -1
           ) {
             obj.codeinterpreter = true;
           } else {
             obj.codeinterpreter = false;
           }
           setSupportContextFlag(
-            save == "true"
+            save == 'true'
               ? configPageData?.supportContext == 1
-              : res.supportContext == 1,
+              : res.supportContext == 1
           );
           setSupportSystemFlag(
-            save == "true"
+            save == 'true'
               ? configPageData?.supportSystem == 1
-              : res.supportSystem == 1,
+              : res.supportSystem == 1
           );
           setInputExample(
-            save == "true"
+            save == 'true'
               ? Array.isArray(configPageData?.inputExampleList)
                 ? configPageData?.inputExampleList
                 : configPageData?.inputExample
               : Array.isArray(res.inputExampleList)
                 ? res.inputExampleList
-                : res.inputExample,
+                : res.inputExample
           );
-          setPrologue(save == "true" ? configPageData?.prologue : res.prologue);
+          setPrologue(save == 'true' ? configPageData?.prologue : res.prologue);
           setChoosedAlltool(obj);
-          setBaseinfo(save == "true" ? configPageData : res);
-          form.setFieldsValue(save == "true" ? configPageData : res);
-          setDetailInfo(save == "true" ? { ...res, ...configPageData } : res);
-          setCoverUrl(save == "true" ? configPageData?.avatar : res.avatar);
-          setModel(save == "true" ? configPageData?.model : res.model);
+          setBaseinfo(save == 'true' ? configPageData : res);
+          form.setFieldsValue(save == 'true' ? configPageData : res);
+          setDetailInfo(save == 'true' ? { ...res, ...configPageData } : res);
+          setCoverUrl(save == 'true' ? configPageData?.avatar : res.avatar);
+          setModel(save == 'true' ? configPageData?.model : res.model);
           const filteredPrompt =
-            save == "true"
-              ? typeof configPageData?.prompt === "string"
+            save == 'true'
+              ? typeof configPageData?.prompt === 'string'
                 ? configPageData.prompt.replace(
                     /接下来我的输入是：\{\{\}\}$/,
-                    "",
+                    ''
                   )
-                : ""
-              : typeof res.prompt === "string"
-                ? res.prompt.replace(/接下来我的输入是：\{\{\}\}$/, "")
-                : "";
+                : ''
+              : typeof res.prompt === 'string'
+                ? res.prompt.replace(/接下来我的输入是：\{\{\}\}$/, '')
+                : '';
           setPrompt(filteredPrompt);
           promptList[0].prompt = filteredPrompt;
           setPromptList(promptList);
           listRepos().then((respo: any) => {
             const arr: any = [];
             if (
-              save == "true"
+              save == 'true'
                 ? Array.isArray(configPageData?.datasetList) &&
                   configPageData.datasetList.length > 0
                 : Array.isArray(res.datasetList) && res.datasetList.length > 0
             ) {
               const newArr: DatasetItem[] =
-                save == "true" ? configPageData?.datasetList : res.datasetList;
+                save == 'true' ? configPageData?.datasetList : res.datasetList;
               const pageData: PageDataItem[] = respo?.pageData;
 
               newArr.forEach((item: DatasetItem) => {
                 pageData.forEach((itemt: PageDataItem) => {
-                  if ((save == "true" ? item : item.id) == itemt.id) {
+                  if ((save == 'true' ? item : item.id) == itemt.id) {
                     arr.push(itemt);
                   }
                 });
               });
             }
             if (
-              save == "true"
+              save == 'true'
                 ? Array.isArray(configPageData?.maasDatasetList) &&
                   configPageData.maasDatasetList.length > 0
                 : Array.isArray(res.maasDatasetList) &&
                   res.maasDatasetList.length > 0
             ) {
               const maasDatasetList: MaasDatasetItem[] =
-                save == "true"
+                save == 'true'
                   ? configPageData?.maasDatasetList
                   : res.maasDatasetList;
 
               maasDatasetList.forEach((item: MaasDatasetItem) => {
                 (respo?.pageData as PageDataItem[]).forEach(
                   (itemt: PageDataItem) => {
-                    if ((save == "true" ? item : item.id) == itemt.id) {
+                    if ((save == 'true' ? item : item.id) == itemt.id) {
                       arr.push(itemt);
                     }
-                  },
+                  }
                 );
               });
             }
@@ -637,32 +630,32 @@ const BaseConfig: React.FC<ChatProps> = ({
         });
       }
     });
-    const quickCreate = searchParams.get("quickCreate");
+    const quickCreate = searchParams.get('quickCreate');
     if (quickCreate) {
       form.setFieldsValue(botTemplateInfoValue);
       setCoverUrl(botTemplateInfoValue.avatar);
-      let prompt = "";
+      let prompt = '';
       botTemplateInfoValue.promptStructList?.forEach(
         (item: { promptKey: string; promptValue: string }, index: number) => {
-          prompt = prompt + item.promptKey + `\n` + item.promptValue + "\n";
-        },
+          prompt = prompt + item.promptKey + `\n` + item.promptValue + '\n';
+        }
       );
       setPrompt(prompt);
       setInputExample(
         Array.isArray(botTemplateInfoValue.inputExampleList)
           ? botTemplateInfoValue.inputExampleList
-          : botTemplateInfoValue.inputExample,
+          : botTemplateInfoValue.inputExample
       );
     }
-    const sentence = searchParams.get("sentence");
+    const sentence = searchParams.get('sentence');
     if (sentence) {
       setSentence(1);
     }
   }, [searchParams, configPageData?.openedTool]);
 
   useEffect(() => {
-    setInputExampleTip("");
-    setInputExampleModel("");
+    setInputExampleTip('');
+    setInputExampleModel('');
   }, []);
 
   useEffect(() => {
@@ -679,21 +672,21 @@ const BaseConfig: React.FC<ChatProps> = ({
   usePrompt(isChanged, `确定离开吗？\n系统可能不会保存您做的更改。`);
 
   useEffect(() => {
-    setCurrentTab("base");
+    setCurrentTab('base');
   }, [currentRobot.id]);
 
   const aiGen = () => {
     if (!prompt) {
-      return message.warning("设定不能为空！");
+      return message.warning('设定不能为空！');
     }
     setLoadingPrompt(true);
     quickCreateBot(prompt).then((res: any) => {
-      let promptStr = "";
+      let promptStr = '';
       res.promptStructList?.forEach(
         (item: { promptKey: string; promptValue: string }, index: number) => {
           promptStr =
-            promptStr + item.promptKey + `\n` + item.promptValue + "\n";
-        },
+            promptStr + item.promptKey + `\n` + item.promptValue + '\n';
+        }
       );
       setPrompt(promptStr);
       setLoadingPrompt(false);
@@ -738,7 +731,7 @@ const BaseConfig: React.FC<ChatProps> = ({
       conversationStarter: {
         enabled: conversation,
         openingRemark: conversationStarter,
-        presetQuestion: presetQuestion.filter((item) => item),
+        presetQuestion: presetQuestion.filter(item => item),
       },
       feedback: {
         enabled: feedback,
@@ -819,15 +812,15 @@ const BaseConfig: React.FC<ChatProps> = ({
     if (multiModelDebugging) {
       flag = false;
     }
-    for (let key in growOrShrinkConfig) {
+    for (const key in growOrShrinkConfig) {
       growOrShrinkConfig[key] = flag;
     }
     setGrowOrShrinkConfig(JSON.parse(JSON.stringify(growOrShrinkConfig)));
   }, [multiModelDebugging]);
 
   useEffect(() => {
-    document.body.addEventListener("click", clickOutside);
-    return () => document.body.removeEventListener("click", clickOutside);
+    document.body.addEventListener('click', clickOutside);
+    return () => document.body.removeEventListener('click', clickOutside);
   }, []);
 
   function clickOutside(event: MouseEvent) {
@@ -836,12 +829,12 @@ const BaseConfig: React.FC<ChatProps> = ({
 
   function closeModal() {
     setVisible(false);
-    setChatModelList((chatModelList) =>
-      chatModelList.map((item) => ({
+    setChatModelList(chatModelList =>
+      chatModelList.map(item => ({
         ...item,
         visible: false,
         optionsVisible: false,
-      })),
+      }))
     );
   }
 
@@ -850,20 +843,79 @@ const BaseConfig: React.FC<ChatProps> = ({
       setIsSending(
         chatModelList
           ?.filter(
-            (item) =>
-              item.modelInfo?.plan?.value && item.modelInfo?.summary?.value,
+            item =>
+              item.modelInfo?.plan?.value && item.modelInfo?.summary?.value
           )
-          ?.some((item) => item.isSending),
+          ?.some(item => item.isSending)
       );
     }
   }, [chatModelList]);
 
+  // 提示词、模型对比涉及状态 start
+  const [showTipPk, setShowTipPk] = useState(false);
+  const [showModelPk, setShowModelPk] = useState(0);
+
+  // 提示词、模型对比涉及状态 over
+
+  /** 处理InputBox发送消息 */
+  const handleInputBoxSend = useCallback(
+    (text: string) => {
+      // 根据当前模式触发相应的PromptTry实例
+
+      if (showTipPk) {
+        tipPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else if (showModelPk > 0) {
+        modelPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else {
+        // 默认模式：触发单个PromptTry实例
+        console.log('Triggering default mode');
+        if (defaultPromptTryRef.current) {
+          defaultPromptTryRef.current.send(text);
+        }
+      }
+
+      // 清空相关状态
+      setInputExampleTip('');
+      setInputExampleModel('');
+    },
+    [showTipPk, showModelPk]
+  );
+
   useEffect(() => {
-    eventBus.on("eventSavebot", savebot);
+    eventBus.on('eventSavebot', savebot);
+
+    // 监听PromptTry实例的loading状态变化
+    const handleLoadingChange = (data: {
+      instanceId: string;
+      loading: boolean;
+    }) => {
+      const { instanceId, loading } = data;
+      if (loading) {
+        loadingInstances.current.add(instanceId);
+      } else {
+        loadingInstances.current.delete(instanceId);
+      }
+      setGlobalLoading(loadingInstances.current.size > 0);
+    };
+
+    eventBus.on('promptTry.inputExample', handleInputBoxSend);
+    eventBus.on('promptTry.loadingChange', handleLoadingChange);
+
     return () => {
-      eventBus.off("eventSavebot", savebot);
+      eventBus.off('eventSavebot', savebot);
+      eventBus.off('promptTry.inputExample', handleInputBoxSend);
+      eventBus.off('promptTry.loadingChange', handleLoadingChange);
     };
   }, [
+    handleInputBoxSend, // 添加 handleInputBoxSend 作为依赖项
     coverUrl,
     baseinfo,
     searchParams,
@@ -879,17 +931,11 @@ const BaseConfig: React.FC<ChatProps> = ({
     sentence,
     choosedAlltool,
   ]);
-  // 提示词、模型对比涉及状态 start
-  const { showTipPk, setShowTipPk } = useTipPkStore();
-  const { showModelPk, setShowModelPk } = useModelPkStore();
-
-  // 提示词、模型对比涉及状态 over
 
   /** 提示词对比 */
   const handleShowTipPk = (type: string) => {
-    setQuestionTip("");
     setShowModelPk(0); // 提示词对比时隐藏模型对比
-    if (type === "show") {
+    if (type === 'show') {
       return setShowTipPk(true);
     } else {
       // TODO: 回显选中的提示词
@@ -899,7 +945,7 @@ const BaseConfig: React.FC<ChatProps> = ({
 
   const debouncedAddModelPk = debounce((showModelPk, setShowModelPk) => {
     if (showModelPk >= 4) {
-      message.info(t("configBase.modelComparisonDesc"));
+      message.info(t('configBase.modelComparisonDesc'));
       return;
     }
     setShowModelPk(showModelPk + 1);
@@ -908,14 +954,36 @@ const BaseConfig: React.FC<ChatProps> = ({
   /** 添加模型 */
   const addModelPk = () => {
     if (modelList.length >= 4) {
-      message.info(t("configBase.modelComparisonDesc"));
+      message.info(t('configBase.modelComparisonDesc'));
       return;
     }
     debouncedAddModelPk(showModelPk, setShowModelPk);
     setModelList([
       ...modelList,
-      { model: "spark", promptAnswerCompleted: true },
+      { model: 'spark', promptAnswerCompleted: true },
     ]);
+  };
+
+  /** 处理InputBox清除消息 */
+  const handleInputBoxClear = () => {
+    // 直接调用PromptTry实例的clear方法
+    if (showTipPk) {
+      tipPromptTryRefs.current.forEach(ref => {
+        if (ref) {
+          ref.clear();
+        }
+      });
+    } else if (showModelPk > 0) {
+      modelPromptTryRefs.current.forEach(ref => {
+        if (ref) {
+          ref.clear();
+        }
+      });
+    } else {
+      if (defaultPromptTryRef.current) {
+        defaultPromptTryRef.current.clear();
+      }
+    }
   };
 
   return (
@@ -923,7 +991,7 @@ const BaseConfig: React.FC<ChatProps> = ({
       <ConfigHeader
         coverUrl={coverUrl}
         baseinfo={baseinfo}
-        botId={searchParams.get("botId") ?? undefined}
+        botId={searchParams.get('botId') ?? undefined}
         detailInfo={detailInfo}
         currentRobot={currentRobot}
         currentTab={currentTab}
@@ -939,25 +1007,25 @@ const BaseConfig: React.FC<ChatProps> = ({
                 loading={loading}
                 className="primary-btn px-6 h-10"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 4,
                 }}
-                onClick={(e) => {
+                onClick={e => {
                   if (!coverUrl) {
-                    return message.warning(t("configBase.defaultAvatar"));
+                    return message.warning(t('configBase.defaultAvatar'));
                   }
                   if (
-                    baseinfo?.botName == "" ||
-                    baseinfo?.botType == "" ||
-                    baseinfo?.botDesc == ""
+                    baseinfo?.botName == '' ||
+                    baseinfo?.botType == '' ||
+                    baseinfo?.botDesc == ''
                   ) {
                     return message.warning(
-                      t("configBase.requiredInfoNotFilled"),
+                      t('configBase.requiredInfoNotFilled')
                     );
                   }
 
-                  if (selectSource[0]?.tag == "SparkDesk-RAG") {
+                  if (selectSource[0]?.tag == 'SparkDesk-RAG') {
                     const datasetList: string[] = [];
                     (selectSource || []).forEach((item: any) => {
                       datasetList.push(item.id);
@@ -966,14 +1034,14 @@ const BaseConfig: React.FC<ChatProps> = ({
                     const obj = {
                       ...(backgroundImgApp && {
                         appBackground:
-                          typeof backgroundImgApp === "string"
-                            ? backgroundImgApp.replace(/\?.*$/, "")
+                          typeof backgroundImgApp === 'string'
+                            ? backgroundImgApp.replace(/\?.*$/, '')
                             : backgroundImgApp,
                       }),
                       ...(backgroundImg && {
                         pcBackground:
-                          typeof backgroundImg === "string"
-                            ? backgroundImg.replace(/\?.*$/, "")
+                          typeof backgroundImg === 'string'
+                            ? backgroundImg.replace(/\?.*$/, '')
                             : backgroundImg,
                       }),
                       supportContext: supportContextFlag ? 1 : 0,
@@ -981,7 +1049,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                       name: form.getFieldsValue().botName,
                       botType: form.getFieldsValue().botType,
                       botDesc: form.getFieldsValue().botDesc,
-                      botId: searchParams.get("botId"),
+                      botId: searchParams.get('botId'),
                       promptType: 0,
                       inputExample: inputExample,
                       promptStructList: [],
@@ -993,17 +1061,20 @@ const BaseConfig: React.FC<ChatProps> = ({
                       isSentence: 0,
                       openedTool: Object.keys(choosedAlltool)
                         .filter((key: any) => choosedAlltool[key])
-                        .join(","),
+                        .join(','),
                       prologue: prologue,
                       model: model,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
                       .then(() => {
-                        message.success(t("configBase.saveSuccess"));
-                        navigate("/space/agent");
+                        message.success(t('configBase.saveSuccess'));
+                        navigate('/space/agent');
                       })
-                      .catch((err) => {
+                      .catch(err => {
                         message.error(err?.msg);
                       });
                   } else {
@@ -1015,14 +1086,14 @@ const BaseConfig: React.FC<ChatProps> = ({
                     const obj = {
                       ...(backgroundImgApp && {
                         appBackground:
-                          typeof backgroundImgApp === "string"
-                            ? backgroundImgApp.replace(/\?.*$/, "")
+                          typeof backgroundImgApp === 'string'
+                            ? backgroundImgApp.replace(/\?.*$/, '')
                             : backgroundImgApp,
                       }),
                       ...(backgroundImg && {
                         pcBackground:
-                          typeof backgroundImg === "string"
-                            ? backgroundImg.replace(/\?.*$/, "")
+                          typeof backgroundImg === 'string'
+                            ? backgroundImg.replace(/\?.*$/, '')
                             : backgroundImg,
                       }),
                       supportContext: supportContextFlag ? 1 : 0,
@@ -1030,7 +1101,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                       name: form.getFieldsValue().botName,
                       botType: form.getFieldsValue().botType,
                       botDesc: form.getFieldsValue().botDesc,
-                      botId: searchParams.get("botId"),
+                      botId: searchParams.get('botId'),
                       promptType: 0,
                       inputExample: inputExample,
                       promptStructList: [],
@@ -1042,23 +1113,26 @@ const BaseConfig: React.FC<ChatProps> = ({
                       isSentence: 0,
                       openedTool: Object.keys(choosedAlltool)
                         .filter((key: any) => choosedAlltool[key])
-                        .join(","),
+                        .join(','),
                       prologue: prologue,
                       model: model,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
                       .then(() => {
-                        message.success(t("configBase.saveSuccess"));
-                        navigate("/space/agent");
+                        message.success(t('configBase.saveSuccess'));
+                        navigate('/space/agent');
                       })
-                      .catch((err) => {
+                      .catch(err => {
                         message.error(err.msg);
                       });
                   }
                 }}
               >
-                <span>{t("configBase.save")}</span>
+                <span>{t('configBase.save')}</span>
               </Button>
             )}
 
@@ -1068,22 +1142,22 @@ const BaseConfig: React.FC<ChatProps> = ({
               loading={loading}
               className="primary-btn px-6 h-10"
               style={{
-                display: "flex",
-                alignItems: "center",
+                display: 'flex',
+                alignItems: 'center',
                 gap: 4,
               }}
-              onClick={(e) => {
+              onClick={e => {
                 if (!coverUrl) {
-                  return message.warning(t("configBase.defaultAvatar"));
+                  return message.warning(t('configBase.defaultAvatar'));
                 }
                 if (
                   !baseinfo?.botName ||
                   !baseinfo?.botType ||
                   !baseinfo?.botDesc
                 ) {
-                  return message.warning(t("configBase.requiredInfoNotFilled"));
+                  return message.warning(t('configBase.requiredInfoNotFilled'));
                 }
-                if (selectSource[0]?.tag == "SparkDesk-RAG") {
+                if (selectSource[0]?.tag == 'SparkDesk-RAG') {
                   const datasetList: string[] = [];
                   (selectSource || []).forEach((item: any) => {
                     datasetList.push(item.id);
@@ -1092,14 +1166,14 @@ const BaseConfig: React.FC<ChatProps> = ({
                   const obj = {
                     ...(backgroundImgApp && {
                       appBackground:
-                        typeof backgroundImgApp === "string"
-                          ? backgroundImgApp.replace(/\?.*$/, "")
+                        typeof backgroundImgApp === 'string'
+                          ? backgroundImgApp.replace(/\?.*$/, '')
                           : backgroundImgApp,
                     }),
                     ...(backgroundImg && {
                       pcBackground:
-                        typeof backgroundImg === "string"
-                          ? backgroundImg.replace(/\?.*$/, "")
+                        typeof backgroundImg === 'string'
+                          ? backgroundImg.replace(/\?.*$/, '')
                           : backgroundImg,
                     }),
                     name: baseinfo.botName,
@@ -1118,7 +1192,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                     isSentence: sentence,
                     openedTool: Object.keys(choosedAlltool)
                       .filter((key: any) => choosedAlltool[key])
-                      .join(","),
+                      .join(','),
                     prologue: prologue,
                     model: model,
                     prompt: prompt,
@@ -1126,9 +1200,9 @@ const BaseConfig: React.FC<ChatProps> = ({
 
                   insertBot(obj)
                     .then(() => {
-                      navigate("/space/agent");
+                      navigate('/space/agent');
                     })
-                    .catch((err) => {
+                    .catch(err => {
                       message.error(err.msg);
                     });
                 } else {
@@ -1140,14 +1214,14 @@ const BaseConfig: React.FC<ChatProps> = ({
                   const obj = {
                     ...(backgroundImgApp && {
                       appBackground:
-                        typeof backgroundImgApp === "string"
-                          ? backgroundImgApp.replace(/\?.*$/, "")
+                        typeof backgroundImgApp === 'string'
+                          ? backgroundImgApp.replace(/\?.*$/, '')
                           : backgroundImgApp,
                     }),
                     ...(backgroundImg && {
                       pcBackground:
-                        typeof backgroundImg === "string"
-                          ? backgroundImg.replace(/\?.*$/, "")
+                        typeof backgroundImg === 'string'
+                          ? backgroundImg.replace(/\?.*$/, '')
                           : backgroundImg,
                     }),
                     name: baseinfo.botName,
@@ -1166,7 +1240,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                     isSentence: sentence,
                     openedTool: Object.keys(choosedAlltool)
                       .filter((key: any) => choosedAlltool[key])
-                      .join(","),
+                      .join(','),
                     prologue: prologue,
                     model: model,
                     prompt: prompt,
@@ -1174,15 +1248,15 @@ const BaseConfig: React.FC<ChatProps> = ({
 
                   insertBot(obj)
                     .then(() => {
-                      navigate("/space/agent");
+                      navigate('/space/agent');
                     })
-                    .catch((err) => {
+                    .catch(err => {
                       message.error(err.msg);
                     });
                 }
               }}
             >
-              <span>{t("configBase.create")}</span>
+              <span>{t('configBase.create')}</span>
             </Button>
           )}
 
@@ -1193,23 +1267,22 @@ const BaseConfig: React.FC<ChatProps> = ({
                 loading={loading}
                 className="primary-btn px-6 h-10"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 4,
                 }}
-                onClick={(e) => {
+                onClick={e => {
                   if (questionTipActive == -1) {
-                    return message.warning(t("configBase.notSelectPrompt"));
+                    return message.warning(t('configBase.notSelectPrompt'));
                   }
                   e.stopPropagation();
                   setPrompt(promptList[questionTipActive].prompt);
                   setShowTipPk(false);
-                  setQuestionTip("");
-                  setInputExampleTip("");
-                  setInputExampleModel("");
+                  setInputExampleTip('');
+                  setInputExampleModel('');
                 }}
               >
-                <span>{t("configBase.completeComparison")}</span>
+                <span>{t('configBase.completeComparison')}</span>
               </Button>
             ) : (
               <Button
@@ -1217,18 +1290,18 @@ const BaseConfig: React.FC<ChatProps> = ({
                 loading={loading}
                 className="primary-btn px-6 h-10"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 4,
                 }}
                 onClick={() => {
-                  if (!searchParams.get("botId")) {
-                    return message.warning(t("先创建助手"));
+                  if (!searchParams.get('botId')) {
+                    return message.warning(t('先创建助手'));
                   }
                   setOpenWxmol(true);
                 }}
               >
-                <span>{t("configBase.publish")}</span>
+                <span>{t('configBase.publish')}</span>
               </Button>
             )}
           </div>
@@ -1253,11 +1326,11 @@ const BaseConfig: React.FC<ChatProps> = ({
           className={`${
             styles.leftBox
           } h-full bg-[#fff] border border-[#E2E8FF] p-6 ${
-            !showTipPk ? "flex-1 pr-0" : "w-1/3"
-          } ${showModelPk !== 0 && "flex-none w-1/3"} z-10 overflow-auto`}
+            !showTipPk ? 'flex-1 pr-0' : 'w-1/3'
+          } ${showModelPk !== 0 && 'flex-none w-1/3'} z-10 overflow-auto`}
           style={{
             borderRadius: 18,
-            display: multiModelDebugging ? "block" : "",
+            display: multiModelDebugging ? 'block' : '',
           }}
         >
           {!showTipPk ? (
@@ -1265,7 +1338,7 @@ const BaseConfig: React.FC<ChatProps> = ({
               <Form
                 form={form}
                 name="botEdit"
-                onValuesChange={(val) => {
+                onValuesChange={val => {
                   setBaseinfo({ ...baseinfo, ...val });
                 }}
               >
@@ -1294,9 +1367,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                               {
                                 <div className={styles.name}>
                                   <Form.Item
-                                    label={t("configBase.agentName")}
+                                    label={t('configBase.agentName')}
                                     name="botName"
-                                    rules={[{ required: true, message: "" }]}
+                                    rules={[{ required: true, message: '' }]}
                                     colon={false}
                                   >
                                     <Input
@@ -1314,9 +1387,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                               <div className={styles.type}>
                                 <Form.Item
                                   name="botType"
-                                  rules={[{ required: true, message: "" }]}
+                                  rules={[{ required: true, message: '' }]}
                                   colon={false}
-                                  label={t("configBase.agentCategory")}
+                                  label={t('configBase.agentCategory')}
                                 >
                                   <Select
                                     disabled={
@@ -1330,9 +1403,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                               </div>
                             </div>
                             <Form.Item
-                              label={t("configBase.agentIntroduction")}
+                              label={t('configBase.agentIntroduction')}
                               name="botDesc"
-                              rules={[{ required: true, message: "" }]}
+                              rules={[{ required: true, message: '' }]}
                               colon={false}
                             >
                               <Input.TextArea
@@ -1351,22 +1424,22 @@ const BaseConfig: React.FC<ChatProps> = ({
               </Form>
               <div className={styles.tipBox}>
                 <Tabs defaultActiveKey="1" className={styles.tipBoxTab}>
-                  <Tabs.TabPane tab={t("configBase.commonConfig")} key="1">
+                  <Tabs.TabPane tab={t('configBase.commonConfig')} key="1">
                     <div className={styles.tipTitle}>
                       <div className={styles.tipLabel}>
-                        {t("configBase.promptEdit")}
+                        {t('configBase.promptEdit')}
                       </div>
                       <div className={styles.tipBotton}>
                         <div
                           className={styles.leftBotton}
-                          onClick={() => handleShowTipPk("show")}
+                          onClick={() => handleShowTipPk('show')}
                         >
                           <img
                             className={styles.leftImg}
                             src={promptIcon}
                             alt=""
                           />
-                          <div>{t("configBase.promptComparison")}</div>
+                          <div>{t('configBase.promptComparison')}</div>
                         </div>
                       </div>
                     </div>
@@ -1374,9 +1447,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                       <Spin spinning={loadingPrompt}>
                         <div
                           style={{
-                            border: "1px solid #e4eaff",
-                            marginBottom: "20px",
-                            borderRadius: "6px",
+                            border: '1px solid #e4eaff',
+                            marginBottom: '20px',
+                            borderRadius: '6px',
                           }}
                         >
                           <Input.TextArea
@@ -1384,7 +1457,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                             onChange={(e: any) => setPrompt(e.target.value)}
                             value={prompt}
                             autoSize={{ minRows: 10, maxRows: 10 }}
-                            style={{ marginBottom: "50px" }}
+                            style={{ marginBottom: '50px' }}
                           />
                           <div
                             className={styles.rightBotton}
@@ -1397,14 +1470,14 @@ const BaseConfig: React.FC<ChatProps> = ({
                               src={starIcon}
                               alt=""
                             />
-                            {t("configBase.AIoptimization")}
+                            {t('configBase.AIoptimization')}
                           </div>
                         </div>
                       </Spin>
                     </div>
                     <div className={styles.tipTitle}>
                       <div className={styles.tipLabel}>
-                        {t("configBase.modelSelection")}
+                        {t('configBase.modelSelection')}
                       </div>
                       <div className={styles.tipBotton}>
                         <div
@@ -1416,43 +1489,34 @@ const BaseConfig: React.FC<ChatProps> = ({
                             src={tipIcon}
                             alt=""
                           />
-                          <div>{t("configBase.modelComparison")}</div>
+                          <div>{t('configBase.modelComparison')}</div>
                         </div>
                       </div>
                     </div>
                     <Select
                       value={model}
                       onChange={handleModelChange}
-                      style={{ width: "100%" }}
-                      placeholder={t("configBase.pleaseSelectModel")}
+                      style={{ width: '100%' }}
+                      placeholder={t('configBase.pleaseSelectModel')}
                     >
-                      <Option value="spark">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t("configBase.sparkModel")}</span>
-                        </div>
-                      </Option>
-                      <Option value="x1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t("configBase.sparkX1Model")}</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekv3">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-V3</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekr1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-R1</span>
-                        </div>
-                      </Option>
+                      {modelOptions.map(option => (
+                        <Option
+                          key={option.modelDomain}
+                          value={option.modelDomain}
+                        >
+                          <div className="flex items-center">
+                            <img
+                              className="w-[20px] h-[20px]"
+                              src={option.modelIcon}
+                              alt={option.modelName}
+                            />
+                            <span>{option.modelName}</span>
+                          </div>
+                        </Option>
+                      ))}
                     </Select>
                   </Tabs.TabPane>
-                  <Tabs.TabPane tab={t("configBase.highOrderConfig")} key="2">
+                  <Tabs.TabPane tab={t('configBase.highOrderConfig')} key="2">
                     <CapabilityDevelopment
                       botCreateActiveV={botCreateActiveV}
                       setBotCreateActiveV={setBotCreateActiveV}
@@ -1510,7 +1574,7 @@ const BaseConfig: React.FC<ChatProps> = ({
             </>
           ) : (
             <div className={styles.tipPkBox}>
-              <h1>{t("configBase.promptEdit")}</h1>
+              <h1>{t('configBase.promptEdit')}</h1>
               <div
                 className={
                   questionTipActive == 0
@@ -1519,7 +1583,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                 }
               >
                 <div className={styles.tipPkTitle}>
-                  {t("configBase.defaultPrompt")}
+                  {t('configBase.defaultPrompt')}
                 </div>
                 <Input.TextArea
                   onChange={(e: any) => {
@@ -1531,15 +1595,15 @@ const BaseConfig: React.FC<ChatProps> = ({
                   autoSize={{ minRows: 13, maxRows: 13 }}
                 />
                 <Button
-                  type={questionTipActive == 0 ? "primary" : "default"}
+                  type={questionTipActive == 0 ? 'primary' : 'default'}
                   className={styles.tipBtn}
                   onClick={() => {
                     setQuestionTipActive(0);
                   }}
                 >
                   {questionTipActive == 0
-                    ? t("configBase.selected")
-                    : t("configBase.select")}
+                    ? t('configBase.selected')
+                    : t('configBase.select')}
                 </Button>
               </div>
               <div
@@ -1550,7 +1614,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                 }
               >
                 <div className={styles.tipPkTitle}>
-                  {t("configBase.comparePrompt")}
+                  {t('configBase.comparePrompt')}
                 </div>
                 <Input.TextArea
                   onChange={(e: any) => {
@@ -1562,15 +1626,15 @@ const BaseConfig: React.FC<ChatProps> = ({
                   autoSize={{ minRows: 13, maxRows: 13 }}
                 />
                 <Button
-                  type={questionTipActive == 1 ? "primary" : "default"}
+                  type={questionTipActive == 1 ? 'primary' : 'default'}
                   className={styles.tipBtn}
                   onClick={() => {
                     setQuestionTipActive(1);
                   }}
                 >
                   {questionTipActive == 1
-                    ? t("configBase.selected")
-                    : t("configBase.select")}
+                    ? t('configBase.selected')
+                    : t('configBase.select')}
                 </Button>
               </div>
             </div>
@@ -1582,15 +1646,15 @@ const BaseConfig: React.FC<ChatProps> = ({
           className="h-full bg-[#fff] border border-[#E2E8FF] p-6 flex-1 z-10 overflow-auto"
           style={{
             borderRadius: 18,
-            display: multiModelDebugging ? "block" : "flex",
+            display: multiModelDebugging ? 'block' : 'flex',
             zIndex: 1,
-            paddingBottom: "0",
+            paddingBottom: '0',
           }}
         >
           <div className={styles.testArea}>
             <div className={styles.testInfo}>
               <div className={styles.testName}>
-                {t("configBase.debugPreview")}
+                {t('configBase.debugPreview')}
               </div>
               {/* 模型对比才显示 */}
               {showModelPk !== 0 && !showTipPk && (
@@ -1599,16 +1663,15 @@ const BaseConfig: React.FC<ChatProps> = ({
                     onClick={() => {
                       setShowModelPk(0);
                       setModelList([
-                        { model: "spark", promptAnswerCompleted: true },
-                        { model: "spark", promptAnswerCompleted: true },
+                        { model: 'spark', promptAnswerCompleted: true },
+                        { model: 'spark', promptAnswerCompleted: true },
                       ]);
-                      setQuestionTip("");
                     }}
                   >
-                    {t("configBase.restoreDefaultDisplay")}
+                    {t('configBase.restoreDefaultDisplay')}
                   </Button>
                   <Button onClick={addModelPk}>
-                    {t("configBase.addModel")} {`(${showModelPk} / 4)`}
+                    {t('configBase.addModel')} {`(${showModelPk} / 4)`}
                   </Button>
                 </div>
               )}
@@ -1619,6 +1682,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                 <>
                   {!showTipPk && (
                     <PromptTry
+                      ref={defaultPromptTryRef}
                       baseinfo={baseinfo}
                       inputExample={inputExample}
                       coverUrl={coverUrl}
@@ -1636,28 +1700,25 @@ const BaseConfig: React.FC<ChatProps> = ({
                         key={index}
                         style={
                           {
-                            "--count": showTipPk ? 2 : 1,
+                            '--count': showTipPk ? 2 : 1,
                             background:
-                              questionTipActive == index ? "#f6f9ff" : "",
+                              questionTipActive == index ? '#f6f9ff' : '',
                             border:
                               questionTipActive == index
-                                ? "1px solid #275eff"
-                                : "",
+                                ? '1px solid #275eff'
+                                : '',
                           } as React.CSSProperties
                         }
                         className={`${styles.ModelItem} ${
                           !showTipPk && styles.signlItem
                         } `}
                       >
-                        <PromptTip
-                          setQuestionTip={setQuestionTip}
-                          item={item}
-                          promptList={promptList}
-                          index={index}
-                          setPromptList={setPromptList}
-                          promptAnswerCompleted={item.promptAnswerCompleted}
-                          showTipPk={showTipPk}
-                          questionTip={questionTip}
+                        <PromptTry
+                          ref={ref => {
+                            if (tipPromptTryRefs.current) {
+                              tipPromptTryRefs.current[index] = ref;
+                            }
+                          }}
                           newPrompt={item.prompt}
                           baseinfo={baseinfo}
                           inputExample={inputExample}
@@ -1682,63 +1743,49 @@ const BaseConfig: React.FC<ChatProps> = ({
                       key={index}
                       style={
                         {
-                          "--count":
+                          '--count':
                             modelList.length === 4 ? 2 : modelList.length,
                         } as React.CSSProperties
                       }
                       className={styles.ModelItem}
                     >
-                      <div style={{ margin: "15px 0 0 15px" }}>
-                        {t("configBase.model")}
+                      <div style={{ margin: '15px 0 0 15px' }}>
+                        {t('configBase.model')}
                         {index + 1}
                       </div>
                       <div
-                        style={{ display: "flex", justifyContent: "center" }}
+                        style={{ display: 'flex', justifyContent: 'center' }}
                       >
                         <Select
                           defaultValue={item.model}
-                          onChange={(e) => handleModelChangeNew(e, index)}
-                          style={{ width: "60%" }}
+                          onChange={e => handleModelChangeNew(e, index)}
+                          style={{ width: '60%' }}
                           placeholder="请选择模型"
                         >
-                          <Option value="spark">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t("configBase.sparkModel")}</span>
-                            </div>
-                          </Option>
-                          <Option value="x1">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t("configBase.sparkX1Model")}</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekv3">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-V3</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekr1">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-R1</span>
-                            </div>
-                          </Option>
+                          {modelOptions.map(option => (
+                            <Option
+                              key={option.modelDomain}
+                              value={option.modelDomain}
+                            >
+                              <div className="flex items-center">
+                                <img
+                                  className="w-[20px] h-[20px]"
+                                  src={option.modelIcon}
+                                  alt={option.modelName}
+                                />
+                                <span>{option.modelName}</span>
+                              </div>
+                            </Option>
+                          ))}
                         </Select>
                       </div>
-                      <PromptModel
-                        setQuestionTip={setQuestionTip}
-                        item={item}
-                        questionTip={questionTip}
+                      <PromptTry
+                        ref={ref => {
+                          if (modelPromptTryRefs.current) {
+                            modelPromptTryRefs.current[index] = ref;
+                          }
+                        }}
                         newModel={item.model}
-                        showModelPk={showModelPk}
                         baseinfo={baseinfo}
                         inputExample={inputExample}
                         coverUrl={coverUrl}
@@ -1755,201 +1802,15 @@ const BaseConfig: React.FC<ChatProps> = ({
               )}
             </div>
 
-            {/* 对话框 */}
-            {showTipPk && (
-              <div style={{ marginTop: "6px" }} className={styles.ask_wrapper}>
-                {answerCompleted && (
-                  <div
-                    className={styles.quit_botmode}
-                    onClick={() => {
-                      eventBus.emit("eventRemoveAll");
-                    }}
-                  >
-                    <DeleteIcon
-                      style={{
-                        pointerEvents: "none",
-                        marginRight: "6px",
-                        marginTop: "5px",
-                      }}
-                    />
-                    {t("configBase.clearHistory")}
-                  </div>
-                )}
-
-                <textarea
-                  value={inputExampleTip}
-                  ref={$ask}
-                  placeholder={"在此输入内容"}
-                  onChange={(e) => {
-                    setAskValue(e.target.value);
-                    setInputExampleTip(e.target.value);
-                  }}
-                  onKeyDown={(e: any) => {
-                    // ctrl+enter执行换行
-                    if (e.ctrlKey && e.code === "Enter") {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      if ($ask.current) {
-                        $ask.current.value += `\n`;
-                      }
-                      return;
-                    }
-                    if (
-                      !e.shiftKey &&
-                      !e.ctrlKey &&
-                      e.code === "Enter" &&
-                      $inputConfirmFlag.current
-                    ) {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      const question: string = $ask.current?.value || "";
-                      if (!question || question.trim() === "") {
-                        message.info(t("configBase.pleaseEnterContent"));
-                        if ($ask.current) {
-                          $ask.current.value = "";
-                        }
-                        return;
-                      }
-                      setQuestionTip(question);
-                      setInputExampleTip("");
-                      if ($ask.current) {
-                        $ask.current.value = "";
-                      }
-                      return;
-                    }
-                  }}
-                  onCompositionStart={() => {
-                    $inputConfirmFlag.current = false;
-                  }}
-                  onCompositionEnd={() => {
-                    $inputConfirmFlag.current = true;
-                  }}
-                />
-                <div
-                  className={styles.send}
-                  style={{
-                    background:
-                      askValue || inputExampleTip ? "#257eff" : "#8aa5e6",
-                    opacity: $ask.current?.value ? 1 : 0.7,
-                  }}
-                  onClick={() => {
-                    const question: string = $ask.current?.value || "";
-                    if (!question || question.trim() === "") {
-                      message.info(t("configBase.pleaseEnterContent"));
-                      if ($ask.current) {
-                        $ask.current.value = "";
-                      }
-                      return;
-                    }
-                    setQuestionTip(question);
-                    setInputExampleTip("");
-                    if ($ask.current) {
-                      $ask.current.value = "";
-                    }
-                    setAskValue("");
-                  }}
-                >
-                  {t("configBase.send")}
-                </div>
-              </div>
-            )}
-
-            {/* 对话框 */}
-            {showModelPk > 0 && (
-              <div style={{ marginTop: "6px" }} className={styles.ask_wrapper}>
-                <div
-                  className={styles.quit_botmode}
-                  onClick={() => {
-                    eventBus.emit("eventRemoveAll");
-                  }}
-                >
-                  <DeleteIcon
-                    style={{ pointerEvents: "none", marginRight: "6px" }}
-                  />
-                  {t("configBase.clearHistory")}
-                </div>
-                <textarea
-                  value={inputExampleModel}
-                  ref={$ask}
-                  placeholder={t("configBase.inputContent")}
-                  onChange={(e) => {
-                    setAskValue(e.target.value);
-                    setInputExampleModel(e.target.value);
-                  }}
-                  onKeyDown={(e: any) => {
-                    // ctrl+enter执行换行
-                    if (e.ctrlKey && e.code === "Enter") {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      if ($ask.current) {
-                        $ask.current.value += `\n`;
-                      }
-                      return;
-                    }
-                    if (
-                      !e.shiftKey &&
-                      !e.ctrlKey &&
-                      e.code === "Enter" &&
-                      $inputConfirmFlag.current
-                    ) {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      const question: string = $ask.current?.value || "";
-                      if (!question || question.trim() === "") {
-                        message.info(t("configBase.pleaseEnterContent"));
-                        if ($ask.current) {
-                          $ask.current.value = "";
-                        }
-                        return;
-                      }
-                      setQuestionTip(question);
-                      //  || dialogEnable === 0
-                      setInputExampleModel("");
-                      if ($ask.current) {
-                        $ask.current.value = "";
-                      }
-                      return;
-                    }
-                  }}
-                  onCompositionStart={() => {
-                    $inputConfirmFlag.current = false;
-                  }}
-                  onCompositionEnd={() => {
-                    $inputConfirmFlag.current = true;
-                  }}
-                />
-                <div
-                  className={styles.send}
-                  style={{
-                    background:
-                      askValue || inputExampleModel ? "#257eff" : "#8aa5e6",
-                    opacity: $ask.current?.value ? 1 : 0.7,
-                  }}
-                  onClick={() => {
-                    const question: string = $ask.current?.value || "";
-                    if (!question || question.trim() === "") {
-                      message.info(t("configBase.pleaseEnterContent"));
-                      if ($ask.current) {
-                        $ask.current.value = "";
-                      }
-                      return;
-                    }
-                    setQuestionTip(question);
-                    setInputExampleModel("");
-                    if ($ask.current) {
-                      $ask.current.value = "";
-                    }
-                    setAskValue("");
-                  }}
-                >
-                  {t("configBase.send")}
-                </div>
-              </div>
-            )}
+            {/* 统一输入框 */}
+            <InputBox
+              onSend={handleInputBoxSend}
+              onClear={handleInputBoxClear}
+              value={askValue}
+              onChange={setAskValue}
+              isLoading={globalLoading}
+              isCompleted={!globalLoading}
+            />
           </div>
         </div>
       </div>

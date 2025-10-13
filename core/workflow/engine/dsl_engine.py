@@ -14,8 +14,11 @@ from asyncio.tasks import Task
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field
-from workflow.consts.flow import ErrorHandler, XFLLMStatus
-from workflow.consts.model_provider import ModelProviderEnum
+
+from workflow.consts.engine.chat_status import ChatStatus, SparkLLMStatus
+from workflow.consts.engine.error_handler import ErrorHandler
+from workflow.consts.engine.model_provider import ModelProviderEnum
+from workflow.consts.engine.value_type import ValueType
 from workflow.domain.entities.chat import HistoryItem
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.chains import Chains, SimplePath
@@ -468,13 +471,16 @@ class RetryableErrorHandler(ExceptionHandlerBase):
                 if stream_node_id == run_result.node_id:
                     llm_content = self._get_error_llm_content(node_type, node)
 
+                    domain = (
+                        node.node_instance.domain
+                        if hasattr(node.node_instance, "domain")
+                        else ""
+                    )
                     await workflow_engine_ctx.variable_pool.stream_data[key][
                         run_result.node_id
                     ].put(
                         StreamOutputMsg(
-                            domain=node.node_instance.get_node_config().get(
-                                "domain", ""
-                            ),
+                            domain=domain,
                             llm_response=llm_content,
                             exception_occurred=True,
                         )
@@ -493,35 +499,37 @@ class RetryableErrorHandler(ExceptionHandlerBase):
         if node_type == NodeType.AGENT.value:
             return {
                 "code": -1,
-                "choices": [{"finish_reason": "stop"}],
+                "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
             }
         elif node_type == NodeType.KNOWLEDGE_PRO.value:
             return {
                 "code": -1,
-                "finish_reason": "stop",
+                "finish_reason": ChatStatus.FINISH_REASON.value,
             }
         elif node_type == NodeType.FLOW.value:
             return {
                 "code": -1,
-                "choices": [{"finish_reason": "stop"}],
+                "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
             }
         elif node_type == NodeType.LLM.value:
-            model_source = node.node_instance.get_node_config().get(
-                "source", ModelProviderEnum.XINGHUO.value
+            model_source = (
+                node.node_instance.source
+                if hasattr(node.node_instance, "source")
+                else ModelProviderEnum.XINGHUO.value
             )
 
             if model_source == ModelProviderEnum.XINGHUO.value:
                 return {
                     "header": {
                         "code": -1,
-                        "status": XFLLMStatus.END.value,
+                        "status": SparkLLMStatus.END.value,
                     },
                     "payload": {"choices": {"text": [{}]}},
                 }
             elif model_source == ModelProviderEnum.OPENAI.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
 
         return {"code": -1}
@@ -864,7 +872,7 @@ class WorkflowEngine(BaseModel):
         # Wait for all tasks to complete
         await self._wait_all_tasks_completion(span)
 
-        return self.engine_ctx.responses[0]
+        return self.engine_ctx.responses[-1]
 
     async def _handle_node_start_callback(
         self,
@@ -1084,7 +1092,11 @@ class WorkflowEngine(BaseModel):
         :param node: The node to get the default intent chain for
         :return: List of default intent chain node IDs, or None if not found
         """
-        intent_chains = node.node_instance.get_node_config().get("intentChains", [])
+        intent_chains = (
+            node.node_instance.intentChains
+            if hasattr(node.node_instance, "intentChains")
+            else []
+        )
 
         for intent in intent_chains:
             if intent.get("name", "") == "default":
@@ -1106,7 +1118,7 @@ class WorkflowEngine(BaseModel):
 
         if node_type == NodeType.QUESTION_ANSWER.value:
             instance = node.node_instance
-            answer_type = instance.get_node_config().get("answerType")
+            answer_type = instance.answerType if hasattr(instance, "answerType") else ""
             return answer_type == "option"
 
         return False
@@ -1496,35 +1508,39 @@ class WorkflowEngine(BaseModel):
             case NodeType.AGENT.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
             case NodeType.KNOWLEDGE_PRO.value:
                 return {
                     "code": -1,
-                    "finish_reason": "stop",
+                    "finish_reason": ChatStatus.FINISH_REASON.value,
                 }
             case NodeType.FLOW.value:
                 return {
                     "code": -1,
-                    "choices": [{"finish_reason": "stop"}],
+                    "choices": [{"finish_reason": ChatStatus.FINISH_REASON.value}],
                 }
             case NodeType.LLM.value:
-                model_source = node.node_instance.get_node_config().get(
-                    "source", ModelProviderEnum.XINGHUO.value
+                model_source = (
+                    node.node_instance.source
+                    if hasattr(node.node_instance, "source")
+                    else ModelProviderEnum.XINGHUO.value
                 )
                 match model_source:
                     case ModelProviderEnum.XINGHUO.value:
                         return {
                             "header": {
                                 "code": -1,
-                                "status": XFLLMStatus.END.value,
+                                "status": SparkLLMStatus.END.value,
                             },
                             "payload": {"choices": {"text": [{}]}},
                         }
                     case ModelProviderEnum.OPENAI.value:
                         return {
                             "code": -1,
-                            "choices": [{"finish_reason": "stop"}],
+                            "choices": [
+                                {"finish_reason": ChatStatus.FINISH_REASON.value}
+                            ],
                         }
             case _:
                 return {"code": -1}
@@ -2071,7 +2087,7 @@ class WorkflowEngineBuilder:
         if node_type == NodeType.START.value:
             self.start_node_id = node.id
         elif node_type == NodeType.DECISION_MAKING.value:
-            self._handle_DECISION_MAKING_node(node.id, node)
+            self._handle_decision_making_node(node.id, node)
         elif node_type == NodeType.LLM.value:
             self._handle_llm_node(node.id, node)
         elif node_type == NodeType.ITERATION.value:
@@ -2079,7 +2095,7 @@ class WorkflowEngineBuilder:
         elif node_type == NodeType.END.value:
             self._handle_end_node(spark_node_instance)
 
-    def _handle_DECISION_MAKING_node(self, node_id: str, node: Node) -> None:
+    def _handle_decision_making_node(self, node_id: str, node: Node) -> None:
         """
         Handle decision making node.
 
@@ -2132,8 +2148,12 @@ class WorkflowEngineBuilder:
         :param spark_node_instance: The SparkFlow engine node instance
         :return: None
         """
-        end_node_config = spark_node_instance.node_instance.get_node_config()
-        if end_node_config["outputMode"] == 0:
+        output_mode = (
+            spark_node_instance.node_instance.outputMode
+            if hasattr(spark_node_instance.node_instance, "outputMode")
+            else 0
+        )
+        if output_mode == 0:
             self.end_node_output_mode = EndNodeOutputModeEnum.VARIABLE_MODE
         else:
             self.end_node_output_mode = EndNodeOutputModeEnum.PROMPT_MODE
@@ -2197,7 +2217,7 @@ class WorkflowEngineBuilder:
             inputs = node.data.inputs
             for input_item in inputs:
                 var_type = input_item.input_schema.value.type
-                if var_type == "literal":
+                if var_type == ValueType.LITERAL.value:
                     continue
 
                 content = input_item.input_schema.value.content

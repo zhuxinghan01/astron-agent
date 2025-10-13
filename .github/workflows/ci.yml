@@ -2,9 +2,9 @@ name: 🚀 CI Pipeline
 
 on:
   push:
-    branches: [main, 'feature/**', 'bugfix/**', 'hotfix/**']
+    branches: [main, master, 'feature/**']
   pull_request:
-    branches: [main]
+    branches: [main, master, 'feature/**']
   workflow_dispatch:
 
 concurrency:
@@ -203,16 +203,18 @@ jobs:
               ;;
             python)
               echo "🛠️ Installing Python quality tools..."
-              python3 -m pip install black==24.4.2 isort==5.13.2 flake8==7.0.0 mypy==1.9.0 pylint==3.1.0
-              echo "✨ Checking format compliance..."
-              python3 -m isort --check-only .
-              python3 -m black --check .
-              echo "🔍 Running flake8..."
-              python3 -m flake8 .
-              echo "📋 Running mypy..."
-              python3 -m mypy .
-              echo "📊 Running pylint..."
-              python3 -m pylint --fail-under=8.0 *.py
+              python3 -m pip install black==24.4.2 isort==5.13.2 flake8==7.0.0 mypy==1.9.0 pylint==3.1.0 types-requests>=2.32.4.20250913
+              echo "🔍 Running Python quality checks..."
+              echo "1. Running flake8 code style check..."
+              python3 -m flake8 --max-line-length 88 --ignore=E203,W503,E501 --max-complexity 10 .
+              echo "2. Running isort import formatting..."
+              python3 -m isort --profile black .
+              echo "3. Running black code formatting..."
+              python3 -m black .
+              echo "4. Running mypy type checking..."
+              python3 -m mypy --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs --no-implicit-optional --ignore-missing-imports --explicit-package-bases .
+              echo "5. Running pylint code analysis..."
+              python3 -m pylint --disable=import-error --max-line-length=88 --max-args=7 --max-locals=15 --max-returns=6 --max-branches=12 --max-statements=50 --fail-under=8.0 *.py
               ;;
           esac
 

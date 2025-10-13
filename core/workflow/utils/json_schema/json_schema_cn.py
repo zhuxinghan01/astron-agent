@@ -8,7 +8,6 @@ Chinese error messages for better user experience in Chinese applications.
 import re
 from typing import Any, Iterator
 
-import jsonschema  # type: ignore[import-untyped]
 from jsonschema import Draft7Validator  # type: ignore[import-untyped]
 from jsonschema import ValidationError, validators
 
@@ -50,7 +49,7 @@ def cn_required_validator(
             yield ValidationError(f"缺少必填字段: '{req}'")
 
 
-def cn_allOf_validator(
+def cn_all_of_validator(
     validator: Any, allOf: list, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -69,7 +68,7 @@ def cn_allOf_validator(
             )
 
 
-def cn_anyOf_validator(
+def cn_any_of_validator(
     validator: Any, anyOf: list, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -85,7 +84,7 @@ def cn_anyOf_validator(
         yield ValidationError("必须至少满足 anyOf 中的一个条件")
 
 
-def cn_oneOf_validator(
+def cn_one_of_validator(
     validator: Any, oneOf: list, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -170,7 +169,7 @@ def cn_items_validator(
                 yield error
 
 
-def cn_maxItems_validator(
+def cn_max_items_validator(
     validator: Any, max_items: int, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -188,7 +187,7 @@ def cn_maxItems_validator(
         )
 
 
-def cn_minItems_validator(
+def cn_min_items_validator(
     validator: Any, min_items: int, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -206,7 +205,7 @@ def cn_minItems_validator(
         )
 
 
-def cn_maxLength_validator(
+def cn_max_length_validator(
     validator: Any, max_length: int, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -224,7 +223,7 @@ def cn_maxLength_validator(
         )
 
 
-def cn_minLength_validator(
+def cn_min_length_validator(
     validator: Any, min_length: int, instance: Any, schema: dict
 ) -> Iterator[ValidationError]:
     """
@@ -332,17 +331,17 @@ _CustomValidator = validators.extend(
     {
         "type": cn_type_validator,
         "required": cn_required_validator,
-        "allOf": cn_allOf_validator,
-        "anyOf": cn_anyOf_validator,
-        "oneOf": cn_oneOf_validator,
+        "allOf": cn_all_of_validator,
+        "anyOf": cn_any_of_validator,
+        "oneOf": cn_one_of_validator,
         "not": cn_not_validator,
         "enum": cn_enum_validator,
         "format": cn_format_validator,
         "items": cn_items_validator,
-        "maxItems": cn_maxItems_validator,
-        "minItems": cn_minItems_validator,
-        "maxLength": cn_maxLength_validator,
-        "minLength": cn_minLength_validator,
+        "maxItems": cn_max_items_validator,
+        "minItems": cn_min_items_validator,
+        "maxLength": cn_max_length_validator,
+        "minLength": cn_min_length_validator,
         "maximum": cn_maximum_validator,
         "minimum": cn_minimum_validator,
         "pattern": cn_pattern_validator,
@@ -365,12 +364,20 @@ def translate_error(error: ValidationError) -> str:
         "required": f"缺少必填字段: {error.message.split()[0]}",
         "maximum": f"数值不能大于 {error.validator_value}，当前为 {error.instance}",
         "minimum": f"数值不能小于 {error.validator_value}，当前为 {error.instance}",
-        "maxLength": f"字符串长度不能超过 {error.validator_value}，当前为 {len(error.instance) if isinstance(error.instance, str) else 0}",
-        "minLength": f"字符串长度不能少于 {error.validator_value}，当前为 {len(error.instance) if isinstance(error.instance, str) else 0}",
+        "maxLength": f"字符串长度不能超过 {error.validator_value}，"
+        f"当前为 "
+        f"{len(error.instance) if isinstance(error.instance, str) else 0}",
+        "minLength": f"字符串长度不能少于 {error.validator_value}，"
+        f"当前为 "
+        f"{len(error.instance) if isinstance(error.instance, str) else 0}",
         "pattern": f"字符串不匹配正则表达式: {error.validator_value}",
         "enum": f"值必须是以下枚举值之一: {error.validator_value}，当前为 {error.instance}",
-        "maxItems": f"数组元素数量不能超过 {error.validator_value} 个，当前为 {len(error.instance) if isinstance(error.instance, list) else 0}",
-        "minItems": f"数组元素数量不能少于 {error.validator_value} 个，当前为 {len(error.instance) if isinstance(error.instance, list) else 0}",
+        "maxItems": f"数组元素数量不能超过 {error.validator_value} 个，"
+        f"当前为 "
+        f"{len(error.instance) if isinstance(error.instance, list) else 0}",
+        "minItems": f"数组元素数量不能少于 {error.validator_value} 个，"
+        f"当前为 "
+        f"{len(error.instance) if isinstance(error.instance, list) else 0}",
         "anyOf": "必须至少满足 anyOf 中的一个条件",
         "allOf": "必须满足 allOf 中的所有条件",
         "oneOf": "必须且仅满足 oneOf 中的一个条件",
@@ -401,7 +408,7 @@ class CNValidator:
         # Use standard Draft7Validator for now
         self.validator = Draft7Validator(schema)
 
-    def validate(self, instance: dict) -> list:
+    def validate(self, instance: Any) -> list:
         """
         Validate instance against schema and return list of errors.
 
@@ -410,7 +417,7 @@ class CNValidator:
         """
         return list(self.iter_errors(instance))
 
-    def iter_errors(self, instance: dict) -> Iterator[dict]:
+    def iter_errors(self, instance: Any) -> Iterator[dict]:
         """
         Iterate over validation errors with Chinese messages.
 
@@ -424,36 +431,3 @@ class CNValidator:
                 "schema_path": list(error.schema_path),
                 "message": error.message,
             }
-
-
-if __name__ == "__main__":
-    # Example usage of Chinese JSON Schema validator
-    schema = {
-        "type": "object",
-        "properties": {
-            "username": {
-                "type": "string",
-                "minLength": 3,
-                "pattern": "^[a-zA-Z0-9_]+$",
-            },
-            "age": {"type": "number", "minimum": 18},
-            "tags": {"type": "array", "minItems": 1, "contains": {"type": "string"}},
-        },
-        "required": ["username", "age"],
-    }
-
-    data = {"username": "a*", "age": 16, "tags": []}
-
-    print("================= Before Localization =================")
-    er_msgs = [
-        f"path: {er.json_path}, message: {er.message}"
-        for er in list(jsonschema.Draft7Validator(schema).iter_errors(data))
-    ]
-    print("\n".join(er_msgs))
-
-    print("================= After Localization =================")
-    validator = CNValidator(schema)
-    errors = validator.validate(data)
-
-    for err in errors:
-        print(f"字段路径: {err['schema_path']}, 错误: {err['message']}")

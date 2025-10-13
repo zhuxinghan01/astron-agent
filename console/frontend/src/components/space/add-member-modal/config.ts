@@ -1,13 +1,9 @@
 import {
-  getEnterpriseSearchUser,
+  getEnterpriseSearchUsername,
   getEnterpriseUserLimit,
-} from "@/services/enterprise";
-import {
-  getSpaceSearchUser,
-  getSpaceSearchUsername,
-  getSpaceUserLimit,
-} from "@/services/space";
-import { message } from "antd";
+} from '@/services/enterprise';
+import { getSpaceSearchUsername, getSpaceUserLimit } from '@/services/space';
+import { message } from 'antd';
 
 const DEFAULT_LIMIT = {
   enterprise: 1000,
@@ -16,7 +12,7 @@ const DEFAULT_LIMIT = {
 
 const methodMap = {
   enterprise: {
-    search: getEnterpriseSearchUser,
+    search: getEnterpriseSearchUsername,
     limit: getEnterpriseUserLimit,
   },
   space: {
@@ -28,7 +24,7 @@ const methodMap = {
 // 查询邀请列表
 export const searchInviteUsers = async (
   params: any,
-  inviteType: string = "enterprise",
+  inviteType: string = 'enterprise'
 ) => {
   const searchFn = methodMap[inviteType as keyof typeof methodMap].search;
 
@@ -48,7 +44,7 @@ export const searchInviteUsers = async (
 
 // 添加成员数量限制
 export const getUserLimit = async (
-  inviteType: string = "enterprise",
+  inviteType: string = 'enterprise'
 ): Promise<number> => {
   try {
     const res = await methodMap[inviteType as keyof typeof methodMap].limit();

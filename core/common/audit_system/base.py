@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from common.audit_system.audit_api.base import ContentType, ContextList, Stage
 from common.audit_system.enums import Status
-from common.exceptions.errs import AuditServiceException
+from common.exceptions.errs import BaseExc
 
 if TYPE_CHECKING:
     from common.otlp.trace.span import Span
@@ -59,7 +59,7 @@ class FrameAuditResult(BaseFrameAudit):
 
     source_frame: Any = None
 
-    error: Optional[AuditServiceException] = None
+    error: Optional[BaseExc] = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -82,7 +82,7 @@ class AuditContext(BaseModel):
 
     output_queue: asyncio.Queue[Any] = Field(default_factory=asyncio.Queue)  # type: ignore[misc]
 
-    error: Optional[AuditServiceException] = None
+    error: Optional[BaseExc] = None
 
     pindex: int = 1
 
@@ -104,7 +104,7 @@ class AuditContext(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def add_source_content(self, output_frame: OutputFrameAudit):
+    def add_source_content(self, output_frame: OutputFrameAudit) -> None:
         """
         添加原始帧内容到上下文中。
         :param output_frame: 输出帧送审对象
@@ -114,7 +114,7 @@ class AuditContext(BaseModel):
             self.audited_content_frame_ids.append(output_frame.frame_id)
             self.all_source_frames[output_frame.frame_id] = output_frame
 
-    async def add_audited_content(self, span: "Span"):
+    async def add_audited_content(self, span: "Span") -> None:
         """
         添加已审核完成的内容
         :param status: 当前状态
@@ -145,7 +145,7 @@ class AuditContext(BaseModel):
 
     async def output_queue_put(
         self, frame_audit_result: FrameAuditResult, span: "Span"
-    ):
+    ) -> None:
         """
         将审核结果放入输出队列。
         :param frame_audit_result: 帧审核结果对象

@@ -1,10 +1,18 @@
-import { ReactElement, useState } from "react";
-import collapseGrayIcon from "@/assets/imgs/sidebar/collapseGray.svg";
-import SidebarLogo from "./sidebar-logo";
-import CreateButton from "./create-button";
-import BottomLogin from "./bottom-login";
-import PersonalCenter from "./personal-center";
-import MenuList from "./menu-list";
+import { ReactElement, useState, useEffect } from 'react';
+import collapseGrayIcon from '@/assets/imgs/sidebar/collapseGray.svg';
+import SidebarLogo from './sidebar-logo';
+import CreateButton from './create-button';
+import BottomLogin from './bottom-login';
+import PersonalCenter from './personal-center';
+import MenuList from './menu-list';
+import IconEntry from './icon-entry';
+import NoticeModal from './notice-modal';
+import useUserStore from '@/store/user-store';
+import { postChatList } from '@/services/chat';
+import { getFavoriteList } from '@/services/agent-square';
+import { PostChatItem, FavoriteEntry } from '@/types/chat';
+import eventBus from '@/utils/event-bus';
+import CreateApplicationModal from '@/components/create-application-modal';
 
 interface User {
   nickname?: string;
@@ -30,18 +38,36 @@ interface SidebarProps {
   // Bottom login props
   user?: User;
   OrderTypeComponent?: ReactElement;
+
+  // Icon entry props
+  myMessage?: {
+    total?: number;
+    messages?: Array<{
+      messageCenter: {
+        id: number;
+        title: string;
+        summary: string;
+        updateTime: string;
+        messageType: number;
+        baseId?: string;
+        outLink?: string;
+        coverImage?: string;
+        jumpType?: number;
+      };
+      isRead: number;
+    }>;
+  };
 }
 
 const Sidebar = ({
-  className = "",
+  className = '',
 
   // Logo props
   isEnterprise = false,
   enterpriseLogo,
-  languageCode = "zh",
+  languageCode = 'zh',
 
   // Create button props
-  isLogin = false,
   onCreateClick,
   onCreateAnalytics,
   onNotLogin,
@@ -52,6 +78,66 @@ const Sidebar = ({
 }: SidebarProps): ReactElement => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPersonCenterOpen, setIsPersonCenterOpen] = useState(false);
+  const [noticeModalVisible, setNoticeModalVisible] = useState(false);
+  const [ApplicationModalVisible, setCreateModalVisible] =
+    useState<boolean>(false); //创建应用
+
+  // Shared chat data state
+  const [mixedChatList, setMixedChatList] = useState<PostChatItem[]>([]);
+  const [favoriteBotList, setFavoriteBotList] = useState<FavoriteEntry[]>([]);
+
+  const getIsLogin = useUserStore.getState().getIsLogin;
+
+  // Page info for favorites
+  const PAGE_SIZE = 45;
+  const pageInfo = {
+    searchValue: '',
+    pageIndex: 1,
+    pageSize: PAGE_SIZE,
+    botType: '',
+  };
+
+  // Fetch chat list
+  const getChatList = async () => {
+    try {
+      const res = await postChatList();
+      setMixedChatList(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Fetch favorite bot list
+  const getFavoriteBotListLocal = async () => {
+    try {
+      const res = await getFavoriteList(pageInfo);
+      setFavoriteBotList(res.pageList);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Create bot
+  const createBot = () => {
+    setCreateModalVisible(true);
+  };
+
+  // Effect to fetch data on mount and setup event listeners
+  useEffect(() => {
+    getChatList();
+    getFavoriteBotListLocal();
+
+    // Setup event bus listeners for data changes
+    eventBus.on('chatListChange', getChatList);
+    eventBus.on('favoriteChange', getFavoriteBotListLocal);
+    eventBus.on('createBot', createBot);
+
+    return () => {
+      eventBus.off('createBot', createBot);
+      eventBus.off('chatListChange', getChatList);
+      eventBus.off('favoriteChange', getFavoriteBotListLocal);
+    };
+  }, []);
 
   return (
     <div
@@ -59,8 +145,8 @@ const Sidebar = ({
         relative bg-white flex flex-col flex-shrink-0 p-4 h-full
         ${
           isCollapsed
-            ? "w-[76px] items-center justify-between"
-            : "w-[232px] rounded-r-3xl"
+            ? 'w-[76px] items-center justify-between'
+            : 'w-[232px] rounded-r-3xl'
         }
         ${className}
       `}
@@ -83,7 +169,7 @@ const Sidebar = ({
           className={`
             transform rotate-180 transition-all duration-300 cursor-pointer z-[998]
             group-hover:brightness-0 group-hover:saturate-100 group-hover:invert
-            ${isCollapsed ? "rotate-[360deg]" : "rotate-180"}
+            ${isCollapsed ? 'rotate-[360deg]' : 'rotate-180'}
           `}
         />
       </div>
@@ -101,33 +187,65 @@ const Sidebar = ({
         {/* Create Button */}
         <CreateButton
           isCollapsed={isCollapsed}
-          isLogin={isLogin}
+          isLogin={getIsLogin()}
           onClick={onCreateClick}
           onAnalytics={onCreateAnalytics}
           onNotLogin={onNotLogin}
         />
 
-        <MenuList />
+        <MenuList
+          isCollapsed={isCollapsed}
+          mixedChatList={mixedChatList}
+          favoriteBotList={favoriteBotList}
+          onRefreshData={() => {
+            getChatList();
+            getFavoriteBotListLocal();
+          }}
+        />
+
+        {/* Icon Entry */}
+        <IconEntry
+          onMessageClick={() => {
+            setNoticeModalVisible(true);
+          }}
+          onNotLogin={onNotLogin}
+        />
 
         {/* Bottom Login */}
         <BottomLogin
           isCollapsed={isCollapsed}
           user={user}
           OrderTypeComponent={OrderTypeComponent}
+          isPersonCenterOpen={isPersonCenterOpen}
+          setIsPersonCenterOpen={setIsPersonCenterOpen}
         />
-
-        {/* <div
-          onClick={() => {
-            setIsPersonCenterOpen(!isPersonCenterOpen);
-          }}
-        >
-          展示个人中心
-        </div> */}
 
         <PersonalCenter
           open={isPersonCenterOpen}
           onCancel={() => {
             setIsPersonCenterOpen(false);
+          }}
+          mixedChatList={mixedChatList}
+          favoriteBotList={favoriteBotList}
+          onRefreshData={() => {
+            getChatList();
+            getFavoriteBotListLocal();
+          }}
+          onRefreshRecentData={getChatList}
+          onRefreshFavoriteData={getFavoriteBotListLocal}
+        />
+
+        {/* Notice Modal */}
+        <NoticeModal
+          open={noticeModalVisible}
+          onClose={() => {
+            setNoticeModalVisible(false);
+          }}
+        />
+        <CreateApplicationModal
+          visible={ApplicationModalVisible}
+          onCancel={() => {
+            setCreateModalVisible(false);
           }}
         />
       </div>

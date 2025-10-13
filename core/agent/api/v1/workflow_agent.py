@@ -59,7 +59,7 @@ class CustomChatCompletion(CompletionBase):
                 yield response
 
 
-@workflow_agent_router.post(
+@workflow_agent_router.post(  # type: ignore[misc]
     "/custom/chat/completions",
     description="Agent execution - user mode",
     response_model=None,
@@ -89,7 +89,7 @@ async def custom_chat_completions(
         span=span,
         bot_id="",
         uid=completion_inputs.uid,
-        question=completion_inputs.messages[-1].content,
+        question=completion_inputs.get_last_message_content(),
     )
 
     async def generate() -> AsyncGenerator[str, None]:

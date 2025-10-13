@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from pydantic import Field
+
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.msg_or_end_dep_info import MsgOrEndDepInfo
 from workflow.engine.entities.node_running_status import NodeRunningStatus
@@ -34,38 +35,6 @@ class EndNode(BaseOutputNode):
     template: str = Field(default="")
     reasoningTemplate: str = Field(default="")
     outputMode: int
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the configuration dictionary for the end node.
-
-        :return: Dictionary containing end node configuration parameters
-        """
-        return {
-            "template": self.template,
-            "outputMode": self.outputMode,
-            "streamOutput": self.streamOutput,
-            "reasoningTemplate": self.reasoningTemplate,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution is not implemented for end nodes.
-
-        :param variable_pool: Pool containing variables and their values
-        :param span: Tracing span for monitoring and debugging
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises: NotImplementedError - synchronous execution not supported
-        """
-        raise NotImplementedError("Synchronous execution not implemented for end nodes")
 
     async def async_execute(
         self,

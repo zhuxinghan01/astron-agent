@@ -10,21 +10,16 @@ import base64
 import json
 import logging
 import os
-import uuid
 import time
+import uuid
+from typing import Union
 
 import requests
-from fastapi import APIRouter, Request
-
-from common.service import get_oss_service
-from common.service import get_kafka_producer_service
+from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
 from common.otlp.metrics.meter import Meter
 from common.otlp.trace.span import Span
-from common.otlp.log_trace.node_trace_log import (
-    NodeTraceLog,
-    Status
-)
-
+from common.service import get_kafka_producer_service, get_oss_service
+from fastapi import APIRouter, Request
 from plugin.aitools.api.schema.types import (
     OCRLLM,
     ErrorCResponse,
@@ -34,30 +29,29 @@ from plugin.aitools.api.schema.types import (
     ISEInput,
     SmartTTSInput,
     SuccessDataResponse,
+    TranslationInput,
 )
 from plugin.aitools.common.logger import log
-
 from plugin.aitools.const.const import IMAGE_GENERATE_MAX_PROMPT_LEN
 from plugin.aitools.const.err_code.code import CodeEnum
 from plugin.aitools.const.err_code.code_convert import CodeConvert
-from plugin.aitools.service.ase_sdk.ability.common.entities.req_data import Credentials
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.client_multithreading import (
+from plugin.aitools.service.ase_sdk.common.entities.req_data import Credentials
+from plugin.aitools.service.ase_sdk.exception.CustomException import CustomException
+from plugin.aitools.service.ocr_llm.client_multithreading import (
     OcrLLMClientMultithreading,
 )
-from plugin.aitools.service.ase_sdk.ability.ocr_llm.entities.req_data_multithreading import (
+from plugin.aitools.service.ocr_llm.entities.req_data_multithreading import (
     BodyM,
     OcrLLMReqSourceDataMultithreading,
     PayloadM,
 )
-
-from plugin.aitools.service.ase_sdk.exception.CustomException import CustomException
 
 app = APIRouter(prefix="/aitools/v1")
 
 
 # 拨测接口
 @app.get("/dial_test")
-def dial_test(request: Request):
+def dial_test(request: Request) -> Union[SuccessDataResponse, ErrorResponse]:
     from plugin.aitools.service.dial_test.dial_test import dial_test_main
 
     # Simple default values to pass pylint - function may be deprecated
@@ -73,7 +67,9 @@ def dial_test(request: Request):
 
 # 图片理解 - 开放平台
 @app.post("/image_understanding")
-def image_understanding(params: ImageUnderstandingInput, request: Request):
+def image_understanding(
+    params: ImageUnderstandingInput, request: Request
+) -> Union[SuccessDataResponse, ErrorResponse]:
     from plugin.aitools.service.route_service import image_understanding_main
 
     return image_understanding_main(
@@ -82,7 +78,9 @@ def image_understanding(params: ImageUnderstandingInput, request: Request):
 
 
 @app.post("/ocr")
-def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
+def req_ase_ability_ocr(
+    ase_ocr_llm_vo: OCRLLM,
+) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
@@ -102,16 +100,16 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
         )
 
         node_trace = NodeTraceLog(
-                service_id=tool_id,
-                sid=span_context.sid,
-                app_id=span_context.app_id,
-                uid=span_context.uid,
-                chat_id=span_context.sid,
-                sub="aitools",
-                caller=caller,
-                log_caller="ocr",
-                question=json.dumps(str(usr_input), ensure_ascii=False),
-            )
+            service_id=tool_id,
+            sid=span_context.sid,
+            app_id=span_context.app_id,
+            uid=span_context.uid,
+            chat_id=span_context.sid,
+            sub="aitools",
+            caller=caller,
+            log_caller="ocr",
+            question=json.dumps(str(usr_input), ensure_ascii=False),
+        )
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service = get_kafka_producer_service()
 
@@ -121,9 +119,7 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
             image_byte_arrays.append(
                 requests.get(ase_ocr_llm_vo.file_url, timeout=30).content
             )
-            client = OcrLLMClientMultithreading(
-                url=os.getenv("OCR_LLM_WS_URL")
-            )
+            client = OcrLLMClientMultithreading(url=os.getenv("OCR_LLM_WS_URL"))
             asyncio.run(
                 client.invoke(
                     req_source_data=OcrLLMReqSourceDataMultithreading(
@@ -157,7 +153,7 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
             log.error("request: %s, error: %s", ase_ocr_llm_vo.json(), str(e))
             response = ErrorResponse(CodeEnum.OCR_FILE_HANDLING_ERROR)
             m.in_error_count(response.code)
-           
+
             node_trace.answer = response.message
             node_trace.status = Status(code=response.code, message=response.message)
             kafka_service.send("spark-agent-builder", node_trace.to_json())
@@ -175,7 +171,9 @@ def req_ase_ability_ocr(ase_ocr_llm_vo: OCRLLM):
 
 
 @app.post("/image_generate")
-def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
+def req_ase_ability_image_generate(
+    image_generate_vo: ImageGenerate,
+) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
@@ -191,25 +189,27 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
             {"usr_input": json.dumps(str(usr_input), ensure_ascii=False)}
         )
         span_context.set_attributes(attributes={"prompt": usr_input.prompt})
-       
+
         node_trace = NodeTraceLog(
-                service_id=tool_id,
-                sid=span_context.sid,
-                app_id=span_context.app_id,
-                uid=span_context.uid,
-                chat_id=span_context.sid,
-                sub="aitools",
-                caller=caller,
-                log_caller="image_generate",
-                question=json.dumps(str(usr_input), ensure_ascii=False),
-            )
+            service_id=tool_id,
+            sid=span_context.sid,
+            app_id=span_context.app_id,
+            uid=span_context.uid,
+            chat_id=span_context.sid,
+            sub="aitools",
+            caller=caller,
+            log_caller="image_generate",
+            question=json.dumps(str(usr_input), ensure_ascii=False),
+        )
         node_trace.start_time = int(round(time.time() * 1000))
         kafka_service = get_kafka_producer_service()
 
         try:
             from plugin.aitools.service.ase_sdk.__base.entities.req_data import ReqData
-            from plugin.aitools.service.ase_sdk.ability.common.client import CommonClient
-            from plugin.aitools.service.ase_sdk.ability.common.entities.req_data import (
+            from plugin.aitools.service.ase_sdk.common.client import (
+                CommonClient,
+            )
+            from plugin.aitools.service.ase_sdk.common.entities.req_data import (
                 CommonReqSourceData,
             )
 
@@ -270,11 +270,10 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
             payload = content_dict[0].get("payload", {})
             text = payload.get("choices", {}).get("text", [{}])[0].get("content", "")
 
-
             oss_service = get_oss_service()
             image_url = oss_service.upload_file(
-                str(uuid.uuid4()) + ".jpg",
-                base64.b64decode(text))
+                str(uuid.uuid4()) + ".jpg", base64.b64decode(text)
+            )
             response = SuccessDataResponse(
                 data={"image_url": image_url, "image_url_md": f"![]({image_url})"},
                 sid=sid,
@@ -300,7 +299,9 @@ def req_ase_ability_image_generate(image_generate_vo: ImageGenerate):
 
 # 超拟人合成
 @app.post("/smarttts")
-def smarttts(params: SmartTTSInput, request: Request):
+def smarttts(
+    params: SmartTTSInput, request: Request
+) -> Union[SuccessDataResponse, ErrorResponse]:
     from plugin.aitools.service.speech_synthesis.voice_main import smarttts_main
 
     return smarttts_main(
@@ -310,7 +311,9 @@ def smarttts(params: SmartTTSInput, request: Request):
 
 # 智能语音评测 - ISE
 @app.post("/ise")
-async def ise_evaluate(params: ISEInput, request: Request):
+async def ise_evaluate(
+    params: ISEInput, request: Request
+) -> Union[SuccessDataResponse, ErrorResponse]:
     from plugin.aitools.service.route_service import ise_evaluate_main
 
     return await ise_evaluate_main(
@@ -319,5 +322,29 @@ async def ise_evaluate(params: ISEInput, request: Request):
         language=params.language,
         category=params.category,
         group=params.group,
+        _request=request,
+    )
+
+
+# Text Translation API
+@app.post("/translation")
+async def translation_api(
+    params: TranslationInput, request: Request
+) -> Union[SuccessDataResponse, ErrorResponse]:
+    """
+    Text translation service endpoint
+
+    Supports bidirectional translation between Chinese and other languages:
+    - Chinese ↔ English (cn ↔ en)
+    - Chinese ↔ Japanese (cn ↔ ja)
+    - Chinese ↔ Korean (cn ↔ ko)
+    - Chinese ↔ Russian (cn ↔ ru)
+    """
+    from plugin.aitools.service.route_service import translation_main
+
+    return translation_main(
+        text=params.text,
+        target_language=params.target_language,
+        source_language=params.source_language,
         request=request,
     )

@@ -1,941 +1,328 @@
 import {
   useState,
-  useEffect,
-  useRef,
   memo,
-  useContext,
-  useCallback,
-} from "react";
-import { useLocation } from "react-router-dom";
-import { message } from "antd";
-import localforage from "localforage";
-import { fetchEventSource } from "@microsoft/fetch-event-source";
-import { Base64 } from "js-base64";
-import { useSparkCommonStore } from "@/store/spark-store/spark-common";
-import { useLocaleStore } from "@/store/spark-store/locale-store";
-import {
-  // jumpTologin,
-  transformMultiModal,
-  getQueryString,
-  getBase64DecodeStr,
-  transformMathThinkData,
-  transformDeepthinkData,
-} from "@/utils/spark-utils";
-import { handleOtherProps } from "@/utils/chat";
-import eventBus from "@/utils/event-bus";
-import { getLanguageCode } from "@/utils/http";
-// import CodeWin from '@/components/code-win';
-import { installPlugin } from "@/services/plugin";
-import { DeleteIcon } from "@/components/svg-icons";
-import { PluginContext } from "@/components/plugin/PluginContext";
-import { localeConfig } from "@/locales/localeConfig";
-// import MultiModeModal from '../muti-modal-components/multiModeModal';
-// import MultiModeCpn from '../muti-modal-components/multi_mode_cpn';
-// import $ from 'jquery'; // TODO: 之后放开
-// import ViewBigimg from 'view-bigimg'; // TODO: unadapted
-// import MathThinkProgress from '../MathThinkProgress';
-// import DeepThinkProgress from '../DeepThinkProgress';
-import { useGetState } from "ahooks";
-import { useTranslation } from "react-i18next";
+  useRef,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
+import { message } from 'antd';
+import { useTranslation } from 'react-i18next';
+import MessageList from './message-list';
+import { MessageListType } from '@/types/chat';
+import { getLanguageCode } from '@/utils/http';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+import eventBus from '@/utils/event-bus';
+import { baseURL } from '@/utils/http';
 
-import userImg from "@/assets/svgs/user-logo.svg";
-import errorIcon from "@/assets/imgs/sparkImg/errorIcon.svg";
+// PromptTry组件暴露的方法接口
+export interface PromptTryRef {
+  send: (text: string) => void;
+  clear: () => void;
+}
 
-import styles from "./index.module.scss";
-
-// const viewer = new ViewBigimg();
-const bug = getQueryString("bug");
-
-const PromptTry = ({
-  newModel,
-  showModelPk,
-  showTipPk,
-  questionTip,
-  newPrompt,
-  baseinfo,
-  inputExample,
-  coverUrl,
-  selectSource,
-  prompt,
-  model,
-  supportContext,
-  promptText,
-  choosedAlltool,
-}: {
-  newModel?;
-  showModelPk?;
-  showTipPk?;
-  questionTip?;
-  newPrompt?;
-  baseinfo?;
-  inputExample?;
-  coverUrl?: any;
-  selectSource?: any;
-  prompt?: any;
-  model?: any;
-  supportContext?: number;
-  promptText?: string;
-  choosedAlltool?: any;
-}) => {
-  const { t } = useTranslation();
-  const [askValue, setAskValue] = useState("");
-  const [deepThinkPeriod, setDeepThinkPeriod, getDeepThinkPeriod] =
-    useGetState<any>([]);
-
-  const [openCurrentMath, setOpenCurrentMath] = useState(false); // 是否打开当前解题（生成中的）
-  const [processVisible, setProcessVisible] = useState(false); // 解题过程显示
-  const [currentMathThink, setCurrentMathThink] = useState<any>({
-    current_title: "",
-    text: "",
-    thinking_cost: 0,
-  }); // sse实时返回时，数学解题思路的内容
-  const [promptTextNow, setPromptTextNow] = useState(promptText);
-
-  const userAvatar = useSparkCommonStore((state) => state.avatar);
-  const botMode = useSparkCommonStore((state) => state.isBotMode); // 是否智能体模式
-  const answerLoading = useSparkCommonStore((state) => state.answerLoad);
-  const setAnswerLoading = useSparkCommonStore((state) => state.setAnswerLoad);
-  const answerCompleted = useSparkCommonStore((state) => state.answerCompleted);
-  const setAnswerCompleted = useSparkCommonStore(
-    (state) => state.setAnswerCompleted,
-  );
-  const { locale: localeNow } = useLocaleStore();
-
-  const location = useLocation();
-  const isPlugin = location?.pathname?.startsWith("/plugin");
-
-  /* state */
-  const [answer, setAnswer]: any = useState("");
-  const [error, setError]: any = useState("");
-  const [mergedList, setMergedList]: any = useState([]); // 对话列表
-  const {
-    data: { infoId, flag, status },
-  } = useContext(PluginContext);
-  const [multiModeModalInfo, setMultiModeModalInfo] = useState<any>({
-    open: false,
-    info: { type: "vm-live-modal", modalInfo: {} },
-  }); // 多模态弹窗信息
-
-  /* ref */
-  const $answerRef: any = useRef(null);
-  const controllerRef: any = useRef(null);
-
-  const tempSid = useRef(0); // 假sid
-  const $bottomRef: any = useRef(null); // 页面底部不可见元素
-  const $ask: any = useRef(null);
-  const $inputConfirmFlag: any = useRef(true); // 是否完成输入
-  const $godownFlag: any = useRef(false); // 持续下拉flag
-  const $temRandom: any = useRef(""); // 时间戳随机数
-
-  const removeAll = () => {
-    setMergedList([]);
-    setProcessVisible(false);
-    setCurrentMathThink({
-      current_title: "",
-      text: "",
-      thinking_cost: 0,
-    });
-    setDeepThinkPeriod([]);
-    setError("");
-  };
-
-  const enterFn = (e) => {
-    // ctrl+enter执行换行
-    if (e.ctrlKey && e.code === "Enter") {
-      e.cancelBubble = true; //ie阻止冒泡行为
-      e.stopPropagation(); //Firefox阻止冒泡行为
-      e.preventDefault(); //取消事件的默认动作*换行
-      $ask.current.value += `\n`;
-      return;
-    }
-    if (
-      !e.shiftKey &&
-      !e.ctrlKey &&
-      e.code === "Enter" &&
-      $inputConfirmFlag.current
-    ) {
-      e.cancelBubble = true; //ie阻止冒泡行为
-      e.stopPropagation(); //Firefox阻止冒泡行为
-      e.preventDefault(); //取消事件的默认动作*换行
-      handleSendBtnClick();
-      return;
-    }
-  };
-
-  useEffect(() => {
-    eventBus.on("handleSendBtn", handleSendBtnClick);
-
-    return () => {
-      eventBus.off("handleSendBtn", handleSendBtnClick);
+interface SSEData {
+  type?: string;
+  choices?: Array<{
+    delta?: {
+      content?: string;
+      reasoning_content?: string;
+      tool_calls?: Array<{
+        deskToolName: string;
+      }>;
     };
-  }, []);
+  }>;
+  end?: boolean;
+  id?: number;
+  content?: string;
+  error?: string | boolean;
+  message?: string;
+  code?: number;
+}
 
-  useEffect(() => {
-    eventBus.on("eventRemoveAll", removeAll);
-
-    return () => {
-      eventBus.off("eventRemoveAll", removeAll);
+const PromptTry = forwardRef<
+  PromptTryRef,
+  {
+    newModel?: string;
+    newPrompt?: string;
+    baseinfo?: any;
+    inputExample?: string[];
+    coverUrl?: string;
+    selectSource?: any;
+    prompt?: string;
+    model?: string;
+    supportContext?: number;
+    promptText?: string;
+    choosedAlltool?: {
+      [key: string]: boolean;
     };
-  }, []);
+  }
+>(
+  (
+    {
+      newModel,
+      newPrompt,
+      baseinfo,
+      inputExample,
+      coverUrl,
+      selectSource,
+      prompt,
+      model,
+      supportContext,
+      choosedAlltool,
+    },
+    ref
+  ) => {
+    const { t } = useTranslation();
+    const instanceId = useRef(Math.random().toString(36).substr(2, 9)); // 实例唯一标识符
+    const [isLoading, setIsLoading] = useState<boolean>(false); // 是否正在加载
+    const [isCompleted, setIsCompleted] = useState<boolean>(true); // 是否完成
+    const [messageList, setMessageList] = useState<MessageListType[]>([]); // 消息列表
+    const controllerRef = useRef<AbortController>(new AbortController()); //sse请求ref
+    const currentSid = useRef<string>(''); // 当前sid
 
-  useEffect(() => {
-    eventBus.on("evenEnterFn", (e) => enterFn(e));
-    return () => {
-      eventBus.off("eventEnterFn", enterFn);
-    };
-  }, []);
+    // 使用useImperativeHandle暴露组件方法
+    useImperativeHandle(ref, () => ({
+      send: handleSendBtnClick,
+      clear: removeAll,
+    }));
 
-  useEffect(() => {
-    if (questionTip) {
-      handleSendBtnClick();
-    }
-  }, [questionTip]);
+    useEffect(() => {
+      // 监听清除所有消息的事件
+      const handleRemoveAll = () => {
+        removeAll();
+      };
 
-  useEffect(() => {
-    const d = document.querySelector("#watermark-wrapper");
-    if (d) {
-      const child: any = d.firstChild;
-      if (child) {
-        child.style.width = "100%";
-        child.style.height = "100%";
-      }
-    }
-  }, []);
+      eventBus.on('eventRemoveAll', handleRemoveAll);
 
-  useEffect(() => {
-    setPromptTextNow(promptText);
-  }, [promptText]);
+      return () => {
+        eventBus.off('eventRemoveAll', handleRemoveAll);
+        // 组件卸载时清理loading状态
+        eventBus.emit('promptTry.loadingChange', {
+          instanceId: instanceId.current,
+          loading: false,
+        });
+      };
+    }, []);
 
-  useEffect(() => {
-    setMergedList([]);
-    return () => {
-      setMergedList([]);
-      stopAnswer();
-    };
-  }, [flag, status]);
+    // 监听loading状态变化，通知config-base
+    useEffect(() => {
+      eventBus.emit('promptTry.loadingChange', {
+        instanceId: instanceId.current,
+        loading: isLoading,
+      });
+    }, [isLoading]);
 
-  // plugin: 用户获取插件的访问令牌
-  const installPluginFn = async () => {
-    try {
-      await localforage.setItem("infoId", String(infoId));
-      const _url = await installPlugin(infoId as number, "/plugin/create");
-      if (_url) {
-        message.warning(
-          t("configBase.promptTry.pluginNeedUserAuthorizationInfo"),
-          0.5,
-          () => {
-            window.location.href = _url;
-          },
-        );
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  // 当一页回答太长，从无滚动条到有滚动条时，滚动一次到最底端
-  const onAnswerLoadingGoDown = () => {
-    if (!$godownFlag.current) return;
-    const outWrap = document.getElementById("out-wrap");
-    const d = document.getElementById("chat-content-wrapper");
-    if (
-      d &&
-      outWrap &&
-      $godownFlag.current &&
-      d?.clientHeight > outWrap?.clientHeight
-    ) {
-      outWrap.scrollTop = d?.clientHeight;
-      $godownFlag.current = false;
-    }
-  };
-
-  const scrollDialogToBottom = () => {
-    setTimeout(() => {
-      $bottomRef && $bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    });
-  };
-
-  // 点击发送按钮
-  const handleSendBtnClick = () => {
-    setCurrentMathThink({
-      current_title: "",
-      text: "",
-      thinking_cost: 0,
-    });
-
-    if (!answerCompleted) {
-      message.warning(t("configBase.promptTry.answerPleaseTryAgainLater"));
-      return;
-    }
-
-    const question: string = $ask.current?.value;
-    if (!questionTip) {
-      if (!question || question.trim() === "") {
-        message.info(t("configBase.promptTry.pleaseEnterQuestion"));
+    // 点击发送按钮
+    const handleSendBtnClick = (text?: string) => {
+      if (isLoading) {
+        message.warning(t('configBase.promptTry.answerPleaseTryAgainLater'));
         return;
       }
-      $ask.current.value = "";
-    }
 
-    newQuestion(questionTip ? questionTip : question, mergedList);
-    setAskValue("");
-  };
+      if (!text || text.trim() === '') {
+        message.info(t('configBase.promptTry.pleaseEnterQuestion'));
+        return;
+      }
 
-  // mergedList中新增一个问题, 并且调接口获取答案
-  const newQuestion = (str: string, originMergedList: any, newchatId?: any) => {
-    const list = [...originMergedList];
-    list.unshift({
-      message: str,
-      origin: "req",
-      id: `${tempSid.current}`,
-    });
-    tempSid.current += 1;
-    setMergedList(list);
-    scrollDialogToBottom();
-    // 调用提问接口
-    getAnswer(list, str);
-  };
-
-  // 将回答推入mergedList
-  const newResp = async (
-    str: string,
-    sid: string,
-    originMergedList: any,
-    multiModalData?: any,
-    type?: any,
-    otherProps?: any, // 接下来往newResp内传参，请向otherProps内扩展
-    content?: any,
-  ) => {
-    const { reasoning, reasoningElapsedSecs } = otherProps ?? {};
-    const list = [...originMergedList];
-    const tempItem: any = {
-      message: str,
-      origin: "resp",
-      sid,
-      reasoning,
-      reasoningElapsedSecs,
-      content: JSON.stringify(content),
-      uuid: originMergedList?.length,
+      getAnswer(text);
     };
-    // 此处插入实时获取的多媒体数据
-    switch (multiModalData?.type) {
-      case "multi_video": // 直播的虚拟人视频
-        tempItem.url = multiModalData.data;
-        tempItem.type = "multi_video";
-        tempItem.message = `\`\`\`multi_video\n${JSON.stringify(
-          multiModalData.data,
-        )}\n\`\`\``;
-        break;
-      case "multi_image_url":
-        tempItem.url = multiModalData.data;
-        tempItem.type = "multi_image_url";
-        break;
-      default:
-        break;
-    }
-    list.unshift(tempItem);
-    setMergedList(list);
-    scrollDialogToBottom();
-    if (type === "o1") {
-      setOpenCurrentMath((val) => {
-        tempItem.mathProcessOpen = val;
-        return val;
-      });
-    }
-    if (getDeepThinkPeriod()?.length > 0) {
-      tempItem.thinkPeriods = getDeepThinkPeriod();
-    }
-    setDeepThinkPeriod([]);
-  };
 
-  // 获取答案
-  const getAnswer = (originMergedList: any, question: any, newchatId?: any) => {
-    const esURL = isPlugin
-      ? "/xingchen-api/u/chat_message/plugin-debug"
-      : "/xingchen-api/u/chat_message/bot-debug";
-    const form = new FormData();
-    if (model) {
-      form.append("model", newModel ? newModel : model);
-    } else {
-      form.append("model", newModel ? newModel : "spark");
-    }
+    //清除聊天记录
+    const removeAll = () => {
+      if (isLoading || !isCompleted) {
+        message.warning(t('configBase.promptTry.answerPleaseTryAgainLater'));
+        return;
+      }
+      setMessageList([]);
+    };
 
-    form.append("text", question);
-    if (!isPlugin) {
+    // 获取答案
+    const getAnswer = (question: string) => {
+      const esURL = `${baseURL}chat-message/bot-debug`;
+      const form = new FormData();
+      if (model) {
+        form.append('model', newModel ? newModel : model);
+      } else {
+        form.append('model', newModel ? newModel : 'spark');
+      }
+
+      form.append('text', question);
       const datasetList: string[] = [];
       (selectSource || []).forEach((item: any) => {
         datasetList.push(item.id);
       });
-      if (datasetList.join(",") !== "") {
-        if (selectSource[0]?.tag == "SparkDesk-RAG") {
-          form.append("datasetList", JSON.stringify(datasetList.join(",")));
+      if (datasetList.join(',') !== '') {
+        if (selectSource[0]?.tag == 'SparkDesk-RAG') {
+          form.append('datasetList', JSON.stringify(datasetList.join(',')));
         } else {
-          form.append("maasDatasetList", JSON.stringify(datasetList.join(",")));
+          form.append('maasDatasetList', JSON.stringify(datasetList.join(',')));
         }
       }
-    }
-    if (isPlugin && infoId) {
-      form.append("infoId", String(infoId));
-    } else {
-      const time = String(+new Date());
-      const fd = time.substring(time.length - 6);
-      $temRandom.current = fd;
-      form.append("need", `${supportContext}`);
-      const arr = mergedList?.reverse()?.map((item: any) => item.message);
-      if (supportContext === 1) form.append("arr", arr ?? []);
-    }
-    if (choosedAlltool) {
-      form.append(
-        "openedTool",
-        Object.keys(choosedAlltool)
-          .filter((key: any) => choosedAlltool[key])
-          .join(","),
-      );
-    }
-    setAnswerLoading(true);
-    setAnswerCompleted(false);
-    fetchEs(esURL, form, originMergedList, "");
-  };
+      form.append('prompt', newPrompt ? newPrompt : prompt || '');
+      form.append('multiTurn', `${supportContext}`); //是否开启多轮对话
+      const arr = messageList.map((item: MessageListType) => item.message);
+      if (supportContext === 1) form.append('arr', JSON.stringify(arr));
 
-  // 调用sse接口
-  // 删除validateResult参数
-  const fetchEs = (
-    url: string,
-    form: any,
-    originMergedList: any[],
-    token: string, // 删除 validateResult?: any
-  ) => {
-    setAnswerLoading(true);
-    setAnswerCompleted(false);
-    $godownFlag.current = true;
-    let ans = "";
-    setAnswer(ans);
-    setError("");
-    let otherProps: any = {};
-    let ansType: any = null;
-    let ansContent: any = null;
-    let err = "";
-    let answerAllGet = false;
-    let sid = "";
-    // 删除gee变量
-    // let gee = '';
-    let multiModalData: any = null;
-    const controller = new AbortController();
-    controllerRef.current = controller;
+      if (choosedAlltool) {
+        form.append(
+          'openedTool',
+          Object.keys(choosedAlltool)
+            .filter((key: string) => choosedAlltool[key])
+            .join(',')
+        );
+      }
+      handleFetchSSE(esURL, form);
+    };
+    const handleFetchSSE = (esURL: string, form: FormData) => {
+      let ans: string = '';
+      let reasoning: string = ''; //思考链内容
+      let toolsName: string = ''; //工具名称
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      const headerConfig = {
+        'Lang-Code': getLanguageCode(),
+        authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      };
+      setIsLoading(true);
+      setIsCompleted(false);
+      // 先追加用户消息
+      setMessageList(prev => [
+        ...prev,
+        {
+          id: Date.now(),
+          message: form.get('text')?.toString() || '',
+          updateTime: new Date().toISOString(),
+          reqType: 'USER',
+        },
+      ]);
+      // 追加一个空的机器人消息，用于流式更新
+      setMessageList(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          message: '',
+          reqType: 'BOT',
+          updateTime: new Date().toISOString(),
+        },
+      ]);
 
-    // 删除极验相关的头部配置
-    const headerConfig: any = {};
-    if (!isPlugin) {
-      headerConfig.clientType = "11";
-    }
-
-    // 删除GtToken添加
-    // form.append('GtToken', token);
-    form.append("prompt", newPrompt ? newPrompt : prompt);
-
-    scrollDialogToBottom();
-    fetchEventSource(url, {
-      method: "POST",
-      body: form,
-      headers: {
-        ...headerConfig,
-        "Lang-Code": getLanguageCode(),
-      },
-      openWhenHidden: true,
-      signal: controller.signal,
-      onopen(res: any) {
-        // if (res.status === 401) {
-        //   jumpTologin();
-        // }
-        setAnswerLoading(false);
-        scrollDialogToBottom();
-        return Promise.resolve();
-      },
-      onmessage(event) {
-        const deCodedData = getBase64DecodeStr(event.data);
-        onAnswerLoadingGoDown();
-        // 未出错，正常结束
-        if (event.data === "<end>" && !err) {
-          setAnswerCompleted(true);
-          $godownFlag.current = false;
-          $answerRef.current = "";
-          answerAllGet = true;
-          return;
-        }
-        // 出错了、禁用对话
-        else if (event.data === "<end>" && err) {
-          const errData = JSON.parse(err.replace(/^\[.*?\]/, ""));
-          setError(errData?.descr);
-          setAnswerCompleted(true);
-          $godownFlag.current = false;
-          $answerRef.current = "";
-          newResp(errData?.descr, `${tempSid.current}`, originMergedList);
-          setError("");
-          tempSid.current += 1;
-          if (errData?.key === 20002) {
-            window.onbeforeunload = null;
-          }
-          controller.abort(t("configBase.promptTry.end"));
-          return;
-        }
-        // 删除极验错误处理
-        // else if (event.data === '<end>' && gee) {
-        //   setGeeError(JSON.parse(gee.slice(10)).descr);
-        //   setAnswerCompleted(true);
-        //   $godownFlag.current = false;
-        //   $answerRef.current = '';
-        //   controller.abort(t('configBase.promptTry.end'));
-        //   captchaObj?.verify();
-        //   return;
-        // }
-
-        // 出错请求头
-        // if (event.data === '[geeError]') {
-        //   gtObj.current = {
-        //     url,
-        //     form,
-        //     oldList: originMergedList,
-        //     token,
-        //   };
-        //   gee += event.data;
-        //   return;
-        // }
-
-        if (event.data === "[belongerr]") {
-          // chatid 不属于 当前账号, 这次chat接口只会返回这个头
-          window.location.reload();
-        }
-        // 识别到就封
-        if (event.data === "<kx>") {
-          console.log("触发了快修");
-          return;
-        }
-        if (event.data.startsWith("[needAuthError]")) {
-          installPluginFn();
-          err += event.data;
-          console.log("插件没权限");
-          return;
-        }
-        // 模型返回溯源结果
-        if (
-          !event.data?.endsWith("<sid>") &&
-          deCodedData?.startsWith("```searchSource")
-        ) {
-          return;
-        }
-        if (
-          !event.data?.endsWith("<sid>") &&
-          (deCodedData?.startsWith("<math_thinking") ||
-            deCodedData?.startsWith("<thinking"))
-        ) {
-          ansContent = transformMathThinkData(deCodedData, ansContent);
-          ansType = "o1";
-          setProcessVisible((visible) => {
-            setOpenCurrentMath(visible);
-            return visible;
-          });
-          setCurrentMathThink({ ...ansContent });
-          return;
-        }
-        if (
-          !event.data?.endsWith("<sid>") &&
-          deCodedData?.startsWith("<deep_x1>")
-        ) {
-          setDeepThinkPeriod(
-            transformDeepthinkData(
-              { setV2Trace: () => null },
-              deCodedData,
-              deepThinkPeriod,
-            ),
-          );
-          return;
-        }
-        if (event.data.startsWith("[pluginError]")) {
-          err += event.data;
-          return;
-        }
-        // 多媒体流程
-        if (Base64.decode(event.data)?.startsWith("```multi")) {
-          if (!multiModalData)
-            multiModalData = transformMultiModal(event.data) || null;
-          return;
-        }
-        // 正常走
-        if (!err) {
-          // 删除 && !gee
-          if (answerAllGet) {
-            sid = event.data.split("<sid>")[0];
-            otherProps = handleOtherProps(otherProps, ansContent, ansType);
-            newResp(
-              ans,
-              sid,
-              originMergedList,
-              multiModalData,
-              ansType,
-              otherProps,
-              ansContent,
-            );
-            controller.abort(t("configBase.promptTry.end"));
+      fetchEventSource(esURL, {
+        method: 'POST',
+        body: form,
+        headers: { ...headerConfig },
+        openWhenHidden: true,
+        signal: controller.signal,
+        onopen(): Promise<void> {
+          return Promise.resolve();
+        },
+        onmessage(event: { data: string }): void {
+          const data: SSEData = JSON.parse(event.data);
+          const { id, type, choices, end, content, message, code } = data;
+          id && (currentSid.current = id.toString());
+          if (type === 'start') return;
+          setIsLoading(false);
+          if (code) {
+            const errorMsg = (message as string) || '发生未知错误';
+            setMessageList(prev => {
+              const updated = [...prev];
+              const last = updated.length - 1;
+              updated[last] = { ...updated[last], message: errorMsg };
+              return updated;
+            });
+            setIsLoading(false);
+            setIsCompleted(true);
+            controller.abort('错误结束');
             return;
           }
-          ans = `${ans}${Base64.decode(event.data)}`;
-          setAnswer(ans);
-        }
-        // 删除gee相关的else if分支
-        // else if (gee) {
-        //   gee += event.data;
-        // }
-        else {
-          err += event.data;
-        }
-      },
-      onerror(err) {
-        console.warn("esError", err);
-        setAnswerLoading(false);
-        setAnswerCompleted(true);
-        $godownFlag.current = false;
-        setAnswer("");
-        console.error(err);
-        setError(t("configBase.promptTry.networkError"));
-        throw err;
-      },
-    }).catch(() => {});
-  };
 
-  // 停止回答
-  const stopAnswer = () => {
-    controllerRef.current && controllerRef.current.abort();
-    setAnswerCompleted(true);
-    setAnswerLoading(false);
-    $godownFlag.current = false;
-    $answerRef.current = "";
-    const list = [...mergedList];
-    list.unshift({
-      message: answer,
-      origin: "resp",
-      sid: `${tempSid.current}`,
-      reasoning: currentMathThink.text,
-      reasoningElapsedSecs: currentMathThink.thinking_cost,
-      thinkPeriods: deepThinkPeriod,
-    });
-    tempSid.current += 1;
-    setMergedList(list);
-    setDeepThinkPeriod([]);
-  };
+          if (end) {
+            setIsLoading(false);
+            setIsCompleted(true);
+            setMessageList(prev => {
+              const updated = [...prev];
+              const last = updated.length - 1;
+              updated[last] = {
+                ...updated[last],
+                sid: currentSid?.current?.toString() || '',
+                message: updated[last]?.message || '',
+              };
+              return updated;
+            });
+            controller.abort('结束');
+            return;
+          }
+          // 思考链
+          reasoning += choices?.[0]?.delta?.reasoning_content || '';
+          // 工具调用
+          toolsName = choices?.[1]?.delta?.tool_calls?.[0]?.deskToolName || '';
+          // 正常文本内容
+          ans = `${ans}${choices?.[0]?.delta?.content || content || ''}`;
+          setMessageList(prev => {
+            const updated = [...prev];
+            const last = updated.length - 1;
+            updated[last] = {
+              ...updated[last],
+              message: ans || '',
+              reasoning: reasoning,
+              tools: toolsName ? [toolsName] : [],
+              traceSource: choices?.[1]?.delta?.tool_calls
+                ? JSON.stringify(choices[1].delta.tool_calls)
+                : '',
+            };
+            return updated;
+          });
+        },
+        onerror(err: Error): void {
+          setIsLoading(false);
+          setIsCompleted(true);
+          controllerRef.current.abort('连接错误');
+          console.error('esError', err);
+        },
+      }).catch((err: Error) => {
+        setIsLoading(false);
+        setIsCompleted(true);
+        controllerRef.current.abort('请求失败');
+        console.error('fetchError', err);
+      });
+    };
 
-  // 改变多模态弹窗状态
-  const changeMultiModeModalInfo = (value: any) => {
-    setMultiModeModalInfo(value);
-  };
+    // 停止回答
+    const stopAnswer = () => {
+      controllerRef?.current.abort();
+      setMessageList(prev => {
+        const updated = [...prev];
+        const last = updated.length - 1;
+        updated[last] = {
+          ...updated[last],
+          sid: currentSid?.current?.toString() || '',
+          message: updated[last]?.message || '',
+        };
+        return updated;
+      });
+      setIsLoading(false);
+      setIsCompleted(true);
+    };
 
-  const handleCodeWinClick = useCallback((event: any) => {
-    const srcValue = event.target.getAttribute("src");
-    const tagName = event.target.nodeName.toLowerCase();
-    if (tagName === "img" && srcValue && bug === "s") {
-      // viewer.show(srcValue);
-    }
-    const _className = event.target.className;
-    if (
-      ["pr-icon", "pr-name", "pr-contro-icon", "pr-contro-icon open"].includes(
-        _className,
-      )
-    ) {
-      // const wrapperDom = $(event?.target).closest('.wrapper');
-      // const target = $(`#${wrapperDom.data('target-id')}`);
-      // const iconDom = wrapperDom.find('.pr-contro-icon');
-      // const _display = target.css('display');
-      // if (_display === 'none') {
-      //   target.fadeIn(100);
-      //   iconDom.addClass('open');
-      // } else {
-      //   target.fadeOut(100);
-      //   iconDom.removeClass('open');
-      // }
-      // const _top = $('#out-wrap').scrollTop() - wrapperDom.position().top;
-      // $('#out-wrap').animate(
-      //   {
-      //     scrollTop: _top + 100,
-      //   },
-      //   200
-      // );
-    }
-  }, []);
-
-  return (
-    <div className={styles.prompt_try}>
-      <div className={styles.out_wrap} id="out-wrap">
-        {isPlugin && !flag ? (
-          <div className={styles.placeholder}>
-            <img
-              src="https://1024-cdn.xfyun.cn/2022_1024%2Fcms%2F16890797804930887%2Fcode_win.png"
-              className={styles.placeholder_pic}
-              alt=""
-            />
-            <div className={styles.pr_title}>
-              {status !== 0
-                ? t(
-                    "configBase.promptTry.youHaveNotUploadedDescriptionFileOrInterfaceDocument",
-                  )
-                : t(
-                    "configBase.promptTry.youUploadedInterfaceDocumentButItHasNotBeenVerified",
-                  )}
-            </div>
-            <div className={styles.pr_subtle}>
-              {status !== 0
-                ? t(
-                    "configBase.promptTry.pleaseUploadDescriptionFileAndInterfaceDocumentAndVerify",
-                  )
-                : t(
-                    "configBase.promptTry.pleaseUploadInterfaceDocumentAndVerify",
-                  )}
-            </div>
-          </div>
-        ) : null}
-        <div className={styles.chat_content_wrapper} id="chat-content-wrapper">
-          <div ref={$bottomRef} />
-          {!answerCompleted && !answerLoading && !error && (
-            <div className={styles.stopBtn}>
-              <div className={styles.stopSpan} onClick={stopAnswer}>
-                <div>{t("configBase.promptTry.stopOutput")}</div>
-              </div>
-            </div>
-          )}
-          {!answerCompleted && !error && (
-            <div className={styles.chat_content} id="answer-box">
-              <img
-                className={botMode ? styles.avatorImage : styles.user_image}
-                src={coverUrl ? coverUrl : errorIcon}
-                alt=""
-              />
-              <div
-                className={styles.content_gpt}
-                style={{
-                  padding: answerLoading ? "8px 30px 8px 16px" : "",
-                  minWidth: answerLoading ? "0" : "260px",
-                }}
-              >
-                {answerLoading ||
-                (model == "xdeepseekr1" ? !currentMathThink.text : false) ? (
-                  <span className={styles.ans_text_tip}>
-                    <div className={styles.loading}>
-                      <div className={styles.loading_inner} />
-                    </div>
-                    {t("configBase.promptTry.answerInProgress")}
-                  </span>
-                ) : (
-                  <>
-                    {/* TODO: 两个用最新的 -- 涛的 */}
-                    {/* <DeepThinkProgress
-                      deepThinkInfo={deepThinkPeriod}
-                      curAnswer={answer ?? ''}
-                    /> */}
-                    {/* {currentMathThink?.text?.length >= 0 &&
-                    model == 'xdeepseekr1' ? (
-                      <MathThinkProgress
-                        mathThinkInfo={currentMathThink}
-                        curAnswer={answer ?? ''}
-                      />
-                    ) : null} */}
-                    {/* <CodeWin
-                      isAnswerComplete={answerCompleted}
-                      mdText={answer ?? ''}
-                    /> */}
-                    {/* TODO: 更换为最新的 */}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-          {error && (
-            <div className={styles.chat_content}>
-              <img
-                className={botMode ? styles.avatorImage : styles.user_image}
-                src={coverUrl ? coverUrl : errorIcon}
-                alt=""
-              />
-              <div className={styles.content_gpt}>
-                <span>{error}</span>
-              </div>
-            </div>
-          )}
-          {/* {geeError && (
-            <div className={styles.chat_content}>
-              <img
-                className={botMode ? styles.avatorImage : styles.user_image}
-                src={coverUrl ? coverUrl : errorIcon}
-                alt=""
-              />
-              <div className={styles.content_gpt}>
-                <span>{geeError}</span>
-              </div>
-            </div>
-          )} */}
-          {mergedList.map((item: any, index: any) => {
-            if (!item) return null;
-            else
-              return (
-                <div
-                  className={styles.chat_content}
-                  key={`${item?.sid || "si"}-${item?.id || "i"}${item?.uuid} `}
-                >
-                  <img
-                    className={
-                      item?.origin === "req" && userAvatar
-                        ? styles.avatorImage
-                        : styles.user_image
-                    }
-                    src={
-                      item?.origin === "req"
-                        ? userAvatar || userImg
-                        : coverUrl
-                          ? coverUrl
-                          : errorIcon
-                    }
-                    alt=""
-                  />
-                  {item?.origin === "req" ? (
-                    <div className={styles.content_user}>{item?.message}</div>
-                  ) : (
-                    <div className={styles.content_gpt}>
-                      {/* <DeepThinkProgress answerItem={item} />
-                      <MathThinkProgress answerItem={item} /> */}
-                      {![
-                        "video",
-                        "multi_video",
-                        "multi_image_url",
-                        "multi_video_edited",
-                      ].includes(item.type) && (
-                        <>
-                          {/* <CodeWin
-                            onClick={handleCodeWinClick}
-                            currentIndex={index}
-                            isAnswerComplete={answerCompleted}
-                            mdText={item?.message || ''}
-                          /> */}
-                        </>
-                      )}
-                      {/* {item.type && (
-                        <MultiModeCpn
-                          answerObj={item}
-                          changeMultiModeModalInfo={changeMultiModeModalInfo}
-                          ask={mergedList[index + 1]?.message}
-                          getBotList={() => {
-                            return;
-                          }}
-                          bigImgShow={(url: any) => {
-                            // viewer.show(url);
-                          }}
-                        />
-                      )} */}
-                    </div>
-                  )}
-                </div>
-              );
-          })}
-
-          <div className={styles.chat_content}>
-            <div className={`${styles.content_gpt} ${styles.default}`}>
-              <div className={styles.first}>
-                <div className={styles.avatar}>
-                  <img src={coverUrl || errorIcon} />
-                </div>
-                <div className={styles.descBox}>
-                  <div className={styles.nameBox}>
-                    <h2 className={styles.name}>
-                      {baseinfo?.botName ||
-                        t("configBase.promptTry.hereIsTheAgentName")}
-                    </h2>
-                  </div>
-                  <div className={styles.desc}>
-                    {baseinfo?.botDesc ||
-                      t("configBase.promptTry.hereIsTheAgentIntroduction")}
-                  </div>
-                </div>
-              </div>
-              {inputExample?.some((ex: string) => ex) && (
-                <div className={styles.last}>
-                  <div className={styles.input_warning}>
-                    {inputExample?.map((ex: string) => {
-                      return ex ? (
-                        <div
-                          className={styles.input_item}
-                          onClick={() => {
-                            if (answerCompleted) {
-                              $ask.current.value = ex;
-                            }
-                            handleSendBtnClick();
-                          }}
-                        >
-                          {ex.length > 15 ? ex.slice(0, 15) + "..." : ex}
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+    return (
+      <div className="w-full h-full">
+        <div className="w-full mx-auto flex flex-col flex-1 min-h-0 h-full overflow-hidden">
+          <MessageList
+            messageList={messageList}
+            botInfo={baseinfo}
+            coverUrl={coverUrl || ''}
+            inputExample={inputExample || []}
+            isLoading={isLoading}
+            isCompleted={isCompleted}
+            stopAnswer={stopAnswer}
+          />
         </div>
       </div>
-      {!showTipPk && !showModelPk && (
-        <div className={styles.ask_wrapper}>
-          {answerCompleted && !answerLoading && (
-            <div
-              className={styles.quit_botmode}
-              onClick={() => {
-                removeAll();
-              }}
-            >
-              <DeleteIcon
-                style={{ pointerEvents: "none", marginRight: "6px" }}
-              />
-              {t("configBase.promptTry.clearHistory")}
-            </div>
-          )}
-          <textarea
-            ref={$ask}
-            placeholder={(localeConfig as any)?.[localeNow]?.contentHere}
-            onKeyDown={(e: any) => {
-              enterFn(e);
-            }}
-            onChange={(e) => {
-              setAskValue(e.target.value);
-            }}
-            onCompositionStart={() => {
-              $inputConfirmFlag.current = false;
-            }}
-            onCompositionEnd={() => {
-              $inputConfirmFlag.current = true;
-            }}
-          />
-          <div
-            className={styles.send}
-            style={{
-              background: askValue ? "#257eff" : "#8aa5e6",
-              opacity: $ask.current?.value ? 1 : 0.7,
-            }}
-            onClick={() => {
-              handleSendBtnClick();
-            }}
-          >
-            {t("configBase.promptTry.send")}
-          </div>
-        </div>
-      )}
+    );
+  }
+);
 
-      {/* 多模态弹窗入口 */}
-      {/* {multiModeModalInfo.open ? (
-        <MultiModeModal
-          type={multiModeModalInfo?.info?.type}
-          modalInfo={multiModeModalInfo?.info?.modalInfo}
-          changeMultiModeModalInfo={changeMultiModeModalInfo}
-          getHistory={() => {
-            return;
-          }}
-        />
-      ) : null} */}
-    </div>
-  );
-};
+// 设置displayName以便调试
+PromptTry.displayName = 'PromptTry';
 
 export default memo(PromptTry);

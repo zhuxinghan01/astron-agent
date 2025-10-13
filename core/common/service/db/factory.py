@@ -1,15 +1,14 @@
 import os
-from typing import Optional
 
 from common.service.base import ServiceFactory
 from common.service.db.db_service import DatabaseService
 
 
 class DatabaseServiceFactory(ServiceFactory):
-    def __init__(self):
-        super().__init__(DatabaseService)
+    def __init__(self) -> None:
+        super().__init__(DatabaseService)  # type: ignore[arg-type]
 
-    def create(self):
+    def create(self) -> DatabaseService:  # type: ignore[override, no-untyped-def]
         """
         Create a new DatabaseService instance.
         :param database_url:

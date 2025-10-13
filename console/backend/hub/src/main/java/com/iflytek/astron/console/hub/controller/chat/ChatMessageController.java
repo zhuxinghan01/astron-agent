@@ -1,9 +1,10 @@
 package com.iflytek.astron.console.hub.controller.chat;
 
 import cn.hutool.core.util.RandomUtil;
+import com.alibaba.fastjson2.JSON;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
-import com.iflytek.astron.console.commons.entity.chat.ChatListCreateResponse;
+import com.iflytek.astron.console.commons.dto.chat.ChatListCreateResponse;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
@@ -12,7 +13,7 @@ import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.util.SseEmitterUtil;
 import com.iflytek.astron.console.hub.dto.chat.BotDebugRequest;
-import com.iflytek.astron.console.commons.entity.bot.ChatBotReqDto;
+import com.iflytek.astron.console.commons.dto.bot.ChatBotReqDto;
 import com.iflytek.astron.console.hub.dto.chat.StopStreamResponse;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
 import com.iflytek.astron.console.commons.entity.chat.ChatReqRecords;
@@ -34,7 +35,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.*;
 
 /**
- * @author yingpeng
+ * @author mingsuiyongheng
  */
 @RestController
 @Slf4j
@@ -236,7 +237,16 @@ public class ChatMessageController {
     }
 
     private record ValidationResult(boolean isValid) {
+        /**
+         * Gets a static method that represents validation passed.
+         *
+         * @return ValidationResult A static result object representing validation passed
+         */
         static ValidationResult valid() { return new ValidationResult(true); }
+        /**
+         * Returns a static method that represents an invalid validation result.
+         * @return ValidationResult Represents an invalid validation result
+         */
         static ValidationResult invalid() { return new ValidationResult(false); }
     }
 
@@ -268,7 +278,7 @@ public class ChatMessageController {
     /**
      * Regenerate conversation result
      */
-    @PostMapping(path = "/reAnswer", produces = "text/event-stream;charset=UTF-8")
+    @PostMapping(path = "/re-answer", produces = "text/event-stream;charset=UTF-8")
     @Operation(summary = "Regenerate conversation result")
     public SseEmitter reAnswer(@RequestParam Long chatId, @RequestParam Long requestId) {
         String sseId = RandomUtil.randomString(8);
@@ -364,14 +374,23 @@ public class ChatMessageController {
 
         log.info("Debug interface establishing SSE connection, sseId: {}", sseId);
         // Check if multi-turn conversation is selected
-        if (debugRequest.getNeed() == 0) {
-            debugRequest.setArr(new ArrayList<>());
+        List<String> messageList = new ArrayList<>();
+        if (debugRequest.getMultiTurn() && StringUtils.isNotBlank(debugRequest.getArr())) {
+            messageList = JSON.parseArray(debugRequest.getArr(), String.class);
         }
-
+        // Parse array from frontend
+        List<String> maasDatasetList;
+        String maasDatasetListStr = debugRequest.getMaasDatasetListStr();
+        if (Objects.nonNull(maasDatasetListStr) && StringUtils.isNotBlank(maasDatasetListStr)) {
+            maasDatasetListStr = maasDatasetListStr.substring(1, maasDatasetListStr.length() - 1);
+            maasDatasetList = Arrays.asList(maasDatasetListStr.split(","));
+        } else {
+            maasDatasetList = new ArrayList<>();
+        }
         try {
             sendStartSignal(sseEmitter, sseId, new ChatContext(uid, 0L, 0));
-            botChatService.debugChatMessageBot(debugRequest.getText(), debugRequest.getPrompt(), debugRequest.getArr(),
-                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), debugRequest.getModelId(), sseEmitter, sseId);
+            botChatService.debugChatMessageBot(debugRequest.getText(), debugRequest.getPrompt(), messageList,
+                    uid, debugRequest.getOpenedTool(), debugRequest.getModel(), debugRequest.getModelId(), maasDatasetList, sseEmitter, sseId);
             return sseEmitter;
         } catch (Exception e) {
             log.error("Bot debug error, sseId: {}", sseId, e);

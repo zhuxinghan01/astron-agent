@@ -11,25 +11,27 @@ import logging
 import os
 import time
 import uuid
+from typing import Any, Union
 
-from common.service import get_kafka_producer_service
+from common.otlp.log_trace.node_trace_log import NodeTraceLog, Status
 from common.otlp.metrics.meter import Meter
 from common.otlp.trace.span import Span
-from common.otlp.log_trace.node_trace_log import (
-    NodeTraceLog,
-    Status
-)
-
+from common.service import get_kafka_producer_service
 from plugin.aitools.api.schema.types import ErrorResponse, SuccessDataResponse
 from plugin.aitools.common.sid_generator2 import new_sid
 from plugin.aitools.const.err_code.code import CodeEnum
 from plugin.aitools.service.image_understanding.image_understanding_client import (
     ImageUnderstandingClient,
 )
+from plugin.aitools.service.translation.translation_client import (
+    TranslationClient,
+)
 
 
 # 图片理解 - 开放平台
-def image_understanding_main(question: str, image_url: str, request):
+def image_understanding_main(
+    question: str, image_url: str, request: Any
+) -> Union[SuccessDataResponse, ErrorResponse]:
     app_id = os.getenv("AI_APP_ID")
     uid = str(uuid.uuid1())
     caller = ""
@@ -83,8 +85,9 @@ def image_understanding_main(question: str, image_url: str, request):
                     m.in_error_count(response.get("code"))
 
                     node_trace.answer = json.dumps(response, ensure_ascii=False)
-                    node_trace.status = Status(code=response.get("code"),
-                                            message=response.get("message"))
+                    node_trace.status = Status(
+                        code=response.get("code"), message=response.get("message")
+                    )
                     kafka_service.send("spark-agent-builder", node_trace.to_json())
 
                     return response
@@ -93,14 +96,16 @@ def image_understanding_main(question: str, image_url: str, request):
                     m.in_error_count(response.code)
 
                     node_trace.answer = response.message
-                    node_trace.status = Status(code=response.code, message=response.message)
+                    node_trace.status = Status(
+                        code=response.code, message=response.message
+                    )
                     kafka_service.send("spark-agent-builder", node_trace.to_json())
 
                     return response
 
             response = SuccessDataResponse(data={"content": answer}, sid=sid)
             m.in_success_count()
-            
+
             node_trace.answer = json.dumps(response.data, ensure_ascii=False)
             node_trace.status = Status(code=response.code, message=response.message)
             kafka_service.send("spark-agent-builder", node_trace.to_json())
@@ -110,7 +115,7 @@ def image_understanding_main(question: str, image_url: str, request):
         logging.error("图片理解请求error: %s", str(e))
         response = ErrorResponse(CodeEnum.INTERNAL_ERROR)
         m.in_error_count(response.code)
-        
+
         node_trace.answer = response.message
         node_trace.status = Status(code=response.code, message=response.message)
         kafka_service.send("spark-agent-builder", node_trace.to_json())
@@ -120,8 +125,8 @@ def image_understanding_main(question: str, image_url: str, request):
 
 # 智能语音评测 - ISE
 async def ise_evaluate_main(
-    audio_data: str, text: str, language: str, category: str, group: str, _request
-):
+    audio_data: str, text: str, language: str, category: str, group: str, _request: Any
+) -> Union[SuccessDataResponse, ErrorResponse]:
     sid = new_sid()
     logging.info(f"ise_evaluate_main sid: {sid}")
     app_id = os.getenv("AI_APP_ID")
@@ -164,15 +169,16 @@ async def ise_evaluate_main(
             kafka_service = get_kafka_producer_service()
 
             from plugin.aitools.service.ise.ise_client import ISEClient
-        
+
             # 解码音频数据
             audio_bytes = base64.b64decode(audio_data)
 
             # 创建ISE客户端
             ise_client = ISEClient(
-                            os.getenv("AI_APP_ID"),
-                            os.getenv("AI_API_KEY"),
-                            os.getenv("AI_API_SECRET"))
+                os.getenv("AI_APP_ID"),
+                os.getenv("AI_API_KEY"),
+                os.getenv("AI_API_SECRET"),
+            )
 
             # 执行语音评测
             success, message, result = await ise_client.evaluate_audio(
@@ -197,7 +203,9 @@ async def ise_evaluate_main(
                 m.in_error_count(CodeEnum.INTERNAL_ERROR.code)
 
                 node_trace.answer = message
-                node_trace.status = Status(code=CodeEnum.INTERNAL_ERROR.code, message=message)
+                node_trace.status = Status(
+                    code=CodeEnum.INTERNAL_ERROR.code, message=message
+                )
                 kafka_service.send("spark-agent-builder", node_trace.to_json())
 
                 return ErrorResponse(
@@ -209,11 +217,105 @@ async def ise_evaluate_main(
     except Exception as e:
         logging.error("ISE语音评测失败， error: %s", str(e))
         m.in_error_count(CodeEnum.INTERNAL_ERROR.code)
-       
+
         node_trace.answer = str(e)
         node_trace.status = Status(code=CodeEnum.INTERNAL_ERROR.code, message=str(e))
         kafka_service.send("spark-agent-builder", node_trace.to_json())
 
         return ErrorResponse(
             code_enum=CodeEnum.INTERNAL_ERROR, message=f"ISE评测异常: {str(e)}", sid=sid
+        )
+
+
+# Text Translation Service
+def translation_main(
+    text: str, target_language: str, source_language: str = "cn", request: Any = None
+) -> Union[SuccessDataResponse, ErrorResponse]:
+    """
+    Text translation service main function
+
+    Args:
+        text: Text to be translated
+        target_language: Target language code
+        source_language: Source language code, default Chinese
+        request: HTTP request object
+
+    Returns:
+        SuccessDataResponse or ErrorResponse
+    """
+    app_id = os.getenv("AI_APP_ID")
+    uid = str(uuid.uuid1())
+    sid = new_sid()
+
+    span = Span(app_id=app_id, uid=uid)
+    usr_input = {
+        "text": text,
+        "target_language": target_language,
+        "source_language": source_language,
+    }
+
+    try:
+        with span.start(
+            func_name="translation", add_source_function_name=False
+        ) as span_context:
+            m = Meter(app_id=span_context.app_id, func="translation")
+            span_context.add_info_events(
+                {"usr_input": json.dumps(usr_input, ensure_ascii=False)}
+            )
+            span_context.set_attributes(attributes=usr_input)
+
+            # Create translation client
+            translation_client = TranslationClient(
+                app_id=os.getenv("AI_APP_ID"),
+                api_key=os.getenv("AI_API_KEY"),
+                api_secret=os.getenv("AI_API_SECRET"),
+            )
+
+            # Execute translation
+            success, message, result = translation_client.translate(
+                text=text,
+                target_language=target_language,
+                source_language=source_language,
+            )
+
+            span_context.add_info_events(
+                {"result": json.dumps(result, ensure_ascii=False)}
+            )
+
+            if success:
+                m.in_success_count()
+                return SuccessDataResponse(
+                    data=result,
+                    message="Translation successful",
+                    sid=sid,
+                )
+            else:
+                # Map error messages to appropriate error codes
+                if "翻译文本不能为空" in message:
+                    error_code = CodeEnum.TRANSLATION_EMPTY_ERROR
+                elif "翻译文本超过5000字符限制" in message:
+                    error_code = CodeEnum.TRANSLATION_TOO_LONG_ERROR
+                elif "不支持的语言组合" in message:
+                    error_code = CodeEnum.TRANSLATION_LANG_ERROR
+                elif "API请求失败" in message:
+                    error_code = CodeEnum.TRANSLATION_API_ERROR
+                elif "API返回数据格式错误" in message:
+                    error_code = CodeEnum.TRANSLATION_RESPONSE_ERROR
+                else:
+                    error_code = CodeEnum.TRANSLATION_API_ERROR
+
+                m.in_error_count(error_code.code)
+                return ErrorResponse(
+                    code_enum=error_code,
+                    message=f"Translation failed: {message}",
+                    sid=sid,
+                )
+
+    except Exception as e:
+        logging.error("Translation service error: %s", str(e))
+        m.in_error_count(CodeEnum.INTERNAL_ERROR.code)
+        return ErrorResponse(
+            code_enum=CodeEnum.INTERNAL_ERROR,
+            message=f"Translation service error: {str(e)}",
+            sid=sid,
         )

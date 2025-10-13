@@ -5,11 +5,10 @@ import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Body, Header, HTTPException
-from sse_starlette.sse import EventSourceResponse
-
 from plugin.rpa.api.schemas.execution_schema import RPAExecutionRequest
-from consts import const
+from plugin.rpa.consts import const
 from plugin.rpa.service.xiaowu.process import task_monitoring
+from sse_starlette.sse import EventSourceResponse
 
 # RPA execution router
 execution_router = APIRouter(tags=["rpa execution api"])
@@ -17,10 +16,12 @@ execution_router = APIRouter(tags=["rpa execution api"])
 
 @execution_router.post("/exec")
 async def exec_fun(
-    Authorization: str = Header(   # pylint: disable=invalid-name
+    Authorization: str = Header(  # pylint: disable=invalid-name
         ..., description="Access token"
     ),
-    request: RPAExecutionRequest = Body(..., description="RPA execution request parameters"),
+    request: RPAExecutionRequest = Body(
+        ..., description="RPA execution request parameters"
+    ),
 ) -> EventSourceResponse:
     """Execute RPA task and return streaming response."""
     try:
@@ -33,10 +34,9 @@ async def exec_fun(
             "Cache-Control": "no-cache, no-transform",
             "X-Accel-Buffering": "no",
         }
-        ping_interval = int(os.getenv(const.XIAOWU_RPA_PING_INTERVAL_KEY, "3"))
+        ping_interval = int(os.getenv(const.XIAOWU_RPA_PING_INTERVAL_KEY, "3") or "3")
         acctss_token = (
-            Authorization[7:] if Authorization.startswith("Bearer ")
-            else Authorization
+            Authorization[7:] if Authorization.startswith("Bearer ") else Authorization
         )
         return EventSourceResponse(
             task_monitoring(

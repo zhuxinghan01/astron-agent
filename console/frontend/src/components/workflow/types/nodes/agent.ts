@@ -1,5 +1,5 @@
 // Agent Node 相关类型定义
-
+import React from 'react';
 export interface AgentProps {
   data: AgentNodeData;
 }
@@ -41,7 +41,7 @@ export interface ToolItem {
   id?: string;
   toolId: string;
   name: string;
-  type: "tool" | "knowledge" | "mcp";
+  type: 'tool' | 'knowledge' | 'mcp';
   icon?: string;
   tag?: string;
   isLatest?: boolean;
@@ -76,4 +76,20 @@ export interface AgentStrategy {
 export interface AddressItem {
   id: string;
   value: string;
+}
+
+export interface UseAgentReturn {
+  toolsList: ToolItem[];
+  orderToolsList: ToolItem[];
+  handleChangeNodeParam: (key: string, value: unknown) => void;
+  handleToolChange: (tool: ToolItem) => void;
+  handleUpdateTool: (tool: ToolItem) => void;
+  handleChangeAddress: (id: string, value: string) => void;
+  handleRemoveAddress: (id: string) => void;
+}
+
+export interface useAddAgentPluginType {
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  renderParamsTooltip: (params: string) => React.ReactNode;
+  handleCheckTool: (tool: ToolItem) => void;
 }

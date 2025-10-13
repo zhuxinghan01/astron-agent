@@ -1,17 +1,17 @@
-import { InputParamsData, RecurseData } from "@/types/resource";
-import React, { useCallback, useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
-import { cloneDeep } from "lodash";
-import { message } from "antd";
-import expand from "@/assets/imgs/plugin/icon_fold.png";
-import shrink from "@/assets/imgs/plugin/icon_shrink.png";
+import { InputParamsData, RecurseData } from '@/types/resource';
+import React, { useCallback, useEffect, useState } from 'react';
+import { v4 as uuid } from 'uuid';
+import { cloneDeep } from 'lodash';
+import { message } from 'antd';
+import expand from '@/assets/imgs/plugin/icon_fold.png';
+import shrink from '@/assets/imgs/plugin/icon_shrink.png';
 
 const useTreeOperations = (): {
   updateIds: (obj: InputParamsData) => InputParamsData;
   findNodeById: (tree: InputParamsData[], id: string) => InputParamsData | null;
   deleteNodeFromTree: (
     tree: InputParamsData[],
-    id: string,
+    id: string
   ) => InputParamsData[];
   addTestProperty: (dataArray: InputParamsData[]) => void;
 } => {
@@ -19,7 +19,7 @@ const useTreeOperations = (): {
     const newObj = { ...obj, id: uuid() };
 
     if (newObj.children && Array.isArray(newObj.children)) {
-      newObj.children = newObj.children.map((child) => updateIds(child));
+      newObj.children = newObj.children.map(child => updateIds(child));
     }
 
     return newObj;
@@ -27,7 +27,7 @@ const useTreeOperations = (): {
 
   const findNodeById = (
     tree: InputParamsData[],
-    id: string,
+    id: string
   ): InputParamsData | null => {
     for (const node of tree) {
       if (node.id === id) {
@@ -60,7 +60,7 @@ const useTreeOperations = (): {
         return acc;
       }, [] as InputParamsData[]);
     },
-    [],
+    []
   );
 
   function addTestProperty(dataArray: InputParamsData[]): void {
@@ -69,11 +69,11 @@ const useTreeOperations = (): {
       obj.id = uuid();
 
       if (obj.children && Array.isArray(obj.children)) {
-        obj.children.forEach((child) => addTest(child));
+        obj.children.forEach(child => addTest(child));
       }
     }
 
-    dataArray.forEach((item) => addTest(item));
+    dataArray.forEach(item => addTest(item));
   }
 
   return {
@@ -97,12 +97,12 @@ const useExpandOperations = (): {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
   const handleExpand = useCallback((record: InputParamsData) => {
-    setExpandedRowKeys((expandedRowKeys) => [...expandedRowKeys, record.id]);
+    setExpandedRowKeys(expandedRowKeys => [...expandedRowKeys, record.id]);
   }, []);
 
   const handleCollapse = useCallback((record: InputParamsData) => {
-    setExpandedRowKeys((expandedRowKeys) =>
-      expandedRowKeys.filter((id) => id !== record.id),
+    setExpandedRowKeys(expandedRowKeys =>
+      expandedRowKeys.filter(id => id !== record.id)
     );
   }, []);
 
@@ -113,7 +113,7 @@ const useExpandOperations = (): {
           <img
             src={shrink}
             className="inline-block w-4 h-4 mb-1 mr-1"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleCollapse(record);
             }}
@@ -122,7 +122,7 @@ const useExpandOperations = (): {
           <img
             src={expand}
             className="inline-block w-4 h-4 mb-1 mr-1"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleExpand(record);
             }}
@@ -131,7 +131,7 @@ const useExpandOperations = (): {
       }
       return null;
     },
-    [],
+    []
   );
 
   return {
@@ -145,14 +145,14 @@ const useExpandOperations = (): {
 
 const useDataTransform = (): {
   transformInputDataToDefaultParamsData: (
-    data: InputParamsData[],
+    data: InputParamsData[]
   ) => InputParamsData[];
   applyDefaults: (
     child: InputParamsData,
-    defaultValue: RecurseData,
+    defaultValue: RecurseData
   ) => InputParamsData;
   transformDefaultParamsDataToDefaultData: (
-    data: InputParamsData[],
+    data: InputParamsData[]
   ) => InputParamsData[];
 } => {
   const transformInputDataToDefaultParamsData = useCallback(
@@ -161,38 +161,53 @@ const useDataTransform = (): {
       function recurse(
         node: InputParamsData,
         defaultVal: RecurseData | undefined,
-        parentId: string,
+        parentId: string
       ): void {
         node.id = parentId ? `${parentId}-${uuid()}` : uuid();
-        if (node.type === "object") {
-          (node.children || []).forEach((child) => {
-            recurse(
-              child,
-              defaultVal ? defaultVal[child.name] : undefined,
-              node.id,
-            );
+        if (node.type === 'object') {
+          (node.children || []).forEach(child => {
+            const childDefaultValue =
+              defaultVal && typeof defaultVal === 'object'
+                ? defaultVal[child.name]
+                : undefined;
+            recurse(child, childDefaultValue, node.id);
           });
-        } else if (node.type === "array") {
+        } else if (node.type === 'array') {
           const arrayDefault = Array.isArray(defaultVal) ? defaultVal : [];
-          node.children =
-            node.children?.map((node, index) => {
-              node.default = arrayDefault[index];
-              recurse(node, arrayDefault[index], node.id);
-              return node;
-            }) || [];
+
+          if (arrayDefault.length > 0) {
+            // If there are saved default values, create children based on saved data
+            const template = node.children?.[0] || node.subChild;
+            if (template) {
+              node.children = arrayDefault.map((savedValue, index) => {
+                const newChild = cloneDeep(template);
+                newChild.id = `${node.id}-${uuid()}`; // Ensure unique ID
+                newChild.default = savedValue;
+                recurse(newChild, savedValue, node.id);
+                return newChild;
+              });
+            }
+          } else if (node.children) {
+            // If no saved values but has template children, keep original logic
+            node.children = node.children.map((childNode, index) => {
+              childNode.default = arrayDefault[index];
+              recurse(childNode, arrayDefault[index], node.id);
+              return childNode;
+            });
+          }
         } else {
-          // 对于基本类型，直接设置默认值
+          // For basic types, directly set default value
           node.default = defaultVal !== undefined ? defaultVal : node.default;
         }
       }
 
-      data.forEach((node) => {
+      data.forEach(node => {
         recurse(node, node.default as RecurseData, node.id);
       });
 
       return data;
     },
-    [],
+    []
   );
 
   const applyDefaults = useCallback(
@@ -201,7 +216,7 @@ const useDataTransform = (): {
 
       if (
         Array.isArray(defaultValue) &&
-        newChild.type === "array" &&
+        newChild.type === 'array' &&
         newChild.children
       ) {
         newChild.children = defaultValue.map((value, i) => {
@@ -210,27 +225,27 @@ const useDataTransform = (): {
             : ({} as InputParamsData);
           return applyDefaults(childTemplate, value);
         });
-      } else if (typeof defaultValue !== "undefined") {
+      } else if (typeof defaultValue !== 'undefined') {
         newChild.default = defaultValue;
       }
 
       return newChild;
     },
-    [],
+    []
   );
 
   const transformDefaultParamsDataToDefaultData = useCallback(
     (data: InputParamsData[]) => {
       function recurse(
-        node: InputParamsData,
+        node: InputParamsData
       ): InputParamsData[] | InputParamsData {
-        if (node.type === "object") {
+        if (node.type === 'object') {
           const obj = {} as Record<string, InputParamsData>;
-          (node.children || []).forEach((child) => {
+          (node.children || []).forEach(child => {
             obj[child.name] = recurse(child) as InputParamsData;
           });
           return obj as unknown as InputParamsData;
-        } else if (node.type === "array") {
+        } else if (node.type === 'array') {
           return node.children && node.children.length > 0
             ? (node.children.map(recurse) as InputParamsData[])
             : ([
@@ -245,7 +260,7 @@ const useDataTransform = (): {
 
       return data.map(recurse).flat();
     },
-    [],
+    []
   );
 
   return {
@@ -263,25 +278,25 @@ const useValidation = (): {
   checkParmas: (params: InputParamsData[], id: string, key: string) => boolean;
 } => {
   const validateTransformedData = (
-    data: InputParamsData[],
+    data: InputParamsData[]
   ): { validatedData: InputParamsData[]; flag: boolean } => {
     let flag = true;
 
     const validate = (items: InputParamsData[]): InputParamsData[] => {
       const newItems = items.map((item, index) => {
         // 校验当前项的 name 字段是否为空
-        if (item?.type !== "object" && item?.type !== "array") {
+        if (item?.type !== 'object' && item?.type !== 'array') {
           if (item?.required && !item?.default?.toString()?.trim()) {
-            item.defaultErrMsg = "值不能为空";
+            item.defaultErrMsg = '值不能为空';
             flag = false;
           } else {
-            item.defaultErrMsg = "";
+            item.defaultErrMsg = '';
           }
         }
         return item;
       });
 
-      return newItems?.map((item) => {
+      return newItems?.map(item => {
         if (Array.isArray(item.children)) {
           item.children = validate(item.children);
         }
@@ -296,10 +311,10 @@ const useValidation = (): {
   const checkParmas = useCallback(
     (params: InputParamsData[], id: string, key: string) => {
       let passFlag = true;
-      const errEsg = "请输入参数值";
+      const errEsg = '请输入参数值';
       const findNodeById = (
         tree: InputParamsData[],
-        id: string,
+        id: string
       ): InputParamsData | null => {
         for (const node of tree) {
           if (node.id === id) {
@@ -320,11 +335,11 @@ const useValidation = (): {
         currentNode[`${key}ErrMsg` as keyof InputParamsData] = errEsg;
         passFlag = false;
       } else {
-        currentNode[`${key}ErrMsg` as keyof InputParamsData] = "";
+        currentNode[`${key}ErrMsg` as keyof InputParamsData] = '';
       }
       return passFlag;
     },
-    [],
+    []
   );
 
   return {
@@ -353,20 +368,20 @@ export const useArrayDefault = ({
   }) => React.ReactNode;
   handleInputParamsChange: (
     id: string,
-    value: string | number | boolean,
+    value: string | number | boolean
   ) => void;
   handleCheckInput: (record: InputParamsData, key: string) => void;
   handleSaveData: () => void;
   deleteNodeFromTree: (
     tree: InputParamsData[],
-    id: string,
+    id: string
   ) => InputParamsData[];
   defaultParamsData: InputParamsData[];
   setDefaultParamsData: (data: InputParamsData[]) => void;
   expandedRowKeys: string[];
 } => {
   const [defaultParamsData, setDefaultParamsData] = useState<InputParamsData[]>(
-    [],
+    []
   );
 
   const { updateIds, findNodeById, addTestProperty, deleteNodeFromTree } =
@@ -394,13 +409,13 @@ export const useArrayDefault = ({
       currentNode?.children?.push(newData);
       setDefaultParamsData(cloneDeep(defaultParamsData));
       if (!expandedRowKeys?.includes(newData?.id)) {
-        setExpandedRowKeys((expandedRowKeys) => [
+        setExpandedRowKeys(expandedRowKeys => [
           ...expandedRowKeys,
           newData?.id,
         ]);
       }
     },
-    [expandedRowKeys, defaultParamsData, setDefaultParamsData],
+    [expandedRowKeys, defaultParamsData, setDefaultParamsData]
   );
 
   const handleInputParamsChange = useCallback(
@@ -410,7 +425,7 @@ export const useArrayDefault = ({
       currentNode.default = value as string;
       setDefaultParamsData(cloneDeep(defaultParamsData));
     },
-    [defaultParamsData, setDefaultParamsData, setExpandedRowKeys],
+    [defaultParamsData, setDefaultParamsData, setExpandedRowKeys]
   );
 
   const checkParmasTable = useCallback(() => {
@@ -422,7 +437,7 @@ export const useArrayDefault = ({
   const handleSaveData = useCallback(() => {
     const flag = checkParmasTable();
     if (!flag) {
-      message.warning("存在未填写的必填参数，请检查后再试");
+      message.warning('存在未填写的必填参数，请检查后再试');
       return;
     }
     const currentNode =
@@ -448,22 +463,29 @@ export const useArrayDefault = ({
       checkParmas(defaultParamsData, record?.id, key);
       setDefaultParamsData(cloneDeep(defaultParamsData));
     },
-    [defaultParamsData, setDefaultParamsData],
+    [defaultParamsData, setDefaultParamsData]
   );
 
   useEffect(() => {
     if (currentArrayDefaultId) {
       const currentNode = findNodeById(inputParamsData, currentArrayDefaultId);
+
+      if (!currentNode) {
+        console.warn(`Node with ID ${currentArrayDefaultId} not found`);
+        return;
+      }
+
       const copyCurrentNode = cloneDeep([currentNode]) as InputParamsData[];
       addTestProperty(copyCurrentNode);
       const defaultParamsData =
         transformInputDataToDefaultParamsData(copyCurrentNode);
+
       setDefaultParamsData(defaultParamsData);
       const allKeys: string[] = [];
-      defaultParamsData[0]?.children?.forEach((item) => {
+      defaultParamsData[0]?.children?.forEach(item => {
         allKeys.push(item.id);
       });
-      setExpandedRowKeys([defaultParamsData[0]?.id || "", ...allKeys]);
+      setExpandedRowKeys([defaultParamsData[0]?.id || '', ...allKeys]);
     }
   }, [currentArrayDefaultId, inputParamsData]);
 

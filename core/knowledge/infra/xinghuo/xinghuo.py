@@ -37,25 +37,29 @@ async def upload(
     Raises:
         ThirdPartyException: Raised when upload fails
     """
-    file_name, _, file_extension = get_file_info_from_url(url)
+    file = kwargs.get("file")
     file_type = ["pdf", "doc", "docx"]
 
+    post_body = {
+        "fileType": "wiki",
+        "stepByStep": "true",
+    }
     if resource_type == 1:
-        post_body = {
-            "webPageUrl": url,
-            "fileName": "file_name.txt",
-            "fileType": "wiki",
-            "parseType": "OCR" if file_extension.lower() in file_type else "AUTO",
-            "stepByStep": "true",
-        }
+        post_body["webPageUrl"] = url
+        post_body["fileName"] = "file_name.txt"
+        post_body["parseType"] = "AUTO"
     else:
-        post_body = {
-            "url": url,
-            "fileName": file_name,
-            "fileType": "wiki",
-            "parseType": "OCR" if file_extension.lower() in file_type else "AUTO",
-            "stepByStep": "true",
-        }
+        if file is None:
+            file_name, _, file_extension = get_file_info_from_url(url)
+            post_body["url"] = url
+        else:
+            file_name = file.filename
+            file_extension = file.content_type
+
+        post_body["fileName"] = file_name
+        post_body["parseType"] = (
+            "OCR" if file_extension.lower() in file_type else "AUTO"
+        )
 
     post_body["extend"] = json.dumps({"wikiSplitExtends": wiki_split_extends})
 
@@ -484,7 +488,7 @@ async def async_request(
             ) from e
 
 
-def _prepare_form_data(body: Any) -> aiohttp.FormData:
+async def _prepare_form_data(body: Dict[str, Any], file: Any) -> aiohttp.FormData:
     """
     Prepare form data
 
@@ -499,6 +503,26 @@ def _prepare_form_data(body: Any) -> aiohttp.FormData:
     for key, value in body.items():
         # Regular fields (strings, numbers, etc.)
         form_data.add_field(key, str(value))
+
+    # Stream process file
+    async def file_stream_generator() -> Any:
+        # Read 128kB each time
+        chunk_size = 128 * 1024
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+        await file.seek(0)  # Reset file pointer
+
+    # Add file stream
+    if file:
+        form_data.add_field(
+            "file",
+            file_stream_generator(),
+            filename=file.filename,
+            content_type=file.content_type or "application/octet-stream",
+        )
     return form_data
 
 
@@ -520,7 +544,8 @@ async def _process_form_response(
         ThirdPartyException: Raised when response error occurs
     """
     response_text = await resp.text()
-    span_context.add_info_events({"RAG_OUTPUT": response_text})
+    if span_context:
+        span_context.add_info_events({"RAG_OUTPUT": response_text})
 
     if resp.status != 200:
         logger.error(f"{url} Failed to 【XINGHUO-RAG】; err code {resp.status}")
@@ -554,20 +579,23 @@ def _handle_form_request_error(e: Exception, url: str, span_context: Any) -> Non
     if isinstance(e, asyncio.TimeoutError):
         error_msg = f"Request to {url} timed out after 60 seconds"
         logger.error(error_msg)
-        span_context.record_exception(e)
+        if span_context:
+            span_context.record_exception(e)
         raise ThirdPartyException(
             e=CodeEnum.CBG_RAGError, msg=f"CBG Request error: {e}"
         ) from e
     if isinstance(e, aiohttp.ClientError):
         error_msg = f"Network error during request to {url}: {e}"
         logger.error(error_msg)
-        span_context.record_exception(e)
+        if span_context:
+            span_context.record_exception(e)
         raise ThirdPartyException(
             e=CodeEnum.CBG_RAGError, msg=f"CBG Network error: {e}"
         ) from e
     error_msg = f"Unexpected error during request to {url}: {e}"
     logger.error(error_msg)
-    span_context.record_exception(e)
+    if span_context:
+        span_context.record_exception(e)
     raise ThirdPartyException(e=CodeEnum.CBG_RAGError, msg=str(e)) from e
 
 
@@ -589,6 +617,7 @@ async def async_form_request(
         ThirdPartyException: Raised when network error or API returns error
     """
     span = kwargs.get("span")
+    file = kwargs.get("file")
 
     if span:
         with span.start(
@@ -602,7 +631,7 @@ async def async_form_request(
             )
 
             # Prepare form data
-            form_data = _prepare_form_data(body)
+            form_data = await _prepare_form_data(body, file)
 
             # Get authentication headers
             headers = await assemble_spark_auth_headers_async()
@@ -616,33 +645,13 @@ async def async_form_request(
                         data=form_data,
                         headers=headers,
                         timeout=aiohttp.ClientTimeout(
-                            total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0"))
+                            total=float(os.getenv("XINGHUO_CLIENT_TIMEOUT", "60.0"))
                         ),
                     ) as resp:
                         return await _process_form_response(resp, url, span_context)
 
             except Exception as e:
                 _handle_form_request_error(e, url, span_context)
-    else:
-        # Fallback without span
-        form_data = _prepare_form_data(body)
-        headers = await assemble_spark_auth_headers_async()
-
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.request(
-                    method=method,
-                    url=url,
-                    data=form_data,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(
-                        total=float(os.getenv("极光_CLIENT_TIMEOUT", "60.0"))
-                    ),
-                ) as resp:
-                    return await _process_form_response(resp, url, None)
-        except Exception as e:
-            _handle_form_request_error(e, url, None)
-
     return {}
 
 

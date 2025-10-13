@@ -6,11 +6,10 @@ from typing import Optional, Tuple
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-
-from consts import const
+from plugin.rpa.consts import const
 from plugin.rpa.errors.error_code import ErrorCode
 from plugin.rpa.exceptions.config_exceptions import InvalidConfigException
-from plugin.rpa.utils.urls.utl_util import is_valid_url
+from plugin.rpa.utils.urls.url_util import is_valid_url
 
 
 # Create task
@@ -41,7 +40,7 @@ async def create_task(
             response.raise_for_status()
 
             response_data = response.json()
-            print(f"create task response_data:\n {response_data}\n\n")
+            logger.debug(f"create task response_data:\n {response_data}\n\n")
 
             code = response_data.get("code", "-1")
             msg = response_data.get("msg", None)
@@ -49,7 +48,9 @@ async def create_task(
 
             if code != "0000" or not data:
                 logger.error(f"Task creation failed: {msg}")
-                raise HTTPException(status_code=500, detail=f"Task creation failed: {msg}")
+                raise HTTPException(
+                    status_code=500, detail=f"Task creation failed: {msg}"
+                )
 
             task_id = data.get("executionId", None)
             if not task_id:
@@ -66,9 +67,11 @@ async def create_task(
                 status_code=e.response.status_code,
                 detail=f"Task creation failed: {e.response.text}",
             ) from e
-        except httpx.RequestError as e:
+        except Exception as e:
             logger.error(f"Task creation failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Task creation failed: {e}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Task creation failed: {e}"
+            ) from e
 
 
 # Query task status
@@ -94,7 +97,7 @@ async def query_task_status(
             response.raise_for_status()
 
             response_data = response.json()
-            print(f"query task response_data:\n {response_data}\n\n")
+            logger.debug(f"query task response_data:\n {response_data}\n\n")
 
             code = response_data.get("code", "-1")
             msg = response_data.get("msg", None)
@@ -109,7 +112,8 @@ async def query_task_status(
             if not execution:
                 logger.error("Task status query failed: No task information returned")
                 raise HTTPException(
-                    status_code=500, detail="Task status query failed: No task information returned"
+                    status_code=500,
+                    detail="Task status query failed: No task information returned",
                 )
 
             status = execution.get("status", "")
@@ -128,8 +132,12 @@ async def query_task_status(
             if status in ["PENDING"]:
                 return None
 
-            raise HTTPException(status_code=500, detail=f"Unknown task status: {status}")
+            raise HTTPException(
+                status_code=500, detail=f"Unknown task status: {status}"
+            )
 
-        except httpx.RequestError as e:
+        except Exception as e:
             logger.error(f"Task status query failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Task status query failed: {e}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Task status query failed: {e}"
+            ) from e

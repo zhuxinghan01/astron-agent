@@ -8,8 +8,8 @@ import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.hub.dto.chat.ChatEnhanceChatHistoryListFileVo;
 import com.iflytek.astron.console.hub.dto.chat.ChatHistoryResponseDto;
-import com.iflytek.astron.console.commons.entity.chat.ChatReqModelDto;
-import com.iflytek.astron.console.commons.entity.chat.ChatRespModelDto;
+import com.iflytek.astron.console.commons.dto.chat.ChatReqModelDto;
+import com.iflytek.astron.console.commons.dto.chat.ChatRespModelDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
 import com.iflytek.astron.console.commons.entity.chat.ChatReasonRecords;
 import com.iflytek.astron.console.commons.entity.chat.ChatTraceSource;
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author yingpeng
+ * @author mingsuiyongheng
  */
 @RestController
 @Slf4j
@@ -130,7 +130,7 @@ public class ChatHistoryController {
         } else {
             responseDto.setHistoryList(new JSONArray());
         }
-        responseDto.setBusinessType(chatFileList.get("businessType").toString());
+        responseDto.setBusinessType(chatFileList.get("businessType") == null ? null : chatFileList.get("businessType").toString());
         responseDto.setExistChatFileSize((Integer) chatFileList.get("existChatFileSize"));
         responseDto.setExistChatImage((Boolean) chatFileList.get("existChatImage"));
         responseDto.setEnabledPluginIds(chatList.getEnabledPluginIds());

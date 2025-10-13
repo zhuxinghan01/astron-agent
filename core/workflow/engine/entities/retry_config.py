@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from workflow.consts.flow import ErrorHandler
+
+from workflow.consts.engine.error_handler import ErrorHandler
 
 
 class RetryConfig(BaseModel):

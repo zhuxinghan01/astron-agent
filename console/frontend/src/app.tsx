@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
-import { RouterProvider } from "react-router-dom";
-import router from "@/router";
-import LoginModal from "@/components/login-modal";
-import useUserStore, { UserState } from "@/store/user-store";
-import { useEnterprise } from "./hooks/use-enterprise";
-import { useSpaceType } from "./hooks/use-space-type";
+import { useCallback, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import router from '@/router';
+import LoginModal from '@/components/login-modal';
+import useUserStore, { UserState } from '@/store/user-store';
+import { useEnterprise } from './hooks/use-enterprise';
+import { useSpaceType } from './hooks/use-space-type';
 
-export default function App() {
+export default function App(): ReactElement {
   const getUserInfo = useUserStore((state: UserState) => state.getUserInfo);
   const { getJoinedEnterpriseList, getEnterpriseSpaceCount, visitEnterprise } =
     useEnterprise();
@@ -16,15 +17,15 @@ export default function App() {
 
   const initSpaceInfo = useCallback(async () => {
     try {
-      const pathname = window.location.pathname.replace(/\/+$/, "");
-      if (pathname === "/space" && isTeamSpace()) {
+      const pathname = window.location.pathname.replace(/\/+$/, '');
+      if (pathname === '/space' && isTeamSpace()) {
         switchToPersonal({ isJump: false });
         return;
       }
 
-      if (!sessionStorage.getItem("lastVisitSpaceDone")) {
+      if (!sessionStorage.getItem('lastVisitSpaceDone')) {
         await getLastVisitSpace();
-        sessionStorage.setItem("lastVisitSpaceDone", "true");
+        sessionStorage.setItem('lastVisitSpaceDone', 'true');
       }
     } finally {
       setInitDone(true);
@@ -32,10 +33,19 @@ export default function App() {
   }, [getLastVisitSpace, isTeamSpace, switchToPersonal]);
 
   useEffect(() => {
+    const pathname = window.location.pathname.replace(/\/+$/, '');
+    if (pathname === '/callback') return; // 避免在回调页时发起鉴权相关请求
     getUserInfo();
     initSpaceInfo();
+    getEnterpriseSpaceCount();
     getJoinedEnterpriseList();
   }, []);
+
+  useEffect(() => {
+    if (!initDone) return;
+    getEnterpriseSpaceCount();
+    visitEnterprise(enterpriseId);
+  }, [enterpriseId, initDone]);
 
   return (
     <>

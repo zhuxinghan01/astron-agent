@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.data.UserInfoDataService;
-import com.iflytek.astron.console.commons.entity.bot.BotDetail;
-import com.iflytek.astron.console.commons.entity.bot.BotMarketForm;
+import com.iflytek.astron.console.commons.dto.bot.BotDetail;
+import com.iflytek.astron.console.commons.dto.bot.BotMarketForm;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.entity.user.UserInfo;
@@ -158,11 +158,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
-    public static final String PROTOCOL_ADD_PATH = "/sparkflow/v1/protocol/add";
-    public static final String PROTOCOL_UPDATE_PATH = "/sparkflow/v1/protocol/update/";
-    public static final String PROTOCOL_DELETE_PATH = "/sparkflow/v1/protocol/delete";
-    public static final String NODE_DEBUG_PATH = "/sparkflow/v1/node/debug/";
-    public static final String PROTOCOL_BUILD_PATH = "/sparkflow/v1/protocol/build/";
+    public static final String PROTOCOL_ADD_PATH = "/workflow/v1/protocol/add";
+    public static final String PROTOCOL_UPDATE_PATH = "/workflow/v1/protocol/update/";
+    public static final String PROTOCOL_DELETE_PATH = "/workflow/v1/protocol/delete";
+    public static final String NODE_DEBUG_PATH = "/workflow/v1/node/debug/";
+    public static final String PROTOCOL_BUILD_PATH = "/workflow/v1/protocol/build/";
     public static final String CODE_RUN_PATH = "/workflow/v1/run";
     public static final String CLONED_SUFFIX_PATTERN = "[(]\\d+[)]$";
 
@@ -380,7 +380,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             if (StringUtils.isNotBlank(w.getData())) {
                 vo.setIoInversion(getIoTrans(JSON.parseObject(w.getData(), BizWorkflowData.class).getNodes()));
             }
-            vo.setSourceCode(CommonConst.Platform.COMMON);
+            vo.setSourceCode(String.valueOf(CommonConst.PlatformCode.COMMON));
             vo.setVersion(workflowVersionMap.get(w.getFlowId()));
 
             if (status != null && status != -1) {
@@ -482,7 +482,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         org.springframework.beans.BeanUtils.copyProperties(workflow, vo);
         vo.setAddress(s3Util.getS3Prefix());
         vo.setColor(workflow.getAvatarColor());
-        vo.setSourceCode(CommonConst.Platform.COMMON);
+        vo.setSourceCode(String.valueOf(CommonConst.PlatformCode.COMMON));
 
         if (StringUtils.isBlank(workflow.getExt())) {
             UserLangChainInfo userLangChainInfo = userLangChainInfoDao.selectOne(new LambdaQueryWrapper<UserLangChainInfo>().eq(UserLangChainInfo::getFlowId, workflow.getFlowId()));
@@ -828,10 +828,10 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         String nFlowId = addResult.data();
 
         BizWorkflowData data = handleDataClone(nFlowId, src.getData());
-        if (data != null) {
-            flowReq.setData(data);
-            saveRemote(flowReq, nFlowId); // Sync to core
-        }
+//        if (data != null) {
+//            flowReq.setData(data);
+//            saveRemote(flowReq, nFlowId); // Sync to core
+//        }
 
         final Workflow replica = new Workflow();
         org.springframework.beans.BeanUtils.copyProperties(src, replica);
@@ -1017,7 +1017,17 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
 
             @Override
             public void onFailure(@NotNull EventSource eventSource, Throwable t, Response response) {
-                log.error("build onFailure, res = {}, t = {}", response, t.getMessage(), t);
+                try {
+                    if (t instanceof java.net.SocketTimeoutException) {
+                        log.error("build onFailure (timeout), res = {}", response, t);
+                    } else if (t != null) {
+                        log.error("build onFailure, res = {}", response, t);
+                    } else {
+                        log.error("build onFailure, res = {}, error = <null Throwable>", response);
+                    }
+                } finally {
+                    latch.countDown();
+                }
             }
         });
         try {
@@ -1054,21 +1064,28 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         // Fill app/ak/sk
         String appId = bizNodeData.getNodeParam().getString("appId");
         AkSk aksk = appService.remoteCallAkSk(appId);
+        ConfigInfo configInfo = configInfoMapper.getByCategoryAndCode("NODE_API_K_S", "NODE");
+        List<String> configs = new ArrayList<>();
+        if (configInfo != null) {
+            configs = Arrays.asList(configInfo.getValue().split(","));
+        }
         try {
-            bizNodeData.getNodeParam().put("apiKey", aksk.getApiKey());
-            bizNodeData.getNodeParam().put("apiSecret", aksk.getApiSecret());
+            if (!configs.contains(prefix)) {
+                bizNodeData.getNodeParam().put("apiKey", aksk.getApiKey());
+                bizNodeData.getNodeParam().put("apiSecret", aksk.getApiSecret());
 
-            if (!node.getId().startsWith(WorkflowConst.NodeType.FLOW)
-                    && StringUtils.equalsAny(env, CommonConst.FIXED_APPID_ENV)) {
-                buidKeyInfo(bizNodeData);
-            }
-            String source = bizNodeData.getNodeParam().getString("source");
-            if ("openai".equals(source)) {
-                Long modelId = bizNodeData.getNodeParam().getLong("modelId");
-                if (modelId != null) {
-                    Model model = modelService.getById(modelId);
-                    bizNodeData.getNodeParam().put("apiKey", model.getApiKey());
-                    bizNodeData.getNodeParam().put("apiSecret", StringUtils.EMPTY);
+                if (!node.getId().startsWith(WorkflowConst.NodeType.FLOW)
+                        && CommonConst.FIXED_APPID_ENV.contains(env)) {
+                    buidKeyInfo(bizNodeData);
+                }
+                String source = bizNodeData.getNodeParam().getString("source");
+                if ("openai".equals(source)) {
+                    Long modelId = bizNodeData.getNodeParam().getLong("modelId");
+                    if (modelId != null) {
+                        Model model = modelService.getById(modelId);
+                        bizNodeData.getNodeParam().put("apiKey", model.getApiKey());
+                        bizNodeData.getNodeParam().put("apiSecret", StringUtils.EMPTY);
+                    }
                 }
             }
             if (SpaceInfoUtil.getSpaceId() != null && "database".equals(prefix)) {
@@ -1078,7 +1095,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             fixOnRepoNode(type, bizNodeData, prefix);
         } catch (Exception ignored) {
             if (!node.getId().startsWith(WorkflowConst.NodeType.FLOW)
-                    && StringUtils.equalsAny(env, CommonConst.FIXED_APPID_ENV)) {
+                    && CommonConst.FIXED_APPID_ENV.contains(env)) {
                 buidKeyInfo(bizNodeData);
                 checkAndEditData(bizNodeData, prefix);
                 fixOnRepoNode(type, bizNodeData, prefix);
@@ -1101,7 +1118,12 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         String response = OkHttpUtil.post(url, body);
         log.info("node debug, response = {}", response);
 
-        NodeDebugResponse nodeDebugResponse = JSON.parseObject(response, NodeDebugResponse.class);
+        NodeDebugResponse nodeDebugResponse = null;
+        try {
+            nodeDebugResponse = JSON.parseObject(response, NodeDebugResponse.class);
+        } catch (Exception e) {
+            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, response);
+        }
         if (nodeDebugResponse.getCode() != 0) {
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, nodeDebugResponse.getMessage());
         }
@@ -1797,7 +1819,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         String apiKey;
         String apiSecret;
 
-        boolean fixedAppEnv = StringUtils.equalsAny(env, CommonConst.FIXED_APPID_ENV);
+        boolean fixedAppEnv = CommonConst.FIXED_APPID_ENV.contains(env);
         Workflow workflow = getOne(Wrappers.lambdaQuery(Workflow.class).eq(Workflow::getFlowId, flowId));
         try {
             if (workflow == null) {
@@ -1821,28 +1843,38 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             protocol = new FlowProtocol();
             // Fill app elements
             List<BizWorkflowNode> nodes = bizWorkflowData.getNodes();
+            ConfigInfo configInfo = configInfoMapper.getByCategoryAndCode("NODE_API_K_S", "NODE");
+            List<String> configs = new ArrayList<>();
+            if (configInfo != null) {
+                configs = Arrays.asList(configInfo.getValue().split(","));
+            }
             for (BizWorkflowNode node : nodes) {
                 boolean notFlowNode = !node.getId().startsWith(WorkflowConst.NodeType.FLOW);
                 BizNodeData bizNodeData = node.getData();
+                String prefix = node.getId().split("::")[0];
                 String type = node.getType();
                 try {
                     if (notFlowNode && fixedAppEnv) {
                         buidKeyInfo(bizNodeData);
                     } else {
-                        bizNodeData.getNodeParam().put("appId", appId);
-                        bizNodeData.getNodeParam().put("apiKey", apiKey);
-                        bizNodeData.getNodeParam().put("apiSecret", apiSecret);
+                        if (!configs.contains(prefix)) {
+                            bizNodeData.getNodeParam().put("appId", appId);
+                            bizNodeData.getNodeParam().put("apiKey", apiKey);
+                            bizNodeData.getNodeParam().put("apiSecret", apiSecret);
+                        }
+
                     }
                     String source = bizNodeData.getNodeParam().getString("source");
                     if ("openai".equals(source)) {
                         Long modelId = bizNodeData.getNodeParam().getLong("modelId");
                         if (modelId != null) {
                             Model model = modelService.getById(modelId);
-                            bizNodeData.getNodeParam().put("apiKey", model.getApiKey());
-                            bizNodeData.getNodeParam().put("apiSecret", StringUtils.EMPTY);
+                            if (!configs.contains(prefix)) {
+                                bizNodeData.getNodeParam().put("apiKey", model.getApiKey());
+                                bizNodeData.getNodeParam().put("apiSecret", StringUtils.EMPTY);
+                            }
                         }
                     }
-                    String prefix = node.getId().split("::")[0];
                     // Agent node changes
                     checkAndEditData(bizNodeData, prefix);
                     // Knowledge base node new parameter passing logic
@@ -3396,37 +3428,43 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     }
 
     public String saveComparisons(List<WorkflowComparisonSaveReq> workflowComparisonReqList) {
-        try {
-            if (workflowComparisonReqList == null || workflowComparisonReqList.isEmpty()) {
-                throw new BusinessException(ResponseEnum.PROMPT_GROUP_PROMPT_CANNOT_EMPTY);
-            }
-            Workflow workflow = workflowMapper.selectOne(Wrappers.lambdaQuery(Workflow.class)
-                    .eq(Workflow::getFlowId, workflowComparisonReqList.get(0).getFlowId()));
-            dataPermissionCheckTool.checkWorkflowBelong(workflow, SpaceInfoUtil.getSpaceId());
-            // Delete old comparison group protocol
-            workflowComparisonMapper.delete(Wrappers.lambdaQuery(WorkflowComparison.class)
-                    .eq(WorkflowComparison::getFlowId, workflowComparisonReqList.get(0).getFlowId()));
-            // Save new comparison group protocol
-            Date date = new Date();
-            workflowComparisonReqList.forEach(data -> {
-                WorkflowComparison workflowComparison = new WorkflowComparison();
-                workflowComparison.setFlowId(data.getFlowId());
-                workflowComparison.setType(data.getType());
-                workflowComparison.setPromptId(data.getPromptId());
-                workflowComparison.setData(JSONObject.toJSONString(data.getData()));
-                workflowComparison.setCreateTime(date);
-                workflowComparison.setUpdateTime(date);
-                workflowComparisonMapper.insert(workflowComparison);
-            });
-            // Define formatter
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            return formatter.format(date);
-        } catch (Exception ex) {
-            log.error("Failed to save comparison group protocol, flowId={}, error={}", workflowComparisonReqList.get(0).getFlowId(), ex.getMessage(), ex);
-            throw new BusinessException(ResponseEnum.PROMPT_GROUP_SAVE_FAILED);
+        if (workflowComparisonReqList == null || workflowComparisonReqList.isEmpty()) {
+            throw new BusinessException(ResponseEnum.PROMPT_GROUP_PROMPT_CANNOT_EMPTY);
         }
 
+        final String flowIdForLog = Optional.ofNullable(workflowComparisonReqList)
+                .filter(list -> !list.isEmpty())
+                .map(list -> list.get(0).getFlowId())
+                .orElse("");
 
+        try {
+            Workflow workflow = workflowMapper.selectOne(
+                    Wrappers.lambdaQuery(Workflow.class)
+                            .eq(Workflow::getFlowId, workflowComparisonReqList.get(0).getFlowId()));
+            dataPermissionCheckTool.checkWorkflowBelong(workflow, SpaceInfoUtil.getSpaceId());
+
+            workflowComparisonMapper.delete(
+                    Wrappers.lambdaQuery(WorkflowComparison.class)
+                            .eq(WorkflowComparison::getFlowId, workflowComparisonReqList.get(0).getFlowId()));
+
+            Date now = new Date();
+            for (WorkflowComparisonSaveReq data : workflowComparisonReqList) {
+                WorkflowComparison wc = new WorkflowComparison();
+                wc.setFlowId(data.getFlowId());
+                wc.setType(data.getType());
+                wc.setPromptId(data.getPromptId());
+                wc.setData(JSONObject.toJSONString(data.getData()));
+                wc.setCreateTime(now);
+                wc.setUpdateTime(now);
+                workflowComparisonMapper.insert(wc);
+            }
+
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now);
+        } catch (Exception ex) {
+            log.error("Failed to save comparison group protocol, flowId={}, error={}",
+                    flowIdForLog, ex.getMessage(), ex);
+            throw new BusinessException(ResponseEnum.PROMPT_GROUP_SAVE_FAILED);
+        }
     }
 
     public List<WorkflowComparison> listComparisons(String promptId) {
@@ -3546,7 +3584,20 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         detailVO.setCreateTime(mcpObject.getString("createTime"));
         detailVO.setLogoUrl(mcpObject.getString("logo"));
         detailVO.setMcpType(mcpObject.getString("mcpType"));
-        detailVO.setContent(mcpObject.getString("content"));
+
+        // Handle content field with proper unescaping for markdown rendering
+        String content = mcpObject.getString("content");
+        if (content != null) {
+            // Unescape common escape sequences that might interfere with markdown rendering
+            content = content.replace("\\n", "\n")
+                    .replace("\\r", "\r")
+                    .replace("\\t", "\t")
+                    .replace("\\\"", "\"")
+                    .replace("\\'", "'")
+                    .replace("\\\\", "\\");
+        }
+        detailVO.setContent(content);
+
         JSONArray tags = mcpObject.getJSONArray("tags");
         if (tags != null) {
             detailVO.setTags(tags.toJavaList(String.class));
@@ -3657,11 +3708,26 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             mcpServerTool.setCreator(mcpObject.getString("creator"));
             mcpServerTool.setCreateTime(mcpObject.getString("createTime"));
             mcpServerTool.setLogoUrl(mcpObject.getString("logo"));
+            mcpServerTool.setName(mcpObject.getString("name"));
             mcpServerTool.setMcpType(mcpObject.getString("mcpType"));
-            mcpServerTool.setContent(mcpObject.getString("content"));
+
+            // Handle content field with proper unescaping for markdown rendering
+            String content = mcpObject.getString("content");
+            if (content != null) {
+                // Unescape common escape sequences that might interfere with markdown rendering
+                content = content.replace("\\n", "\n")
+                        .replace("\\r", "\r")
+                        .replace("\\t", "\t")
+                        .replace("\\\"", "\"")
+                        .replace("\\'", "'")
+                        .replace("\\\\", "\\");
+            }
+            mcpServerTool.setContent(content);
+
             mcpServerTool.setTools(mcpObject.getJSONArray("tools"));
             mcpServerTool.setTags(mcpObject.getJSONArray("tags"));
             mcpServerTool.setAuthorized(mcpObject.getBoolean("authorized"));
+            mcpServerTool.setServerUrl(mcpObject.getString("server"));
         }
 
         return mcpServerTool;

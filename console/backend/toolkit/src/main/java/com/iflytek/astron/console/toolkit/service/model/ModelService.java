@@ -1263,7 +1263,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
 
     private Model loadForEdit(LocalModelDto dto) {
         Model model = this.getById(dto.getId());
-        if (model == null || Objects.equals(model.getIsDeleted(), 1)) {
+        if (model == null || Objects.equals(model.getIsDeleted(), true)) {
             throw new BusinessException(ResponseEnum.MODEL_NOT_EXIST);
         }
         if (!Objects.equals(model.getUid(), dto.getUid())) {
@@ -1291,6 +1291,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
         model.setModelPath(dto.getModelPath());
         model.setAcceleratorCount(dto.getAcceleratorCount());
         model.setReplicaCount(dto.getReplicaCount());
+        model.setEnable(false);
+        // Placeholder, in order to use pysdk
+        model.setApiKey("sk-personal");
         model.setConfig(
                 Optional.ofNullable(dto.getConfig()).map(JSON::toJSONString).orElse(null));
     }
@@ -1333,6 +1336,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
             String status = ret.getString("status");
             String endpoint = ret.getString("endpoint");
             Integer codeByValue = ModelStatusEnum.getCodeByValue(status);
+            if (!ModelStatusEnum.RUNNING.getCode().equals(model.getStatus()) && ModelStatusEnum.RUNNING.getValue().equals(status)) {
+                model.setEnable(true);
+            }
             model.setStatus(codeByValue);
             model.setUrl(endpoint);
             this.updateById(model);
@@ -1366,6 +1372,9 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                 boolean changed = false;
                 if (!Objects.equals(model.getStatus(), newCode)) {
                     model.setStatus(newCode);
+                    if (!ModelStatusEnum.RUNNING.getCode().equals(model.getStatus()) && ModelStatusEnum.RUNNING.getValue().equals(statusStr)) {
+                        model.setEnable(true);
+                    }
                     changed = true;
                 }
                 if (!Objects.equals(model.getUrl(), endpoint)) {

@@ -7,7 +7,9 @@ from typing import Any, Dict, List, Literal, Optional, cast
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
+
 from workflow.cache.event_registry import EventRegistry
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.engine.callbacks.callback_handler import ChatCallBacks
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.entities.workflow_dsl import OutputItem
@@ -189,56 +191,6 @@ class QuestionAnswerNode(BaseLLMNode):
     instruction: str = Field(default="")
     token_usage: dict = Field(default_factory=dict)
     processed_options: List[Option] = Field(default_factory=list)
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get node configuration as dictionary
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "question": self.question,
-            "answerType": self.answerType,
-            "timeout": self.timeout,
-            "needReply": self.needReply,
-            "directAnswer": self.directAnswer.dict(),
-            "optionAnswer": (
-                [opt.dict() for opt in self.optionAnswer] if self.optionAnswer else []
-            ),
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "temperature": self.temperature,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "maxTokens": self.maxTokens,
-            "uid": self.uid,
-            "topK": self.topK,
-            "patch_id": self.patch_id,
-            "start_time": self.start_time,
-            "event_id": self.event_id,
-            "default_output": self.default_outputs,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented)
-
-        :param variable_pool: Variable pool for data access
-        :param span: Tracing span for monitoring
-        :param event_log_node_trace: Event logging trace
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        :raises NotImplementedError: This method is not implemented
-        """
-        raise NotImplementedError
 
     def assemble_schema_info(self) -> dict:
         """
@@ -424,7 +376,7 @@ class QuestionAnswerNode(BaseLLMNode):
             code=0,
             node_id=self.node_id,
             alias_name=self.alias_name,
-            finish_reason="interrupt",
+            finish_reason=ChatStatus.INTERRUPT.value,
         )
 
     async def handle_static_option_response(
@@ -449,38 +401,17 @@ class QuestionAnswerNode(BaseLLMNode):
         span_context.add_info_events({"option_reply_content": user_reply})
 
         option_output: Option | None = None
-        default_option: Option | None = None
-        branch_id: str = ""
         # Single traversal to find matching item and default item
         for option in self.processed_options:
             # Standardized option name comparison
-            if option.name == user_reply:
+            if option.name == user_reply or option.type == OptionType.DEFAULT.value:
                 option_output = option
                 break
-            if option.type == OptionType.DEFAULT.value:
-                default_option = option
 
         if not option_output:
-            if not default_option:
-                raise CustomException(
-                    err_code=CodeEnum.QUESTION_ANSWER_NODE_EXECUTION_ERROR,
-                    err_msg="No matching option and no default option",
-                )
-            option_output = default_option
-
-            # Prioritize matching item, then use default item
-            branch_id = option_output.id
-
-        # If no valid branch, record error
-        if not branch_id:
-            err_msg = (
-                f"No matching option and no default option, user input: {user_reply}"
-            )
-            span_context.add_error_event(err_msg)
             raise CustomException(
-                err_code=CodeEnum.ENG_PROTOCOL_VALIDATE_ERROR,
-                err_msg=err_msg,
-                cause_error=err_msg,
+                err_code=CodeEnum.QUESTION_ANSWER_NODE_EXECUTION_ERROR,
+                err_msg="No matching option and no default option",
             )
 
         if option_output:
@@ -509,7 +440,7 @@ class QuestionAnswerNode(BaseLLMNode):
             status=WorkflowNodeExecutionStatus.SUCCEEDED,
             inputs=inputs,
             outputs=order_outputs,
-            branch_id=branch_id,
+            branch_id=option_output.id,
         )
 
     async def handle_dynamic_option_response(self) -> None:

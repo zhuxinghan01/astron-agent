@@ -2,64 +2,49 @@
 Server startup module responsible for FastAPI application initialization and startup.
 """
 
-import json
 import os
-import threading
-import time
-from pathlib import Path
 
 import uvicorn
-from dotenv import load_dotenv
-from fastapi import FastAPI
-from loguru import logger
-
-
-
-
 from common.initialize.initialize import initialize_services
+from fastapi import FastAPI
 from plugin.aitools.api.route import app
-from plugin.aitools.const.const import (
-    SERVICE_PORT_KEY,
-    SERVICE_APP_KEY
-)
+from plugin.aitools.const.const import SERVICE_APP_KEY, SERVICE_PORT_KEY
+
 
 class AIToolsServer:
 
-    def start(self):
-        #self.set_env()
+    def start(self) -> None:
+        # self.set_env()
         self.setup_server()
         self.start_uvicorn()
 
-    def start_config_watcher(self):
-        """启动一个后台线程，每 5 分钟执行一次拉取配置"""
-
-        def config_watcher():
-            while True:
-                try:
-                    self.load_config()
-                except Exception as e:
-                    logger.error("配置拉取失败: %s", e)
-                time.sleep(300)
-
-        thread = threading.Thread(target=config_watcher, daemon=True)
-        thread.start()
-
     @staticmethod
-    def setup_server():
+    def setup_server() -> None:
         """初始化服务套件"""
 
-        os.environ["CONFIG_ENV_PATH"] = (
-            "./plugin/aitools/config.env"
-        )
-        need_init_services = ["settings_service", "oss_service", "kafka_producer_service",  "otlp_sid_service", "otlp_span_service", "otlp_metric_service"]
+        os.environ["CONFIG_ENV_PATH"] = "./plugin/aitools/config.env"
+        need_init_services = [
+            "settings_service",
+            "oss_service",
+            "kafka_producer_service",
+            "otlp_sid_service",
+            "otlp_span_service",
+            "otlp_metric_service",
+        ]
         initialize_services(services=need_init_services)
 
     @staticmethod
-    def start_uvicorn():
+    def start_uvicorn() -> None:
+
+        if not (service_app := os.getenv(SERVICE_APP_KEY)):
+            raise ValueError(f"Missing {SERVICE_APP_KEY} environment variable")
+        if not (service_port := os.getenv(SERVICE_PORT_KEY)):
+            raise ValueError(f"Missing {SERVICE_PORT_KEY} environment variable")
+
         uvicorn_config = uvicorn.Config(
-            app=os.getenv(SERVICE_APP_KEY),
+            app=service_app,
             host="0.0.0.0",
-            port=int(os.getenv( SERVICE_PORT_KEY)),
+            port=int(service_port),
             workers=20,
             reload=False,
             ws_ping_interval=None,
@@ -70,7 +55,7 @@ class AIToolsServer:
         uvicorn_server.run()
 
 
-def aitools_app():
+def aitools_app() -> FastAPI:
     """
     description: create ai tools app
     :return:

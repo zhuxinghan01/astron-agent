@@ -8,11 +8,12 @@ operations using various knowledge repositories and LLM providers.
 import asyncio
 import json
 import os
-from typing import Any, Dict, List, Literal
+from typing import Any, List, Literal
 
 import aiohttp
 from aiohttp import ClientTimeout
 from pydantic import Field
+
 from workflow.engine.entities.node_entities import NodeType
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
@@ -60,32 +61,6 @@ class KnowledgeProNode(BaseNode):
     repoTopK: int = Field(..., ge=1, le=5)  # Number of top documents to retrieve (1-5)
     answerRole: str = Field(default="")  # Role specification for answer generation
     score: float = Field(default=0.1)  # Score threshold for document relevance
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the complete node configuration as a dictionary.
-
-        :return: Dictionary containing all node configuration parameters
-        """
-        return {
-            "model": self.model,
-            "url": self.url,
-            "domain": self.domain,
-            "appId": self.appId,
-            "apiKey": self.apiKey,
-            "apiSecret": self.apiSecret,
-            "temperature": self.temperature,
-            "maxTokens": self.maxTokens,
-            "topK": self.topK,
-            "uid": self.uid,
-            "ragType": self.ragType,
-            "repoIds": self.repoIds,
-            "docIds": self.docIds,
-            "repoType": self.repoType,
-            "repoTopK": self.repoTopK,
-            "answerRole": self.answerRole,
-            "score": self.score,
-        }
 
     @property
     def run_s(self) -> WorkflowNodeExecutionStatus:
@@ -285,28 +260,6 @@ class KnowledgeProNode(BaseNode):
             alias_name=self.alias_name,
             node_type=self.node_type,
         )
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented).
-
-        This method is not supported for Knowledge Pro node as it requires
-        asynchronous operations for streaming responses.
-
-        :param variable_pool: Pool of variables for the workflow execution
-        :param span: Tracing span for observability
-        :param event_log_node_trace: Optional node log trace
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution status and outputs
-        :raises NotImplementedError: Always raised as sync execution is not supported
-        """
-        raise NotImplementedError
 
     async def async_execute(
         self,

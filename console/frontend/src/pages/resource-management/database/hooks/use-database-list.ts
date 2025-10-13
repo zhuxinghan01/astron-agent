@@ -5,12 +5,14 @@ import {
   SetStateAction,
   RefObject,
   MutableRefObject,
-} from "react";
-import { pageList, create } from "@/services/database";
-import { DatabaseItem, CreateDbParams } from "@/types/database";
-import { useInfiniteScroll } from "./use-infinite-scroll";
+} from 'react';
+import { pageList, create } from '@/services/database';
+import { DatabaseItem, CreateDbParams } from '@/types/database';
+import { useInfiniteScroll } from './use-infinite-scroll';
+import { message } from 'antd';
+import { ResponseBusinessError } from '@/types/global';
 
-type createDatabaseOk = (createParams: CreateDbParams) => Promise<void>;
+type createDatabaseOk = (createParams: CreateDbParams) => void;
 
 interface UseDatabaseListReturn {
   // 状态
@@ -44,11 +46,11 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
     pageSize: 20,
   }); // 分页信息
   const [dataSource, setDataSource] = useState<DatabaseItem[]>([]); // 数据库列表
-  const [searchValue, setSearchValue] = useState(""); // 搜索内容
+  const [searchValue, setSearchValue] = useState(''); // 搜索内容
 
   // 无限滚动回调函数
   const handleLoadMore = useCallback((): void => {
-    setPagination((pagination) => ({
+    setPagination(pagination => ({
       ...pagination,
       pageNum: pagination?.pageNum + 1,
     }));
@@ -56,7 +58,7 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
 
   const { targetRef: loader, loading: loadingRef } = useInfiniteScroll(
     handleLoadMore,
-    hasMore,
+    hasMore
   );
 
   // 获取数据库列表
@@ -68,9 +70,9 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
       search: searchValue,
     };
     pageList(params)
-      .then((data) => {
+      .then(data => {
         const newData = data?.records || [];
-        setDataSource((preDataSource) => {
+        setDataSource(preDataSource => {
           if (pagination?.pageNum === 1) {
             return [...newData];
           } else {
@@ -85,16 +87,24 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
       })
       .finally(() => {
         loadingRef.current = false;
+      })
+      .catch((e: ResponseBusinessError) => {
+        message.error(e?.message);
       });
   }, [pagination, searchValue, loadingRef]);
 
   // 创建数据库
   const createDatabaseOk = useCallback(
-    async (createParams: CreateDbParams): Promise<void> => {
-      await create(createParams);
-      getList();
+    (createParams: CreateDbParams): void => {
+      create(createParams)
+        .then(() => {
+          getList();
+        })
+        .catch((error: ResponseBusinessError) => {
+          message.error(error?.message);
+        });
     },
-    [getList],
+    [getList]
   );
 
   return {

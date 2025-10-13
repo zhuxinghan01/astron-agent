@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import desc
 from sqlmodel import Session, select  # type: ignore
+
 from workflow.domain.models.history import History
 from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
@@ -73,25 +74,14 @@ def add_history(
         )
         session.add(db_history)
         session.commit()
-        # TODO: Implement history size management
-        # Query flow_id and node_id corresponding data count
-        # query = select(History).where(History.flow_id == flow_id, History.node_id == node_id).order_by(
-        #     History.create_time)
-        # results = session.exec(query).all()
-        #
-        # # If data exceeds MAX_HISTORY_SIZE, delete the oldest entry
-        # if len(results) > MAX_HISTORY_SIZE:
-        #     # The oldest entry is the first in the result set (sorted by create_time)
-        #     oldest_entry = results[0]
-        #     session.delete(oldest_entry)
-        #     session.commit()
 
         session.refresh(db_history)
     except Exception as e:
         raise CustomException(
             CodeEnum.ENG_RUN_ERROR,
             err_msg=f"add_history method failed to add LLM history; {e}",
-            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. message: add_history method failed to add LLM history; {e}",
+            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. "
+            f"message: add_history method failed to add LLM history; {e}",
         ) from e
 
 
@@ -189,5 +179,7 @@ def get_history(
         raise CustomException(
             CodeEnum.ENG_RUN_ERROR,
             err_msg=f"get_history method failed to retrieve LLM history; {e}",
-            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. message: get_history method failed to retrieve LLM history; {e}",
+            cause_error=f"err code : {CodeEnum.ENG_RUN_ERROR.code}. "
+            f"message: get_history method failed "
+            f"to retrieve LLM history; {e}",
         ) from e

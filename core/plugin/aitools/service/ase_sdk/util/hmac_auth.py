@@ -11,24 +11,28 @@ from wsgiref.handlers import format_date_time
 class HMACAuth:
 
     @staticmethod
-    def build_auth_request_url(request_url, method="GET", api_key="", api_secret=""):
+    def build_auth_request_url(
+        request_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+    ) -> str:
         values = HMACAuth.build_auth_params(request_url, method, api_key, api_secret)
         return request_url + "?" + urlencode(values)
 
     @staticmethod
-    def build_auth_params(request_url, method="GET", api_key="", api_secret="") -> dict:
+    def build_auth_params(
+        request_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+    ) -> dict:
         url_result = parse.urlparse(request_url)
         date = format_date_time(mktime(datetime.now().timetuple()))
         signature_origin = (
             f"host: {url_result.hostname}\ndate: {date}\n"
             f"{method} {url_result.path} HTTP/1.1"
         )
-        signature_sha = hmac.new(
+        signature_sha_bytes = hmac.new(
             api_secret.encode("utf-8"),
             signature_origin.encode("utf-8"),
             digestmod=hashlib.sha256,
         ).digest()
-        signature_sha = base64.b64encode(signature_sha).decode(encoding="utf-8")
+        signature_sha = base64.b64encode(signature_sha_bytes).decode(encoding="utf-8")
         authorization_origin = (
             f'api_key="{api_key}", algorithm="hmac-sha256", '
             f'headers="host date request-line", signature="{signature_sha}"'
@@ -44,7 +48,9 @@ class HMACAuth:
         return values
 
     @staticmethod
-    def build_auth_header(request_url, method="GET", api_key="", api_secret="") -> dict:
+    def build_auth_header(
+        request_url: str, method: str = "GET", api_key: str = "", api_secret: str = ""
+    ) -> dict:
         u = urlparse(request_url)
         host = u.hostname
         path = u.path

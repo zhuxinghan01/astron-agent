@@ -4,15 +4,16 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.iflytek.astron.console.commons.dto.bot.BotDetail;
 import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
+import com.iflytek.astron.console.commons.dto.bot.PromptBotDetail;
 import com.iflytek.astron.console.commons.dto.vcn.CustomV2VCNDTO;
 import com.iflytek.astron.console.commons.entity.bot.*;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
@@ -27,6 +28,7 @@ import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.service.data.IDatasetInfoService;
 import com.iflytek.astron.console.commons.service.mcp.McpDataService;
 import com.iflytek.astron.console.commons.util.MaasUtil;
+import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -36,8 +38,6 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -179,45 +179,44 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
 
     @Override
     public boolean deleteBot(Integer botId, String uid) {
-        return updateEntity(chatBotBaseMapper, ChatBotBase::getId, ChatBotBase::getUid, botId, uid, ChatBotBase::new, entity -> entity.setIsDelete(1)) &&
-                updateEntity(chatBotListMapper, ChatBotList::getRealBotId, ChatBotList::getUid, botId, uid, ChatBotList::new, entity -> entity.setIsAct(0)) &&
-                updateEntity(chatListMapper, ChatList::getBotId, ChatList::getUid, botId, uid, ChatList::new, entity -> entity.setIsDelete(1)) &&
-                updateEntity(chatBotMarketMapper, ChatBotMarket::getBotId, ChatBotMarket::getUid, botId, uid, ChatBotMarket::new, entity -> entity.setIsDelete(1));
+        return deleteChatBotBase(botId, uid) &&
+                deleteChatBotList(botId, uid) &&
+                deleteChatList(botId, uid) &&
+                deleteChatBotMarket(botId, uid);
     }
 
-    /**
-     * Generic update method to update entity status based on two condition fields.
-     *
-     * @param <T> Entity type
-     * @param mapper Corresponding MyBatis Plus Mapper
-     * @param field1 First query condition field (usually ID related)
-     * @param field2 Second query condition field (such as user ID)
-     * @param value1 Value of the first field
-     * @param value2 Value of the second field
-     * @param entitySupplier // Supplier for creating new entity
-     * @param configurator Configuration on how to set updated entity attributes
-     * @return Returns true if update is successful and affected rows > 0; otherwise returns false
-     */
-    private <T> boolean updateEntity(
-            BaseMapper<T> mapper,
-            SFunction<T, ?> field1,
-            SFunction<T, ?> field2,
-            Object value1,
-            Object value2,
-            Supplier<T> entitySupplier,
-            Consumer<T> configurator) {
-        LambdaQueryWrapper<T> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(field1, value1)
-                .eq(field2, value2);
-
-        // Create new entity instance using supplier
-        T entity = entitySupplier.get();
-        // Set entity attributes according to the passed configurator
-        configurator.accept(entity);
-
-        int rowsAffected = mapper.update(entity, queryWrapper);
-        return rowsAffected > 0;
+    private boolean deleteChatBotBase(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotBase> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotBase::getId, botId)
+                .eq(ChatBotBase::getUid, uid)
+                .set(ChatBotBase::getIsDelete, 1);
+        return chatBotBaseMapper.update(null, updateWrapper) > 0;
     }
+
+    private boolean deleteChatBotList(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotList> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotList::getRealBotId, botId)
+                .eq(ChatBotList::getUid, uid)
+                .set(ChatBotList::getIsAct, 0);
+        return chatBotListMapper.update(null, updateWrapper) > 0;
+    }
+
+    private boolean deleteChatList(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatList> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatList::getBotId, botId)
+                .eq(ChatList::getUid, uid)
+                .set(ChatList::getIsDelete, 1);
+        return chatListMapper.update(null, updateWrapper) > 0;
+    }
+
+    private boolean deleteChatBotMarket(Integer botId, String uid) {
+        LambdaUpdateWrapper<ChatBotMarket> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ChatBotMarket::getBotId, botId)
+                .eq(ChatBotMarket::getUid, uid)
+                .set(ChatBotMarket::getIsDelete, 1);
+        return chatBotMarketMapper.update(null, updateWrapper) > 0;
+    }
+
 
     @Override
     public boolean deleteBot(Integer botId, Long spaceId) {
@@ -477,12 +476,14 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         BotDetail botDetail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         botDetail.setId(null);
         ChatBotBase base = new ChatBotBase();
+        BeanUtils.copyProperties(botDetail, base);
         // Set a new assistant name as differentiation
         base.setUid(uid);
         base.setSpaceId(spaceId);
         base.setBotName(base.getBotName() + RandomUtil.randomString(6));
         base.setUpdateTime(LocalDateTime.now());
         base.setCreateTime(LocalDateTime.now());
+        log.info("--------------------------------old bot is :{}, new bot is :{}", JSONObject.toJSONString(botDetail), base);
         chatBotBaseMapper.insert(base);
         return base;
     }
@@ -617,5 +618,44 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
             releaseList.add(ReleaseTypeEnum.MCP.getCode());
         }
         return releaseList;
+    }
+
+    @Override
+    public ChatBotBase findOne(String uid, Long botId) {
+        LambdaQueryWrapper<ChatBotBase> botSearch = Wrappers.lambdaQuery(ChatBotBase.class).eq(ChatBotBase::getId, botId);
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        if (spaceId == null) {
+            botSearch.eq(ChatBotBase::getUid, uid)
+                    .isNull(ChatBotBase::getSpaceId);
+        } else {
+            botSearch.eq(ChatBotBase::getSpaceId, spaceId);
+        }
+        return chatBotBaseMapper.selectOne(botSearch);
+    }
+
+    @Override
+    public void updateChatBotMarket(ChatBotBase chatBotBase) {
+        UpdateWrapper<ChatBotMarket> wrapper = new UpdateWrapper<>();
+        wrapper.eq("uid", chatBotBase.getUid());
+        wrapper.eq("bot_id", chatBotBase.getId());
+        wrapper.set("bot_name", chatBotBase.getBotName());
+        wrapper.set("avatar", chatBotBase.getAvatar());
+        wrapper.set("bot_type", chatBotBase.getBotType());
+        wrapper.set("bot_desc", chatBotBase.getBotDesc());
+        wrapper.set("pc_background", chatBotBase.getPcBackground());
+        wrapper.set("app_background", chatBotBase.getAppBackground());
+        wrapper.set("background_color", chatBotBase.getBackgroundColor());
+        wrapper.set("prompt", chatBotBase.getPrompt());
+        wrapper.set("prologue", chatBotBase.getPrologue());
+        wrapper.set("support_context", chatBotBase.getSupportContext());
+        wrapper.set("version", chatBotBase.getVersion());
+        wrapper.set("model", chatBotBase.getModel());
+        wrapper.set("opened_tool", chatBotBase.getOpenedTool());
+        wrapper.set("client_hide", chatBotBase.getClientHide());
+        wrapper.set("model_id", chatBotBase.getModelId());
+        wrapper.set("support_document", chatBotBase.getSupportDocument());
+        wrapper.set("update_time", LocalDateTime.now());
+        chatBotMarketMapper.update(null, wrapper);
+        log.debug("Updated chat bot market uid={}, botId={}", chatBotBase.getUid(), chatBotBase.getId());
     }
 }

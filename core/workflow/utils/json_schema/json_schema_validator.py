@@ -8,6 +8,7 @@ against schemas and automatically fix common data type issues.
 from typing import Any
 
 import jsonschema  # type: ignore[import-untyped]
+from loguru import logger
 
 
 class JsonSchemaValidator:
@@ -26,7 +27,7 @@ class JsonSchemaValidator:
         """
         self.schema = schema
 
-    def validate(self, data: dict) -> bool:
+    def validate(self, data: Any) -> bool:
         """
         Validate data against the JSON Schema.
 
@@ -37,12 +38,13 @@ class JsonSchemaValidator:
             jsonschema.validate(instance=data, schema=self.schema)
             return True
         except jsonschema.ValidationError as e:
-            print(f"Validation error: {e.message}")
+            logger.error(f"Validation error: {e.message}")
             return False
 
     def preprocess_data(self, data: dict) -> dict:
         """
-        Preprocess input data according to JSON Schema, adding default values for required fields.
+        Preprocess input data according to JSON Schema, adding default values for
+        required fields.
 
         :param data: Data dictionary to preprocess
         :return: Preprocessed data dictionary
@@ -103,16 +105,14 @@ class JsonSchemaValidator:
                 # Fix to boolean value
                 if isinstance(value, bool):
                     return value
-                # if isinstance(value, (int, float)):
-                #     return value != 0  # Non-zero numbers are True
-                # if isinstance(value, str):
-                #     return value.strip() != ""  # Non-empty strings are True
-                # if isinstance(value, list):
-                #     return len(value) > 0  # Non-empty arrays are True
                 return False  # Return False for other cases
 
             case "object":
                 if isinstance(value, dict):
+                    for key, val in value.items():
+                        value[key] = self._fix_type(
+                            val, props.get("properties", {}).get(key, "")
+                        )
                     return value
                 return {}  # Return empty dict for non-dict values
 

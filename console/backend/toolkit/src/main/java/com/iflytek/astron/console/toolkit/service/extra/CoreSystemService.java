@@ -24,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -44,8 +45,8 @@ public class CoreSystemService {
 
     public static final String UPLOAD_FILE_PATH = "/workflow/v1/upload_file";
     public static final String BATCH_UPLOAD_FILE_PATH = "/workflow/v1/upload_files";
-    public static final String ADD_COMPARISONS_PATH = "/sparkflow/v1/protocol/compare/save";
-    public static final String DELETE_COMPARISONS_PATH = "/sparkflow/v1/protocol/compare/delete";
+    public static final String ADD_COMPARISONS_PATH = "/workflow/v1/protocol/compare/save";
+    public static final String DELETE_COMPARISONS_PATH = "/workflow/v1/protocol/compare/delete";
     public static final String CREATE_DATABASE_PATH = "/xingchen-db/v1/create_database";
     public static final String EXEC_DDL_PATH = "/xingchen-db/v1/exec_ddl";
     public static final String EXEC_DML_PATH = "/xingchen-db/v1/exec_dml";
@@ -90,7 +91,7 @@ public class CoreSystemService {
         String body = jsonObject.toString();
 
         if (!StringUtils.equalsAny(env, CommonConst.ENV_DEV)) {
-            requestHeader = assembleRequestHeader(url, apiUrl.getTenantKey(), apiUrl.getTenantSecret(), "POST", body.getBytes());
+            requestHeader = assembleRequestHeader(url, apiUrl.getTenantKey(), apiUrl.getTenantSecret(), "POST", body.getBytes(StandardCharsets.UTF_8));
         }
         requestHeader.put(X_CONSUMER_USERNAME, apiUrl.getTenantId());
         log.info("workflow protocol publish, url = {}, body = {}, header={}", url, body, requestHeader);
@@ -124,7 +125,8 @@ public class CoreSystemService {
         } else {
             authJson.fluentPut("app_id", appId);
             if (!StringUtils.equalsAny(env, CommonConst.ENV_DEV)) {
-                requestHeader = assembleRequestHeader(authUrl, apiUrl.getTenantKey(), apiUrl.getTenantSecret(), "POST", authJson.toString().getBytes());
+                requestHeader = assembleRequestHeader(authUrl, apiUrl.getTenantKey(), apiUrl.getTenantSecret(), "POST",
+                        authJson.toString().getBytes(StandardCharsets.UTF_8));
             }
         }
         String authBody = authJson.toString();

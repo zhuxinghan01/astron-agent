@@ -4,10 +4,10 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
-import com.iflytek.astron.console.commons.entity.bot.BotInfoDto;
+import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
-import com.iflytek.astron.console.commons.entity.workflow.CloneSynchronize;
+import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
@@ -81,11 +81,11 @@ public class BotMaasServiceImpl implements BotMaasService {
     public Integer massCopySynchronize(CloneSynchronize synchronize) {
         log.info("------ Astron workflow copy synchronization: {}", JSONObject.toJSONString(synchronize));
         String uid = synchronize.getUid();
-        String originId = synchronize.getOriginId();
+        Long originId = synchronize.getOriginId();
         Long maasId = synchronize.getCurrentId();
         String flowId = synchronize.getFlowId();
         Long spaceId = synchronize.getSpaceId();
-        UserLangChainInfo userLangChainInfo = userLangChainDataService.selectByMaasId(maasId);
+        UserLangChainInfo userLangChainInfo = userLangChainDataService.selectByMaasId(originId);
         if (Objects.isNull(userLangChainInfo)) {
             log.info("----- Xinghuo did not find Astron workflow: {}", JSONObject.toJSONString(synchronize));
             throw new BusinessException(ResponseEnum.BOT_NOT_EXIST);

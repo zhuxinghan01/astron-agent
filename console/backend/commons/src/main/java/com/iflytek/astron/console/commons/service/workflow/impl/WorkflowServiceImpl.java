@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
-import com.iflytek.astron.console.commons.entity.workflow.CloneSynchronize;
+import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
@@ -34,11 +34,11 @@ public class WorkflowServiceImpl implements WorkflowBotService {
     @Override
     public Integer massCopySynchronize(CloneSynchronize synchronize) {
         String uid = synchronize.getUid();
-        String originId = synchronize.getOriginId();
+        Long originId = synchronize.getOriginId();
         Long maasId = synchronize.getCurrentId();
         String flowId = synchronize.getFlowId();
         Long spaceId = synchronize.getSpaceId();
-        UserLangChainInfo info = userLangChainDataService.selectByFlowId(originId);
+        UserLangChainInfo info = userLangChainDataService.selectByMaasId(originId);
         if (Objects.isNull(info)) {
             log.error("----- unable to find workflow: {}", JSONObject.toJSONString(synchronize));
             throw new BusinessException(ResponseEnum.DATA_NOT_FOUND);

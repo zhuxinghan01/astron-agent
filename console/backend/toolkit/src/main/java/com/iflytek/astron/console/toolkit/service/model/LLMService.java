@@ -220,10 +220,17 @@ public class LLMService {
         if (CollUtil.isNotEmpty(valueList) && !valueList.contains(nodeType)) {
             return;
         }
-        List<Model> models = modelMapper.selectList(new LambdaQueryWrapper<Model>()
-                .eq(Model::getUid, userId)
+        LambdaQueryWrapper<Model> lambdaQueryWrapper = new LambdaQueryWrapper<Model>()
                 .eq(Model::getEnable, 1)
-                .eq(Model::getIsDeleted, 0));
+                .eq(Model::getIsDeleted, 0);
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        if (spaceId != null) {
+            lambdaQueryWrapper.eq(Model::getSpaceId, spaceId);
+        } else {
+            lambdaQueryWrapper.eq(Model::getUid, userId);
+        }
+        List<Model> models = modelMapper.selectList(lambdaQueryWrapper);
+
         for (Model model : models) {
             LLMInfoVo llmInfoVo = new LLMInfoVo();
             llmInfoVo.setId(model.getId());
@@ -236,11 +243,37 @@ public class LLMService {
             llmInfoVo.setTag(JSONArray.parseArray(model.getTag(), String.class));
             llmInfoVo.setLlmSource(0);
             llmInfoVo.setDomain(model.getDomain());
-            llmInfoVo.setConfig(model.getConfig());
+            JSONArray config = JSONArray.parseArray(model.getConfig());
+            for (Object o : config) {
+                JSONObject obj = (JSONObject) o;
+                // 1.0 2.0 3.0 4.0
+                Float precision = obj.getFloat("precision");
+                if(precision != null){
+                    obj.put("precision", convertPrecisionValue(precision));
+                }
+            }
+            llmInfoVo.setConfig(JSON.toJSONString(config));
             personalList.add(llmInfoVo);
         }
     }
 
+    /**
+     * Convert precision value (e.g., 1.0 -> 0.1, 2.0 -> 0.01, etc.)
+     *
+     * @param precision Original precision value, usually an integer or float like 1.0, 2.0
+     * @return Converted float value, or original if not valid (e.g., 0.5 stays 0.5)
+     */
+    private Float convertPrecisionValue(Float precision) {
+        if (precision == null) {
+            return null;
+        }
+        int intPrec = Math.round(precision);
+        if (precision >= 1 && Math.abs(precision - intPrec) < 1e-6) {
+            // 1 -> 0.1, 2 -> 0.01, 3 -> 0.001 ...
+            return 1f / (float) Math.pow(10, intPrec);
+        }
+        return precision;
+    }
     /**
      * Generate random llmId
      *
@@ -426,8 +459,12 @@ public class LLMService {
     public void switchFinetuneModel(Long modelId, Boolean enable) {
         final String enabledKey = MODEL_ENABLE_KEY.concat(UserInfoManagerHandler.getUserId());
         Map<String, Boolean> catchModelMap = getCatchModelMap(enabledKey);
-        Boolean b = catchModelMap.get(modelId);
-        if (b == null) {
+        if (catchModelMap == null) {
+            catchModelMap = new HashMap<>();
+        }
+        final String key = String.valueOf(modelId);
+        Boolean exists = catchModelMap.get(key);
+        if (exists == null) {
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Fine-tuning model does not exist");
         } else {
             catchModelMap.put(modelId.toString(), enable);

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+
 from workflow.domain.entities.chat import HistoryItem
 from workflow.infra.providers.llm.iflytek_spark.schemas import SparkAiMessage
 
@@ -20,14 +21,6 @@ class History(BaseModel):
 
         :param history: List of history items to initialize with
         """
-        # result = []
-        # if history:
-        #     for h in history:
-        #         user = h.get("role","")
-        #         content = h.get("content","")
-        #         content_type = h.get("content_type")
-        #         item = {"role":user,"content":content,"content_type":content_type}
-        #         result.append(item)
         self.origin_history = history
 
     @staticmethod

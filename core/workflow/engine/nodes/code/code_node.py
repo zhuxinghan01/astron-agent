@@ -4,6 +4,7 @@ import re
 from typing import Any, Dict, Literal
 
 from pydantic import Field
+
 from workflow.engine.entities.variable_pool import VariablePool
 from workflow.engine.nodes.base_node import BaseNode
 from workflow.engine.nodes.code.executor.base_executor import CodeExecutorFactory
@@ -12,11 +13,6 @@ from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.log_trace.node_log import NodeLog
 from workflow.extensions.otlp.trace.span import Span
-
-# Reference type for variable binding
-REF = "ref"
-# Literal type for direct value assignment
-LITERAL = "literal"
 
 # Python code execution template that wraps user code with main function call
 PYTHON_RUNNER = """{{code}}
@@ -51,19 +47,6 @@ class CodeNode(BaseNode):
     appId: str = Field(..., description="App ID")
     uid: str = Field(..., description="User ID")
 
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get node configuration parameters.
-
-        :return: Dictionary containing node configuration
-        """
-        return {
-            "codeLanguage": self.codeLanguage,
-            "code": self.code,
-            "appId": self.appId,
-            "uid": self.uid,
-        }
-
     def _get_actual_parameter(
         self, variable_pool: VariablePool, span_context: Span
     ) -> Dict[str, Any]:
@@ -85,24 +68,6 @@ class CodeNode(BaseNode):
             {"input": json.dumps(actual_parameters, ensure_ascii=False)}
         )
         return actual_parameters
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution method (not implemented for code nodes).
-
-        :param variable_pool: Pool containing workflow variables
-        :param span: Tracing span for logging
-        :param event_log_node_trace: Optional node trace logger
-        :param kwargs: Additional keyword arguments
-        :return: Node execution result
-        """
-        raise NotImplementedError
 
     async def async_execute(
         self,
@@ -178,7 +143,14 @@ class CodeNode(BaseNode):
             uid=self.uid,
         )
 
-        return json.loads(result_str)
+        # If the result is not a valid JSON string, return the result as a string
+        try:
+            return json.loads(result_str)
+        except Exception as e:
+            span_context.record_exception(e)
+            return {
+                self.output_identifier[0]: result_str,
+            }
 
     def _check_and_set_variable_pool(
         self, variable_pool: VariablePool, code_result_dict: dict, span: Span

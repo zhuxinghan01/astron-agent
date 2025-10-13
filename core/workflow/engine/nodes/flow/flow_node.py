@@ -8,7 +8,8 @@ from typing import Any, Dict, Optional, Tuple
 import aiohttp
 from aiohttp import ClientTimeout
 from pydantic import Field
-from workflow.consts.flow import FLOW_FINISH_REASON
+
+from workflow.consts.engine.chat_status import ChatStatus
 from workflow.domain.models.ai_app import App
 from workflow.engine.callbacks.openai_types_sse import GenerateUsage
 from workflow.engine.entities.history import EnableChatHistoryV2, History
@@ -58,40 +59,6 @@ class FlowNode(BaseNode):
 
     # Optional version specification for the target flow
     version: Optional[str] = None
-
-    def get_node_config(self) -> Dict[str, Any]:
-        """
-        Get the node configuration as a dictionary.
-
-        :return: Dictionary containing flow configuration parameters
-        """
-        return {
-            "flow_id": self.flowId,
-            "app_id": self.appId,
-            "uid": self.uid,
-            "enableChatHistoryV2": self.enableChatHistoryV2.dict(),
-            "version": self.version,
-        }
-
-    def sync_execute(
-        self,
-        variable_pool: VariablePool,
-        span: Span,
-        event_log_node_trace: NodeLog | None = None,
-        **kwargs: Any,
-    ) -> NodeRunResult:
-        """
-        Synchronous execution is not supported for flow nodes.
-        Flow nodes require asynchronous execution due to API calls.
-
-        :param variable_pool: Variable pool containing workflow variables
-        :param span: Tracing span for observability
-        :param event_log_node_trace: Optional node trace logging
-        :param kwargs: Additional keyword arguments
-        :return: NodeRunResult containing execution results
-        :raises: NotImplementedError as sync execution is not supported
-        """
-        raise NotImplementedError("Flow nodes only support async execution")
 
     def assemble_chat_body(self, inputs: dict) -> dict:
         """
@@ -329,7 +296,10 @@ class FlowNode(BaseNode):
                             )
 
                         # Check for completion
-                        if choices[0].get("finish_reason") == FLOW_FINISH_REASON:
+                        if (
+                            choices[0].get("finish_reason")
+                            == ChatStatus.FINISH_REASON.value
+                        ):
                             token_usage = msg.get("usage", {})
                             break
         except asyncio.TimeoutError as e:
