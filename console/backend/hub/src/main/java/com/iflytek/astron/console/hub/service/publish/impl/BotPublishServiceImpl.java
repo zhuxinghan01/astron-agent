@@ -2,6 +2,7 @@ package com.iflytek.astron.console.hub.service.publish.impl;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.hub.dto.PageResponse;
@@ -22,6 +23,7 @@ import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotMarketMapper;
+import com.iflytek.astron.console.commons.mapper.bot.ChatBotApiMapper;
 import com.iflytek.astron.console.hub.mapper.BotDashboardCountLogMapper;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.hub.converter.BotPublishConverter;
@@ -29,6 +31,7 @@ import com.iflytek.astron.console.hub.converter.WorkflowVersionConverter;
 import com.iflytek.astron.console.hub.service.publish.PublishChannelService;
 import com.iflytek.astron.console.hub.service.wechat.WechatThirdpartyService;
 import com.iflytek.astron.console.commons.dto.bot.BotPublishQueryResult;
+import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.hub.entity.BotDashboardCountLog;
 import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.commons.exception.BusinessException;
@@ -38,6 +41,7 @@ import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import com.iflytek.astron.console.commons.dto.bot.BotQueryCondition;
@@ -77,6 +81,12 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     // Statistics data related
     private final BotDashboardCountLogMapper botDashboardCountLogMapper;
+    
+    // MaaS API related
+    private final ChatBotApiMapper chatBotApiMapper;
+
+    @Value("${maas.appId}")
+    private String maasAppId;
 
     @Override
     public PageResponse<BotPublishInfoDto> getBotList(
@@ -129,10 +139,43 @@ public class BotPublishServiceImpl implements BotPublishService {
             detailDto.setWechatAppid(null);
         }
 
-        log.info("Bot details query completed: botId={}, channels={}", botId, detailDto.getPublishChannels());
+        // 4. Get MaaS App ID
+        String maasId = getMaasIdByBotId(botId);
+        detailDto.setMaasId(maasId);
+
+        log.info("Bot details query completed: botId={}, channels={}, maasId={}", 
+                botId, detailDto.getPublishChannels(), maasId);
         return detailDto;
     }
 
+
+
+    // ==================== MaaS Integration ====================
+
+    /**
+     * Get MaaS App ID by Bot ID
+     * Query chat_bot_api table to find appId, fallback to configured maas appId
+     */
+    private String getMaasIdByBotId(Integer botId) {
+        try {
+            LambdaQueryWrapper<ChatBotApi> queryWrapper = new LambdaQueryWrapper<ChatBotApi>()
+                    .eq(ChatBotApi::getBotId, botId)
+                    .last("LIMIT 1");
+            
+            ChatBotApi chatBotApi = chatBotApiMapper.selectOne(queryWrapper);
+            
+            if (chatBotApi != null && chatBotApi.getAppId() != null) {
+                log.debug("Found maasId for botId {}: {}", botId, chatBotApi.getAppId());
+                return chatBotApi.getAppId();
+            } else {
+                log.debug("No maasId found for botId: {}, using configured maas appId: {}", botId, maasAppId);
+                return maasAppId;
+            }
+        } catch (Exception e) {
+            log.error("Failed to get maasId for botId: {}, using configured maas appId: {}", botId, maasAppId, e);
+            return maasAppId;
+        }
+    }
 
 
     // ==================== Version Management ====================
