@@ -561,6 +561,12 @@ const UploadedFile = ({
   );
 };
 
+const getMaxSize = (fileType: string): number => {
+  if (fileType === 'image') return 3;
+  if (fileType === 'video') return 500;
+  return 50;
+};
+
 const renderFileUpload = (
   params,
   index,
@@ -579,7 +585,7 @@ const renderFileUpload = (
             uploadComplete(event, index, fileId),
           handleFileUpload: (file, fileId) =>
             handleFileUpload(file, index, multiple, fileId),
-          maxSize: params?.fileType === 'image' ? 3 : 50,
+          maxSize: getMaxSize(params?.fileType),
         } as unknown)}
       />
       {params?.default?.map(file => (
