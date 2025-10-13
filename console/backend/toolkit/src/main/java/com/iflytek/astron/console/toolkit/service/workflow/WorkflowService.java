@@ -3732,6 +3732,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             mcpServerTool.setTools(mcpObject.getJSONArray("tools"));
             mcpServerTool.setTags(mcpObject.getJSONArray("tags"));
             mcpServerTool.setAuthorized(mcpObject.getBoolean("authorized"));
+            mcpServerTool.setServerUrl(mcpObject.getString("server"));
         }
 
         return mcpServerTool;
