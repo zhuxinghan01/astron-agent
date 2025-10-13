@@ -364,7 +364,7 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/agent/config.env:/opt/agent/config.env
+      - ./config/agent/config.env:/opt/core/agent/config.env
     networks:
       - astron-agent-network
     restart: always
