@@ -359,7 +359,7 @@ export const quickCreateBot = (str: string) => {
 
 // 模板创建
 export const createFromTemplate = (params: any) => {
-  return http.post(`/u/bot/mass/createFromTemplate`, params);
+  return http.post(`/workflow/bot/createFromTemplate`, params);
 };
 
 // 获取星辰模版
