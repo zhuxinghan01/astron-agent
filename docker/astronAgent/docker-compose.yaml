@@ -227,7 +227,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/rpa/config.env:/opt/rpa/plugin/rpa/config.env
+      - ./config/rpa/config.env:/opt/core/plugin/rpa/config.env
+      - ./config/rpa/logs/:/opt/core/logs
     networks:
       - astron-agent-network
     restart: always
