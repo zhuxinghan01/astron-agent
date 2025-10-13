@@ -3,9 +3,11 @@ package com.iflytek.astron.console.toolkit.service.extra;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.workflow.WorkflowBotService;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
+import com.iflytek.astron.console.toolkit.config.properties.CommonConfig;
 import com.iflytek.astron.console.toolkit.tool.OpenPlatformTool;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.*;
 class OpenPlatformServiceTest {
 
     @Mock ApiUrl apiUrl;
+    @Mock
+    CommonConfig commonConfig;
     @Mock WorkflowBotService botMassService;
 
     @InjectMocks OpenPlatformService service;
@@ -44,8 +48,8 @@ class OpenPlatformServiceTest {
     @Test
     @DisplayName("syncWorkflowClone - 应组装 CloneSynchronize 并调用 botMassService，返回其结果")
     void syncWorkflowClone_shouldBuildDto_andDelegate() {
-        ArgumentCaptor<com.iflytek.astron.console.commons.entity.workflow.CloneSynchronize> cap =
-                ArgumentCaptor.forClass(com.iflytek.astron.console.commons.entity.workflow.CloneSynchronize.class);
+        ArgumentCaptor<CloneSynchronize> cap =
+                ArgumentCaptor.forClass(CloneSynchronize.class);
         when(botMassService.massCopySynchronize(any())).thenReturn(123);
 
         Integer ret = service.syncWorkflowClone("u1", 11L, 22L, "F-1", 33L);
@@ -88,7 +92,7 @@ class OpenPlatformServiceTest {
                  MockedStatic<OkHttpUtil> http = mockStatic(OkHttpUtil.class)) {
 
                 // 签名桩：校验 appId 与 secret，返回固定签名
-                sign.when(() -> OpenPlatformTool.getSignature(eq(OpenPlatformService.MAAS1024APP), eq("sec-xyz"), anyLong()))
+                sign.when(() -> OpenPlatformTool.getSignature(eq(commonConfig.getAppId()), eq("sec-xyz"), anyLong()))
                     .thenReturn("SIG-123");
 
                 // HTTP 桩：精确校验 URL/Headers/Body，返回 code=0 的响应
@@ -101,7 +105,7 @@ class OpenPlatformServiceTest {
 
                         assertThat(url).isEqualTo("http://open/workflow/updateSynchronize");
                         // header：appId、签名、时间戳
-                        assertThat(headers).containsEntry("appId", OpenPlatformService.MAAS1024APP);
+                        assertThat(headers).containsEntry("appId", commonConfig.getAppId());
                         assertThat(headers).containsEntry("signature", "SIG-123");
                         assertThat(headers).containsKey("timestamp");
                         assertThat(headers.get("timestamp")).matches("\\d{10}"); // 秒级时间戳
@@ -129,7 +133,7 @@ class OpenPlatformServiceTest {
 
                 // 验证签名函数被调用（appId/secret 固定，时间戳为任意 long）
                 sign.verify(() -> OpenPlatformTool.getSignature(
-                        eq(OpenPlatformService.MAAS1024APP), eq("sec-xyz"), anyLong()));
+                        eq(commonConfig.getAppId()), eq("sec-xyz"), anyLong()));
             }
         }
 
