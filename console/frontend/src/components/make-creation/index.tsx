@@ -57,7 +57,7 @@ const MakeCreateModal: React.FC<MakeCreateModalProps> = ({
           navigate(`/work_flow/${res.maasId}/arrange`);
         })
         .catch(e => {
-          message.error(e?.msg || '创建失败');
+          message.error(e?.message || '创建失败');
         });
     } else {
       await submitBotBaseInfo(req)
@@ -65,7 +65,7 @@ const MakeCreateModal: React.FC<MakeCreateModalProps> = ({
           navigate(`/work_flow/${res.maasId}/arrange`);
         })
         .catch(e => {
-          message.error(e?.msg || '创建失败');
+          message.error(e?.message || '创建失败');
         });
     }
     setAddAgentTemplateLoading(false);
@@ -326,7 +326,7 @@ const MakeCreateModal: React.FC<MakeCreateModalProps> = ({
                                     width: '100%',
                                   }}
                                 >
-                                  {item.core_abilities.description}
+                                  {item?.coreAbilities?.description}
                                 </div>
                               )}
                             </div>

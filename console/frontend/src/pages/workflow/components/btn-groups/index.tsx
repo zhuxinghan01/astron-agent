@@ -1,12 +1,17 @@
-import React, { useMemo } from 'react';
-import { Tooltip, Button } from 'antd';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Tooltip, Button, message } from 'antd';
 import { useMemoizedFn } from 'ahooks';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
-import useFlowStore from '@/components/workflow/store/useFlowStore';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
-import { workflowExport } from '@/services/flow';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFlowCommon } from '@/components/workflow/hooks/use-flow-common';
+import { downloadFileWithHeaders } from '@/utils/http';
+import { getFixedUrl } from '@/components/workflow/utils';
+import WxModal from '@/components/wx-modal';
+import useToggle from '@/hooks/use-toggle';
+import { isCanPublish } from '@/services/flow';
+import { getAgentDetail } from '@/services/release-management';
+import { useBotStateStore } from '@/store/spark-store/bot-state';
 
 import publishModalIcon from '@/assets/imgs/workflow/publish-modal-icon.png';
 
@@ -32,44 +37,31 @@ interface FlowType {
   status?: number;
 }
 
-const PublishHeader: React.FC<PublishHeaderProps> = ({
-  publishModal,
+const usePublishHeader = ({
+  setBotMultiFileParam,
+  setOpenWxmol,
+  setFabuFlag,
   setPublishModal,
 }) => {
-  const { t } = useTranslation();
-  const { handleDebugger } = useFlowCommon();
-  const navigate = useNavigate();
-
   // Flow store
-  const currentFlow: FlowType = useFlowsManager(
-    (state: unknown) => state.currentFlow
-  );
+  const currentFlow = useFlowsManager(state => state.currentFlow);
   const setVersionManagement = useFlowsManager(
-    (state: unknown) => state.setVersionManagement
+    state => state.setVersionManagement
   );
   const setAdvancedConfiguration = useFlowsManager(
-    (state: unknown) => state.setAdvancedConfiguration
+    state => state.setAdvancedConfiguration
   );
   const setOpenOperationResult = useFlowsManager(
-    (state: unknown) => state.setOpenOperationResult
+    state => state.setOpenOperationResult
   );
-  const historyVersion: boolean = useFlowsManager(
-    (state: unknown) => state.historyVersion
-  );
-  const canPublish: boolean = useFlowsManager(
-    (state: unknown) => state.canPublish
-  );
+  const historyVersion = useFlowsManager(state => state.historyVersion);
+  const canPublish = useFlowsManager(state => state.canPublish);
   const setNodeInfoEditDrawerlInfo = useFlowsManager(
-    (state: unknown) => state.setNodeInfoEditDrawerlInfo
+    state => state.setNodeInfoEditDrawerlInfo
   );
-  const checkFlow = useFlowsManager((state: unknown) => state.checkFlow);
-  const isLoading: boolean = useFlowsManager(
-    (state: unknown) => state.isLoading
-  );
-
-  // Nodes store
-  const nodes: NodeType[] = useFlowStore((state: unknown) => state.nodes);
-
+  const currentStore = useFlowsManager(state => state.getCurrentStore());
+  const nodes = currentStore(state => state.nodes);
+  const setBotDetailInfo = useBotStateStore(state => state.setBotDetailInfo);
   const handleVersionSettings = useMemoizedFn(() => {
     setVersionManagement((prev: boolean) => !prev);
     setAdvancedConfiguration(false);
@@ -106,35 +98,140 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
     setOpenOperationResult(false);
   });
 
-  const handleFlowExport = useMemoizedFn(() => {
-    const latestAccessToken = localStorage.getItem('accessToken');
-    fetch(`http://172.29.201.92:8080/workflow/export/${currentFlow?.id}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${latestAccessToken}`,
-      },
-    }).then(async res => {
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+  const multiParams = useMemo(() => {
+    const startNode = nodes?.find(node => node?.nodeType === 'node-start');
+    const outputs = startNode?.data?.outputs;
+    let multiParams = true;
+    if (outputs?.length === 1) {
+      multiParams = false;
+    }
+    if (
+      outputs?.length === 2 &&
+      outputs?.[1]?.fileType &&
+      outputs?.[1]?.schema?.type === 'string'
+    ) {
+      multiParams = false;
+    }
+    return multiParams;
+  }, [nodes]);
 
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${currentFlow?.name}.yml`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      window.URL.revokeObjectURL(url);
+  const handlePublish = useMemoizedFn(() => {
+    setVersionManagement(false);
+    isCanPublish(currentFlow?.id).then(flag => {
+      if (flag) {
+        setFabuFlag(true);
+        setOpenWxmol(true);
+      } else {
+        setPublishModal(true);
+      }
     });
   });
+  const newBotId = useMemo(() => {
+    return currentFlow?.ext ? JSON.parse(currentFlow.ext)?.botId : null;
+  }, [currentFlow]);
+
+  const getBotBaseInfo = (newBotId?: string | number): void => {
+    const botId = newBotId;
+    getAgentDetail(botId as unknown as number)
+      .then(data => {
+        setBotDetailInfo({
+          ...data,
+          name: data?.botName,
+        });
+      })
+      .catch(err => {
+        return err?.msg && message.error(err.msg);
+      });
+  };
+  return {
+    handlePublish,
+    showComparativeDebugging,
+    handleVersionSettings,
+    handleAdvancedSettings,
+    multiParams,
+    newBotId,
+    getBotBaseInfo,
+  };
+};
+
+const PublishHeader: React.FC<PublishHeaderProps> = ({
+  publishModal,
+  setPublishModal,
+}) => {
+  const { t } = useTranslation();
+  const { handleDebugger } = useFlowCommon();
+  const navigate = useNavigate();
+  const { id: agentMassId } = useParams<{ id: string }>();
+  // Flow store
+  const currentFlow: FlowType = useFlowsManager(
+    (state: unknown) => state.currentFlow
+  );
+  const setOpenOperationResult = useFlowsManager(
+    (state: unknown) => state.setOpenOperationResult
+  );
+  const historyVersion: boolean = useFlowsManager(
+    (state: unknown) => state.historyVersion
+  );
+  const checkFlow = useFlowsManager((state: unknown) => state.checkFlow);
+  const isLoading: boolean = useFlowsManager(
+    (state: unknown) => state.isLoading
+  );
+  const [botMultiFileParam, setBotMultiFileParam] = useState<any>(false);
+  const [editV2Visible, { setLeft: hide, setRight: show }] = useToggle();
+  const [fabuFlag, setFabuFlag]: any = useState(false);
+  const [openWxmol, setOpenWxmol] = useState(false);
+  const {
+    handlePublish,
+    showComparativeDebugging,
+    handleVersionSettings,
+    handleAdvancedSettings,
+    multiParams,
+    newBotId,
+    getBotBaseInfo,
+  } = usePublishHeader({
+    setBotMultiFileParam,
+    setOpenWxmol,
+    setFabuFlag,
+    setPublishModal,
+  });
+
+  useEffect(() => {
+    console.log('newBotId@@', newBotId);
+    newBotId && getBotBaseInfo(newBotId);
+  }, [newBotId]);
 
   return (
     <div className="relative flex items-center gap-6 flow-header-operation-container">
+      <WxModal
+        botMultiFileParam={botMultiFileParam}
+        moreParams={multiParams}
+        showInfoModel={show}
+        setPageInfo={() => {}}
+        disjump={true}
+        setIsOpenapi={() => {}}
+        fabuFlag={fabuFlag}
+        show={openWxmol}
+        onCancel={() => {
+          setOpenWxmol(false);
+        }}
+        workflowId={
+          currentFlow?.ext ? JSON.parse(currentFlow.ext)?.botId : null
+        }
+        agentMassId={agentMassId || null}
+      />
       <Tooltip
         title={t('workflow.nodes.header.export')}
         overlayClassName="black-tooltip"
       >
-        <span onClick={handleFlowExport} className="flow-export-icon" />
+        <span
+          onClick={() =>
+            downloadFileWithHeaders(
+              getFixedUrl(`/workflow/export/${currentFlow?.id}`),
+              `${currentFlow?.name}.yml`
+            )
+          }
+          className="flow-export-icon"
+        />
       </Tooltip>
 
       {showComparativeDebugging && (
@@ -189,6 +286,7 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
             className="flex items-center px-4"
             style={{ height: '36px', lineHeight: '36px' }}
             disabled={isLoading}
+            onClick={() => handlePublish()}
           >
             {currentFlow?.status === 1
               ? t('workflow.nodes.header.updatePublish')

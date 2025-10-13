@@ -63,6 +63,7 @@ const translation = {
   atLeastOneCustomField: 'At least add one custom field',
   save: 'Save',
   saveSuccess: 'Save successful',
+  saveFailed: 'Save failed',
   fieldNameRepeat: 'Field name repeated',
   fieldNameConvention:
     'Can only contain lowercase letters, numbers, _, must start with English letter',
@@ -106,6 +107,7 @@ const translation = {
   deleteFailed: 'Delete failed',
   noFileSelected: 'Please select file',
   importFailed: 'Import failed',
+  duplicateFieldsIgnored: 'Duplicate fields ignored',
 };
 
 export default translation;

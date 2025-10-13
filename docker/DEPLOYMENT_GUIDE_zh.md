@@ -6,20 +6,25 @@
 
 astronAgent 项目包含以下三个主要组件：
 
-1. **Casdoor** - 身份认证和单点登录服务
-2. **RagFlow** - 知识库和文档检索服务
-3. **astronAgent** - 核心业务服务集群
+1. **Casdoor** - 身份认证和单点登录服务(必要部署组件,提供单点登录功能)
+2. **RagFlow** - 知识库和文档检索服务(非必要部署组件,根据需要部署)
+3. **astronAgent** - 核心业务服务集群(必要部署组件)
 
 ## 🚀 部署步骤
 
 ### 前置要求
 
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- 至少 16GB 可用内存
-- 至少 50GB 可用磁盘空间
+**Agent系统配置要求**
+- CPU >= 2 Core
+- RAM >= 4 GiB
+- Disk >= 50 GB
 
-### 第一步：启动 Casdoor 身份认证服务（根据需要部署）
+**RAGFlow配置要求**
+- CPU >= 4 Core
+- RAM >= 16 GB
+- Disk >= 50 GB
+
+### 第一步：启动 Casdoor 身份认证服务
 
 Casdoor 是一个开源的身份和访问管理平台，提供OAuth 2.0、OIDC、SAML等多种认证协议支持。
 
@@ -49,16 +54,13 @@ docker-compose logs -f
 - 配置文件：`./conf` 目录
 - 日志文件：`./logs` 目录
 
-### 第二步：启动 RagFlow 知识库服务
+### 第二步：启动 RagFlow 知识库服务（根据需要部署）
 
 RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档理解技术提供准确的问答服务。
 
 ```bash
 # 进入 RagFlow 目录
 cd docker/ragflow
-
-# 复制环境变量配置（如果存在）
-cp .env.example .env
 
 # 启动 RagFlow 服务（包含所有依赖）
 docker-compose up -d
@@ -80,15 +82,14 @@ docker-compose logs -f ragflow
 
 **访问地址：**
 - RagFlow Web界面：http://localhost:9380
-- MinIO控制台：http://localhost:9001
 
 **重要配置说明：**
-- 默认使用 Elasticsearch，如需使用 OpenSearch，请修改 docker-compose.yml 中的 profiles 配置
+- 默认使用 Elasticsearch，如需使用 opensearch、infinity，请修改 .env 中的 DOC_ENGINE 配置
 - 支持GPU加速，使用 `docker-compose-gpu.yml` 启动
 
-### 第三步：配置 astronAgent 核心服务
+### 第三步：集成配置 Casdoor、RagFlow 服务（根据需要配置相关信息）
 
-在启动 astronAgent 服务之前，需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
+在启动 astronAgent 服务之前，根据需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
 
 #### 3.1 配置知识库服务连接
 
@@ -112,13 +113,45 @@ RAGFLOW_DEFAULT_GROUP=星辰知识库
 
 #### 3.2 配置 Casdoor 认证集成
 
-根据您的需求配置 Casdoor 认证集成，主要包括：
+编辑 `docker/astronAgent/.env` 文件，配置 Casdoor 连接信息：
 
+**关键配置项：**
+
+```env
+# Casdoor配置
+CONSOLE_CASDOOR_URL=http://your-casdoor-server:8000
+CONSOLE_CASDOOR_ID=your-casdoor-client-id
+CONSOLE_CASDOOR_APP=your-casdoor-app-name
+CONSOLE_CASDOOR_ORG=your-casdoor-org-name
+```
+
+**根据您的需求配置 Casdoor 认证集成，主要包括：**
 1. **OAuth 应用注册**：在 Casdoor 中注册 astronAgent 应用
 2. **回调地址配置**：设置正确的回调URL
 3. **权限配置**：配置用户角色和权限
+4. **配置文件更新**
 
-### 第四步：启动 astronAgent 核心服务
+### 第四步：启动 astronAgent 核心服务（必要部署步骤）
+
+#### 4.1 配置 讯飞开放平台 相关APP_ID API_KEY等信息
+
+获取文档详见：https://www.xfyun.cn/doc/platform/quickguide.html
+
+创建应用完成后可能需要购买或领取相应能力的API授权服务量
+- 星火大模型API: https://xinghuo.xfyun.cn/sparkapi
+  (对于大模型API会有额外的SPARK_API_PASSWORD需要在页面上获取)
+- 语音转写API: https://www.xfyun.cn/services/lfasr
+- 图片生成API: https://www.xfyun.cn/services/wtop
+
+最后编辑 `docker/astronAgent/.env` 文件，更新相关环境变量：
+```env
+PLATFORM_APP_ID=your-app-id
+PLATFORM_API_KEY=your-api-key
+PLATFORM_API_SECRET=your-api-secret
+
+SPARK_API_PASSWORD=your-api-password
+```
+
 
 ```bash
 # 进入 astronAgent 目录
@@ -151,69 +184,15 @@ docker-compose logs -f
 - **RagFlow Web界面**：http://localhost:9380
 
 ### AstronAgent 核心服务
-- **控制台前端**：http://localhost:1881
-- **控制台Hub API**：http://localhost:8080
+- **控制台前端(nginx代理)**：http://localhost:80
 
 ### 中间件服务
 - **PostgreSQL**：localhost:5432
 - **MySQL**：localhost:3306
 - **Redis**：localhost:6379
-- **Elasticsearch**：http://localhost:9200
+- **Elasticsearch**：localhost:9200
 - **Kafka**：localhost:9092
-- **MinIO**：http://localhost:9000
-
-## 🔍 故障排除
-
-### 1. 服务启动失败
-
-```bash
-# 查看详细错误日志
-docker-compose logs service-name
-
-# 检查端口占用
-netstat -tlnp | grep :端口号
-
-# 检查资源使用
-docker stats
-```
-
-### 2. 服务间连接问题
-
-**常见问题：**
-- 确保所有服务都在同一网络中
-- 检查服务名称解析是否正确
-- 验证端口配置是否一致
-
-**解决方案：**
-```bash
-# 查看网络配置
-docker network ls
-docker network inspect [network-name]
-
-# 测试服务连通性
-docker exec -it container-name ping target-service-name
-```
-
-### 3. 配置文件问题
-
-**检查配置文件语法：**
-```bash
-# 验证 docker-compose 文件
-docker-compose config
-
-# 检查环境变量
-docker-compose config --services
-```
-
-### 4. 数据持久化问题
-
-```bash
-# 查看数据卷
-docker volume ls
-
-# 检查数据卷挂载
-docker volume inspect volume-name
-```
+- **MinIO**：localhost:9000
 
 ## 📚 更多资源
 

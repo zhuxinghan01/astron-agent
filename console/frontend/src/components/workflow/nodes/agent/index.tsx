@@ -11,14 +11,14 @@ import { useTranslation } from 'react-i18next';
 import { useMemoizedFn } from 'ahooks';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import Inputs from '../components/inputs';
 import Outputs from '../components/outputs';
 import ModelSelect from './components/model-select';
 import AddTools from './components/add-tool';
 import ExceptionHandling from '../components/exception-handling';
 import { getToolLatestVersion } from '@/services/plugin';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import { isValidURL } from '@/components/workflow/utils/reactflowUtils';
 import {
   AgentProps,
@@ -227,7 +227,7 @@ const McpAddressSection = ({
           {addressList?.length < 3 && (
             <div
               className="text-[#275EFF] text-xs font-medium mt-1 inline-flex items-center cursor-pointer gap-1.5 pl-6"
-              onClick={() => handleAddAddress()}
+              onClick={handleAddAddress}
             >
               <img src={Icons.agent.inputAddIcon} className="w-3 h-3" alt="" />
               <span>{t('workflow.nodes.agentNode.addAddress')}</span>
@@ -255,7 +255,7 @@ const McpAddressSection = ({
                   />
                 )}
               </div>
-              {!isValidURL(item?.value) && (
+              {item?.value?.trim() && !isValidURL(item?.value) && (
                 <div className="text-[#FF4D4F] text-xs font-medium">
                   {t('workflow.nodes.agentNode.invalidUrl')}
                 </div>
@@ -313,6 +313,7 @@ const PromptSection = ({
             {t('workflow.nodes.agentNode.roleSetting')}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             value={data?.nodeParam?.instruction?.answer}
             onChange={value =>
@@ -328,6 +329,7 @@ const PromptSection = ({
             {t('workflow.nodes.agentNode.thinkingSteps')}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.instruction?.reasoning}
@@ -345,6 +347,7 @@ const PromptSection = ({
             <span>{t('workflow.nodes.agentNode.userQuery')}</span>
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.instruction?.query}
@@ -480,7 +483,17 @@ const useAgent = ({
     handleChangeNodeParam(
       (data: unknown, value: unknown) =>
         (data.nodeParam.plugin.mcpServerUrls = value),
-      addressList?.map(item => item?.value)?.filter(item => item)
+      addressList?.map(item => item?.value)
+    );
+  });
+
+  const handleAddAddress = useMemoizedFn(e => {
+    e.stopPropagation();
+    const newAddressList = [...addressList, { id: uuid(), value: '' }];
+    handleChangeNodeParam(
+      (data: unknown, value: unknown) =>
+        (data.nodeParam.plugin.mcpServerUrls = value),
+      newAddressList?.map(item => item?.value)
     );
   });
 
@@ -489,7 +502,7 @@ const useAgent = ({
     handleChangeNodeParam(
       (data: unknown, value: unknown) =>
         (data.nodeParam.plugin.mcpServerUrls = value),
-      newAddressList?.map(item => item?.value)?.filter(item => item)
+      newAddressList?.map(item => item?.value)
     );
   });
 
@@ -615,6 +628,7 @@ const useAgent = ({
     handleUpdateTool,
     handleChangeAddress,
     handleRemoveAddress,
+    handleAddAddress,
   };
 };
 
@@ -651,6 +665,7 @@ export const AgentDetail = memo((props: AgentDetailProps) => {
     handleUpdateTool,
     handleChangeAddress,
     handleRemoveAddress,
+    handleAddAddress,
   } = useAgent({
     addressList,
     id,
@@ -699,6 +714,7 @@ export const AgentDetail = memo((props: AgentDetailProps) => {
             addressList={addressList}
             handleChangeAddress={handleChangeAddress}
             handleRemoveAddress={handleRemoveAddress}
+            handleAddAddress={handleAddAddress}
           />
           <PromptSection
             id={id}

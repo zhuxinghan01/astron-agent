@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Slider, InputNumber, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useMemoizedFn } from 'ahooks';
 import { cloneDeep } from 'lodash';
 import { RepoConfig } from '@/components/workflow/types';
@@ -60,7 +60,12 @@ const KnowledgeParameter = (): React.ReactElement => {
     <>
       {knowledgeParameterModalInfo?.open
         ? createPortal(
-            <div className="mask">
+            <div
+              className="mask"
+              style={{
+                zIndex: 1002,
+              }}
+            >
               <div className="modalContent">
                 <p className="text-second font-medium">
                   {t('workflow.nodes.parameterModal.topK')}

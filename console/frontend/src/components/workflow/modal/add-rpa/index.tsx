@@ -11,9 +11,9 @@ import { getRpaDetail, getRpaList } from '@/services/rpa';
 import { useMemoizedFn, useRequest } from 'ahooks';
 import { throttle } from 'lodash';
 import dayjs from 'dayjs';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import { useTranslation } from 'react-i18next';
-import { useFlowCommon } from '@/components/workflow/hooks/useFlowCommon';
+import { useFlowCommon } from '@/components/workflow/hooks/use-flow-common';
 
 import { Icons } from '@/components/workflow/icons';
 
@@ -108,7 +108,7 @@ export default function index(): React.ReactElement {
                   </span>
                   <img
                     src={Icons.advancedConfig.close}
-                    className="w-7 h-7 cursor-pointer"
+                    className="w-[14px] h-[14px] cursor-pointer"
                     alt=""
                     onClick={handleCloseModal}
                   />
@@ -176,7 +176,7 @@ export default function index(): React.ReactElement {
                                     </p>
                                   </div>
                                 </div>
-                                <Space size={16}>
+                                <Space size={24}>
                                   <Button
                                     type="link"
                                     className="p-0 !text-[#275EFF]"
@@ -191,6 +191,7 @@ export default function index(): React.ReactElement {
                                       handleRpaChangeThrottle({
                                         ...(item || {}),
                                         fields: rpaDetail?.fields,
+                                        rpaId: rpaDetail?.id,
                                       });
                                     }}
                                     className="w-[100px] text-center px-[16px] py-[4px] bg-white rounded-lg box-border border border-gray-200 shadow-sm font-normal text-[14px] text-[#275EFF]"
@@ -218,7 +219,7 @@ export default function index(): React.ReactElement {
                               </div>
                             ))}
                             <div className="text-[12px] text-[#7F7F7F] pt-[12px] text-center font-normal">
-                              没有更多了
+                              {t('workflow.nodes.rpaNode.noMore')}
                             </div>
                           </div>
                         ) : (

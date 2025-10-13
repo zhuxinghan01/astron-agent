@@ -5,7 +5,7 @@ import {
   FLowCollapse,
 } from '@/components/workflow/ui';
 import { v4 as uuid } from 'uuid';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
 import Inputs from '@/components/workflow/nodes/components/inputs';
 import Outputs from '@/components/workflow/nodes/components/outputs';
 import ExceptionHandling from '@/components/workflow/nodes/components/exception-handling';
@@ -15,24 +15,11 @@ import {
   generateOrUpdateObject,
 } from '@/components/workflow/utils/reactflowUtils';
 import { isJSON } from '@/utils';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
 import { ModelSection } from '@/components/workflow/nodes/node-common';
-import { EnabledChatHistory } from '@/components/workflow/nodes/components/single-input';
 
 import promptOptimizationIcon from '@/assets/imgs/workflow/prompt-optimization-icon.png';
 import promptLibraryIcon from '@/assets/imgs/workflow/prompt-library-icon.svg';
-
-const InputSection = ({ id, data }): React.ReactElement => {
-  const { t } = useTranslation();
-  return (
-    <Inputs id={id} data={data}>
-      <div className="flex-1 flex items-center justify-between text-base font-medium">
-        <div>{t('common.input')}</div>
-        <EnabledChatHistory id={id} data={data} />
-      </div>
-    </Inputs>
-  );
-};
 
 const PromptSection = ({
   id,
@@ -60,9 +47,10 @@ const PromptSection = ({
           {!canvasesDisabled && (
             <div
               className="flex items-center gap-1 cursor-pointer text-[#275EFF] text-xs"
-              onClick={() =>
-                setSelectPromptModalInfo({ open: true, nodeId: id })
-              }
+              onClick={e => {
+                e.stopPropagation();
+                setSelectPromptModalInfo({ open: true, nodeId: id });
+              }}
             >
               <img
                 src={promptLibraryIcon}
@@ -96,6 +84,7 @@ const PromptSection = ({
             )}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.systemTemplate}
@@ -130,6 +119,7 @@ const PromptSection = ({
             )}
           </div>
           <FlowTemplateEditor
+            id={id}
             data={data}
             onBlur={() => delayCheckNode(id)}
             value={data?.nodeParam?.template}
@@ -282,11 +272,7 @@ export const LargeModelDetail = memo(({ id, data }): React.ReactElement => {
     <div className="p-[14px] pb-[6px]">
       <div className="bg-[#fff] rounded-lg w-full flex flex-col gap-2.5">
         <ModelSection id={id} data={data} />
-        <InputSection
-          id={id}
-          data={data}
-          handleChangeNodeParam={handleChangeNodeParam}
-        />
+        <Inputs id={id} data={data} />
         <PromptSection
           id={id}
           data={data}

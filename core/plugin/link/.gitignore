@@ -6,3 +6,9 @@ __pycache__
 .pytest_cache
 .claude
 .script
+.coverage
+coverage.xml
+.benchmarks
+htmlcov
+tests/example/
+logs

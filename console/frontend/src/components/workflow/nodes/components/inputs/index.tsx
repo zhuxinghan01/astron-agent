@@ -7,8 +7,9 @@ import {
   FLowCollapse,
 } from '@/components/workflow/ui';
 import ChatHistory from '@/components/workflow/nodes/components/chat-history';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
-import { useNodeCommon } from '@/components/workflow/hooks/useNodeCommon';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
+import { useNodeCommon } from '@/components/workflow/hooks/use-node-common';
+import { EnabledChatHistory } from '@/components/workflow/nodes/components/single-input';
 
 import inputAddIcon from '@/assets/imgs/workflow/input-add-icon.png';
 import remove from '@/assets/imgs/workflow/input-remove-icon.png';
@@ -38,10 +39,11 @@ function NameField({
   );
 }
 export function TypeSelector({ id, data, item }: unknown): React.ReactElement {
-  const { handleChangeInputParam, isIteratorNode } = useNodeCommon({
-    id,
-    data,
-  });
+  const { handleChangeInputParam, isIteratorNode, isFixedInputsNode } =
+    useNodeCommon({
+      id,
+      data,
+    });
   const { t } = useTranslation();
   if (isIteratorNode) return <>Array</>;
 
@@ -59,7 +61,9 @@ export function TypeSelector({ id, data, item }: unknown): React.ReactElement {
             data.schema.value.type = val;
             if (val === 'literal') {
               data.schema.value.content = '';
-              data.schema.type = 'string';
+              if (!isFixedInputsNode) {
+                data.schema.type = 'string';
+              }
             } else {
               data.schema.value.content = {};
             }
@@ -72,7 +76,8 @@ export function TypeSelector({ id, data, item }: unknown): React.ReactElement {
 }
 
 export function ValueField({ id, data, item }: unknown): React.ReactElement {
-  const { references, handleChangeInputParam } = useNodeCommon({ id, data });
+  const { references, handleChangeInputParam, isFixedInputsNode } =
+    useNodeCommon({ id, data });
   const valueType = item?.schema?.value?.type;
 
   if (valueType === 'literal') {
@@ -87,6 +92,7 @@ export function ValueField({ id, data, item }: unknown): React.ReactElement {
 
   return (
     <ReferenceField
+      isFixedInputsNode={isFixedInputsNode}
       id={id}
       item={item}
       references={references}
@@ -138,6 +144,7 @@ function RemoveButton({ id, data, item }: unknown): React.ReactElement {
 
 /** 单独拆出引用选择 */
 function ReferenceField({
+  isFixedInputsNode,
   id,
   item,
   references,
@@ -157,7 +164,9 @@ function ReferenceField({
       item.id,
       (data, val) => {
         data.schema.value.content = val.content;
-        data.schema.type = val.type;
+        if (!isFixedInputsNode) {
+          data.schema.type = val.type;
+        }
         data.fileType = val.fileType;
       },
       {
@@ -196,7 +205,7 @@ export function ErrorMessages({ item }: unknown): React.ReactElement {
   );
 }
 
-function index({ id, data, children }): React.ReactElement {
+function index({ id, data }): React.ReactElement {
   const { inputs, isIteratorNode, handleAddInputLine, handleChangeInputParam } =
     useNodeCommon({ id, data });
   const { t } = useTranslation();
@@ -209,8 +218,11 @@ function index({ id, data, children }): React.ReactElement {
   return (
     <FLowCollapse
       label={
-        <div className="flex items-center w-full gap-2 cursor-pointer">
-          {children}
+        <div className="w-full flex items-center cursor-pointer gap-2">
+          <div className="flex items-center justify-between text-base font-medium flex-1">
+            <div>{t('common.input')}</div>
+            <EnabledChatHistory id={id} data={data} />
+          </div>
         </div>
       }
       content={

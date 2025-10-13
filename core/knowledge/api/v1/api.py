@@ -6,14 +6,14 @@ including document splitting, knowledge chunk saving, updating, deleting, queryi
 """
 
 import json
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 from common.otlp.metrics.meter import Meter
 from common.otlp.trace.span import Span
 from common.service import get_otlp_metric_service, get_otlp_span_service
 from common.service.otlp.metric.metric_service import OtlpMetricService
 from common.service.otlp.span.span_service import OtlpSpanService
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from loguru import logger
 
 from knowledge.consts.error_code import CodeEnum
@@ -24,6 +24,7 @@ from knowledge.domain.entity.chunk_dto import (
     ChunkUpdateReq,
     FileSplitReq,
     QueryDocReq,
+    RAGType,
 )
 from knowledge.domain.response import ErrorResponse, SuccessDataResponse
 from knowledge.exceptions.exception import (
@@ -170,13 +171,118 @@ async def file_split(
             span_context=span_context,
             metric=metric,
             operation_callable=strategy.split,
-            file=split_request.file,
+            fileUrl=split_request.file,
             resourceType=split_request.resourceType,
             lengthRange=split_request.lengthRange,
             overlap=split_request.overlap,
             separator=split_request.separator,
             titleSplit=split_request.titleSplit,
             cutOff=split_request.cutOff,
+        )
+
+
+async def parse_length_range(lengthRange: Optional[str]) -> Optional[List[int]]:
+    parsed_length_range = None
+    if lengthRange:
+        try:
+            parsed_length_range = json.loads(lengthRange)
+            # Invalid
+            if not all(isinstance(x, int) for x in parsed_length_range):
+                raise ProtocolParamException(
+                    msg="The lengthRange must be an array of integers"
+                )
+        except (json.JSONDecodeError, ValueError) as e:
+            raise ProtocolParamException(
+                msg=f"Invalid lengthRange format: {str(e)}；The lengthRange must be an array of integers"
+            )
+    return parsed_length_range
+
+
+async def parse_separator(separator: Optional[str]) -> Optional[List[str]]:
+    parsed_separator = None
+    if separator:
+        try:
+            parsed_separator = json.loads(separator)
+            # Invalid
+            if not all(isinstance(x, str) for x in parsed_separator):
+                raise ProtocolParamException(
+                    msg="The separator must be an array of strings"
+                )
+        except (json.JSONDecodeError, ValueError) as e:
+            raise ProtocolParamException(
+                msg=f"Invalid separator format: {str(e)}；The separator must be an array of strings"
+            )
+    return parsed_separator
+
+
+@rag_router.post("/document/upload")
+async def file_upload(
+    file: UploadFile = File(),
+    ragType: RAGType = Form(),
+    lengthRange: Optional[str] = Form(
+        None, description='Length range JSON array, such as "[256, 1024]"'
+    ),
+    separator: Optional[str] = Form(
+        None, description='Delimiter JSON array, such as ["\\n", ". "]'
+    ),
+    app_id: str = Depends(get_app_id),
+) -> Union[SuccessDataResponse, ErrorResponse]:
+    """
+    Parse file content and perform chunking.
+
+    2. Form-data mode: Upload file or provide URL with form parameters
+
+    Args:
+        file: Uploaded file (form-data mode)
+        ragType: RAG type (form-data mode)
+        lengthRange: Split length range as JSON string (form-data mode)
+        separator: Separator list as JSON string (form-data mode)
+        app_id: Application identifier
+
+    Returns:
+        Result of the splitting operation
+    """
+    span, metric = get_span_and_metric(app_id=app_id, function_name="file_upload")
+
+    with span.start(func_name="file_upload") as span_context:
+        # Record and validate
+        span_context.add_info_events(
+            {
+                "usr_input": json.dumps(
+                    {
+                        "file": file.filename,
+                        "ragType": ragType,
+                        "lengthRange": lengthRange,
+                        "separator": separator,
+                    },
+                    ensure_ascii=False,
+                )
+            }
+        )
+        strategy = RAGStrategyFactory.get_strategy(ragType)
+
+        try:
+            # Use a unified parameter parsing function
+            parsed_length_range = await parse_length_range(lengthRange)
+            parsed_separator = await parse_separator(separator)
+
+        except ProtocolParamException as e:
+            error_msg = f"file_upload ProtocolParamException, reason {e}"
+            logger.error(error_msg)
+            span_context.record_exception(e)
+            metric.in_error_count(code=CodeEnum.ParameterCheckException.code)
+            return ErrorResponse(
+                code_enum=CodeEnum.ParameterCheckException, message=str(e)
+            )
+
+        # Use helper function to handle core operations and exceptions
+        return await handle_rag_operation(
+            span_context=span_context,
+            metric=metric,
+            operation_callable=strategy.split,
+            file=file,
+            lengthRange=parsed_length_range,
+            separator=parsed_separator,
         )
 
 

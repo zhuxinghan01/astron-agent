@@ -9,6 +9,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.data.UserInfoDataService;
+import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
+import com.iflytek.astron.console.commons.dto.bot.BotDetail;
+import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.entity.bot.*;
 import com.iflytek.astron.console.commons.entity.user.UserInfo;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
@@ -350,7 +353,7 @@ public class BotServiceImpl implements BotService {
         botBase.setStyle(bot.getStyle());
         botBase.setBackground(bot.getBackground());
         botBase.setVirtualCharacter(bot.getVirtualCharacter());
-        botBase.setMassBotId(bot.getMassBotId());
+        botBase.setMaasBotId(bot.getMaasBotId());
         botBase.setVersion(1);
         botBase.setSpaceId(spaceId);
         setInputExamples(botBase, bot.getInputExample(), bot.getInputExampleEn());
@@ -431,6 +434,7 @@ public class BotServiceImpl implements BotService {
 
             chatBotDataService.updateBot(botBase);
             chatListDataService.updateChatBotList(botBase);
+            chatBotDataService.updateChatBotMarket(botBase);
         } catch (Exception e) {
             log.error("uid update bot basic info error, uid: {}", uid, e);
             throw new BusinessException(ResponseEnum.UPDATE_BOT_FAILED);
@@ -450,6 +454,8 @@ public class BotServiceImpl implements BotService {
                 .prologue(bot.getPrologue())
                 .botDesc(bot.getBotDesc())
                 .botTemplate(bot.getBotTemplate())
+                .version(BotTypeEnum.SYSTEM_BOT.getType())
+                .supportContext(bot.getSupportContext())
                 .supportSystem(bot.getSupportSystem())
                 .supportDocument(bot.getSupportDocument())
                 .promptType(bot.getPromptType())
@@ -472,7 +478,7 @@ public class BotServiceImpl implements BotService {
                 .style(bot.getStyle())
                 .background(bot.getBackground())
                 .virtualCharacter(bot.getVirtualCharacter())
-                .massBotId(bot.getMassBotId())
+                .maasBotId(bot.getMaasBotId())
                 .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
                 .modelId(bot.getModelId())
                 .build();

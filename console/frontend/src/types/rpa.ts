@@ -74,6 +74,7 @@ export interface RpaDetailInfo {
   userName?: string;
   remarks?: string;
   platform?: string;
+  updateTime: string;
 }
 
 export interface RpaDetailFormInfo {
@@ -106,4 +107,5 @@ export interface RpaNode extends Node {
 export interface RpaNodeParam extends RpaRobot {
   fields: RpaDetailInfo['fields'];
   platform?: string;
+  rpaId?: number;
 }

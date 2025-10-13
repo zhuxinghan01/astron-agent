@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import {
@@ -19,10 +25,12 @@ import UploadCover from '@/components/upload-avatar/index';
 import { DeleteIcon } from '@/components/svg-icons';
 import PromptModel from '@/components/prompt-model';
 import PromptTip from '@/components/prompt-tip';
-import PromptTry from '@/components/prompt-try';
+import PromptTry, { PromptTryRef } from '@/components/prompt-try';
+import InputBox from '@/components/prompt-try/input-box';
 import WxModal from '@/components/wx-modal';
 
 import { configListRepos } from '@/services/knowledge';
+import { handleAgentStatus } from '@/services/release-management';
 import {
   getBotInfo,
   getBotType,
@@ -32,16 +40,13 @@ import {
   listRepos,
   updateDoneBot,
   quickCreateBot,
+  getModelList,
+  ModelListData,
 } from '@/services/spark-common';
-import {
-  useTipPkStore,
-  useModelPkStore,
-} from '@/store/spark-store/config-page-store';
 import { useSparkCommonStore } from '@/store/spark-store/spark-common';
 import { useBotStateStore } from '@/store/spark-store/bot-state';
 import usePrompt from '@/hooks/use-prompt';
 import { v4 as uuid } from 'uuid';
-import { robotType } from '@/types/typesServices';
 import eventBus from '@/utils/event-bus';
 import { debounce } from 'lodash';
 import { useTranslation } from 'react-i18next';
@@ -55,16 +60,20 @@ import tipIcon from '@/assets/imgs/sparkImg/tip.svg';
 
 import styles from './index.module.scss';
 
-interface ChatProps {
-  currentRobot: robotType;
-  setCurrentRobot: (value: any) => void;
-  currentTab: string;
-  setCurrentTab: (value: string) => void;
-}
+import {
+  ChatProps,
+  BaseModelConfig,
+  DatasetItem,
+  PageDataItem,
+  MaasDatasetItem,
+  TreeNode,
+  KnowledgeLeaf,
+  Knowledge,
+} from './types';
 
 const { Option } = Select;
 
-const baseModelConfig = {
+const baseModelConfig: BaseModelConfig = {
   visible: false,
   isSending: false,
   optionsVisible: false,
@@ -96,41 +105,6 @@ const baseModelConfig = {
   },
 };
 
-interface TreeNode {
-  id?: string | number;
-  files?: TreeNode[];
-  [key: string]: any;
-}
-
-interface KnowledgeLeaf {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface Knowledge {
-  id: string | number;
-  charCount?: number;
-  knowledgeCount?: number;
-  [key: string]: any;
-}
-
-interface DatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface PageDataItem {
-  id: string | number;
-  [key: string]: any;
-}
-
-interface MaasDatasetItem {
-  id: string | number;
-  [key: string]: any;
-}
-
 const BaseConfig: React.FC<ChatProps> = ({
   currentRobot,
   setCurrentRobot,
@@ -147,8 +121,7 @@ const BaseConfig: React.FC<ChatProps> = ({
   const setConfigPageData = useSparkCommonStore(
     state => state.setConfigPageData
   );
-  const answerCompleted = useSparkCommonStore(state => state.answerCompleted);
-  const inputExampleTip = useSparkCommonStore(state => state.inputExampleTip);
+
   const setInputExampleTip = useSparkCommonStore(
     state => state.setInputExampleTip
   );
@@ -165,7 +138,13 @@ const BaseConfig: React.FC<ChatProps> = ({
   const { t } = useTranslation();
   const [askValue, setAskValue] = useState('');
   const [sentence, setSentence] = useState(0); //是否是一句话创建
-  const $inputConfirmFlag = useRef<boolean>(true); // 是否完成输入
+  const [globalLoading, setGlobalLoading] = useState(false); // 全局loading状态
+  const loadingInstances = useRef(new Set<string>()); // 跟踪正在loading的实例
+
+  // PromptTry实例的refs
+  const defaultPromptTryRef = useRef<PromptTryRef>(null);
+  const tipPromptTryRefs = useRef<(PromptTryRef | null)[]>([]);
+  const modelPromptTryRefs = useRef<(PromptTryRef | null)[]>([]);
   const [botCreateActiveV, setBotCreateActiveV] = useState<{
     cn: string;
     en: string;
@@ -180,8 +159,6 @@ const BaseConfig: React.FC<ChatProps> = ({
     { model: 'spark', promptAnswerCompleted: true },
   ]);
   const [questionTipActive, setQuestionTipActive] = useState(-1);
-  const [questionTip, setQuestionTip] = useState('');
-  const $ask = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const [prologue, setPrologue] = useState('');
   const [createBotton, setCreateBotton] = useState<any>(false);
@@ -261,11 +238,20 @@ const BaseConfig: React.FC<ChatProps> = ({
   const [vcnList, setVcnList] = useState<{ vcn: string }[]>([]);
   const [form] = Form.useForm();
   const [model, setModel] = useState('spark');
-  const handleModelChange = (value: string) => {
+  const [modelOptions, setModelOptions] = useState<ModelListData[]>([]);
+
+  // 获取模型列表
+  const getModelListData = (): void => {
+    getModelList().then((res: ModelListData[]) => {
+      setModelOptions(res || []);
+    });
+  };
+
+  const handleModelChange = (value: string): void => {
     setModel(value);
   };
 
-  const handleModelChangeNew = (e: string, index: number) => {
+  const handleModelChangeNew = (e: string, index: number): void => {
     const updatedModelList = [...modelList];
     updatedModelList[index] = { ...updatedModelList[index], model: e };
     setModelList(updatedModelList);
@@ -277,7 +263,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     api: (params: any) => Promise<any>,
     successMessage: string,
     shouldNavigateToAgent = false
-  ) => {
+  ): Promise<void> => {
     try {
       await api(obj);
       message.success(successMessage);
@@ -313,7 +299,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     isRag: boolean,
     useFormValues: boolean,
     isForPublish: boolean = false
-  ) => {
+  ): any => {
     const datasetKey = isRag ? 'datasetList' : 'maasDatasetList';
     const dataList: string[] = [];
     (selectSource || []).forEach((item: any) => {
@@ -362,6 +348,9 @@ const BaseConfig: React.FC<ChatProps> = ({
         .join(','),
       prologue: prologue,
       model: model,
+      modelId: modelOptions?.find(item => item.modelDomain === model)?.modelId,
+      isCustom: modelOptions?.find(item => item.modelDomain === model)
+        ?.isCustom,
       prompt: prompt,
       ...(!useFormValues && { promptStructList: [] }),
     };
@@ -387,12 +376,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     );
 
     const obj = buildRequestObject(isRag, useFormValues);
-    const api =
-      detailInfo.botStatus === 1 ||
-      detailInfo.botStatus === 2 ||
-      detailInfo.botStatus === 4
-        ? updateDoneBot
-        : updateBot;
+    const api = updateBot;
     const successMessage =
       detailInfo.botStatus === 1 ||
       detailInfo.botStatus === 2 ||
@@ -426,7 +410,7 @@ const BaseConfig: React.FC<ChatProps> = ({
         const obj = buildRequestObject(isRag, false, true); // 第三个参数表示用于发布
         handleApiCall(
           obj,
-          updateDoneBot,
+          updateBot,
           t('configBase.updatePublishSuccess'),
           true
         ); // 第四个参数为 true 表示导航到 /space/agent
@@ -435,12 +419,18 @@ const BaseConfig: React.FC<ChatProps> = ({
         const obj = buildRequestObject(isRag, true, true);
         updateBot(obj)
           .then(() => {
-            handleApiCall(
-              { botId },
-              sendApplyBot,
-              t('configBase.publishSuccess'),
-              true // 导航到 /space/agent
-            );
+            handleAgentStatus(Number(botId), {
+              action: 'PUBLISH',
+              publishType: 'MARKET',
+              publishData: {},
+            })
+              .then(() => {
+                message.success(t('configBase.publishSuccess'));
+                navigate('/space/agent');
+              })
+              .catch(err => {
+                message.error(err?.msg);
+              });
           })
           .catch(err => {
             message.error(err?.msg);
@@ -453,12 +443,18 @@ const BaseConfig: React.FC<ChatProps> = ({
       const obj = buildRequestObject(isRag, false, true);
       insertBot(obj)
         .then((res: any) => {
-          handleApiCall(
-            { botId: res.botId },
-            sendApplyBot,
-            t('configBase.publishSuccess'),
-            true // 导航到 /space/agent
-          );
+          handleAgentStatus(Number(res.botId), {
+            action: 'PUBLISH',
+            publishType: 'MARKET',
+            publishData: {},
+          })
+            .then(() => {
+              message.success(t('configBase.publishSuccess'));
+              navigate('/space/agent');
+            })
+            .catch(err => {
+              message.error(err?.msg);
+            });
         })
         .catch(err => {
           message.error(err.msg);
@@ -478,6 +474,7 @@ const BaseConfig: React.FC<ChatProps> = ({
   useEffect(() => {
     setShowTipPk(false);
     setShowModelPk(0);
+    getModelListData();
   }, []);
 
   useEffect(() => {
@@ -485,6 +482,7 @@ const BaseConfig: React.FC<ChatProps> = ({
     obj.botDesc = botTemplateInfoValue.botDesc;
     obj.botName = botTemplateInfoValue.botName;
     obj.botType = botTemplateInfoValue.botType;
+    console.log('🚀 ~ useEffect ~ obj:', obj);
     setBaseinfo(obj);
     const create = searchParams.get('create');
     if (create) {
@@ -500,6 +498,12 @@ const BaseConfig: React.FC<ChatProps> = ({
       setBottypeList(filteredBottypeList);
       const save = searchParams.get('save');
       const botId = searchParams.get('botId');
+      console.log(
+        '🚀 ~ getBotType ~ botId:',
+        botId,
+        '--------',
+        botTemplateInfoValue
+      );
       if (botId) {
         sessionStorage.removeItem('botTemplateInfoValue');
 
@@ -854,12 +858,71 @@ const BaseConfig: React.FC<ChatProps> = ({
     }
   }, [chatModelList]);
 
+  // 提示词、模型对比涉及状态 start
+  const [showTipPk, setShowTipPk] = useState(false);
+  const [showModelPk, setShowModelPk] = useState(0);
+
+  // 提示词、模型对比涉及状态 over
+
+  /** 处理InputBox发送消息 */
+  const handleInputBoxSend = useCallback(
+    (text: string) => {
+      // 根据当前模式触发相应的PromptTry实例
+
+      if (showTipPk) {
+        tipPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else if (showModelPk > 0) {
+        modelPromptTryRefs.current.forEach(ref => {
+          if (ref) {
+            ref.send(text);
+          }
+        });
+      } else {
+        // 默认模式：触发单个PromptTry实例
+        console.log('Triggering default mode');
+        if (defaultPromptTryRef.current) {
+          defaultPromptTryRef.current.send(text);
+        }
+      }
+
+      // 清空相关状态
+      setInputExampleTip('');
+      setInputExampleModel('');
+    },
+    [showTipPk, showModelPk]
+  );
+
   useEffect(() => {
     eventBus.on('eventSavebot', savebot);
+
+    // 监听PromptTry实例的loading状态变化
+    const handleLoadingChange = (data: {
+      instanceId: string;
+      loading: boolean;
+    }) => {
+      const { instanceId, loading } = data;
+      if (loading) {
+        loadingInstances.current.add(instanceId);
+      } else {
+        loadingInstances.current.delete(instanceId);
+      }
+      setGlobalLoading(loadingInstances.current.size > 0);
+    };
+
+    eventBus.on('promptTry.inputExample', handleInputBoxSend);
+    eventBus.on('promptTry.loadingChange', handleLoadingChange);
+
     return () => {
       eventBus.off('eventSavebot', savebot);
+      eventBus.off('promptTry.inputExample', handleInputBoxSend);
+      eventBus.off('promptTry.loadingChange', handleLoadingChange);
     };
   }, [
+    handleInputBoxSend, // 添加 handleInputBoxSend 作为依赖项
     coverUrl,
     baseinfo,
     searchParams,
@@ -875,15 +938,9 @@ const BaseConfig: React.FC<ChatProps> = ({
     sentence,
     choosedAlltool,
   ]);
-  // 提示词、模型对比涉及状态 start
-  const { showTipPk, setShowTipPk } = useTipPkStore();
-  const { showModelPk, setShowModelPk } = useModelPkStore();
-
-  // 提示词、模型对比涉及状态 over
 
   /** 提示词对比 */
   const handleShowTipPk = (type: string) => {
-    setQuestionTip('');
     setShowModelPk(0); // 提示词对比时隐藏模型对比
     if (type === 'show') {
       return setShowTipPk(true);
@@ -913,7 +970,29 @@ const BaseConfig: React.FC<ChatProps> = ({
       { model: 'spark', promptAnswerCompleted: true },
     ]);
   };
-  console.log(modelList, 'modelList');
+
+  /** 处理InputBox清除消息 */
+  const handleInputBoxClear = () => {
+    // 直接调用PromptTry实例的clear方法
+    if (showTipPk) {
+      tipPromptTryRefs.current.forEach(ref => {
+        if (ref) {
+          ref.clear();
+        }
+      });
+    } else if (showModelPk > 0) {
+      modelPromptTryRefs.current.forEach(ref => {
+        if (ref) {
+          ref.clear();
+        }
+      });
+    } else {
+      if (defaultPromptTryRef.current) {
+        defaultPromptTryRef.current.clear();
+      }
+    }
+  };
+
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden">
       <ConfigHeader
@@ -992,6 +1071,12 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      modelId: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.modelId,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
@@ -1041,6 +1126,12 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      modelId: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.modelId,
+                      isCustom: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.isCustom,
                       prompt: prompt,
                     };
                     updateBot(obj)
@@ -1200,7 +1291,6 @@ const BaseConfig: React.FC<ChatProps> = ({
                   e.stopPropagation();
                   setPrompt(promptList[questionTipActive].prompt);
                   setShowTipPk(false);
-                  setQuestionTip('');
                   setInputExampleTip('');
                   setInputExampleModel('');
                 }}
@@ -1235,7 +1325,6 @@ const BaseConfig: React.FC<ChatProps> = ({
           disjump={true}
           setIsOpenapi={() => {}}
           fabuFlag={fabuFlag}
-          isV1={false}
           show={openWxmol}
           onCancel={() => {
             setOpenWxmol(false);
@@ -1422,30 +1511,21 @@ const BaseConfig: React.FC<ChatProps> = ({
                       style={{ width: '100%' }}
                       placeholder={t('configBase.pleaseSelectModel')}
                     >
-                      <Option value="spark">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t('configBase.sparkModel')}</span>
-                        </div>
-                      </Option>
-                      <Option value="x1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={spark} />
-                          <span>{t('configBase.sparkX1Model')}</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekv3">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-V3</span>
-                        </div>
-                      </Option>
-                      <Option value="xdeepseekr1">
-                        <div className="flex items-center">
-                          <img className="w-[20px] h-[20px]" src={deepseek} />
-                          <span>DeepSeek-R1</span>
-                        </div>
-                      </Option>
+                      {modelOptions.map(option => (
+                        <Option
+                          key={option.modelDomain}
+                          value={option.modelDomain}
+                        >
+                          <div className="flex items-center">
+                            <img
+                              className="w-[20px] h-[20px]"
+                              src={option.modelIcon}
+                              alt={option.modelName}
+                            />
+                            <span>{option.modelName}</span>
+                          </div>
+                        </Option>
+                      ))}
                     </Select>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab={t('configBase.highOrderConfig')} key="2">
@@ -1598,7 +1678,6 @@ const BaseConfig: React.FC<ChatProps> = ({
                         { model: 'spark', promptAnswerCompleted: true },
                         { model: 'spark', promptAnswerCompleted: true },
                       ]);
-                      setQuestionTip('');
                     }}
                   >
                     {t('configBase.restoreDefaultDisplay')}
@@ -1615,6 +1694,7 @@ const BaseConfig: React.FC<ChatProps> = ({
                 <>
                   {!showTipPk && (
                     <PromptTry
+                      ref={defaultPromptTryRef}
                       baseinfo={baseinfo}
                       inputExample={inputExample}
                       coverUrl={coverUrl}
@@ -1645,15 +1725,12 @@ const BaseConfig: React.FC<ChatProps> = ({
                           !showTipPk && styles.signlItem
                         } `}
                       >
-                        <PromptTip
-                          setQuestionTip={setQuestionTip}
-                          item={item}
-                          promptList={promptList}
-                          index={index}
-                          setPromptList={setPromptList}
-                          promptAnswerCompleted={item.promptAnswerCompleted}
-                          showTipPk={showTipPk}
-                          questionTip={questionTip}
+                        <PromptTry
+                          ref={ref => {
+                            if (tipPromptTryRefs.current) {
+                              tipPromptTryRefs.current[index] = ref;
+                            }
+                          }}
                           newPrompt={item.prompt}
                           baseinfo={baseinfo}
                           inputExample={inputExample}
@@ -1697,44 +1774,30 @@ const BaseConfig: React.FC<ChatProps> = ({
                           style={{ width: '60%' }}
                           placeholder="请选择模型"
                         >
-                          <Option value="spark">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t('configBase.sparkModel')}</span>
-                            </div>
-                          </Option>
-                          <Option value="x1">
-                            <div className="flex items-center">
-                              <img className="w-[20px] h-[20px]" src={spark} />
-                              <span>{t('configBase.sparkX1Model')}</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekv3">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-V3</span>
-                            </div>
-                          </Option>
-                          <Option value="xdeepseekr1">
-                            <div className="flex items-center">
-                              <img
-                                className="w-[20px] h-[20px]"
-                                src={deepseek}
-                              />
-                              <span>DeepSeek-R1</span>
-                            </div>
-                          </Option>
+                          {modelOptions.map(option => (
+                            <Option
+                              key={option.modelDomain}
+                              value={option.modelDomain}
+                            >
+                              <div className="flex items-center">
+                                <img
+                                  className="w-[20px] h-[20px]"
+                                  src={option.modelIcon}
+                                  alt={option.modelName}
+                                />
+                                <span>{option.modelName}</span>
+                              </div>
+                            </Option>
+                          ))}
                         </Select>
                       </div>
-                      <PromptModel
-                        setQuestionTip={setQuestionTip}
-                        item={item}
-                        questionTip={questionTip}
+                      <PromptTry
+                        ref={ref => {
+                          if (modelPromptTryRefs.current) {
+                            modelPromptTryRefs.current[index] = ref;
+                          }
+                        }}
                         newModel={item.model}
-                        showModelPk={showModelPk}
                         baseinfo={baseinfo}
                         inputExample={inputExample}
                         coverUrl={coverUrl}
@@ -1751,201 +1814,15 @@ const BaseConfig: React.FC<ChatProps> = ({
               )}
             </div>
 
-            {/* 对话框 */}
-            {showTipPk && (
-              <div style={{ marginTop: '6px' }} className={styles.ask_wrapper}>
-                {answerCompleted && (
-                  <div
-                    className={styles.quit_botmode}
-                    onClick={() => {
-                      eventBus.emit('eventRemoveAll');
-                    }}
-                  >
-                    <DeleteIcon
-                      style={{
-                        pointerEvents: 'none',
-                        marginRight: '6px',
-                        marginTop: '5px',
-                      }}
-                    />
-                    {t('configBase.clearHistory')}
-                  </div>
-                )}
-
-                <textarea
-                  value={inputExampleTip}
-                  ref={$ask}
-                  placeholder={'在此输入内容'}
-                  onChange={e => {
-                    setAskValue(e.target.value);
-                    setInputExampleTip(e.target.value);
-                  }}
-                  onKeyDown={(e: any) => {
-                    // ctrl+enter执行换行
-                    if (e.ctrlKey && e.code === 'Enter') {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      if ($ask.current) {
-                        $ask.current.value += `\n`;
-                      }
-                      return;
-                    }
-                    if (
-                      !e.shiftKey &&
-                      !e.ctrlKey &&
-                      e.code === 'Enter' &&
-                      $inputConfirmFlag.current
-                    ) {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      const question: string = $ask.current?.value || '';
-                      if (!question || question.trim() === '') {
-                        message.info(t('configBase.pleaseEnterContent'));
-                        if ($ask.current) {
-                          $ask.current.value = '';
-                        }
-                        return;
-                      }
-                      setQuestionTip(question);
-                      setInputExampleTip('');
-                      if ($ask.current) {
-                        $ask.current.value = '';
-                      }
-                      return;
-                    }
-                  }}
-                  onCompositionStart={() => {
-                    $inputConfirmFlag.current = false;
-                  }}
-                  onCompositionEnd={() => {
-                    $inputConfirmFlag.current = true;
-                  }}
-                />
-                <div
-                  className={styles.send}
-                  style={{
-                    background:
-                      askValue || inputExampleTip ? '#257eff' : '#8aa5e6',
-                    opacity: $ask.current?.value ? 1 : 0.7,
-                  }}
-                  onClick={() => {
-                    const question: string = $ask.current?.value || '';
-                    if (!question || question.trim() === '') {
-                      message.info(t('configBase.pleaseEnterContent'));
-                      if ($ask.current) {
-                        $ask.current.value = '';
-                      }
-                      return;
-                    }
-                    setQuestionTip(question);
-                    setInputExampleTip('');
-                    if ($ask.current) {
-                      $ask.current.value = '';
-                    }
-                    setAskValue('');
-                  }}
-                >
-                  {t('configBase.send')}
-                </div>
-              </div>
-            )}
-
-            {/* 对话框 */}
-            {showModelPk > 0 && (
-              <div style={{ marginTop: '6px' }} className={styles.ask_wrapper}>
-                <div
-                  className={styles.quit_botmode}
-                  onClick={() => {
-                    eventBus.emit('eventRemoveAll');
-                  }}
-                >
-                  <DeleteIcon
-                    style={{ pointerEvents: 'none', marginRight: '6px' }}
-                  />
-                  {t('configBase.clearHistory')}
-                </div>
-                <textarea
-                  value={inputExampleModel}
-                  ref={$ask}
-                  placeholder={t('configBase.inputContent')}
-                  onChange={e => {
-                    setAskValue(e.target.value);
-                    setInputExampleModel(e.target.value);
-                  }}
-                  onKeyDown={(e: any) => {
-                    // ctrl+enter执行换行
-                    if (e.ctrlKey && e.code === 'Enter') {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      if ($ask.current) {
-                        $ask.current.value += `\n`;
-                      }
-                      return;
-                    }
-                    if (
-                      !e.shiftKey &&
-                      !e.ctrlKey &&
-                      e.code === 'Enter' &&
-                      $inputConfirmFlag.current
-                    ) {
-                      e.cancelBubble = true; //ie阻止冒泡行为
-                      e.stopPropagation(); //Firefox阻止冒泡行为
-                      e.preventDefault(); //取消事件的默认动作*换行
-                      const question: string = $ask.current?.value || '';
-                      if (!question || question.trim() === '') {
-                        message.info(t('configBase.pleaseEnterContent'));
-                        if ($ask.current) {
-                          $ask.current.value = '';
-                        }
-                        return;
-                      }
-                      setQuestionTip(question);
-                      //  || dialogEnable === 0
-                      setInputExampleModel('');
-                      if ($ask.current) {
-                        $ask.current.value = '';
-                      }
-                      return;
-                    }
-                  }}
-                  onCompositionStart={() => {
-                    $inputConfirmFlag.current = false;
-                  }}
-                  onCompositionEnd={() => {
-                    $inputConfirmFlag.current = true;
-                  }}
-                />
-                <div
-                  className={styles.send}
-                  style={{
-                    background:
-                      askValue || inputExampleModel ? '#257eff' : '#8aa5e6',
-                    opacity: $ask.current?.value ? 1 : 0.7,
-                  }}
-                  onClick={() => {
-                    const question: string = $ask.current?.value || '';
-                    if (!question || question.trim() === '') {
-                      message.info(t('configBase.pleaseEnterContent'));
-                      if ($ask.current) {
-                        $ask.current.value = '';
-                      }
-                      return;
-                    }
-                    setQuestionTip(question);
-                    setInputExampleModel('');
-                    if ($ask.current) {
-                      $ask.current.value = '';
-                    }
-                    setAskValue('');
-                  }}
-                >
-                  {t('configBase.send')}
-                </div>
-              </div>
-            )}
+            {/* 统一输入框 */}
+            <InputBox
+              onSend={handleInputBoxSend}
+              onClear={handleInputBoxClear}
+              value={askValue}
+              onChange={setAskValue}
+              isLoading={globalLoading}
+              isCompleted={!globalLoading}
+            />
           </div>
         </div>
       </div>

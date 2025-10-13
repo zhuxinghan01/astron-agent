@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import appdirs
 import orjson
@@ -10,7 +10,7 @@ from plugin.link.consts import const
 VALID_LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
-def serialize(record):
+def serialize(record: Dict[str, Any]) -> bytes:
     """Serialize log record for structured output.
 
     Args:
@@ -23,7 +23,7 @@ def serialize(record):
     return orjson.dumps(subset)
 
 
-def patching(record):
+def patching(record: Any) -> None:
     """Add serialized data to log record.
 
     Args:
@@ -32,7 +32,7 @@ def patching(record):
     record["extra"]["serialized"] = serialize(record)
 
 
-def configure(log_level: Optional[str] = None, log_file: Optional[Path] = None):
+def configure(log_level: Optional[str] = None, log_file: Optional[Path] = None) -> None:
     """Configure the logger with specified level and output file.
 
     Args:
@@ -54,11 +54,13 @@ def configure(log_level: Optional[str] = None, log_file: Optional[Path] = None):
     if not log_file:
         cache_dir = os.getenv(const.LOG_PATH_KEY)
         if cache_dir:
-            cache_dir = Path(cache_dir)
+            log_file_path = os.path.join(cache_dir, "link.log")
         else:
-            cache_dir = Path(appdirs.user_cache_dir("sparklink"))
-
-    log_file = log_file / "link.log"
+            cache_dir_path = appdirs.user_cache_dir("sparklink")
+            log_file_path = os.path.join(cache_dir_path, "link.log")
+        log_file = Path(log_file_path)
+    else:
+        log_file = log_file / "link.log"
     print(f"Log file: {log_file}, Log level: {log_level}")
 
     log_file = Path(log_file)

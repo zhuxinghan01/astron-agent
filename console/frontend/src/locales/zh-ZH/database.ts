@@ -60,6 +60,7 @@ const translation = {
   atLeastOneCustomField: '至少添加一个自定义字段',
   save: '保存',
   saveSuccess: '保存成功',
+  saveFailed: '保存失败',
   fieldNameRepeat: '字段名称重复',
   fieldNameConvention: '只能包含小写字母、数字、_，必须以英文字母开头',
   pleaseEnterFieldName: '请输入字段名称',
@@ -100,6 +101,7 @@ const translation = {
   deleteFailed: '删除失败',
   noFileSelected: '请选择文件',
   importFailed: '导入失败',
+  duplicateFieldsIgnored: '重复字段已忽略',
 };
 
 export default translation;

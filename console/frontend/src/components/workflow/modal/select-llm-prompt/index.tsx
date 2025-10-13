@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import useFlowsManager from '@/components/workflow/store/useFlowsManager';
-import { Input, Button, Spin, Tooltip } from 'antd';
+import useFlowsManager from '@/components/workflow/store/use-flows-manager';
+import { Input, Spin, Tooltip } from 'antd';
 import { useDebounce, useMemoizedFn } from 'ahooks';
 import { cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -62,21 +62,6 @@ const SelectPromptToolbar = ({
             placeholder={t('workflow.nodes.selectPrompt.searchPlaceholder')}
           />
         </div>
-        <Button
-          type="primary"
-          className="flex items-center gap-2"
-          onClick={e => {
-            e.stopPropagation();
-            window.open(`${window.location.origin}/prompt`, '_blank');
-          }}
-        >
-          <img
-            className="w-3 h-3"
-            src={Icons.selectLlmPrompt.toolModalAdd}
-            alt=""
-          />
-          <span>{t('workflow.nodes.selectPrompt.createNewPrompt')}</span>
-        </Button>
       </div>
     </div>
   );

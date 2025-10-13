@@ -6,30 +6,17 @@ import {
   aiGenPrologue,
   getBotTemplate,
 } from '@/services/spark-common';
-import { getBotMarketList } from '@/services/agent-square';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Bot, BotMarketPage } from '@/types/agent-square';
+import {
+  HeaderFeedbackModalProps,
+  BotMarketItem,
+  QuickCreateBotResponse,
+} from '@/types/agent-create';
+import { AxiosResponse } from 'axios';
+import { getRandom3 } from '@/utils/agent-create-utils';
 
 import styles from './index.module.scss';
-
-interface HeaderFeedbackModalProps {
-  visible: boolean;
-  onCancel: () => void;
-}
-
-interface BotMarketItem {
-  bot: Bot;
-  [key: string]: any; // 为其他可能存在的属性保留灵活性
-}
-
-interface QuickCreateBotResponse {
-  [key: string]: any;
-}
-
-interface GetBotTemplateResponse {
-  [key: string]: any;
-}
 
 const HeaderFeedbackModal: React.FC<HeaderFeedbackModalProps> = ({
   visible,
@@ -41,10 +28,10 @@ const HeaderFeedbackModal: React.FC<HeaderFeedbackModalProps> = ({
   const [form] = Form.useForm<{ preset_detail: string }>();
   const [tuijian, setTuijian] = useState<BotMarketItem[]>([]);
 
-  const handleSubmit = (values: { preset_detail: string }) => {
+  const handleSubmit = (values: { preset_detail: string }): void => {
     setLoading(true);
     quickCreateBot(values.preset_detail).then(
-      async (res: QuickCreateBotResponse) => {
+      async (res: AxiosResponse<QuickCreateBotResponse>) => {
         await sessionStorage.setItem(
           'botTemplateInfoValue',
           JSON.stringify(res)
@@ -62,10 +49,11 @@ const HeaderFeedbackModal: React.FC<HeaderFeedbackModalProps> = ({
     );
   };
 
-  const aiGen = () => {
+  const aiGen = (): void => {
     const presetDetail = form.getFieldsValue().preset_detail;
     if (!presetDetail) {
-      return message.warning(t('createAgent1.settingCannotBeEmpty'));
+      message.warning(t('createAgent1.settingCannotBeEmpty'));
+      return;
     }
     setLoading(true);
     aiGenPrologue({ name: presetDetail })
@@ -86,46 +74,10 @@ const HeaderFeedbackModal: React.FC<HeaderFeedbackModalProps> = ({
     return;
   };
 
-  const getRandom3 = (arr: (BotMarketItem | undefined)[]): BotMarketItem[] => {
-    // 过滤掉 undefined 值
-    const validItems = arr.filter(
-      (item): item is BotMarketItem => item !== undefined
-    );
-
-    // 如果数组长度不足3，直接返回过滤后的数组
-    if (validItems.length <= 3) {
-      return validItems.slice().sort(() => Math.random() - 0.5);
-    }
-
-    // 创建副本避免修改原数组
-    const copy = [...validItems];
-
-    // Fisher-Yates 洗牌算法的前3步
-    for (let i = 0; i < 3; i++) {
-      const randomIndex = Math.floor(Math.random() * (copy.length - i)) + i;
-
-      // 使用非空断言操作符明确告诉TypeScript这些值不会是undefined
-      const temp = copy[i]!;
-      const randomItem = copy[randomIndex]!;
-
-      copy[i] = randomItem;
-      copy[randomIndex] = temp;
-    }
-
-    // 返回前3个元素
-    return copy.slice(0, 3);
-  };
-
   useEffect(() => {
-    getBotMarketList({
-      searchValue: '',
-      botType: '',
-      official: 1,
-      pageIndex: 1,
-      pageSize: 16,
-    }).then((res: BotMarketPage) => {
-      if (res && res.pageList) {
-        setTuijian(getRandom3(res.pageList));
+    getBotTemplate().then((res: unknown) => {
+      if (res) {
+        setTuijian(getRandom3(res as BotMarketItem[]));
       }
     });
   }, []);
@@ -159,30 +111,30 @@ const HeaderFeedbackModal: React.FC<HeaderFeedbackModalProps> = ({
               </div>
               {tuijian.map(item => (
                 <div
-                  key={item.bot?.botId}
+                  key={item?.id}
                   className={styles.tuijianButton}
                   onClick={() => {
-                    getBotTemplate(item.bot?.botId).then(
-                      async (res: GetBotTemplateResponse | null) => {
-                        if (!res) {
-                          return message.warning(
-                            t('createAgent1.templateDataEmpty')
-                          );
-                        }
+                    getBotTemplate(item?.id).then(async (res: unknown) => {
+                      if (!res) {
+                        return message.warning(
+                          t('createAgent1.templateDataEmpty')
+                        );
+                      }
+                      if (Array.isArray(res) && res?.length > 0) {
                         await sessionStorage.setItem(
                           'botTemplateInfoValue',
-                          JSON.stringify(res)
+                          JSON.stringify(res[0])
                         );
-                        navigate(
-                          '/space/config/base?create=true&quickCreate=true'
-                        );
-                        return;
                       }
-                    );
+                      navigate(
+                        '/space/config/base?create=true&quickCreate=true'
+                      );
+                      return;
+                    });
                   }}
                 >
-                  <Tooltip title={item.bot?.botName} placement="top">
-                    {item.bot?.botName}
+                  <Tooltip title={item?.botName} placement="top">
+                    {item?.botName}
                   </Tooltip>
                 </div>
               ))}

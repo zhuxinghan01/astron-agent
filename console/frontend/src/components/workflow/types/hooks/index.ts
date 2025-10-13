@@ -46,6 +46,7 @@ export interface UseNodeInfoReturn {
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
   isCodeNode: boolean;
+  isDataBaseNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;
   showExceptionFlow: boolean;
@@ -84,6 +85,7 @@ export interface UseNodeFuncReturn {
   ) => void;
   handleAddOutputLine: () => void;
   handleRemoveOutputLine: (outputId: string) => void;
+  isFixedOutputComponentFunc: (output: OutputItem) => boolean;
 }
 
 export interface UseNodeOutputRenderReturn {
@@ -242,7 +244,7 @@ export interface UseNodeCommonReturn {
   isIteratorChildNode: boolean;
   isAgentNode: boolean;
   isStartOrEndNode: boolean;
-  isRpaNode: boolean;
+  isRpaNode?: boolean;
   isCodeNode: boolean;
   showInputs: boolean;
   showOutputs: boolean;
@@ -273,6 +275,7 @@ export interface UseNodeCommonReturn {
 }
 
 export interface UseFlowCommonReturn {
+  startWorkflowKeydownEvent: boolean;
   handleAddNode: (
     addNode: AddNodeType,
     position: PositionType
@@ -318,6 +321,25 @@ export interface UseVariableMemoryHandlersReturn {
     value: unknown
   ) => void;
   handleRemoveInputLine: (inputId: string) => void;
+}
+
+export interface UseAddNodeReturn {
+  handleAddNode: (
+    addNode: AddNodeType,
+    position: PositionType
+  ) => NewNodeType[] | null;
+}
+
+export interface UseAddToolNodeReturn {
+  handleAddToolNode: (tool: ToolType) => void;
+}
+
+export interface UseAddFlowNodeReturn {
+  handleAddFlowNode: (flow: FlowType) => void;
+}
+
+export interface UseAddRpaNodeReturn {
+  handleAddRpaNode: (rpa: RpaNodeParam) => void;
 }
 
 // 重新导出常用的类型以便在hooks中使用

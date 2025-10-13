@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DeleteModal } from './components/modal-component';
 import { useNavigate } from 'react-router-dom';
 import RetractableInput from '@/components/ui/global/retract-table-input';
-import { jumpTologin } from '@/utils/http';
+import { jumpToLogin } from '@/utils/http';
 import { usePluginPage } from './hooks/use-plugin-page';
 
 const PluginPage: FC = () => {
@@ -75,7 +75,7 @@ const PluginPage: FC = () => {
               }}
               onClick={() => {
                 if (!user?.login && !user?.uid) {
-                  return jumpTologin();
+                  return jumpToLogin();
                 }
 
                 navigate('/resource/plugin/create');
@@ -102,7 +102,7 @@ const PluginPage: FC = () => {
                 onClick={() => {
                   if (k.status == 0) {
                     if (!user?.login && !user?.uid) {
-                      return jumpTologin();
+                      return jumpToLogin();
                     }
                     navigate(`/resource/plugin/create?id=${k.id}`);
                   } else {
@@ -127,14 +127,12 @@ const PluginPage: FC = () => {
                       style={{
                         background: k.avatarColor
                           ? k.avatarColor
-                          : `url(${
-                              k.address + k.icon
-                            }) no-repeat center / cover`,
+                          : `url(${k.icon}) no-repeat center / cover`,
                       }}
                     >
                       {k.avatarColor && (
                         <img
-                          src={k.address + k.icon}
+                          src={k.icon || ''}
                           className="w-[28px] h-[28px]"
                           alt=""
                         />
