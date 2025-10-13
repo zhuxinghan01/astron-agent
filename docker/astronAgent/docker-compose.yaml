@@ -474,7 +474,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/workflow/config.env:/opt/openstellar/workflow/config.env
+      - ./config/workflow/config.env:/opt/core/workflow/config.env
+      - ./config/workflow/logs/:/opt/core/logs
     networks:
       - astron-agent-network
     restart: always
