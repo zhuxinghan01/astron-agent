@@ -1459,7 +1459,7 @@ CREATE TABLE `chat_bot_base`
     `background`        varchar(512)     DEFAULT NULL COMMENT 'Background setting',
     `virtual_character` varchar(512)     DEFAULT NULL COMMENT 'Character setting',
     `model`             varchar(32)      DEFAULT 'spark' COMMENT 'Model selected by assistant',
-    `mass_bot_id`       varchar(50)      DEFAULT NULL COMMENT 'mass_bot_id',
+    `maas_bot_id`       varchar(50)      DEFAULT NULL COMMENT 'maas_bot_id',
     `prologue_en`       varchar(1024)    DEFAULT NULL COMMENT 'Opening words - English',
     `input_example_en`  varchar(1024)    DEFAULT NULL COMMENT 'Recommended questions - English',
     `space_id`          bigint           DEFAULT NULL COMMENT 'Space ID',
