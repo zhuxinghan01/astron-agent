@@ -298,8 +298,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/aitools/config.env:/opt/aitools/config.env
-      - ./config/aitools/logs/:/opt/aitools/logs/
+      - ./config/aitools/config.env:/opt/core/plugin/aitools/config.env
+      - ./config/aitools/logs/:/opt/core/plugin/aitools/logs/
     networks:
       - astron-agent-network
     restart: always
