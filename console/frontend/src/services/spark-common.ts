@@ -522,7 +522,7 @@ export const promptBack = (params: any) => {
 /** ## 工作流发布版本列表 */
 export const getVersionList = (params: any) => {
   return http.get(
-    `/workflow/version/list_botId?botId=${params.botId}&size=${params.size}&current=${params.current}`
+    `/publish/bots/${params.botId}/versions?size=${params.size}&page=${params.current}`
   );
 };
 
