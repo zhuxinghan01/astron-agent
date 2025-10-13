@@ -227,7 +227,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/rpa/config.env:/opt/rpa/plugin/rpa/config.env
+      - ./config/rpa/config.env:/opt/core/plugin/rpa/config.env
+      - ./config/rpa/logs/:/opt/core/logs/
     networks:
       - astron-agent-network
     restart: always
@@ -262,8 +263,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/link/config.env:/opt/link/config.env
-      - ./config/link/logs/:/opt/link/logs/
+      - ./config/link/config.env:/opt/core/plugin/link/config.env
+      - ./config/link/logs/:/opt/core/plugin/link/logs/
     networks:
       - astron-agent-network
     restart: always
@@ -297,8 +298,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/aitools/config.env:/opt/aitools/config.env
-      - ./config/aitools/logs/:/opt/aitools/logs/
+      - ./config/aitools/config.env:/opt/core/plugin/aitools/config.env
+      - ./config/aitools/logs/:/opt/core/plugin/aitools/logs/
     networks:
       - astron-agent-network
     restart: always
