@@ -1,5 +1,5 @@
 select 'spark-link DATABASE initialization started' as '';
-CREATE DATABASE IF NOT EXISTS `spark-link`;
+CREATE DATABASE IF NOT EXISTS `spark-link`
 
 USE spark-link;
 
