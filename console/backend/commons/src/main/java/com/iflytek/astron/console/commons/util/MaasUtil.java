@@ -94,7 +94,7 @@ public class MaasUtil {
     @Value("${maas.mcpRegister}")
     private String mcpReleaseUrl;
 
-    public static final String PREFIX_MASS_COPY = "mass_copy_";
+    public static final String PREFIX_MAAS_COPY = "maas_copy_";
     private static final String BOT_TAG_LIST = "bot_tag_list";
 
     @Autowired
@@ -157,16 +157,16 @@ public class MaasUtil {
             if (responseBody != null) {
                 response = responseBody.string();
             } else {
-                log.error("Delete mass workflow request response is empty");
+                log.error("Delete maas workflow request response is empty");
                 return new JSONObject();
             }
         } catch (IOException e) {
-            log.error("Delete mass workflow request failed: {}", e.getMessage());
+            log.error("Delete maas workflow request failed: {}", e.getMessage());
             return new JSONObject();
         }
         JSONObject res = JSON.parseObject(response);
         if (res.getInteger("code") != 0) {
-            log.info("------ Delete mass workflow failed, reason: {}", response);
+            log.info("------ Delete maas workflow failed, reason: {}", response);
             return new JSONObject();
         }
         return res;
@@ -202,7 +202,7 @@ public class MaasUtil {
             // If it's newly created, then it's empty, use POST request
             httpMethod = "POST";
         }
-        log.info("----- mass synchronization request body: {}", JSONObject.toJSONString(param));
+        log.info("----- maas synchronization request body: {}", JSONObject.toJSONString(param));
 
         // Build request body
         RequestBody requestBody = RequestBody.create(
@@ -230,17 +230,17 @@ public class MaasUtil {
             if (responseBody != null) {
                 response = responseBody.string();
             } else {
-                log.error("Synchronize mass workflow request response is empty");
+                log.error("Synchronize maas workflow request response is empty");
                 return new JSONObject();
             }
         } catch (IOException e) {
-            log.error("Synchronize mass workflow request failed: {}", e.getMessage());
+            log.error("Synchronize maas workflow request failed: {}", e.getMessage());
             return new JSONObject();
         }
 
         JSONObject res = JSONObject.parseObject(response);
         if (res.getInteger("code") != 0) {
-            log.error("------ Synchronize mass workflow failed, reason: {}", res);
+            log.error("------ Synchronize maas workflow failed, reason: {}", res);
             return new JSONObject();
         }
         return res;
@@ -298,7 +298,7 @@ public class MaasUtil {
     }
 
     public static String generatePrefix(String uid, Integer botId) {
-        return PREFIX_MASS_COPY + uid + "_" + botId;
+        return PREFIX_MAAS_COPY + uid + "_" + botId;
     }
 
     /**
@@ -400,7 +400,7 @@ public class MaasUtil {
      * @return JSONObject response result
      */
     private JSONObject createApiInternal(String flowId, String appid, String version, JSONObject data) {
-        log.info("----- Publishing mass workflow flowId: {}", flowId);
+        log.info("----- Publishing maas workflow flowId: {}", flowId);
         MaasApi maasApi = new MaasApi(flowId, appid, version, data);
 
         // Execute publish request
@@ -461,7 +461,7 @@ public class MaasUtil {
         log.info("----- {} maas api response: {}", action, responseStr);
         JSONObject res = JSONObject.parseObject(responseStr);
         if (res.getInteger("code") != 0) {
-            log.error("------ Failed to {} maas api, massId: {}, appid: {}, reason: {}", action, flowId, appid, responseStr);
+            log.error("------ Failed to {} maas api, maasId: {}, appid: {}, reason: {}", action, flowId, appid, responseStr);
             throw new BusinessException(ResponseEnum.BOT_API_CREATE_ERROR);
         }
     }
