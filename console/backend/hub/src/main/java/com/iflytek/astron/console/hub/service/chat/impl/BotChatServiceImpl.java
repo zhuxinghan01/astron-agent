@@ -177,7 +177,7 @@ public class BotChatServiceImpl implements BotChatService {
                     List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
                     SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
                     sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, true, false);
-                } else  {
+                } else {
                     maxInputTokens = 32000;
                     List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
                     LLMInfoVo llmInfoVo = new LLMInfoVo();

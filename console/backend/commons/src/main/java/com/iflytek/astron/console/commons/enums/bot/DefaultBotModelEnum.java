@@ -8,7 +8,7 @@ public enum DefaultBotModelEnum {
     X1("星火大模型 Spark X1", "x1", "https://openres.xfyun.cn/xfyundoc/2025-09-24/e9b74fbb-c2d6-4f4a-8c07-0ea7f03ee03a/1758681839941/icon.png"),
     SPARK_4_0("星火大模型 Spark V4.0 Ultra", "spark", "https://openres.xfyun.cn/xfyundoc/2025-09-24/e9b74fbb-c2d6-4f4a-8c07-0ea7f03ee03a/1758681839941/icon.png"),
     DEEPSEEK_V3("DeepSeek-V3", "deepseek-chat", ""),
-    DEEPSEEK_R1("DeepSeek-R1","deepseek-reasoner","");
+    DEEPSEEK_R1("DeepSeek-R1", "deepseek-reasoner", "");
 
     private String name;
     private String domain;
