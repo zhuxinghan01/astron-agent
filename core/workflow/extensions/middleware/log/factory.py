@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 from loguru import logger
 
@@ -37,7 +36,7 @@ class LogServiceFactory(ServiceFactory):
         :return: Configured LogService instance
         """
         log_dir = os.path.join(
-            Path(__file__).parent.parent.parent.parent.parent,
+            "../",
             os.getenv("LOG_PATH", "logs"),
         )
         os.makedirs(log_dir, exist_ok=True)  # Ensure log directory exists
