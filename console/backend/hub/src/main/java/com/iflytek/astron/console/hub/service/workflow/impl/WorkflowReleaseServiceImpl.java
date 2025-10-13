@@ -141,11 +141,13 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
         requestBody.put("flowId", flowId);
 
         String jsonBody = requestBody.toJSONString();
+        String authHeader = getAuthorizationHeader();
 
         Request.Builder requestBuilder = new Request.Builder()
                 .url(baseUrl + GET_VERSION_NAME_URL)
                 .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
-                .addHeader("Content-Type", "application/json");
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", authHeader);
 
         if (spaceId != null) {
             requestBuilder.addHeader("space-id", spaceId.toString());
