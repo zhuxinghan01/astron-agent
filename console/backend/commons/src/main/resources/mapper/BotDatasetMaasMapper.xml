@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iflytek.astron.console.commons.mapper.dataset.BotDatasetMaasMapper">
+
+    <resultMap id="DatasetStatsResultMap" type="com.iflytek.astron.console.commons.dto.dataset.DatasetStats">
+        <result column="bot_id" property="botId"/>
+        <result column="dataset_id" property="datasetId"/>
+        <result column="bot_name" property="name"/>
+        <result column="bot_type" property="botType"/>
+        <result column="bot_status" property="status"/>
+    </resultMap>
+
+    <select id="selectBotStatsMaps" resultMap="DatasetStatsResultMap">
+        SELECT
+            bdm.bot_id,
+            bdm.dataset_id,
+            cb.bot_name,
+            cb.bot_type,
+            CASE
+                WHEN cb.is_delete = 0 THEN 'active'
+                ELSE 'inactive'
+            END as bot_status
+        FROM bot_dataset_maas bdm
+        LEFT JOIN chat_bot_base cb ON bdm.bot_id = cb.id
+        WHERE bdm.dataset_id IN
+        <foreach item="datasetId" index="index" collection="datasetIds" open="(" separator="," close=")">
+            #{datasetId}
+        </foreach>
+        AND bdm.is_act = 1
+        AND cb.is_delete = 0
+    </select>
+
+</mapper>
