@@ -354,6 +354,7 @@ class FlowNode(BaseNode):
                     item if isinstance(item, dict) else item.__dict__
                     for item in history_v2.origin_history
                 ]
+        origin_inputs = copy.deepcopy(inputs)
 
         # Add chat history to inputs if available
         if history:
@@ -363,7 +364,7 @@ class FlowNode(BaseNode):
         req_body = {
             "flow_id": self.flowId,
             "uid": self.uid,
-            "parameters": inputs,
+            "parameters": origin_inputs,
             "ext": {},
             "stream": True,
             "history": history,

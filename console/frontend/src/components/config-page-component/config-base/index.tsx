@@ -348,6 +348,7 @@ const BaseConfig: React.FC<ChatProps> = ({
         .join(','),
       prologue: prologue,
       model: model,
+      modelId: modelOptions?.find(item => item.modelDomain === model)?.modelId,
       isCustom: modelOptions?.find(item => item.modelDomain === model)
         ?.isCustom,
       prompt: prompt,
@@ -1070,6 +1071,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      modelId: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.modelId,
                       isCustom: modelOptions?.find(
                         item => item.modelDomain === model
                       )?.isCustom,
@@ -1122,6 +1126,9 @@ const BaseConfig: React.FC<ChatProps> = ({
                         .join(','),
                       prologue: prologue,
                       model: model,
+                      modelId: modelOptions?.find(
+                        item => item.modelDomain === model
+                      )?.modelId,
                       isCustom: modelOptions?.find(
                         item => item.modelDomain === model
                       )?.isCustom,
