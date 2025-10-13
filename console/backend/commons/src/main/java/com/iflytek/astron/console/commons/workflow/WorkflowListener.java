@@ -202,6 +202,11 @@ public class WorkflowListener extends EventSourceListener {
     public void onFailure(@NotNull EventSource eventSource, Throwable t, Response response) {
         log.error(".....MaasListener failed to establish connection with chain-sse....., sseId: {}, uid: {}, chatId: {}", sseId, chatReqRecords.getUid(), chatReqRecords.getChatId(), t);
         // Close current websocket connection
+        try {
+            log.error("Response: {}", response.body().string());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         if (chainClient != null) {
             chainClient.closeSse();
         }

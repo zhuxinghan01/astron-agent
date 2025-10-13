@@ -111,11 +111,16 @@ class BotChatServiceImplUnitTest {
         ChatBotMarket chatBotMarket = createChatBotMarket();
         chatBotMarket.setModelId(null);
         chatBotMarket.setVersion(1);
-        chatBotMarket.setSupportDocument(1); // Enable knowledge base support
+        chatBotMarket.setSupportDocument(0); // Disable knowledge base support for this test
 
         ChatReqRecords createdRecord = createChatReqRecords();
         List<String> knowledgeList = Arrays.asList("knowledge1", "knowledge2");
         List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
+        // Add current ask message that will be removed by the code
+        SparkChatRequest.MessageDto currentAskMessage = new SparkChatRequest.MessageDto();
+        currentAskMessage.setRole("user");
+        currentAskMessage.setContent("test question");
+        historyMessages.add(currentAskMessage);
 
         when(chatBotDataService.findMarketBotByBotId(anyInt())).thenReturn(chatBotMarket);
         when(chatDataService.createRequest(any())).thenReturn(createdRecord);
@@ -146,6 +151,11 @@ class BotChatServiceImplUnitTest {
         ChatReqRecords createdRecord = createChatReqRecords();
         List<String> knowledgeList = Arrays.asList("knowledge1", "knowledge2");
         List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
+        // Add current ask message that will be removed by the code
+        SparkChatRequest.MessageDto currentAskMessage = new SparkChatRequest.MessageDto();
+        currentAskMessage.setRole("user");
+        currentAskMessage.setContent("test question");
+        historyMessages.add(currentAskMessage);
         LLMInfoVo llmInfoVo = createLLMInfoVo();
 
         when(chatBotDataService.findMarketBotByBotId(anyInt())).thenReturn(chatBotMarket);
@@ -205,6 +215,11 @@ class BotChatServiceImplUnitTest {
         ChatReqRecords createdRecord = createChatReqRecords();
         List<String> knowledgeList = Arrays.asList("knowledge1", "knowledge2");
         List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
+        // Add current ask message that will be removed by the code
+        SparkChatRequest.MessageDto currentAskMessage = new SparkChatRequest.MessageDto();
+        currentAskMessage.setRole("user");
+        currentAskMessage.setContent("test question");
+        historyMessages.add(currentAskMessage);
 
         when(chatBotDataService.findMarketBotByBotId(anyInt())).thenReturn(null);
         when(chatBotDataService.findById(anyInt())).thenReturn(Optional.of(chatBotBase));
@@ -248,6 +263,19 @@ class BotChatServiceImplUnitTest {
         ChatBotMarket chatBotMarket = createChatBotMarket();
         chatBotMarket.setModelId(null);
         List<SparkChatRequest.MessageDto> historyMessages = new ArrayList<>();
+        // Add current ask message and previous Q&A that will be removed by the code (edit mode)
+        SparkChatRequest.MessageDto prevQuestion = new SparkChatRequest.MessageDto();
+        prevQuestion.setRole("user");
+        prevQuestion.setContent("previous question");
+        historyMessages.add(prevQuestion);
+        SparkChatRequest.MessageDto prevAnswer = new SparkChatRequest.MessageDto();
+        prevAnswer.setRole("assistant");
+        prevAnswer.setContent("previous answer");
+        historyMessages.add(prevAnswer);
+        SparkChatRequest.MessageDto currentAskMessage = new SparkChatRequest.MessageDto();
+        currentAskMessage.setRole("user");
+        currentAskMessage.setContent("test question");
+        historyMessages.add(currentAskMessage);
 
         when(chatDataService.findRequestById(requestId)).thenReturn(chatReqRecords);
         when(chatBotDataService.findMarketBotByBotId(botId)).thenReturn(chatBotMarket);
@@ -261,7 +289,7 @@ class BotChatServiceImplUnitTest {
 
         // Then
         verify(chatDataService).findRequestById(requestId);
-        verify(sparkChatService).chatStream(any(SparkChatRequest.class), eq(sseEmitter), eq(sseId), eq(chatReqRecords), eq(false), eq(false));
+        verify(sparkChatService).chatStream(any(SparkChatRequest.class), eq(sseEmitter), eq(sseId), eq(chatReqRecords), eq(true), eq(false));
     }
 
     @Test
@@ -272,7 +300,7 @@ class BotChatServiceImplUnitTest {
         List<String> messages = Arrays.asList("message1", "message2");
         String uid = "test-uid";
         String openedTool = "ifly_search";
-        String model = "test-model";
+        String model = "x1";
         Long modelId = null;
         List<String> maasDatasetList = Arrays.asList("dataset1");
         SseEmitter sseEmitter = new SseEmitter();
@@ -438,7 +466,7 @@ class BotChatServiceImplUnitTest {
         market.setBotStatus(ShelfStatusEnum.ON_SHELF.getCode());
         market.setPrompt("test prompt");
         market.setSupportContext(1);
-        market.setModel("test-model");
+        market.setModel("x1");  // Use Spark model to trigger sparkChatService
         market.setOpenedTool("ifly_search");
         market.setVersion(1);
         market.setModelId(null);
@@ -453,7 +481,7 @@ class BotChatServiceImplUnitTest {
                 .botName("Test Bot")
                 .prompt("test prompt")
                 .supportContext(1)
-                .model("test-model")
+                .model("x1")  // Use Spark model to trigger sparkChatService
                 .openedTool("ifly_search")
                 .version(1)
                 .modelId(null)
