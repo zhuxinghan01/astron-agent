@@ -35,6 +35,9 @@ cd docker/casdoor
 # 修改环境变量配置
 vim conf/app.conf
 
+# 设置日志目录权限（重要！）
+chmod -R 777 logs
+
 # 启动 Casdoor 服务
 docker-compose up -d
 
