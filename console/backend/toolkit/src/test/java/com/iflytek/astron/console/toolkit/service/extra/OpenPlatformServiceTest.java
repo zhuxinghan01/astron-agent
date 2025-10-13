@@ -10,7 +10,6 @@ import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
 import com.iflytek.astron.console.toolkit.config.properties.CommonConfig;
 import com.iflytek.astron.console.toolkit.tool.OpenPlatformTool;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
-import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
