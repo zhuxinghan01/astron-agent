@@ -97,6 +97,8 @@ public class MaasUtil {
     public static final String PREFIX_MAAS_COPY = "maas_copy_";
     private static final String BOT_TAG_LIST = "bot_tag_list";
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+
     @Autowired
     private UserLangChainDataService userLangChainDataService;
 
@@ -468,14 +470,13 @@ public class MaasUtil {
     }
 
 
-    public JSONObject copyWorkFlow(Long maasId, String uid) {
+    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request) {
         log.info("----- Copying maas workflow id: {}", maasId);
         HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl + "/workflow/internal-clone");
         if (baseUrl == null) {
             log.error("Failed to parse clone workflow URL: {}", cloneWorkFlowUrl);
             throw new BusinessException(ResponseEnum.CLONE_BOT_FAILED);
         }
-        Map<String, String> pubAuth = AuthStringUtil.authMap(baseUrl.toString(), "POST", consumerKey, consumerSecret, "");
         HttpUrl httpUrl = baseUrl.newBuilder()
                 .addQueryParameter("id", String.valueOf(maasId))
                 .addQueryParameter("password", "xfyun")
@@ -484,7 +485,7 @@ public class MaasUtil {
                 .url(httpUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .headers(Headers.of(pubAuth))
+                .addHeader(AUTHORIZATION_HEADER, MaasUtil.getAuthorizationHeader(request))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .get()
                 .build();

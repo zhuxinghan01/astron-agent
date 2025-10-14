@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
+import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
-import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
@@ -18,6 +18,7 @@ import com.iflytek.astron.console.hub.entity.maas.MaasTemplate;
 import com.iflytek.astron.console.hub.entity.maas.WorkflowTemplateQueryDto;
 import com.iflytek.astron.console.hub.mapper.MaasTemplateMapper;
 import com.iflytek.astron.console.hub.service.workflow.BotMaasService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,7 @@ public class BotMaasServiceImpl implements BotMaasService {
     private MaasTemplateMapper maasTemplateMapper;
 
     @Override
-    public BotInfoDto createFromTemplate(String uid, MaasDuplicate maasDuplicate) {
+    public BotInfoDto createFromTemplate(String uid, MaasDuplicate maasDuplicate, HttpServletRequest request) {
         Long spaceId = SpaceInfoUtil.getSpaceId();
         // Create an event, consumed by /maasCopySynchronize
         Long maasId = maasDuplicate.getMaasId();
@@ -67,7 +68,7 @@ public class BotMaasServiceImpl implements BotMaasService {
             throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
         }
         // Copy a new workflow for the assistant
-        JSONObject res = maasUtil.copyWorkFlow(maasDuplicate.getMaasId(), uid);
+        JSONObject res = maasUtil.copyWorkFlow(maasDuplicate.getMaasId(), request);
         if (Objects.isNull(res) || res.isEmpty()) {
             throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
         }
