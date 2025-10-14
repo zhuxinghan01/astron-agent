@@ -80,13 +80,8 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final WorkflowVersionConverter workflowVersionConverter;
 
     // Statistics data related
-<<<<<<< Updated upstream
-    private final BotDashboardCountLogMapper botDashboardCountLogMapper;
-    
-=======
     private final BotConversationStatsMapper botConversationStatsMapper;
 
->>>>>>> Stashed changes
     // MaaS API related
     private final ChatBotApiMapper chatBotApiMapper;
 
@@ -270,9 +265,9 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     @Override
     public void recordDashboardCountLog(String uid, Long spaceId, Integer botId, Long chatId,
-            String sid, Integer tokenConsumed, Integer messageRounds) {
-        log.info("Record conversation stats: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}, messageRounds={}",
-                uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
+            String sid, Integer tokenConsumed) {
+        log.info("Record conversation statistics: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}",
+                uid, spaceId, botId, chatId, tokenConsumed);
 
         try {
             BotConversationStats conversationStats = BotConversationStats.createBuilder()
@@ -282,18 +277,17 @@ public class BotPublishServiceImpl implements BotPublishService {
                     .chatId(chatId)
                     .sid(sid)
                     .tokenConsumed(tokenConsumed)
-                    .messageRounds(messageRounds)
                     .build();
             int result = botConversationStatsMapper.insert(conversationStats);
 
             if (result > 0) {
-                log.info("Conversation stats recorded successfully: chatId={}, statsId={}", chatId, conversationStats.getId());
+                log.info("Conversation statistics recorded successfully: chatId={}, statsId={}", chatId, conversationStats.getId());
 
             } else {
-                log.warn("Conversation stats record failed: chatId={}", chatId);
+                log.warn("Conversation statistics record failed: chatId={}", chatId);
             }
         } catch (Exception e) {
-            log.error("Record conversation stats exception: chatId={}", chatId, e);
+            log.error("Record conversation statistics exception: chatId={}", chatId, e);
         }
     }
 

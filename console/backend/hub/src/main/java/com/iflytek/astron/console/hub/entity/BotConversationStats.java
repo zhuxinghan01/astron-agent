@@ -52,11 +52,6 @@ public class BotConversationStats {
     private Integer tokenConsumed;
 
     /**
-     * Message rounds in this conversation
-     */
-    private Integer messageRounds;
-
-    /**
      * Conversation date
      */
     private LocalDate conversationDate;
@@ -111,11 +106,6 @@ public class BotConversationStats {
             return this;
         }
 
-        public Builder messageRounds(Integer messageRounds) {
-            instance.messageRounds = messageRounds;
-            return this;
-        }
-
         public Builder conversationDate(LocalDate conversationDate) {
             instance.conversationDate = conversationDate;
             return this;
@@ -140,9 +130,6 @@ public class BotConversationStats {
             }
             if (instance.isDelete == null) {
                 instance.isDelete = 0;
-            }
-            if (instance.messageRounds == null) {
-                instance.messageRounds = 1;
             }
             if (instance.tokenConsumed == null) {
                 instance.tokenConsumed = 0;

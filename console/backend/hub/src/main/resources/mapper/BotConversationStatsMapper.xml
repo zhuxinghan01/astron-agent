@@ -8,7 +8,7 @@
             COALESCE(SUM(token_consumed), 0) as totalTokens,
             COALESCE(COUNT(DISTINCT chat_id), 0) as totalChats,
             COALESCE(COUNT(DISTINCT uid), 0) as totalUsers,
-            COALESCE(SUM(message_rounds), 0) as totalMessages
+            COALESCE(COUNT(*), 0) as totalMessages
         FROM bot_conversation_stats 
         WHERE bot_id = #{botId}
           AND is_delete = 0
@@ -26,7 +26,7 @@
             conversation_date as date,
             COALESCE(COUNT(DISTINCT uid), 0) as userCount,
             COALESCE(SUM(token_consumed), 0) as tokenCount,
-            COALESCE(SUM(message_rounds), 0) as messageCount,
+            COALESCE(COUNT(*), 0) as messageCount,
             COALESCE(COUNT(DISTINCT chat_id), 0) as chatCount
         FROM bot_conversation_stats 
         WHERE bot_id = #{botId}
