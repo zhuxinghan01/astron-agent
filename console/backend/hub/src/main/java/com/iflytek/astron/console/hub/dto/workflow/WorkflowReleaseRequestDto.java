@@ -37,4 +37,18 @@ public class WorkflowReleaseRequestDto {
      * Version name
      */
     private String name;
+
+    /**
+     * 版本号（时间戳格式）
+     */
+    private String versionNum;
+
+    // Manual setter for versionNum in case Lombok doesn't generate it
+    public void setVersionNum(String versionNum) {
+        this.versionNum = versionNum;
+    }
+
+    public String getVersionNum() {
+        return versionNum;
+    }
 }
