@@ -425,11 +425,9 @@ public class MaasUtil {
      * @return String representation of response content
      */
     private String executeRequest(String url, MaasApi bodyData) {
-        Map<String, String> authMap = AuthStringUtil.authMap(url, "POST", consumerKey, consumerSecret, JSONObject.toJSONString(bodyData));
         RequestBody requestBody = RequestBody.create(
                 JSONObject.toJSONString(bodyData),
                 MediaType.parse("application/json; charset=utf-8"));
-
         Request request = new Request.Builder()
                 .url(url)
                 .post(requestBody)
@@ -438,7 +436,7 @@ public class MaasUtil {
                 .addHeader("Authorization", "Bearer %s:%s".formatted(consumerKey, consumerSecret))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .build();
-        log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), JSONObject.toJSONString(authMap), request.headers());
+        log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), request, request.headers());
         try (Response httpResponse = HTTP_CLIENT.newCall(request).execute()) {
             ResponseBody responseBody = httpResponse.body();
             if (responseBody != null) {
@@ -486,7 +484,7 @@ public class MaasUtil {
                 .url(httpUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .addHeader("Authorization", "Bearer %s:%s".formatted(consumerKey, consumerSecret))
+                .headers(Headers.of(pubAuth))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .get()
                 .build();
