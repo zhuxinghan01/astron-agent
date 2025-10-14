@@ -385,7 +385,7 @@ public class MaasUtil {
      * @param flowId  Workflow ID
      * @param appid   Application ID
      * @param version Version number
-     * @param data Version data (not used in publish request)
+     * @param data    Version data (not used in publish request)
      * @return JSONObject response result
      */
     public JSONObject createApi(String flowId, String appid, String version, JSONObject data) {
@@ -486,7 +486,7 @@ public class MaasUtil {
                 .url(httpUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .headers(Headers.of(pubAuth))
+                .addHeader("Authorization", "Bearer %s:%s".formatted(consumerKey, consumerSecret))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .get()
                 .build();
