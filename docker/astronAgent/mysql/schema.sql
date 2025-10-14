@@ -8438,19 +8438,19 @@ CREATE TABLE `req_knowledge_records`
 -- Table structure for rpa_info
 -- ----------------------------
 DROP TABLE IF EXISTS `rpa_info`;
-CREATE TABLE `rpa_info`
-(
-    `id`          bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
-    `category`    varchar(64)   DEFAULT NULL COMMENT 'RPA category',
-    `name`        varchar(255)  DEFAULT NULL COMMENT 'RPA name',
-    `value`       text COMMENT 'Configuration content',
-    `is_deleted`  tinyint       DEFAULT '0' COMMENT 'Whether effective, 0-invalid, 1-valid',
-    `remarks`     varchar(1000) DEFAULT NULL COMMENT 'Notes, remarks',
-    `icon`        varchar(150)  DEFAULT NULL,
-    `create_time` datetime      DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
-    `update_time` datetime      DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='RPA configuration table';
+CREATE TABLE `rpa_info` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `category` varchar(64) DEFAULT NULL COMMENT 'RPA category',
+  `name` varchar(255) DEFAULT NULL COMMENT 'RPA name',
+  `value` text COMMENT 'Configuration content',
+  `is_deleted` tinyint DEFAULT '0' COMMENT 'Whether effective, 0-invalid, 1-valid',
+  `remarks` varchar(1000) DEFAULT NULL COMMENT 'Notes, remarks',
+  `icon` varchar(150) DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
+  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
+  `path` varchar(100) DEFAULT NULL COMMENT '平台官网地址',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='RPA configuration table';
 
 INSERT INTO rpa_info (category, name, value, is_deleted, remarks, icon, create_time, update_time, `path`) VALUES('xiaowu', '晓悟RPA', '[
     {
