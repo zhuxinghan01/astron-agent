@@ -28,7 +28,7 @@ astronAgent 项目包含以下三个主要组件：
 
 Casdoor 是一个开源的身份和访问管理平台，提供OAuth 2.0、OIDC、SAML等多种认证协议支持。
 
-启动 Casdoor 服务器请运行我们的 [docker-compose.yaml](/docker/casdoor/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
+启动 Casdoor 服务请运行我们的 [docker-compose.yaml](/docker/casdoor/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
 ```bash
 # 进入 Casdoor 目录
@@ -66,7 +66,7 @@ docker-compose logs -f
 
 RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档理解技术提供准确的问答服务。
 
-启动 RagFlow 服务器请运行我们的 [docker-compose.yml](/docker/ragflow/docker-compose.yml) 文件或 [docker-compose-macos.yml](/docker/ragflow/docker-compose-macos.yml) 。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
+启动 RagFlow 服务请运行我们的 [docker-compose.yml](/docker/ragflow/docker-compose.yml) 文件或 [docker-compose-macos.yml](/docker/ragflow/docker-compose-macos.yml) 。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
 ```bash
 # 进入 RagFlow 目录
@@ -93,9 +93,17 @@ docker-compose logs -f ragflow
 
 在启动 astronAgent 服务之前，根据需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
 
+```bash
+# 进入 astronAgent 目录
+cd docker/astronAgent
+
+# 复制环境变量配置
+cp .env.example .env
+```
+
 #### 3.1 配置知识库服务连接
 
-编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，配置 RagFlow 连接信息：
+编辑 docker/astronAgent/.env 文件，配置 RagFlow 连接信息：
 
 **关键配置项：**
 
@@ -115,7 +123,7 @@ RAGFLOW_DEFAULT_GROUP=星辰知识库
 
 #### 3.2 配置 Casdoor 认证集成
 
-编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，配置 Casdoor 连接信息：
+编辑 docker/astronAgent/.env 文件，配置 Casdoor 连接信息：
 
 **关键配置项：**
 
@@ -145,7 +153,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 - 语音转写API: https://www.xfyun.cn/services/lfasr
 - 图片生成API: https://www.xfyun.cn/services/wtop
 
-最后编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，更新相关环境变量：
+最后编辑 docker/astronAgent/.env 文件，更新相关环境变量：
 ```env
 PLATFORM_APP_ID=your-app-id
 PLATFORM_API_KEY=your-api-key
@@ -154,13 +162,11 @@ PLATFORM_API_SECRET=your-api-secret
 SPARK_API_PASSWORD=your-api-password
 ```
 
+启动 astronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
 ```bash
 # 进入 astronAgent 目录
 cd docker/astronAgent
-
-# 复制环境变量配置
-cp .env.example .env
 
 # 根据需要修改配置
 vim .env
@@ -183,18 +189,10 @@ docker-compose logs -f
 - **Casdoor 管理界面**：http://localhost:8000
 
 ### 知识库服务
-- **RagFlow Web界面**：http://localhost:9380
+- **RagFlow Web界面**：http://localhost/
 
 ### AstronAgent 核心服务
-- **控制台前端(nginx代理)**：http://localhost:80
-
-### 中间件服务
-- **PostgreSQL**：localhost:5432
-- **MySQL**：localhost:3306
-- **Redis**：localhost:6379
-- **Elasticsearch**：localhost:9200
-- **Kafka**：localhost:9092
-- **MinIO**：localhost:9000
+- **控制台前端(nginx代理)**：http://localhost:10080
 
 ## 📚 更多资源
 
