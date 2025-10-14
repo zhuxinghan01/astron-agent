@@ -804,6 +804,9 @@ def _filter_response_frame(
 
     if is_stop:
         response_frame.workflow_step.seq = last_workflow_step.seq + 1
+        if not is_stream:
+            delta.content = "".join(message_cache)
+            delta.reasoning_content = "".join(reasoning_content_cache)
         return response_frame
 
     # Only process specific node types (flow_obj or MESSAGE/END/QUESTION_ANSWER)
@@ -828,11 +831,7 @@ def _filter_response_frame(
     )
 
     if not is_stream and not is_interrupted:
-        if is_stop:
-            delta.content = "".join(message_cache)
-            delta.reasoning_content = "".join(reasoning_content_cache)
-        else:
-            return None
+        return None
 
     # Standardize index
     choice.index = 0
@@ -889,7 +888,7 @@ def _cache_content_and_reasoning_content(
     :param reasoning_content_cache: Cached reasoning content for non-streaming mode
     :return: None
     """
-    if is_stream:
+    if not is_stream:
         message_cache.append(response_frame.choices[0].delta.content)
         reasoning_content_cache.append(
             response_frame.choices[0].delta.reasoning_content
