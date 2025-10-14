@@ -355,10 +355,9 @@ public class BotAIServiceImpl implements BotAIService {
             String botName = null, botTypeName = null, botDesc = null;
             String roleDesc = null, targetTask = null, requirement = null, inputExample = null;
 
-            for (String line : lines) {
-                line = line.trim();
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim();
 
-                // Check each field mapping
                 if (matchesFieldMapping(line, fieldMappings.get("assistant_name"))) {
                     botName = extractValue(line);
                 } else if (matchesFieldMapping(line, fieldMappings.get("assistant_category"))) {
@@ -372,7 +371,34 @@ public class BotAIServiceImpl implements BotAIService {
                 } else if (matchesFieldMapping(line, fieldMappings.get("requirement_description"))) {
                     requirement = extractValue(line);
                 } else if (matchesFieldMapping(line, fieldMappings.get("input_examples"))) {
-                    inputExample = extractValue(line);
+                    StringBuilder exampleBuilder = new StringBuilder(extractValue(line));
+
+                    for (int j = i + 1; j < lines.length; j++) {
+                        String nextLine = lines[j].trim();
+                        if (StringUtils.isBlank(nextLine)) {
+                            continue;
+                        }
+
+                        boolean isNextField = false;
+                        for (List<String> patterns : fieldMappings.values()) {
+                            if (matchesFieldMapping(nextLine, patterns)) {
+                                isNextField = true;
+                                break;
+                            }
+                        }
+
+                        if (isNextField) {
+                            break;
+                        }
+
+                        if (exampleBuilder.length() > 0) {
+                            exampleBuilder.append("\n");
+                        }
+                        exampleBuilder.append(nextLine);
+                        i = j;
+                    }
+
+                    inputExample = exampleBuilder.toString();
                 }
             }
 
@@ -415,14 +441,21 @@ public class BotAIServiceImpl implements BotAIService {
 
             // Process input examples
             if (StringUtils.isNotBlank(inputExample)) {
-                String[] examples = inputExample.replace("||", "|").split("\\|");
-                List<String> exampleList = new ArrayList<>();
-                for (String example : examples) {
-                    if (StringUtils.isNotBlank(example.trim()) && exampleList.size() < 3) {
-                        exampleList.add(example.trim());
+                List<String> exampleList;
+
+                if (inputExample.contains("|")) {
+                    String[] examples = inputExample.replace("||", "|").split("\\|");
+                    exampleList = new ArrayList<>();
+                    for (String example : examples) {
+                        if (StringUtils.isNotBlank(example.trim()) && exampleList.size() < 3) {
+                            exampleList.add(example.trim());
+                        }
                     }
+                } else {
+                    exampleList = parseNumberedExamples(inputExample);
                 }
-                botDetail.setInputExample(exampleList);
+
+                botDetail.setInputExample(exampleList.size() > 3 ? exampleList.subList(0, 3) : exampleList);
             } else {
                 botDetail.setInputExample(new ArrayList<>());
             }
@@ -707,8 +740,14 @@ public class BotAIServiceImpl implements BotAIService {
         if (m.find()) {
             for (int i = 1; i <= 3; i++) {
                 String seg = StringUtils.trimToEmpty(m.group(i));
-                // Cut potential trailing numbering accidentally captured
                 seg = seg.replaceAll("(?s)\\n\\s*[1-9]\\.\\s*.*$", "").trim();
+
+                if (seg.startsWith("\"") && seg.endsWith("\"") && seg.length() > 1) {
+                    seg = seg.substring(1, seg.length() - 1).trim();
+                } else if (seg.startsWith("'") && seg.endsWith("'") && seg.length() > 1) {
+                    seg = seg.substring(1, seg.length() - 1).trim();
+                }
+
                 if (StringUtils.isNotBlank(seg)) {
                     result.add(seg);
                 }
@@ -725,8 +764,14 @@ public class BotAIServiceImpl implements BotAIService {
             String s = StringUtils.trimToEmpty(line);
             if (s.isEmpty())
                 continue;
-            // leading numbering or dash
             s = s.replaceFirst("^\\s*(?:[0-9]+[\\.)]|[-•])\\s*", "").trim();
+
+            if (s.startsWith("\"") && s.endsWith("\"") && s.length() > 1) {
+                s = s.substring(1, s.length() - 1).trim();
+            } else if (s.startsWith("'") && s.endsWith("'") && s.length() > 1) {
+                s = s.substring(1, s.length() - 1).trim();
+            }
+
             if (!s.isEmpty()) {
                 result.add(s);
             }
