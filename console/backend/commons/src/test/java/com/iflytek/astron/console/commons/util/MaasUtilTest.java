@@ -173,7 +173,7 @@ class MaasUtilTest {
 
         String result = MaasUtil.generatePrefix(uid, botId);
 
-        assertEquals("mass_copy_user123_456", result);
+        assertEquals("maas_copy_user123_456", result);
     }
 
     @Test
