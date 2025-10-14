@@ -81,7 +81,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     // Statistics data related
     private final BotDashboardCountLogMapper botDashboardCountLogMapper;
-    
+
     // MaaS API related
     private final ChatBotApiMapper chatBotApiMapper;
 
@@ -143,7 +143,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         String maasId = getMaasIdByBotId(botId);
         detailDto.setMaasId(maasId);
 
-        log.info("Bot details query completed: botId={}, channels={}, maasId={}", 
+        log.info("Bot details query completed: botId={}, channels={}, maasId={}",
                 botId, detailDto.getPublishChannels(), maasId);
         return detailDto;
     }
@@ -153,17 +153,17 @@ public class BotPublishServiceImpl implements BotPublishService {
     // ==================== MaaS Integration ====================
 
     /**
-     * Get MaaS App ID by Bot ID
-     * Query chat_bot_api table to find appId, fallback to configured maas appId
+     * Get MaaS App ID by Bot ID Query chat_bot_api table to find appId, fallback to configured maas
+     * appId
      */
     private String getMaasIdByBotId(Integer botId) {
         try {
             LambdaQueryWrapper<ChatBotApi> queryWrapper = new LambdaQueryWrapper<ChatBotApi>()
                     .eq(ChatBotApi::getBotId, botId)
                     .last("LIMIT 1");
-            
+
             ChatBotApi chatBotApi = chatBotApiMapper.selectOne(queryWrapper);
-            
+
             if (chatBotApi != null && chatBotApi.getAppId() != null) {
                 log.debug("Found maasId for botId {}: {}", botId, chatBotApi.getAppId());
                 return chatBotApi.getAppId();
