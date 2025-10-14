@@ -97,6 +97,8 @@ public class MaasUtil {
     public static final String PREFIX_MAAS_COPY = "maas_copy_";
     private static final String BOT_TAG_LIST = "bot_tag_list";
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+
     @Autowired
     private UserLangChainDataService userLangChainDataService;
 
@@ -385,7 +387,7 @@ public class MaasUtil {
      * @param flowId Workflow ID
      * @param appid Application ID
      * @param version Version number
-     * @param data Version data (not used in publish request)
+     * @param data    Version data (not used in publish request)
      * @return JSONObject response result
      */
     public JSONObject createApi(String flowId, String appid, String version, JSONObject data) {
@@ -425,11 +427,9 @@ public class MaasUtil {
      * @return String representation of response content
      */
     private String executeRequest(String url, MaasApi bodyData) {
-        Map<String, String> authMap = AuthStringUtil.authMap(url, "POST", consumerKey, consumerSecret, JSONObject.toJSONString(bodyData));
         RequestBody requestBody = RequestBody.create(
                 JSONObject.toJSONString(bodyData),
                 MediaType.parse("application/json; charset=utf-8"));
-
         Request request = new Request.Builder()
                 .url(url)
                 .post(requestBody)
@@ -438,7 +438,7 @@ public class MaasUtil {
                 .addHeader("Authorization", "Bearer %s:%s".formatted(consumerKey, consumerSecret))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .build();
-        log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), JSONObject.toJSONString(authMap), request.headers());
+        log.info("MaasUtil executeRequest url: {} request: {}, header: {}", request.url(), request, request.headers());
         try (Response httpResponse = HTTP_CLIENT.newCall(request).execute()) {
             ResponseBody responseBody = httpResponse.body();
             if (responseBody != null) {
@@ -470,14 +470,13 @@ public class MaasUtil {
     }
 
 
-    public JSONObject copyWorkFlow(Long maasId, String uid) {
+    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request) {
         log.info("----- Copying maas workflow id: {}", maasId);
         HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl + "/workflow/internal-clone");
         if (baseUrl == null) {
             log.error("Failed to parse clone workflow URL: {}", cloneWorkFlowUrl);
             throw new BusinessException(ResponseEnum.CLONE_BOT_FAILED);
         }
-        Map<String, String> pubAuth = AuthStringUtil.authMap(baseUrl.toString(), "POST", consumerKey, consumerSecret, "");
         HttpUrl httpUrl = baseUrl.newBuilder()
                 .addQueryParameter("id", String.valueOf(maasId))
                 .addQueryParameter("password", "xfyun")
@@ -486,7 +485,7 @@ public class MaasUtil {
                 .url(httpUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
-                .headers(Headers.of(pubAuth))
+                .addHeader(AUTHORIZATION_HEADER, MaasUtil.getAuthorizationHeader(request))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .get()
                 .build();

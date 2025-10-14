@@ -3,7 +3,6 @@ package com.iflytek.astron.console.hub.service.publish.impl;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
-import com.iflytek.astron.console.commons.entity.bot.DatasetInfo;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.entity.user.AppMst;
 import com.iflytek.astron.console.commons.exception.BusinessException;
@@ -30,9 +29,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -45,6 +44,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PublishApiServiceImpl implements PublishApiService {
+
+
+    @Value("${maas.botApiCbmBaseUrl}")
+    private String botApiCbmBaseUrl;
+
+    @Value("${maas.botApiMaasBaseUrl}")
+    private String botApiMaasBaseUrl;
 
     @Autowired
     private AppMstService appMstService;
@@ -75,9 +81,7 @@ public class PublishApiServiceImpl implements PublishApiService {
 
     private static final String PUBLISH_API = "publish_api";
 
-    private static final String BOT_API_CBM_BASE_URL = "ws(s)://spark-openapi.cn-huabei-1.xf-yun.com";
-
-    private static final String BOT_API_MAAS_BASE_URL = "http(s)://xingchen-api.xf-yun.com";
+    private static final String BOT_API_MAAS_URL = "/workflow/v1/chat/completions";
 
     @Override
     public Boolean createApp(CreateAppVo createAppVo) {
@@ -129,12 +133,10 @@ public class PublishApiServiceImpl implements PublishApiService {
             throw new BusinessException(ResponseEnum.BOT_API_CREATE_LIMIT_ERROR);
         }
         try {
-            if (botBase.getVersion().equals(BotVersionEnum.BASE_BOT.getVersion())) {
-                return createBaseBotApi(uid, appMst, botBase);
-            } else if (botBase.getVersion().equals(BotVersionEnum.WORKFLOW.getVersion())) {
+            if (botBase.getVersion().equals(BotVersionEnum.WORKFLOW.getVersion())) {
                 return createMaasApi(uid, appMst, botBase, request);
             } else {
-                throw new BusinessException(ResponseEnum.BOT_TYPE_NOT_EXISTS);
+                throw new BusinessException(ResponseEnum.BOT_TYPE_NOT_SUPPORT);
             }
         } catch (Exception e) {
             log.error("PublishApiServiceImpl.createBotApi : create Bot api error, request: {}", createBotApiVo, e);
@@ -158,13 +160,13 @@ public class PublishApiServiceImpl implements PublishApiService {
         }
         ChatBotApi botApi = chatBotApiService.getOneByUidAndBotId(uid, botId);
         if (Objects.isNull(botApi)) {
-            throw new BusinessException(ResponseEnum.USER_APP_ID_NOT_EXISTE);
+            throw new BusinessException(ResponseEnum.USER_API_ID_NOT_EXISTE);
         }
         AppMst appMst = appMstService.getByAppId(uid, botApi.getAppId());
         if (Objects.isNull(appMst)) {
             throw new BusinessException(ResponseEnum.USER_APP_ID_NOT_EXISTE);
         }
-        String serviceUrlHost = botBase.getVersion() == 1 ? BOT_API_CBM_BASE_URL : BOT_API_MAAS_BASE_URL;
+        String serviceUrlHost = botBase.getVersion() == 1 ? botApiCbmBaseUrl : botApiMaasBaseUrl;
         return BotApiInfoDTO.builder()
                 .botId(Math.toIntExact(botId))
                 .botName(botBase.getBotName())
@@ -204,7 +206,7 @@ public class PublishApiServiceImpl implements PublishApiService {
                 .prompt("")
                 .pluginId("")
                 .embeddingId("")
-                .apiPath("/workflow/v1/chat/completions")
+                .apiPath(BOT_API_MAAS_URL)
                 .description(botBase.getBotName())
                 .build();
 
@@ -217,49 +219,8 @@ public class PublishApiServiceImpl implements PublishApiService {
                 .appId(appMst.getAppId())
                 .appKey(appMst.getAppKey())
                 .appSecret(appMst.getAppSecret())
-                .serviceUrl(BOT_API_MAAS_BASE_URL + "/workflow/v1/chat/completions")
+                .serviceUrl(botApiMaasBaseUrl + BOT_API_MAAS_URL)
                 .flowId(flowId)
-                .build();
-    }
-
-    private BotApiInfoDTO createBaseBotApi(String uid, AppMst appMst, ChatBotBase botBase) throws IOException {
-        Integer botId = botBase.getId();
-        String prompt = botBase.getPrompt();
-        Long count = chatBotApiService.selectCount(botId);
-        if (count != null && count.intValue() >= 100) {
-            throw new BusinessException(ResponseEnum.BOT_API_CREATE_ERROR);
-        }
-
-        List<DatasetInfo> datasetInfos = botDatasetMapper.selectDatasetListByBotId(botId);
-        List<Long> datasetIdList = datasetInfos.stream().map(DatasetInfo::getId).toList();
-        String embeddingIds = StringUtils.defaultString(datasetIdList.stream().map(Objects::toString).collect(Collectors.joining(",")), "");
-
-        ChatBotApi chatBotApi = ChatBotApi.builder()
-                .uid(uid)
-                .botId(botId)
-                .appId(appMst.getAppId())
-                .apiSecret(appMst.getAppSecret())
-                .apiKey(appMst.getAppKey())
-                .prompt(prompt)
-                .pluginId("")
-                .embeddingId(embeddingIds)
-                .apiPath(null)
-                .description(botBase.getBotName())
-                .build();
-
-        chatBotApiService.insertOrUpdate(chatBotApi);
-
-        // TODO: capability authorization
-
-        return BotApiInfoDTO.builder()
-                .botId(botId)
-                .botName(botBase.getBotName())
-                .appName(appMst.getAppName())
-                .appId(appMst.getAppId())
-                .appKey(appMst.getAppKey())
-                .appSecret(appMst.getAppSecret())
-                .serviceUrl(BOT_API_CBM_BASE_URL)
-                .flowId(null)
                 .build();
     }
 }
