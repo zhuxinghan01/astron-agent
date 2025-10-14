@@ -20,7 +20,6 @@ import { useNavigate } from 'react-router-dom';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { debounce } from 'lodash';
 import { Modal } from 'antd';
-import { baseURL } from '@/utils/http';
 import { getFixedUrl } from '@/components/workflow/utils';
 
 // 文档数据管理 Hook
