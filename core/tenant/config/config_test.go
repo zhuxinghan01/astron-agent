@@ -243,17 +243,60 @@ func TestConfig_Validate(t *testing.T) {
 	}
 }
 
+type loadConfigTestCase struct {
+	name       string
+	configFile string
+	envVars    map[string]string
+	wantErr    bool
+	validate   func(t *testing.T, cfg *Config)
+}
+
+func createValidatorForConfigWithEnvOverride(t *testing.T) func(t *testing.T, cfg *Config) {
+	return func(t *testing.T, cfg *Config) {
+		checkLoadConfigField(t, "Server.Port", cfg.Server.Port, 9090)
+		checkLoadConfigField(t, "Server.Location", cfg.Server.Location, "us-east")
+		checkLoadConfigField(t, "DataBase.DBType", cfg.DataBase.DBType, "mysql")
+	}
+}
+
+func createValidatorForEnvOnlyConfig(t *testing.T) func(t *testing.T, cfg *Config) {
+	return func(t *testing.T, cfg *Config) {
+		checkLoadConfigField(t, "Server.Port", cfg.Server.Port, 8080)
+		checkLoadConfigField(t, "DataBase.DBType", cfg.DataBase.DBType, "postgresql")
+		checkLoadConfigField(t, "DataBase.MaxOpenConns", cfg.DataBase.MaxOpenConns, 20)
+	}
+}
+
+func checkLoadConfigField(t *testing.T, fieldName string, actual, expected interface{}) {
+	if actual != expected {
+		t.Errorf("Expected %s %v, got %v", fieldName, expected, actual)
+	}
+}
+
+func setupTestEnvironment(envVars map[string]string) (func(), map[string]string) {
+	originalEnv := make(map[string]string)
+	for key, value := range envVars {
+		originalEnv[key] = os.Getenv(key)
+		_ = os.Setenv(key, value)
+	}
+
+	cleanup := func() {
+		for key := range envVars {
+			if originalVal, exists := originalEnv[key]; exists {
+				_ = os.Setenv(key, originalVal)
+			} else {
+				_ = os.Unsetenv(key)
+			}
+		}
+	}
+
+	return cleanup, originalEnv
+}
+
 func TestLoadConfig(t *testing.T) {
-	// Create temporary directory for test files
 	tempDir := t.TempDir()
 
-	tests := []struct {
-		name       string
-		configFile string
-		envVars    map[string]string
-		wantErr    bool
-		validate   func(*Config) error
-	}{
+	tests := []loadConfigTestCase{
 		{
 			name: "valid config file with env override",
 			configFile: `
@@ -273,21 +316,10 @@ maxIdleConns = 5
 path = "/tmp/test.log"
 `,
 			envVars: map[string]string{
-				"SERVICE_PORT": "9090", // Override port via env
+				"SERVICE_PORT": "9090",
 			},
-			wantErr: false,
-			validate: func(cfg *Config) error {
-				if cfg.Server.Port != 9090 {
-					t.Errorf("Expected port 9090 (env override), got %d", cfg.Server.Port)
-				}
-				if cfg.Server.Location != "us-east" {
-					t.Errorf("Expected location 'us-east', got %s", cfg.Server.Location)
-				}
-				if cfg.DataBase.DBType != "mysql" {
-					t.Errorf("Expected dbType 'mysql', got %s", cfg.DataBase.DBType)
-				}
-				return nil
-			},
+			wantErr:  false,
+			validate: createValidatorForConfigWithEnvOverride(t),
 		},
 		{
 			name: "invalid config - missing required fields",
@@ -297,10 +329,8 @@ port = 8080
 
 [database]
 dbType = "mysql"
-# Missing required fields like username, password, url
 
 [log]
-# Missing path
 `,
 			wantErr: true,
 		},
@@ -319,50 +349,22 @@ dbType = "mysql"
 				"DATABASE_MAX_IDLE_CONNS": "10",
 				"LOG_PATH":                "/env/log/path.log",
 			},
-			wantErr: false,
-			validate: func(cfg *Config) error {
-				if cfg.Server.Port != 8080 {
-					t.Errorf("Expected port 8080, got %d", cfg.Server.Port)
-				}
-				if cfg.DataBase.DBType != "postgresql" {
-					t.Errorf("Expected dbType 'postgresql', got %s", cfg.DataBase.DBType)
-				}
-				if cfg.DataBase.MaxOpenConns != 20 {
-					t.Errorf("Expected MaxOpenConns 20, got %d", cfg.DataBase.MaxOpenConns)
-				}
-				return nil
-			},
+			wantErr:  false,
+			validate: createValidatorForEnvOnlyConfig(t),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create config file
 			configPath := filepath.Join(tempDir, "config.toml")
 			err := os.WriteFile(configPath, []byte(tt.configFile), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to write test config file: %v", err)
 			}
 
-			// Set environment variables
-			originalEnv := make(map[string]string)
-			for key, value := range tt.envVars {
-				originalEnv[key] = os.Getenv(key)
-				_ = os.Setenv(key, value)
-			}
+			cleanup, _ := setupTestEnvironment(tt.envVars)
+			defer cleanup()
 
-			// Cleanup environment variables after test
-			defer func() {
-				for key := range tt.envVars {
-					if originalVal, exists := originalEnv[key]; exists {
-						_ = os.Setenv(key, originalVal)
-					} else {
-						_ = os.Unsetenv(key)
-					}
-				}
-			}()
-
-			// Test LoadConfig
 			cfg, err := LoadConfig(configPath)
 
 			if (err != nil) != tt.wantErr {
@@ -376,11 +378,8 @@ dbType = "mysql"
 					return
 				}
 
-				// Run custom validation if provided
 				if tt.validate != nil {
-					if err := tt.validate(cfg); err != nil {
-						t.Errorf("Custom validation failed: %v", err)
-					}
+					tt.validate(t, cfg)
 				}
 			}
 		})

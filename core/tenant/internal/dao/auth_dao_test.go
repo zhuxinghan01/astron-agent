@@ -55,28 +55,85 @@ func TestNewAuthDao(t *testing.T) {
 	}
 }
 
+type authSqlOptionTest struct {
+	name        string
+	createFunc  func(*AuthDao) SqlOption
+	expectedSQL string
+	expectedLen int
+	checkParams func([]interface{}) bool
+}
+
+func testAuthSqlOption(t *testing.T, test authSqlOptionTest, authDao *AuthDao) {
+	t.Run(test.name, func(t *testing.T) {
+		option := test.createFunc(authDao)
+		if option == nil {
+			t.Errorf("%s should not return nil", test.name)
+			return
+		}
+
+		sql, params := option()
+		if sql != test.expectedSQL {
+			t.Errorf("%s sql = %s, want %s", test.name, sql, test.expectedSQL)
+		}
+
+		if len(params) != test.expectedLen {
+			t.Errorf("%s params length = %d, want %d", test.name, len(params), test.expectedLen)
+		}
+
+		if test.checkParams != nil && !test.checkParams(params) {
+			t.Errorf("%s params validation failed: %v", test.name, params)
+		}
+	})
+}
+
 func TestAuthDao_SqlOptions(t *testing.T) {
-	// Create a mock AuthDao to test SQL option functions
 	mockDb := &database.Database{}
 	authDao, err := NewAuthDao(mockDb)
 	if err != nil {
 		t.Fatalf("Failed to create AuthDao: %v", err)
 	}
 
-	t.Run("WithAppId", func(t *testing.T) {
-		appId := "test-app-123"
-		option := authDao.WithAppId(appId)
-		sql, params := option()
+	tests := []authSqlOptionTest{
+		{
+			name:        "WithAppId",
+			createFunc:  func(dao *AuthDao) SqlOption { return dao.WithAppId("test-app-123") },
+			expectedSQL: "app_id=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test-app-123" },
+		},
+		{
+			name:        "WithIsDelete",
+			createFunc:  func(dao *AuthDao) SqlOption { return dao.WithIsDelete(false) },
+			expectedSQL: "is_delete=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == false },
+		},
+		{
+			name:        "WithApiKey",
+			createFunc:  func(dao *AuthDao) SqlOption { return dao.WithApiKey("test-api-key-123") },
+			expectedSQL: "api_key=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test-api-key-123" },
+		},
+		{
+			name:        "WithUpdateTime",
+			createFunc:  func(dao *AuthDao) SqlOption { return dao.WithUpdateTime("2023-01-01 12:00:00") },
+			expectedSQL: "update_time=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "2023-01-01 12:00:00" },
+		},
+		{
+			name:        "WithSource",
+			createFunc:  func(dao *AuthDao) SqlOption { return dao.WithSource(int64(12345)) },
+			expectedSQL: "source=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == int64(12345) },
+		},
+	}
 
-		expectedSql := "app_id=?"
-		if sql != expectedSql {
-			t.Errorf("WithAppId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != appId {
-			t.Errorf("WithAppId() params = %v, want [%v]", params, appId)
-		}
-	})
+	for _, test := range tests {
+		testAuthSqlOption(t, test, authDao)
+	}
 
 	t.Run("WithAppIds", func(t *testing.T) {
 		appIds := []string{"app1", "app2", "app3"}
@@ -103,66 +160,6 @@ func TestAuthDao_SqlOptions(t *testing.T) {
 		option := authDao.WithAppIds()
 		if option != nil {
 			t.Errorf("WithAppIds() with empty slice should return nil")
-		}
-	})
-
-	t.Run("WithIsDelete", func(t *testing.T) {
-		isDelete := false
-		option := authDao.WithIsDelete(isDelete)
-		sql, params := option()
-
-		expectedSql := "is_delete=?"
-		if sql != expectedSql {
-			t.Errorf("WithIsDelete() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != isDelete {
-			t.Errorf("WithIsDelete() params = %v, want [%v]", params, isDelete)
-		}
-	})
-
-	t.Run("WithApiKey", func(t *testing.T) {
-		apiKey := "test-api-key-123"
-		option := authDao.WithApiKey(apiKey)
-		sql, params := option()
-
-		expectedSql := "api_key=?"
-		if sql != expectedSql {
-			t.Errorf("WithApiKey() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != apiKey {
-			t.Errorf("WithApiKey() params = %v, want [%v]", params, apiKey)
-		}
-	})
-
-	t.Run("WithUpdateTime", func(t *testing.T) {
-		updateTime := "2023-01-01 12:00:00"
-		option := authDao.WithUpdateTime(updateTime)
-		sql, params := option()
-
-		expectedSql := "update_time=?"
-		if sql != expectedSql {
-			t.Errorf("WithUpdateTime() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != updateTime {
-			t.Errorf("WithUpdateTime() params = %v, want [%v]", params, updateTime)
-		}
-	})
-
-	t.Run("WithSource", func(t *testing.T) {
-		source := int64(12345)
-		option := authDao.WithSource(source)
-		sql, params := option()
-
-		expectedSql := "source=?"
-		if sql != expectedSql {
-			t.Errorf("WithSource() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != source {
-			t.Errorf("WithSource() params = %v, want [%v]", params, source)
 		}
 	})
 }
