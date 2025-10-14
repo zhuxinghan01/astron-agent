@@ -1,48 +1,10 @@
 package handler
 
 import (
-	"tenant/internal/models"
-	"tenant/internal/service"
 	"testing"
+
+	"tenant/internal/service"
 )
-
-// Mock auth service for testing
-type mockAuthService struct {
-	addAuthFunc          func(*models.Auth) error
-	deleteApiKeyFunc     func(string, string) error
-	queryFunc            func(string) ([]*models.Auth, error)
-	queryAppByAPIKeyFunc func(string) (*models.App, error)
-}
-
-func (m *mockAuthService) AddAuth(auth *models.Auth) error {
-	if m.addAuthFunc != nil {
-		return m.addAuthFunc(auth)
-	}
-	return nil
-}
-
-func (m *mockAuthService) DeleteApiKey(appId, apiKey string) error {
-	if m.deleteApiKeyFunc != nil {
-		return m.deleteApiKeyFunc(appId, apiKey)
-	}
-	return nil
-}
-
-func (m *mockAuthService) Query(appId string) ([]*models.Auth, error) {
-	if m.queryFunc != nil {
-		return m.queryFunc(appId)
-	}
-	return []*models.Auth{
-		{AppId: appId, ApiKey: "test-key", ApiSecret: "test-secret"},
-	}, nil
-}
-
-func (m *mockAuthService) QueryAppByAPIKey(apiKey string) (*models.App, error) {
-	if m.queryAppByAPIKeyFunc != nil {
-		return m.queryAppByAPIKeyFunc(apiKey)
-	}
-	return &models.App{AppId: "test-app", AppName: "Test App"}, nil
-}
 
 func TestNewAuthHandler(t *testing.T) {
 	tests := []struct {
@@ -106,7 +68,7 @@ func TestAuthHandler_SaveAuth(t *testing.T) {
 	// This will likely panic due to nil service, but tests handler exists
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -131,7 +93,7 @@ func TestAuthHandler_DeleteAuth(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -149,7 +111,7 @@ func TestAuthHandler_ListAuth(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -167,7 +129,7 @@ func TestAuthHandler_GetAppByAPIKey(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -212,7 +174,7 @@ func TestAuthHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("GET", "/auth?app_id=test", nil)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.ListAuth(c)
@@ -221,16 +183,20 @@ func TestAuthHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("POST", "/auth", AddAuthReq{RequestId: "test", AppId: "test"})
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.SaveAuth(c)
 		}},
 		{"DeleteAuth_exists", func(t *testing.T) {
-			c, _ := createTestContext("DELETE", "/auth", DeleteAuthReq{RequestId: "test", AppId: "test", ApiKey: "test"})
+			c, _ := createTestContext(
+				"DELETE",
+				"/auth",
+				DeleteAuthReq{RequestId: "test", AppId: "test", ApiKey: "test"},
+			)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.DeleteAuth(c)
@@ -239,7 +205,7 @@ func TestAuthHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("GET", "/auth/app?api_key=test", nil)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.GetAppByAPIKey(c)

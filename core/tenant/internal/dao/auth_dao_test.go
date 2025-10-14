@@ -718,7 +718,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Insert method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.Insert(&models.Auth{}, nil)
 				return err
 			},
@@ -726,7 +726,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Update method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.Update([]SqlOption{}, nil)
 				return err
 			},
@@ -734,7 +734,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Delete method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.Delete(nil)
 				return err
 			},
@@ -742,7 +742,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Select method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.Select()
 				return err
 			},
@@ -750,7 +750,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Count method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.Count(false, nil)
 				return err
 			},
@@ -758,7 +758,7 @@ func TestAuthDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "BeginTx method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := authDao.BeginTx()
 				return err
 			},

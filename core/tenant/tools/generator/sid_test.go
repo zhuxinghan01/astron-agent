@@ -43,7 +43,6 @@ func TestSidGenerator2_NewSid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sid, err := generator.NewSid(tt.sub)
-
 			if err != nil {
 				t.Errorf("NewSid should not return error: %v", err)
 			}

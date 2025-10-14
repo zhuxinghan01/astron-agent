@@ -339,7 +339,7 @@ dbType = "mysql"
 		t.Run(tt.name, func(t *testing.T) {
 			// Create config file
 			configPath := filepath.Join(tempDir, "config.toml")
-			err := os.WriteFile(configPath, []byte(tt.configFile), 0644)
+			err := os.WriteFile(configPath, []byte(tt.configFile), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to write test config file: %v", err)
 			}
@@ -348,16 +348,16 @@ dbType = "mysql"
 			originalEnv := make(map[string]string)
 			for key, value := range tt.envVars {
 				originalEnv[key] = os.Getenv(key)
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value)
 			}
 
 			// Cleanup environment variables after test
 			defer func() {
 				for key := range tt.envVars {
 					if originalVal, exists := originalEnv[key]; exists {
-						os.Setenv(key, originalVal)
+						_ = os.Setenv(key, originalVal)
 					} else {
-						os.Unsetenv(key)
+						_ = os.Unsetenv(key)
 					}
 				}
 			}()
@@ -403,18 +403,17 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 
 	// Set environment variables
 	for key, value := range envVars {
-		os.Setenv(key, value)
+		_ = os.Setenv(key, value)
 	}
 
 	// Cleanup
 	defer func() {
 		for key := range envVars {
-			os.Unsetenv(key)
+			_ = os.Unsetenv(key)
 		}
 	}()
 
 	cfg, err := LoadConfig(nonExistentPath)
-
 	// Should not error if env vars provide all required config
 	if err != nil {
 		t.Errorf("LoadConfig() with non-existent file but valid env vars should not error: %v", err)

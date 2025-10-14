@@ -5,68 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"tenant/internal/models"
-	"tenant/internal/service"
 	"testing"
+
+	"tenant/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Mock service for testing
-type mockAppService struct {
-	saveAppFunc      func(*models.App, *models.Auth) (*service.AddAppResult, error)
-	modifyAppFunc    func(*models.App) error
-	deleteFunc       func(string) error
-	disableFunc      func(string, bool) error
-	queryFunc        func(*service.AppQuery) ([]*models.App, error)
-	queryDetailsFunc func(*service.AppQuery) ([]*service.AppDetailsData, error)
-}
-
-func (m *mockAppService) SaveApp(app *models.App, auth *models.Auth) (*service.AddAppResult, error) {
-	if m.saveAppFunc != nil {
-		return m.saveAppFunc(app, auth)
-	}
-	return &service.AddAppResult{AppId: "test-app", ApiKey: "test-key", ApiSecret: "test-secret"}, nil
-}
-
-func (m *mockAppService) ModifyApp(app *models.App) error {
-	if m.modifyAppFunc != nil {
-		return m.modifyAppFunc(app)
-	}
-	return nil
-}
-
-func (m *mockAppService) Delete(appId string) error {
-	if m.deleteFunc != nil {
-		return m.deleteFunc(appId)
-	}
-	return nil
-}
-
-func (m *mockAppService) DisableOrEnable(appId string, disable bool) error {
-	if m.disableFunc != nil {
-		return m.disableFunc(appId, disable)
-	}
-	return nil
-}
-
-func (m *mockAppService) Query(query *service.AppQuery) ([]*models.App, error) {
-	if m.queryFunc != nil {
-		return m.queryFunc(query)
-	}
-	return []*models.App{
-		{AppId: "test-app", AppName: "Test App", DevId: 1, ChannelId: "channel1"},
-	}, nil
-}
-
-func (m *mockAppService) QueryDetails(query *service.AppQuery) ([]*service.AppDetailsData, error) {
-	if m.queryDetailsFunc != nil {
-		return m.queryDetailsFunc(query)
-	}
-	return []*service.AppDetailsData{
-		{Appid: "test-app", Name: "Test App", IsDisable: false},
-	}, nil
-}
 
 // Helper function to create test gin context
 func createTestContext(method, url string, body interface{}) (*gin.Context, *httptest.ResponseRecorder) {
@@ -168,7 +114,7 @@ func TestAppHandler_SaveApp(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var resp map[string]interface{}
-				json.Unmarshal(w.Body.Bytes(), &resp)
+				_ = json.Unmarshal(w.Body.Bytes(), &resp)
 				if resp["code"].(float64) != float64(ParamErr) {
 					t.Errorf("Expected param error code, got %v", resp["code"])
 				}
@@ -185,7 +131,7 @@ func TestAppHandler_SaveApp(t *testing.T) {
 			// Test will likely panic due to nil service, but we can catch it
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected behavior with nil service
+					t.Log("Expected behavior with nil service:", r)
 				}
 			}()
 
@@ -214,7 +160,7 @@ func TestAppHandler_ModifyApp(t *testing.T) {
 	// This will likely panic due to nil service, but tests handler exists
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -238,7 +184,7 @@ func TestAppHandler_DeleteApp(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -262,7 +208,7 @@ func TestAppHandler_DisableApp(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -280,7 +226,7 @@ func TestAppHandler_ListApp(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -298,7 +244,7 @@ func TestAppHandler_DetailApp(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			// Expected behavior with nil service
+			t.Log("Expected behavior with nil service:", r)
 		}
 	}()
 
@@ -342,10 +288,14 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 		test func(*testing.T)
 	}{
 		{"SaveApp_exists", func(t *testing.T) {
-			c, _ := createTestContext("POST", "/apps", AddAppReq{RequestId: "test", AppName: "test", DevId: 1, CloudId: "test"})
+			c, _ := createTestContext(
+				"POST",
+				"/apps",
+				AddAppReq{RequestId: "test", AppName: "test", DevId: 1, CloudId: "test"},
+			)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.SaveApp(c)
@@ -354,7 +304,7 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("PUT", "/apps", ModifyAppReq{RequestId: "test", AppId: "test"})
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.ModifyApp(c)
@@ -363,7 +313,7 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("DELETE", "/apps", DeleteAppReq{RequestId: "test", AppId: "test"})
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.DeleteApp(c)
@@ -372,7 +322,7 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("PUT", "/apps/disable", DisableAppReq{RequestId: "test", AppId: "test"})
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.DisableApp(c)
@@ -381,7 +331,7 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("GET", "/apps?name=test", nil)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.ListApp(c)
@@ -390,7 +340,7 @@ func TestAppHandler_MethodsExist(t *testing.T) {
 			c, _ := createTestContext("GET", "/apps/details?app_ids=test", nil)
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected due to nil service
+					t.Log("Expected due to nil service:", r)
 				}
 			}()
 			handler.DetailApp(c)
