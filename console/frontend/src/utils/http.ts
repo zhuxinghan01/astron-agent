@@ -178,6 +178,9 @@ export const initBusinessError = (
   response: AxiosResponse,
   result: ResponseResult
 ) => {
+  if (result?.code !== 0) {
+    message.error(result?.message || result?.desc);
+  }
   // 添加套餐用量耗尽处理
   if ([11120].includes(result.code)) {
     eventBus.emit('showUsageExhausted', {
@@ -455,12 +458,12 @@ const getBaseURL = (): string => {
   // 兜底逻辑：通过import.meta.env.MODE获取构建时的环境模式
   switch (mode) {
     case 'development':
-      return 'http://172.29.202.54:8080/';
+      return 'http://172.29.202.54:8080';
     case 'test':
-      return 'http://172.29.201.92:8080/';
+      return 'http://172.29.201.92:8080';
     default:
       // production和其他环境保持原有逻辑
-      return 'http://172.29.201.92:8080/';
+      return 'http://172.29.201.92:8080';
   }
 };
 

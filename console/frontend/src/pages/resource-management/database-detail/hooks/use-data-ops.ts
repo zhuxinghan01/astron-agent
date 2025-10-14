@@ -54,7 +54,7 @@ export const useDataOps = (): {
       if (!currentSheet) return;
 
       try {
-        actions.setTestData(state.testDataSource, true);
+        actions.setTestTableLoading(true);
         const params = {
           tbId: currentSheet.id,
           execDev: type - 1,
@@ -167,7 +167,7 @@ export const useDataOps = (): {
         actions.setExportLoading(false);
       }
     },
-    [state.testDataSource.length, actions.setExportLoading, t]
+    [state.testDataSource.length, actions.setExportLoading]
   );
 
   // 使用事件处理hook
