@@ -17,7 +17,7 @@ class LogServiceFactory(ServiceFactory):
         """
         print("------ init loguru in factory")
         log_dir = os.path.join(
-            "../",
+            "./",
             os.getenv("LOG_PATH", "logs"),
         )
         os.makedirs(log_dir, exist_ok=True)
