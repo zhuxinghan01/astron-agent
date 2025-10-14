@@ -6,7 +6,7 @@ import (
 )
 
 func TestAppQuery_Structure(t *testing.T) {
-	// 测试 AppQuery 结构体的基本功能
+	// Test basic functionality of AppQuery struct
 	query := AppQuery{
 		AppIds:  []string{"app1", "app2"},
 		Name:    "test-app",
@@ -185,7 +185,7 @@ func TestBizErr_Msg(t *testing.T) {
 		{"empty message", ""},
 		{"long message", "this is a very long error message for testing purposes"},
 		{"special chars", "error with special chars: !@#$%^&*()"},
-		{"unicode message", "错误信息测试"},
+		{"unicode message", "error message test"},
 	}
 
 	for _, tt := range tests {

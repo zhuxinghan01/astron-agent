@@ -426,7 +426,7 @@ func TestGeneratorFunctions_ThreadSafety(t *testing.T) {
 func TestGeneratorFunctions_InputValidation(t *testing.T) {
 	// Test various edge cases for input validation
 	t.Run("GenKey_with_unicode", func(t *testing.T) {
-		appid := "测试应用"
+		appid := "test-app"
 		result := GenKey(appid)
 
 		if len(result) != 32 {
