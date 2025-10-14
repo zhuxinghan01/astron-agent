@@ -281,9 +281,9 @@ services:
       OSS_BUCKET_NAME: "${OSS_BUCKET_NAME}"
       OSS_TTL: "${OSS_TTL:-157788000}"
       KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
-      AI_APP_ID: "${AI_APP_ID}"
-      AI_API_KEY: "${AI_API_KEY}"
-      AI_API_SECRET: "${AI_API_SECRET}"
+      AI_APP_ID: "${PLATFORM_APP_ID}"
+      AI_API_KEY: "${PLATFORM_API_KEY}"
+      AI_API_SECRET: "${PLATFORM_API_SECRET}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -380,6 +380,7 @@ services:
       RAGFLOW_API_TOKEN: "${RAGFLOW_API_TOKEN}"
       RAGFLOW_TIMEOUT: "${RAGFLOW_TIMEOUT:-60}"
       RAGFLOW_DEFAULT_GROUP: "${RAGFLOW_DEFAULT_GROUP}"
+      XINGHUO_DATASET_ID: "${XINGHUO_DATASET_ID:-}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -568,8 +569,13 @@ services:
       MAAS_AUTH_API: "${MAAS_AUTH_API:-}"
       MAAS_MCP_REGISTER: "${MAAS_MCP_REGISTER:-}"
       MAAS_WORKFLOW_CONFIG: "${MAAS_WORKFLOW_CONFIG:-}"
+      BOT_API_CBM_BASE_URL: "${BOT_API_CBM_BASE_URL:-}"
+      BOT_API_MAAS_BASE_URL: "${BOT_API_MAAS_BASE_URL:-}"
       TENANT_CREATE_APP: "${TENANT_CREATE_APP:-}"
       TENANT_GET_APP_DETAIL: "${TENANT_GET_APP_DETAIL:-}"
+      DEEPSEEK_URL: "${DEEPSEEK_URL:-https://api.deepseek.com/chat/completions}"
+      DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+      
     expose:
       - "8080"
     depends_on:

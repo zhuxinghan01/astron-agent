@@ -6,6 +6,7 @@ import com.iflytek.astron.console.commons.dto.chat.ChatRequestDtoList;
 import com.iflytek.astron.console.commons.dto.chat.ChatRespModelDto;
 import com.iflytek.astron.console.commons.dto.llm.SparkChatRequest;
 import com.iflytek.astron.console.commons.service.data.ChatDataService;
+import com.iflytek.astron.console.commons.util.I18nUtil;
 import com.iflytek.astron.console.hub.data.ReqKnowledgeRecordsDataService;
 import com.iflytek.astron.console.hub.entity.ReqKnowledgeRecords;
 import org.apache.logging.log4j.util.Base64Util;
@@ -384,21 +385,30 @@ class ChatHistoryServiceImplTest {
 
     @Test
     void testEnhanceAskWithKnowledgeRecord_WithValidKnowledge_ShouldEnhanceContent() {
-        // Given
-        String originalAsk = "What is machine learning?";
-        ReqKnowledgeRecords knowledgeRecord = ReqKnowledgeRecords.builder()
-                .reqId(1L)
-                .knowledge("machine learning knowledge")
-                .build();
+        try (MockedStatic<I18nUtil> mockedI18nUtil = mockStatic(I18nUtil.class)) {
+            // Mock I18n messages
+            mockedI18nUtil.when(() -> I18nUtil.getMessage("loose.prefix.prompt"))
+                    .thenReturn(
+                            "Please use the following document fragments as known information:[]\nPlease answer the question accurately based on the original text above and your knowledge\nWhen answering user questions, please answer in the language the user asked\nIf the above content cannot answer the user information, combine your knowledge to answer the user's question\nAnswer the user's questions concisely and professionally, and do not add fabricated content to the answer.");
+            mockedI18nUtil.when(() -> I18nUtil.getMessage("loose.suffix.prompt"))
+                    .thenReturn("\nMy next input is: {{}}");
 
-        // When - Use reflection to access private method
-        String result = invokeEnhanceAskWithKnowledgeRecord(originalAsk, knowledgeRecord);
+            // Given
+            String originalAsk = "What is machine learning?";
+            ReqKnowledgeRecords knowledgeRecord = ReqKnowledgeRecords.builder()
+                    .reqId(1L)
+                    .knowledge("machine learning knowledge")
+                    .build();
 
-        // Then
-        assertNotNull(result);
-        assertNotEquals(originalAsk, result);
-        assertTrue(result.contains(originalAsk));
-        assertTrue(result.contains("machine learning knowledge"));
+            // When - Use reflection to access private method
+            String result = invokeEnhanceAskWithKnowledgeRecord(originalAsk, knowledgeRecord);
+
+            // Then
+            assertNotNull(result);
+            assertNotEquals(originalAsk, result);
+            assertTrue(result.contains(originalAsk));
+            assertTrue(result.contains("machine learning knowledge"));
+        }
     }
 
     @Test

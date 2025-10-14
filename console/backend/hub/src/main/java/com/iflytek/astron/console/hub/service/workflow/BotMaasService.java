@@ -6,14 +6,15 @@ import com.iflytek.astron.console.commons.dto.workflow.CloneSynchronize;
 import com.iflytek.astron.console.hub.entity.maas.MaasDuplicate;
 import com.iflytek.astron.console.hub.entity.maas.MaasTemplate;
 import com.iflytek.astron.console.hub.entity.maas.WorkflowTemplateQueryDto;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
 
 public interface BotMaasService {
-    BotInfoDto createFromTemplate(String uid, MaasDuplicate massDuplicate);
+    BotInfoDto createFromTemplate(String uid, MaasDuplicate massDuplicate, HttpServletRequest request);
 
-    Integer massCopySynchronize(CloneSynchronize synchronize);
+    Integer maasCopySynchronize(CloneSynchronize synchronize);
 
     List<MaasTemplate> templateList(WorkflowTemplateQueryDto queryDto);
 }
