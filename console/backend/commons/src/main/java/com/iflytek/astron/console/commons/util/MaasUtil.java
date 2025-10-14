@@ -85,9 +85,6 @@ public class MaasUtil {
     @Value("${maas.mcpRegister}")
     private String mcpReleaseUrl;
 
-    public static final String PREFIX_MASS_COPY = "mass_copy_";
-    private static final String BOT_TAG_LIST = "bot_tag_list";
-
     @Autowired
     private UserLangChainDataService userLangChainDataService;
 
