@@ -95,27 +95,27 @@ docker-compose logs -f ragflow
 
 #### 3.1 配置知识库服务连接
 
-编辑 `docker/astronAgent/.env` 文件，配置 RagFlow 连接信息：
+编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，配置 RagFlow 连接信息：
 
 **关键配置项：**
 
 ```env
 # RAGFlow配置
-RAGFLOW_BASE_URL=http://localhost:9380
+RAGFLOW_BASE_URL=http://localhost/
 RAGFLOW_API_TOKEN=ragflow-your-api-token-here
 RAGFLOW_TIMEOUT=60
 RAGFLOW_DEFAULT_GROUP=星辰知识库
 ```
 
 **获取 RagFlow API Token：**
-1. 访问 RagFlow Web界面：http://localhost:9380
+1. 访问 RagFlow Web界面：http://localhost/
 2. 登录并进入用户设置
 3. 生成 API Token
 4. 将 Token 更新到配置文件中
 
 #### 3.2 配置 Casdoor 认证集成
 
-编辑 `docker/astronAgent/.env` 文件，配置 Casdoor 连接信息：
+编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，配置 Casdoor 连接信息：
 
 **关键配置项：**
 
@@ -145,7 +145,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 - 语音转写API: https://www.xfyun.cn/services/lfasr
 - 图片生成API: https://www.xfyun.cn/services/wtop
 
-最后编辑 `docker/astronAgent/.env` 文件，更新相关环境变量：
+最后编辑 [`docker/astronAgent/.env`](/docker/astronAgent/.env) 文件，更新相关环境变量：
 ```env
 PLATFORM_APP_ID=your-app-id
 PLATFORM_API_KEY=your-api-key
