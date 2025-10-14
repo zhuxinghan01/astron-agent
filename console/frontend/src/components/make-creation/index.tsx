@@ -50,7 +50,7 @@ const MakeCreateModal: React.FC<MakeCreateModalProps> = ({
       inputExample: ['', '', ''],
     };
     if (flag) {
-      req['massId'] = item.mass_id;
+      req['maasId'] = item.maasId;
       req['name'] = item.title + Date.now();
       await createFromTemplate(req)
         .then((res: any) => {
@@ -270,7 +270,7 @@ const MakeCreateModal: React.FC<MakeCreateModalProps> = ({
                     {starModeShowList.map((item, index) => {
                       return (
                         <div
-                          key={item.mass_id + item._id?.timestamp}
+                          key={item.maasId}
                           className={styles.agentType_Type_content}
                           ref={ref => (mouseNowPageRef.current[index] = ref)}
                           onMouseLeave={() => {
