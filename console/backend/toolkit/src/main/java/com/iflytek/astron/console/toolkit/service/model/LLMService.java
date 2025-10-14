@@ -227,8 +227,8 @@ public class LLMService {
         if (spaceId != null) {
             lambdaQueryWrapper.eq(Model::getSpaceId, spaceId);
         } else {
-            lambdaQueryWrapper.eq(Model::getUid, userId);
-            lambdaQueryWrapper.eq(Model::getSpaceId, null);
+            lambdaQueryWrapper.eq(Model::getUid, userId)
+                    .isNull(Model::getSpaceId);
         }
         List<Model> models = modelMapper.selectList(lambdaQueryWrapper);
 
