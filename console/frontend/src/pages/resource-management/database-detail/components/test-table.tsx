@@ -252,6 +252,7 @@ const TestTable = forwardRef<
         rowSelection={rowSelection}
         loading={loading}
         scroll={{ x: 'max-content', y: tableHeight }}
+        locale={{ emptyText: ' ' }}
       />
     </div>
   );

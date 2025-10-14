@@ -23,8 +23,6 @@ services:
       MYSQL_DATABASE: casdoor
       MYSQL_USER: ${MYSQL_USER:-casdoor}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-casdoor123}
-    ports:
-      - "3306:3306"
     volumes:
       - /usr/local/docker/mysql:/var/lib/mysql
     networks:

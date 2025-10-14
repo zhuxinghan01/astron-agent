@@ -14,8 +14,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-spark}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spark123}
       PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./pgsql/:/docker-entrypoint-initdb.d/
@@ -34,8 +32,6 @@ services:
     container_name: astron-agent-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
-    ports:
-      - "${EXPOSE_MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/:/docker-entrypoint-initdb.d/
@@ -52,8 +48,6 @@ services:
   redis:
     image: redis:7
     container_name: astron-agent-redis
-    ports:
-      - "${EXPOSE_REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -75,9 +69,6 @@ services:
       - "ES_JAVA_OPTS=${ES_JAVA_OPTS:--Xms512m -Xmx512m}"
       - xpack.security.enabled=${ELASTICSEARCH_SECURITY_ENABLED:-false}
       - cluster.name=astron-agent-cluster
-    ports:
-      - "${EXPOSE_ELASTICSEARCH_PORT:-9200}:9200"
-      - "${EXPOSE_ELASTICSEARCH_TRANSPORT_PORT:-9300}:9300"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
@@ -159,8 +150,6 @@ services:
       DATABASE_MAX_OPEN_CONNS: "${DATABASE_MAX_OPEN_CONNS:-5}"
       DATABASE_MAX_IDLE_CONNS: "${DATABASE_MAX_IDLE_CONNS:-5}"
       LOG_PATH: "${LOG_PATH:-log.txt}"
-    ports:
-      - "${CORE_TENANT_PORT:-5052}:${CORE_TENANT_PORT:-5052}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -184,19 +173,17 @@ services:
 
   # Memory Database Service
 
-  core-memory:
-    image: ghcr.io/iflytek/astron-agent/core-memory:latest
-    container_name: astron-agent-core-memory
+  core-database:
+    image: ghcr.io/iflytek/astron-agent/core-database:latest
+    container_name: astron-agent-core-database
     environment:
-      SERVICE_PORT: "${CORE_MEMORY_PORT:-7990}"
+      SERVICE_PORT: "${CORE_DATABASE_PORT:-7990}"
       PGSQL_HOST: "${POSTGRES_HOST:-postgres}"
       PGSQL_PORT: "${POSTGRES_PORT:-5432}"
       PGSQL_USER: "${POSTGRES_USER:-spark}"
       PGSQL_PASSWORD: "${POSTGRES_PASSWORD:-spark123}"
-      PGSQL_DATABASE: "${MEMORY_POSTGRES_DATABASE:-sparkdb_manager}"
+      PGSQL_DATABASE: "${DATABASE_POSTGRES_DATABASE:-sparkdb_manager}"
       OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
-    ports:
-      - "${CORE_MEMORY_PORT:-7990}:${CORE_MEMORY_PORT:-7990}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -211,8 +198,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/memory/config.env:/opt/database/memory/database/config.env
-      - ./config/memory/logs/:/opt/database/memory/database/logs
+      - ./config/database/config.env:/opt/database/memory/database/config.env
+      - ./config/database/logs/:/opt/database/memory/database/logs
     networks:
       - astron-agent-network
     restart: always
@@ -226,8 +213,6 @@ services:
       KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
       XIAOWU_RPA_TASK_CREATE_URL: "${XIAOWU_RPA_TASK_CREATE_URL:-}"
       XIAOWU_RPA_TASK_QUERY_URL: "${XIAOWU_RPA_TASK_QUERY_URL:-}"
-    ports:
-      - "${CORE_RPA_PORT:-17198}:17198"
     depends_on:
       postgres:
         condition: service_healthy
@@ -242,7 +227,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/rpa/config.env:/opt/rpa/plugin/rpa/config.env
+      - ./config/rpa/config.env:/opt/core/plugin/rpa/config.env
+      - ./config/rpa/logs/:/opt/core/logs/
     networks:
       - astron-agent-network
     restart: always
@@ -263,8 +249,6 @@ services:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
       OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
       KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
-    ports:
-      - "${CORE_LINK_PORT:-18888}:18888"
     depends_on:
       postgres:
         condition: service_healthy
@@ -279,8 +263,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/link/config.env:/opt/link/config.env
-      - ./config/link/logs/:/opt/link/logs/
+      - ./config/link/config.env:/opt/core/plugin/link/config.env
+      - ./config/link/logs/:/opt/core/plugin/link/logs/
     networks:
       - astron-agent-network
     restart: always
@@ -300,8 +284,6 @@ services:
       AI_APP_ID: "${AI_APP_ID}"
       AI_API_KEY: "${AI_API_KEY}"
       AI_API_SECRET: "${AI_API_SECRET}"
-    ports:
-      - "${CORE_AITOOLS_PORT:-18668}:${CORE_AITOOLS_PORT:-18668}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -316,8 +298,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/aitools/config.env:/opt/aitools/config.env
-      - ./config/aitools/logs/:/opt/aitools/logs/
+      - ./config/aitools/config.env:/opt/core/plugin/aitools/config.env
+      - ./config/aitools/logs/:/opt/core/plugin/aitools/logs/
     networks:
       - astron-agent-network
     restart: always
@@ -369,8 +351,6 @@ services:
       APP_AUTH_PROT: "${APP_AUTH_PROT:-http}"
       APP_AUTH_API_KEY: "${APP_AUTH_API_KEY:-YOUR_APP_AUTH_API_KEY}"
       APP_AUTH_SECRET: "${APP_AUTH_SECRET:-YOUR_APP_AUTH_SECRET}"
-    ports:
-      - "${CORE_AGENT_PORT:-17870}:${CORE_AGENT_PORT:-17870}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -385,7 +365,7 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/agent/config.env:/opt/agent/config.env
+      - ./config/agent/config.env:/opt/core/agent/config.env
     networks:
       - astron-agent-network
     restart: always
@@ -400,8 +380,6 @@ services:
       RAGFLOW_API_TOKEN: "${RAGFLOW_API_TOKEN}"
       RAGFLOW_TIMEOUT: "${RAGFLOW_TIMEOUT:-60}"
       RAGFLOW_DEFAULT_GROUP: "${RAGFLOW_DEFAULT_GROUP}"
-    ports:
-      - "${CORE_KNOWLEDGE_PORT:-20010}:${CORE_KNOWLEDGE_PORT:-20010}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -458,8 +436,6 @@ services:
       KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
       KAFKA_TIMEOUT: "${KAFKA_TIMEOUT:-60}"
       KAFKA_TOPIC: "${WORKFLOW_KAFKA_TOPIC:-spark-agent-builder}"
-    ports:
-      - "${CORE_WORKFLOW_PORT:-7880}:${CORE_WORKFLOW_PORT:-7880}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -474,7 +450,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/workflow/config.env:/opt/openstellar/workflow/config.env
+      - ./config/workflow/config.env:/opt/core/workflow/config.env
+      - ./config/workflow/logs/:/opt/core/logs
     networks:
       - astron-agent-network
     restart: always
@@ -559,6 +536,9 @@ services:
       WECHAT_COMPONENT_SECRET: "${WECHAT_COMPONENT_SECRET:-your-wechat-component-secret}"
       WECHAT_TOKEN: "${WECHAT_TOKEN:-your-wechat-token}"
       WECHAT_ENCODING_AES_KEY: "${WECHAT_ENCODING_AES_KEY:-your-wechat-encoding-aes-key}"
+      WORKFLOW_CHAT_URL: "${WORKFLOW_CHAT_URL:-http://core-workflow:7880/workflow/v1/chat/completions}"
+      WORKFLOW_DEBUG_URL: "${WORKFLOW_DEBUG_URL:-http://core-workflow:7880/workflow/v1/debug/chat/completions}"
+      WORKFLOW_RESUME_URL: "${WORKFLOW_RESUME_URL:-http://core-workflow:7880/workflow/v1/resume}"
       COMMON_APPID: "${COMMON_APPID:-appid}"
       COMMON_APIKEY: "${COMMON_APIKEY:-apiKey}"
       COMMON_API_SECRET: "${COMMON_API_SECRET:-apiSecret}"
@@ -566,6 +546,12 @@ services:
       TENANT_KEY: "${TENANT_KEY:-tenantKey}"
       TENANT_SECRET: "${TENANT_SECRET:-tenantSecret}"
       ADMIN_UID: "${ADMIN_UID:-9999}"
+      APP_URL: "${APP_URL:-}"
+      KNOWLEDGE_URL: "${KNOWLEDGE_URL:-}"
+      TOOL_URL: "${TOOL_URL:-}"
+      WORKFLOW_URL: "${WORKFLOW_URL:-}"
+      SPARK_DB_URL: "${SPARK_DB_URL:-}"
+      LOCAL_MODEL_URL: "${LOCAL_MODEL_URL:-}"
       MAAS_APP_ID: "${MAAS_APP_ID:-your-maas-app-id}"
       MAAS_API_KEY: "${MAAS_API_KEY:-your-maas-api-key}"
       MAAS_API_SECRET: "${MAAS_API_SECRET:-your-maas-api-secret}"

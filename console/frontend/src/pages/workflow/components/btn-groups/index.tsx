@@ -161,7 +161,7 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
   const { t } = useTranslation();
   const { handleDebugger } = useFlowCommon();
   const navigate = useNavigate();
-  const { id: agentMassId } = useParams<{ id: string }>();
+  const { id: agentMaasId } = useParams<{ id: string }>();
   // Flow store
   const currentFlow: FlowType = useFlowsManager(
     (state: unknown) => state.currentFlow
@@ -217,7 +217,7 @@ const PublishHeader: React.FC<PublishHeaderProps> = ({
         workflowId={
           currentFlow?.ext ? JSON.parse(currentFlow.ext)?.botId : null
         }
-        agentMassId={agentMassId || null}
+        agentMaasId={agentMaasId || null}
       />
       <Tooltip
         title={t('workflow.nodes.header.export')}
