@@ -79,6 +79,15 @@ public class MaasUtil {
     @Value("${maas.authApi}")
     private String authApi;
 
+    @Value("${maas.mcpHost}")
+    private String mcpHost;
+
+    @Value("${maas.mcpRegister}")
+    private String mcpReleaseUrl;
+
+    public static final String PREFIX_MASS_COPY = "mass_copy_";
+    private static final String BOT_TAG_LIST = "bot_tag_list";
+
     @Autowired
     private UserLangChainDataService userLangChainDataService;
 
@@ -391,8 +400,7 @@ public class MaasUtil {
      */
     private JSONObject createApiInternal(String flowId, String appid, String version, JSONObject data) {
         log.info("----- Publishing maas workflow flowId: {}", flowId);
-        // Create MaasApi without data parameter for publish request
-        MaasApi maasApi = new MaasApi(flowId, appid, version);
+        MaasApi maasApi = new MaasApi(flowId, appid, version, data);
 
         // Execute publish request
         String publishResponse = executeRequest(publishApi, maasApi);
