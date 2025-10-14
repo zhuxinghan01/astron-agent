@@ -42,9 +42,11 @@ class KafkaProducerServiceFactory(ServiceFactory):
         password = os.getenv("KAFKA_SASL_PASSWORD", "")
         if username and password:
             config.update(
-                security_protocol=protocol,
-                sasl_mechanism=mechanism,
-                sasl_plain_username=username,
-                sasl_plain_password=password,
+                {
+                    "security.protocol": protocol,
+                    "sasl.mechanism": mechanism,
+                    "sasl.username": username,
+                    "sasl.password": password,
+                }
             )
         return KafkaProducerService(config)

@@ -28,12 +28,20 @@ astronAgent 项目包含以下三个主要组件：
 
 Casdoor 是一个开源的身份和访问管理平台，提供OAuth 2.0、OIDC、SAML等多种认证协议支持。
 
+启动 Casdoor 服务请运行我们的 [docker-compose.yaml](/docker/casdoor/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
+
 ```bash
 # 进入 Casdoor 目录
 cd docker/casdoor
 
 # 修改环境变量配置
 vim conf/app.conf
+
+# 创建日志挂载目录
+mkdir -p logs
+
+# 设置日志目录权限
+chmod -R 777 logs
 
 # 启动 Casdoor 服务
 docker-compose up -d
@@ -58,6 +66,8 @@ docker-compose logs -f
 
 RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档理解技术提供准确的问答服务。
 
+启动 RagFlow 服务请运行我们的 [docker-compose.yml](/docker/ragflow/docker-compose.yml) 文件或 [docker-compose-macos.yml](/docker/ragflow/docker-compose-macos.yml) 。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
+
 ```bash
 # 进入 RagFlow 目录
 cd docker/ragflow
@@ -72,16 +82,8 @@ docker-compose ps
 docker-compose logs -f ragflow
 ```
 
-**RagFlow 服务组件：**
-- **ragflow-server**：主服务 (端口 9380)
-- **ragflow-mysql**：MySQL数据库 (端口 3306)
-- **ragflow-redis**：Redis缓存 (端口 6379)
-- **ragflow-minio**：对象存储 (端口 9000, 控制台 9001)
-- **ragflow-es-01** 或 **ragflow-opensearch-01**：搜索引擎 (端口 9200/9201)
-- **ragflow-infinity**：向量数据库 (可选)
-
 **访问地址：**
-- RagFlow Web界面：http://localhost:9380
+- RagFlow Web界面：http://localhost/
 
 **重要配置说明：**
 - 默认使用 Elasticsearch，如需使用 opensearch、infinity，请修改 .env 中的 DOC_ENGINE 配置
@@ -91,29 +93,37 @@ docker-compose logs -f ragflow
 
 在启动 astronAgent 服务之前，根据需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
 
+```bash
+# 进入 astronAgent 目录
+cd docker/astronAgent
+
+# 复制环境变量配置
+cp .env.example .env
+```
+
 #### 3.1 配置知识库服务连接
 
-编辑 `docker/astronAgent/.env` 文件，配置 RagFlow 连接信息：
+编辑 docker/astronAgent/.env 文件，配置 RagFlow 连接信息：
 
 **关键配置项：**
 
 ```env
 # RAGFlow配置
-RAGFLOW_BASE_URL=http://localhost:9380
+RAGFLOW_BASE_URL=http://localhost/
 RAGFLOW_API_TOKEN=ragflow-your-api-token-here
 RAGFLOW_TIMEOUT=60
 RAGFLOW_DEFAULT_GROUP=星辰知识库
 ```
 
 **获取 RagFlow API Token：**
-1. 访问 RagFlow Web界面：http://localhost:9380
+1. 访问 RagFlow Web界面：http://localhost/
 2. 登录并进入用户设置
 3. 生成 API Token
 4. 将 Token 更新到配置文件中
 
 #### 3.2 配置 Casdoor 认证集成
 
-编辑 `docker/astronAgent/.env` 文件，配置 Casdoor 连接信息：
+编辑 docker/astronAgent/.env 文件，配置 Casdoor 连接信息：
 
 **关键配置项：**
 
@@ -143,7 +153,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 - 语音转写API: https://www.xfyun.cn/services/lfasr
 - 图片生成API: https://www.xfyun.cn/services/wtop
 
-最后编辑 `docker/astronAgent/.env` 文件，更新相关环境变量：
+最后编辑 docker/astronAgent/.env 文件，更新相关环境变量：
 ```env
 PLATFORM_APP_ID=your-app-id
 PLATFORM_API_KEY=your-api-key
@@ -152,13 +162,11 @@ PLATFORM_API_SECRET=your-api-secret
 SPARK_API_PASSWORD=your-api-password
 ```
 
+启动 astronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
 ```bash
 # 进入 astronAgent 目录
 cd docker/astronAgent
-
-# 复制环境变量配置
-cp .env.example .env
 
 # 根据需要修改配置
 vim .env
@@ -181,18 +189,10 @@ docker-compose logs -f
 - **Casdoor 管理界面**：http://localhost:8000
 
 ### 知识库服务
-- **RagFlow Web界面**：http://localhost:9380
+- **RagFlow Web界面**：http://localhost/
 
 ### AstronAgent 核心服务
-- **控制台前端(nginx代理)**：http://localhost:80
-
-### 中间件服务
-- **PostgreSQL**：localhost:5432
-- **MySQL**：localhost:3306
-- **Redis**：localhost:6379
-- **Elasticsearch**：localhost:9200
-- **Kafka**：localhost:9092
-- **MinIO**：localhost:9000
+- **控制台前端(nginx代理)**：http://localhost:10080
 
 ## 📚 更多资源
 
