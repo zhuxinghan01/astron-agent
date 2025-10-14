@@ -167,7 +167,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     public static final String CLONED_SUFFIX_PATTERN = "[(]\\d+[)]$";
 
     private static final String JSON_KEY_BOT_ID = "botId";
-    private static final String PUBLISH_SUCCESS = "Success";
+    private static final String PUBLISH_SUCCESS = "成功";
     private static final int DEFAULT_ORDER = 0;
 
     @Value("${spring.profiles.active}")
