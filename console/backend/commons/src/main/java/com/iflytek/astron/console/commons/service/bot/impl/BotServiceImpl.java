@@ -141,7 +141,7 @@ public class BotServiceImpl implements BotService {
     @Override
     public BotInfoDto getBotInfo(HttpServletRequest request, Integer botId, Long chatId, String workflowVersion) {
         String uid = RequestContextUtil.getUID();
-        String langCode = request.getHeader("Lang-Code") == null ? "" : request.getHeader("Lang-Code");
+        String langCode = I18nUtil.getLanguage();
         ChatBotBase chatBotBase = chatBotDataService.findById(botId).orElse(null);
 
         if (chatBotBase == null) {
