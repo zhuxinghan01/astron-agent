@@ -184,6 +184,7 @@ services:
       PGSQL_PASSWORD: "${POSTGRES_PASSWORD:-spark123}"
       PGSQL_DATABASE: "${DATABASE_POSTGRES_DATABASE:-sparkdb_manager}"
       OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
+      OTLP_ENABLE: "${OTLP_ENABLE:-0}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,8 +199,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/database/config.env:/opt/database/memory/database/config.env
-      - ./config/database/logs/:/opt/database/memory/database/logs
+      - ./config/database/config.env:/opt/core/memory/database/config.env
+      - ./config/database/logs/:/opt/core/memory/database/logs
     networks:
       - astron-agent-network
     restart: always
