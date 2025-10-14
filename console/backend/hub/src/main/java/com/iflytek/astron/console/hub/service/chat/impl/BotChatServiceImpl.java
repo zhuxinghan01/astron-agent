@@ -78,7 +78,7 @@ public class BotChatServiceImpl implements BotChatService {
     @Value("${deepseek.url}")
     private String deepseekUrl;
 
-    @Value("${deepseek.api.key}")
+    @Value("${deepseek.api-key}")
     private String deepseekApiKey;
 
     @Autowired
