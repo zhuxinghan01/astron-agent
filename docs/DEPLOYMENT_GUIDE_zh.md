@@ -37,6 +37,9 @@ cd docker/casdoor
 # 修改环境变量配置
 vim conf/app.conf
 
+# 创建日志挂载目录
+mkdir -p logs
+
 # 设置日志目录权限
 chmod -R 777 logs
 
@@ -63,6 +66,8 @@ docker-compose logs -f
 
 RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档理解技术提供准确的问答服务。
 
+启动 RagFlow 服务器请运行我们的 [docker-compose.yml](/docker/ragflow/docker-compose.yml) 文件或 [docker-compose-macos.yml](/docker/ragflow/docker-compose-macos.yml) 。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
+
 ```bash
 # 进入 RagFlow 目录
 cd docker/ragflow
@@ -77,16 +82,8 @@ docker-compose ps
 docker-compose logs -f ragflow
 ```
 
-**RagFlow 服务组件：**
-- **ragflow-server**：主服务 (端口 9380)
-- **ragflow-mysql**：MySQL数据库 (端口 3306)
-- **ragflow-redis**：Redis缓存 (端口 6379)
-- **ragflow-minio**：对象存储 (端口 9000, 控制台 9001)
-- **ragflow-es-01** 或 **ragflow-opensearch-01**：搜索引擎 (端口 9200/9201)
-- **ragflow-infinity**：向量数据库 (可选)
-
 **访问地址：**
-- RagFlow Web界面：http://localhost:9380
+- RagFlow Web界面：http://localhost/
 
 **重要配置说明：**
 - 默认使用 Elasticsearch，如需使用 opensearch、infinity，请修改 .env 中的 DOC_ENGINE 配置
