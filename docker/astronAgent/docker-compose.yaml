@@ -376,6 +376,7 @@ services:
     container_name: astron-agent-core-knowledge
     environment:
       SERVICE_PORT: "${CORE_KNOWLEDGE_PORT:-20010}"
+      OTLP_ENABLE: "${OTLP_ENABLE:-0}"
       RAGFLOW_BASE_URL: "${RAGFLOW_BASE_URL}"
       RAGFLOW_API_TOKEN: "${RAGFLOW_API_TOKEN}"
       RAGFLOW_TIMEOUT: "${RAGFLOW_TIMEOUT:-60}"
