@@ -131,8 +131,8 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
     }
 
     /**
-     * Get next version name for workflow release
-     * Simplified to match old project logic exactly - no fallback
+     * Get next version name for workflow release Simplified to match old project logic exactly - no
+     * fallback
      */
     private String getNextVersionName(String flowId, Long spaceId) {
         log.info("Getting next workflow version name: flowId={}, spaceId={}", flowId, spaceId);
@@ -175,13 +175,14 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             log.error("getVersionName-获取助手版本号异常,flowId={}", flowId, e);
             return null;
         }
-        
+
         // If we reach here, API call failed - return null like old project
         return null;
     }
 
     /**
      * Generate timestamp-based version number like old project
+     *
      * @return Timestamp version number (e.g., "1760323182721")
      */
     private String generateTimestampVersionNumber() {
@@ -232,7 +233,7 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             // Generate timestamp-based version number like old project
             String timestampVersionNum = generateTimestampVersionNumber();
             log.info("Generated timestamp version number: {}", timestampVersionNum);
-            
+
             // Create a new request with timestamp version number
             WorkflowReleaseRequestDto requestWithVersionNum = new WorkflowReleaseRequestDto();
             requestWithVersionNum.setBotId(request.getBotId());
@@ -242,7 +243,7 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
             requestWithVersionNum.setDescription(request.getDescription());
             requestWithVersionNum.setName(request.getName());
             requestWithVersionNum.setVersionNum(timestampVersionNum);
-            
+
             String jsonBody = JSON.toJSONString(requestWithVersionNum);
             String authHeader = getAuthorizationHeader();
 

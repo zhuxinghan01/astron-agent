@@ -1459,7 +1459,7 @@ CREATE TABLE `chat_bot_base`
     `background`        varchar(512)     DEFAULT NULL COMMENT 'Background setting',
     `virtual_character` varchar(512)     DEFAULT NULL COMMENT 'Character setting',
     `model`             varchar(32)      DEFAULT 'spark' COMMENT 'Model selected by assistant',
-    `mass_bot_id`       varchar(50)      DEFAULT NULL COMMENT 'mass_bot_id',
+    `maas_bot_id`       varchar(50)      DEFAULT NULL COMMENT 'maas_bot_id',
     `prologue_en`       varchar(1024)    DEFAULT NULL COMMENT 'Opening words - English',
     `input_example_en`  varchar(1024)    DEFAULT NULL COMMENT 'Recommended questions - English',
     `space_id`          bigint           DEFAULT NULL COMMENT 'Space ID',
@@ -9536,3 +9536,23 @@ mp3 html播放器
   "updateTime": "2025-02-08T21:50:01.000+08:00"
 }',1);
 
+-- ----------------------------
+-- Table structure for app_mst
+-- ----------------------------
+DROP TABLE IF EXISTS `app_mst`;
+CREATE TABLE `app_mst` (
+  `id`           bigint         NOT NULL        AUTO_INCREMENT,
+  `uid`          varchar(128)   NOT NULL        COMMENT 'User ID',
+  `app_name`     varchar(128)   DEFAULT NULL,   COMMENT 'App name',
+  `app_describe` varchar(512)   DEFAULT NULL,   COMMENT 'App Describe',
+  `app_id`       varchar(128)   DEFAULT NULL,   COMMENT 'App ID',
+  `app_key`      varchar(128)   DEFAULT NULL,   COMMENT 'App Key',
+  `app_secret`   varchar(128)   DEFAULT NULL,   COMMENT 'App Secret',
+  `is_delete`    tinyint        DEFAULT '0',    COMMENT 'Is Delete',
+  `create_time`  datetime       DEFAULT NULL,   COMMENT 'Create Time',
+  `update_time`  datetime       DEFAULT NULL,   COMMENT 'Update Time',
+  PRIMARY KEY (`id`),
+  KEY `idx_uid` (`uid`),
+  KEY `idx_app_id` (`app_id`),
+  KEY `idx_app_name` (`app_name`)
+) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci;
