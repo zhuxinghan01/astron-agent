@@ -8452,6 +8452,16 @@ CREATE TABLE `rpa_info`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='RPA configuration table';
 
+INSERT INTO rpa_info (category, name, value, is_deleted, remarks, icon, create_time, update_time, `path`) VALUES('xiaowu', '晓悟RPA', '[
+    {
+        "key": "API KEY",
+        "name": "apiKey",
+        "desc": "鉴权token key",
+        "type":"string",
+        "required":true
+    }
+]', 0, '晓悟RPA基于科大讯飞的AI+RPA技术，提供超过300个预置自动化原子能力，并以此为基础构建了流程自动化开发平台。该平台具备零基础开发特性，用户可通过无代码拖拽方式，灵活调用原子能力与场景化组件，快速完成业务机器人的搭建。', 'https://oss-beijing-m8.openstorage.cn/SparkBotProd/icon/icon_xiaowu.png', '2025-09-23 11:07:51', '2025-09-26 16:57:59', 'https://www.iflyrpa.com/');
+
 -- ----------------------------
 -- Table structure for rpa_user_assistant
 -- ----------------------------
