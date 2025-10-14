@@ -3,9 +3,10 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"testing"
+
 	"tenant/internal/dao"
 	"tenant/internal/models"
-	"testing"
 )
 
 // Mock AppDao
@@ -214,14 +215,6 @@ func (m *MockAuthDao) WithSource(source int64) dao.SqlOption {
 }
 
 // Helper function to create AppService with mock DAOs
-func createMockAppService(mockAppDao *MockAppDao, mockAuthDao *MockAuthDao) *AppService {
-	// We need to cast to the real interface, but for now let's create a wrapper
-	return &AppService{
-		appDao:  (*dao.AppDao)(nil),  // This will be overridden in tests
-		authDao: (*dao.AuthDao)(nil), // This will be overridden in tests
-	}
-}
-
 func TestNewAppService(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -291,7 +284,10 @@ func testAppServiceMethodSafely(t *testing.T, testName string, testFunc func() e
 			if r := recover(); r != nil {
 				// If we get a nil pointer panic, we expect it due to DAO being nil
 				// This is normal in our test environment since we can't create real DAOs
-				t.Logf("Expected nil pointer panic in test environment - this indicates the test reached the DAO layer: %v", r)
+				t.Logf(
+					"Expected nil pointer panic in test environment - this indicates the test reached the DAO layer: %v",
+					r,
+				)
 				// Don't fail the test - this is expected behavior
 			}
 		}()
@@ -397,8 +393,9 @@ func TestAppService_Rollback_WithError(t *testing.T) {
 		t.Error("Test error should not be nil")
 	}
 
-	if service == nil {
-		t.Error("Service should not be nil")
+	// Verify service is initialized
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 
 	t.Logf("Testing error handling with error: %v", testErr)
@@ -414,8 +411,9 @@ func TestAppService_Rollback_WithoutError(t *testing.T) {
 	// This test verifies that no-error handling works
 	t.Log("Testing rollback method behavior without error")
 
-	if service == nil {
-		t.Error("Service should not be nil")
+	// Test service initialization
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 }
 
@@ -432,8 +430,8 @@ func TestAppService_Rollback_WithPanic(t *testing.T) {
 	}()
 
 	// Test that service exists and can handle operations
-	if service == nil {
-		t.Error("Service should not be nil")
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 
 	t.Log("Testing panic recovery behavior")
@@ -777,8 +775,8 @@ func TestAppService_Rollback_RollbackError_Enhanced(t *testing.T) {
 
 	// Test rollback error handling - simplified
 	t.Log("Testing rollback error handling")
-	if service == nil {
-		t.Error("Service should not be nil")
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 }
 
@@ -787,8 +785,8 @@ func TestAppService_Rollback_CommitError_Enhanced(t *testing.T) {
 
 	// Test commit error handling - simplified
 	t.Log("Testing commit error handling")
-	if service == nil {
-		t.Error("Service should not be nil")
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 }
 
@@ -803,8 +801,8 @@ func TestAppService_Rollback_PanicRecovery_Enhanced(t *testing.T) {
 		}
 	}()
 
-	if service == nil {
-		t.Error("Service should not be nil")
+	if service.appDao == nil && service.authDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 
 	t.Log("Testing panic recovery")

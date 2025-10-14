@@ -1,9 +1,10 @@
 package service
 
 import (
+	"testing"
+
 	"tenant/internal/dao"
 	"tenant/internal/models"
-	"testing"
 )
 
 // Helper that creates AuthService for testing without DB dependency
@@ -20,7 +21,10 @@ func testAuthServiceMethodSafely(t *testing.T, testName string, testFunc func() 
 			if r := recover(); r != nil {
 				// If we get a nil pointer panic, we expect it due to DAO being nil
 				// This is normal in our test environment since we can't create real DAOs
-				t.Logf("Expected nil pointer panic in test environment - this indicates the test reached the DAO layer: %v", r)
+				t.Logf(
+					"Expected nil pointer panic in test environment - this indicates the test reached the DAO layer: %v",
+					r,
+				)
 				// Don't fail the test - this is expected behavior
 			}
 		}()
@@ -250,8 +254,8 @@ func TestAuthService_Rollback_WithPanic(t *testing.T) {
 		}
 	}()
 
-	if service == nil {
-		t.Error("Service should not be nil")
+	if service.authDao == nil && service.appDao == nil {
+		t.Error("Service DAOs should be initialized")
 	}
 
 	t.Log("Testing panic recovery behavior")

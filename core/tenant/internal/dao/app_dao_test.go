@@ -642,7 +642,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Insert method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Insert(&models.App{}, nil)
 				return err
 			},
@@ -650,7 +650,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Update method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Update([]SqlOption{}, nil)
 				return err
 			},
@@ -658,7 +658,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Delete method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Delete(nil)
 				return err
 			},
@@ -666,7 +666,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Select method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Select()
 				return err
 			},
@@ -674,7 +674,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Count method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Count(false, nil)
 				return err
 			},
@@ -682,7 +682,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "BeginTx method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.BeginTx()
 				return err
 			},

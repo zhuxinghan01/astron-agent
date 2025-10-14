@@ -170,7 +170,7 @@ location = "invalid
 		t.Run(tt.name, func(t *testing.T) {
 			// Create config file
 			configPath := filepath.Join(tempDir, "test_config.toml")
-			err := os.WriteFile(configPath, []byte(tt.configFile), 0644)
+			err := os.WriteFile(configPath, []byte(tt.configFile), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to write test config file: %v", err)
 			}
@@ -211,19 +211,19 @@ func TestLocalLoader_Load_PermissionDenied(t *testing.T) {
 	configPath := filepath.Join(tempDir, "restricted_config.toml")
 
 	// Write config file
-	err := os.WriteFile(configPath, []byte(`[service]\nport = 8080`), 0644)
+	err := os.WriteFile(configPath, []byte(`[service]\nport = 8080`), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to write test config file: %v", err)
 	}
 
 	// Remove read permissions (this may not work on all systems)
-	err = os.Chmod(configPath, 0000)
+	err = os.Chmod(configPath, 0o000)
 	if err != nil {
 		t.Skipf("Cannot change file permissions on this system: %v", err)
 	}
 
 	// Restore permissions for cleanup
-	defer os.Chmod(configPath, 0644)
+	defer func() { _ = os.Chmod(configPath, 0o644) }()
 
 	loader := NewLocalLoader(configPath)
 	cfg := &Config{}

@@ -5,8 +5,7 @@ import (
 	"os"
 )
 
-type EnvLoader struct {
-}
+type EnvLoader struct{}
 
 func NewEnvLoader() *EnvLoader {
 	return &EnvLoader{}

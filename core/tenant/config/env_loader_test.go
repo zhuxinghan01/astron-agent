@@ -174,21 +174,21 @@ func TestEnvLoader_Load(t *testing.T) {
 
 			for _, key := range envKeys {
 				originalEnv[key] = os.Getenv(key)
-				os.Unsetenv(key) // Clear environment first
+				_ = os.Unsetenv(key) // Clear environment first
 			}
 
 			// Set test environment variables
 			for key, value := range tt.envVars {
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value)
 			}
 
 			// Cleanup environment after test
 			defer func() {
 				for _, key := range envKeys {
 					if originalVal, exists := originalEnv[key]; exists {
-						os.Setenv(key, originalVal)
+						_ = os.Setenv(key, originalVal)
 					} else {
-						os.Unsetenv(key)
+						_ = os.Unsetenv(key)
 					}
 				}
 			}()
@@ -284,19 +284,19 @@ func TestEnvLoader_Load_IntegerParsing(t *testing.T) {
 			originalEnv := make(map[string]string)
 			for _, key := range envKeys {
 				originalEnv[key] = os.Getenv(key)
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			}
 
 			// Set the specific test environment variable
-			os.Setenv(tt.envVar, tt.value)
+			_ = os.Setenv(tt.envVar, tt.value)
 
 			// Cleanup
 			defer func() {
 				for _, key := range envKeys {
 					if originalVal, exists := originalEnv[key]; exists {
-						os.Setenv(key, originalVal)
+						_ = os.Setenv(key, originalVal)
 					} else {
-						os.Unsetenv(key)
+						_ = os.Unsetenv(key)
 					}
 				}
 			}()
@@ -369,18 +369,17 @@ func TestEnvLoader_LoadPreservesExistingConfig(t *testing.T) {
 
 	// Set only one environment variable
 	originalPort := os.Getenv("SERVICE_PORT")
-	os.Setenv("SERVICE_PORT", "8080")
+	_ = os.Setenv("SERVICE_PORT", "8080")
 	defer func() {
 		if originalPort != "" {
-			os.Setenv("SERVICE_PORT", originalPort)
+			_ = os.Setenv("SERVICE_PORT", originalPort)
 		} else {
-			os.Unsetenv("SERVICE_PORT")
+			_ = os.Unsetenv("SERVICE_PORT")
 		}
 	}()
 
 	loader := NewEnvLoader()
 	err := loader.Load(cfg)
-
 	if err != nil {
 		t.Errorf("EnvLoader.Load() should not error: %v", err)
 	}

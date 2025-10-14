@@ -9,7 +9,6 @@ import (
 func TestGetLocalIP(t *testing.T) {
 	t.Run("should_return_valid_ip", func(t *testing.T) {
 		ip, err := GetLocalIP()
-
 		if err != nil {
 			// On some systems this might fail, which is acceptable
 			t.Logf("GetLocalIP failed (this may be expected in some environments): %v", err)
@@ -134,7 +133,6 @@ func TestGetWinIP(t *testing.T) {
 
 	t.Run("should_return_valid_ip_on_windows", func(t *testing.T) {
 		ip, err := getWinIP()
-
 		if err != nil {
 			// Connection might fail in test environment
 			t.Logf("getWinIP failed (may be expected in test environment): %v", err)
