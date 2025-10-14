@@ -140,12 +140,53 @@ func TestNewErrResp(t *testing.T) {
 	}
 }
 
+type successRespTestCase struct {
+	name string
+	sid  string
+	data interface{}
+}
+
+func validateSuccessResponse(t *testing.T, resp *Resp, tt successRespTestCase) {
+	if resp == nil {
+		t.Fatal("Expected non-nil response")
+	}
+
+	if resp.Code != Success {
+		t.Errorf("Expected code %d, got %d", Success, resp.Code)
+	}
+
+	if resp.Sid != tt.sid {
+		t.Errorf("Expected sid '%s', got '%s'", tt.sid, resp.Sid)
+	}
+
+	if resp.Message != "success" {
+		t.Errorf("Expected message 'success', got '%s'", resp.Message)
+	}
+
+	validateSuccessResponseData(t, resp, tt)
+}
+
+func validateSuccessResponseData(t *testing.T, resp *Resp, tt successRespTestCase) {
+	if tt.data != nil {
+		if resp.Data == nil {
+			t.Errorf("Expected data %v, got nil", tt.data)
+		}
+
+		switch tt.data.(type) {
+		case []string:
+			if resp.Data == nil {
+				t.Error("Expected slice data to be non-nil")
+			}
+		default:
+			if resp.Data != tt.data {
+				t.Errorf("Expected data %v, got %v", tt.data, resp.Data)
+			}
+		}
+	}
+}
+
 func TestNewSuccessResp(t *testing.T) {
-	tests := []struct {
-		name string
-		sid  string
-		data interface{}
-	}{
+	tests := []successRespTestCase{
 		{
 			name: "success response with string data",
 			sid:  "test-sid-123",
@@ -174,44 +215,7 @@ func TestNewSuccessResp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := newSuccessResp(tt.data, tt.sid)
-
-			if resp == nil {
-				t.Fatal("Expected non-nil response")
-			}
-
-			if resp.Code != Success {
-				t.Errorf("Expected code %d, got %d", Success, resp.Code)
-			}
-
-			if resp.Sid != tt.sid {
-				t.Errorf("Expected sid '%s', got '%s'", tt.sid, resp.Sid)
-			}
-
-			if resp.Message != "success" {
-				t.Errorf("Expected message 'success', got '%s'", resp.Message)
-			}
-
-			// For success response, data should match
-			if tt.data != nil {
-				// Use type assertion and reflection for safer comparison
-				if resp.Data == nil {
-					t.Errorf("Expected data %v, got nil", tt.data)
-				}
-				// For slice types, just check that data is not nil
-				// For other types, we can do direct comparison
-				switch tt.data.(type) {
-				case []string:
-					// For slice data, just verify it's not nil
-					if resp.Data == nil {
-						t.Error("Expected slice data to be non-nil")
-					}
-				default:
-					// For non-slice types, do direct comparison
-					if resp.Data != tt.data {
-						t.Errorf("Expected data %v, got %v", tt.data, resp.Data)
-					}
-				}
-			}
+			validateSuccessResponse(t, resp, tt)
 		})
 	}
 }

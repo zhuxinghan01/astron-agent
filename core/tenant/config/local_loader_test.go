@@ -45,16 +45,67 @@ func TestNewLocalLoader(t *testing.T) {
 	}
 }
 
+type localTestCase struct {
+	name       string
+	configFile string
+	wantErr    bool
+	validate   func(t *testing.T, cfg *Config)
+}
+
+func createValidatorForValidTOML(t *testing.T) func(t *testing.T, cfg *Config) {
+	return func(t *testing.T, cfg *Config) {
+		expectations := map[string]interface{}{
+			"Server.Port":           8080,
+			"Server.Location":       "us-east",
+			"DataBase.DBType":       "mysql",
+			"DataBase.UserName":     "testuser",
+			"DataBase.Password":     "testpass",
+			"DataBase.Url":          "localhost:3306/testdb",
+			"DataBase.MaxOpenConns": 10,
+			"DataBase.MaxIdleConns": 5,
+			"Log.LogFile":           "/tmp/test.log",
+		}
+
+		checkConfigField(t, "Server.Port", cfg.Server.Port, expectations["Server.Port"])
+		checkConfigField(t, "Server.Location", cfg.Server.Location, expectations["Server.Location"])
+		checkConfigField(t, "DataBase.DBType", cfg.DataBase.DBType, expectations["DataBase.DBType"])
+		checkConfigField(t, "DataBase.UserName", cfg.DataBase.UserName, expectations["DataBase.UserName"])
+		checkConfigField(t, "DataBase.Password", cfg.DataBase.Password, expectations["DataBase.Password"])
+		checkConfigField(t, "DataBase.Url", cfg.DataBase.Url, expectations["DataBase.Url"])
+		checkConfigField(t, "DataBase.MaxOpenConns", cfg.DataBase.MaxOpenConns, expectations["DataBase.MaxOpenConns"])
+		checkConfigField(t, "DataBase.MaxIdleConns", cfg.DataBase.MaxIdleConns, expectations["DataBase.MaxIdleConns"])
+		checkConfigField(t, "Log.LogFile", cfg.Log.LogFile, expectations["Log.LogFile"])
+	}
+}
+
+func createValidatorForPartialTOML(t *testing.T) func(t *testing.T, cfg *Config) {
+	return func(t *testing.T, cfg *Config) {
+		checkConfigField(t, "Server.Port", cfg.Server.Port, 9090)
+		checkConfigField(t, "Server.Location", cfg.Server.Location, "")
+		checkConfigField(t, "DataBase.DBType", cfg.DataBase.DBType, "postgresql")
+		checkConfigField(t, "DataBase.UserName", cfg.DataBase.UserName, "partialuser")
+		checkConfigField(t, "DataBase.Password", cfg.DataBase.Password, "")
+		checkConfigField(t, "DataBase.MaxOpenConns", cfg.DataBase.MaxOpenConns, 0)
+	}
+}
+
+func createValidatorForEmptyTOML(t *testing.T) func(t *testing.T, cfg *Config) {
+	return func(t *testing.T, cfg *Config) {
+		checkConfigField(t, "Server.Port", cfg.Server.Port, 0)
+		checkConfigField(t, "DataBase.DBType", cfg.DataBase.DBType, "")
+	}
+}
+
+func checkConfigField(t *testing.T, fieldName string, actual, expected interface{}) {
+	if actual != expected {
+		t.Errorf("Expected %s %v, got %v", fieldName, expected, actual)
+	}
+}
+
 func TestLocalLoader_Load(t *testing.T) {
-	// Create temporary directory for test files
 	tempDir := t.TempDir()
 
-	tests := []struct {
-		name       string
-		configFile string
-		wantErr    bool
-		validate   func(*Config) error
-	}{
+	tests := []localTestCase{
 		{
 			name: "valid TOML config",
 			configFile: `
@@ -73,37 +124,8 @@ maxIdleConns = 5
 [log]
 path = "/tmp/test.log"
 `,
-			wantErr: false,
-			validate: func(cfg *Config) error {
-				if cfg.Server.Port != 8080 {
-					t.Errorf("Expected port 8080, got %d", cfg.Server.Port)
-				}
-				if cfg.Server.Location != "us-east" {
-					t.Errorf("Expected location 'us-east', got %s", cfg.Server.Location)
-				}
-				if cfg.DataBase.DBType != "mysql" {
-					t.Errorf("Expected dbType 'mysql', got %s", cfg.DataBase.DBType)
-				}
-				if cfg.DataBase.UserName != "testuser" {
-					t.Errorf("Expected username 'testuser', got %s", cfg.DataBase.UserName)
-				}
-				if cfg.DataBase.Password != "testpass" {
-					t.Errorf("Expected password 'testpass', got %s", cfg.DataBase.Password)
-				}
-				if cfg.DataBase.Url != "localhost:3306/testdb" {
-					t.Errorf("Expected url 'localhost:3306/testdb', got %s", cfg.DataBase.Url)
-				}
-				if cfg.DataBase.MaxOpenConns != 10 {
-					t.Errorf("Expected MaxOpenConns 10, got %d", cfg.DataBase.MaxOpenConns)
-				}
-				if cfg.DataBase.MaxIdleConns != 5 {
-					t.Errorf("Expected MaxIdleConns 5, got %d", cfg.DataBase.MaxIdleConns)
-				}
-				if cfg.Log.LogFile != "/tmp/test.log" {
-					t.Errorf("Expected log file '/tmp/test.log', got %s", cfg.Log.LogFile)
-				}
-				return nil
-			},
+			wantErr:  false,
+			validate: createValidatorForValidTOML(t),
 		},
 		{
 			name: "partial TOML config",
@@ -115,45 +137,15 @@ port = 9090
 dbType = "postgresql"
 username = "partialuser"
 `,
-			wantErr: false,
-			validate: func(cfg *Config) error {
-				if cfg.Server.Port != 9090 {
-					t.Errorf("Expected port 9090, got %d", cfg.Server.Port)
-				}
-				if cfg.Server.Location != "" {
-					t.Errorf("Expected empty location, got %s", cfg.Server.Location)
-				}
-				if cfg.DataBase.DBType != "postgresql" {
-					t.Errorf("Expected dbType 'postgresql', got %s", cfg.DataBase.DBType)
-				}
-				if cfg.DataBase.UserName != "partialuser" {
-					t.Errorf("Expected username 'partialuser', got %s", cfg.DataBase.UserName)
-				}
-				// Other fields should be zero values
-				if cfg.DataBase.Password != "" {
-					t.Errorf("Expected empty password, got %s", cfg.DataBase.Password)
-				}
-				if cfg.DataBase.MaxOpenConns != 0 {
-					t.Errorf("Expected MaxOpenConns 0, got %d", cfg.DataBase.MaxOpenConns)
-				}
-				return nil
-			},
+			wantErr:  false,
+			validate: createValidatorForPartialTOML(t),
 		},
 		{
 			name: "empty TOML config",
 			configFile: `# Empty config file
 `,
-			wantErr: false,
-			validate: func(cfg *Config) error {
-				// All fields should be zero values
-				if cfg.Server.Port != 0 {
-					t.Errorf("Expected port 0, got %d", cfg.Server.Port)
-				}
-				if cfg.DataBase.DBType != "" {
-					t.Errorf("Expected empty dbType, got %s", cfg.DataBase.DBType)
-				}
-				return nil
-			},
+			wantErr:  false,
+			validate: createValidatorForEmptyTOML(t),
 		},
 		{
 			name: "invalid TOML syntax",
@@ -168,14 +160,12 @@ location = "invalid
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create config file
 			configPath := filepath.Join(tempDir, "test_config.toml")
 			err := os.WriteFile(configPath, []byte(tt.configFile), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to write test config file: %v", err)
 			}
 
-			// Create loader and load config
 			loader := NewLocalLoader(configPath)
 			cfg := &Config{}
 			err = loader.Load(cfg)
@@ -186,9 +176,7 @@ location = "invalid
 			}
 
 			if !tt.wantErr && tt.validate != nil {
-				if err := tt.validate(cfg); err != nil {
-					t.Errorf("Config validation failed: %v", err)
-				}
+				tt.validate(t, cfg)
 			}
 		})
 	}

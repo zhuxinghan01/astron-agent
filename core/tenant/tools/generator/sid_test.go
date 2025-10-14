@@ -78,15 +78,64 @@ func TestSidGenerator2_NewSid(t *testing.T) {
 	}
 }
 
+type sidGeneratorTestCase struct {
+	name        string
+	location    string
+	localIP     string
+	localPort   string
+	shouldPanic bool
+	description string
+}
+
+func testSidGeneratorInit(t *testing.T, tt sidGeneratorTestCase) {
+	generator := &SidGenerator2{}
+
+	if tt.shouldPanic {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Init should have panicked for %s", tt.description)
+			}
+		}()
+	} else {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Init should not panic for valid input: %v", r)
+			}
+		}()
+	}
+
+	generator.Init(tt.location, tt.localIP, tt.localPort)
+
+	if !tt.shouldPanic {
+		validateSidGenerator(t, generator, tt)
+	}
+}
+
+func validateSidGenerator(t *testing.T, generator *SidGenerator2, tt sidGeneratorTestCase) {
+	if generator.Location != tt.location {
+		t.Errorf("Location not set correctly: expected %s, got %s", tt.location, generator.Location)
+	}
+
+	if generator.Port != tt.localPort {
+		t.Errorf("Port not set correctly: expected %s, got %s", tt.localPort, generator.Port)
+	}
+
+	if generator.ShortLocalIP == "" {
+		t.Error("ShortLocalIP should be computed")
+	}
+
+	if len(generator.ShortLocalIP) != 4 {
+		t.Errorf("ShortLocalIP should be 4 characters, got %d", len(generator.ShortLocalIP))
+	}
+
+	matched, _ := regexp.MatchString("^[0-9a-f]{4}$", generator.ShortLocalIP)
+	if !matched {
+		t.Errorf("ShortLocalIP should be 4-character hex string, got: %s", generator.ShortLocalIP)
+	}
+}
+
 func TestSidGenerator2_Init(t *testing.T) {
-	tests := []struct {
-		name        string
-		location    string
-		localIP     string
-		localPort   string
-		shouldPanic bool
-		description string
-	}{
+	tests := []sidGeneratorTestCase{
 		{
 			name:        "valid IPv4 and port",
 			location:    "BJ",
@@ -132,7 +181,7 @@ func TestSidGenerator2_Init(t *testing.T) {
 			location:    "BJ",
 			localIP:     "2001:db8::1",
 			localPort:   "8080",
-			shouldPanic: false, // IPv6 addresses are parsed successfully by net.ParseIP
+			shouldPanic: false,
 			description: "should work with IPv6 address",
 		},
 		{
@@ -171,49 +220,7 @@ func TestSidGenerator2_Init(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator := &SidGenerator2{}
-
-			if tt.shouldPanic {
-				defer func() {
-					if r := recover(); r == nil {
-						t.Errorf("Init should have panicked for %s", tt.description)
-					}
-				}()
-			} else {
-				defer func() {
-					if r := recover(); r != nil {
-						t.Errorf("Init should not panic for valid input: %v", r)
-					}
-				}()
-			}
-
-			generator.Init(tt.location, tt.localIP, tt.localPort)
-
-			if !tt.shouldPanic {
-				// Verify initialization was successful
-				if generator.Location != tt.location {
-					t.Errorf("Location not set correctly: expected %s, got %s", tt.location, generator.Location)
-				}
-
-				if generator.Port != tt.localPort {
-					t.Errorf("Port not set correctly: expected %s, got %s", tt.localPort, generator.Port)
-				}
-
-				// Verify ShortLocalIP was computed
-				if generator.ShortLocalIP == "" {
-					t.Error("ShortLocalIP should be computed")
-				}
-
-				if len(generator.ShortLocalIP) != 4 {
-					t.Errorf("ShortLocalIP should be 4 characters, got %d", len(generator.ShortLocalIP))
-				}
-
-				// Verify ShortLocalIP is hex
-				matched, _ := regexp.MatchString("^[0-9a-f]{4}$", generator.ShortLocalIP)
-				if !matched {
-					t.Errorf("ShortLocalIP should be 4-character hex string, got: %s", generator.ShortLocalIP)
-				}
-			}
+			testSidGeneratorInit(t, tt)
 		})
 	}
 }
