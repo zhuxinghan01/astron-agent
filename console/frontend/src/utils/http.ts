@@ -178,6 +178,9 @@ export const initBusinessError = (
   response: AxiosResponse,
   result: ResponseResult
 ) => {
+  if (result?.code !== 0) {
+    message.error(result?.message || result?.desc);
+  }
   // 添加套餐用量耗尽处理
   if ([11120].includes(result.code)) {
     eventBus.emit('showUsageExhausted', {
