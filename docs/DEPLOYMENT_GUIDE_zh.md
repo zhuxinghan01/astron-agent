@@ -146,7 +146,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 3. 进入 **“应用管理”** 页面： [http://localhost:8000/applications](http://localhost:8000/applications)  
 4. 创建一个新的应用，填写以下信息：  
    - **Name**：自定义应用名称  
-   - **Redirect URL**：设置为项目的回调地址，例如 `http://localhost:10080/callback `（该地址为项目中 Nginx 容器的回调端口，默认 `10080`）  
+   - **Redirect URL**：设置为项目的回调地址，例如 `http://localhost:80/callback `（该地址为项目中 Nginx 容器的回调端口，默认 `80`）  
 5. 保存应用后，记录以下信息并与项目配置项一一对应：  
 
 | Casdoor 信息项 | 示例值 | `.env` 中对应配置项 |
