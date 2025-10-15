@@ -69,6 +69,9 @@ RagFlow 是一个开源的RAG（检索增强生成）引擎，使用深度文档
 # 进入 RagFlow 目录
 cd docker/ragflow
 
+# 给所有 sh 文件添加可执行权限
+chmod +x *.sh
+
 # 启动 RagFlow 服务（包含所有依赖）
 docker compose up -d
 
