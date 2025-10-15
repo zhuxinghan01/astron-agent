@@ -624,11 +624,7 @@ public class MaasUtil {
      */
     public static boolean isFileArray(JSONObject param) {
         try {
-            if ("array-string".equalsIgnoreCase(param.getJSONObject("schema").getString("type"))) {
-                return true;
-            } else {
-                return false;
-            }
+            return "array-string".equalsIgnoreCase(param.getJSONObject("schema").getString("type"));
         } catch (Exception e) {
             log.error("Exception determining if parameter is array type: {}", e.getMessage());
             return false;
