@@ -403,7 +403,6 @@ func TestBuildUpdate_EdgeCases(t *testing.T) {
 		}
 
 		sql, params, err := buildUpdate("", options...)
-
 		if err != nil {
 			t.Errorf("buildUpdate() with empty template should not error: %v", err)
 		}
@@ -428,7 +427,6 @@ func TestBuildUpdate_EdgeCases(t *testing.T) {
 		}
 
 		sql, params, err := buildUpdate("UPDATE test SET", options...)
-
 		if err != nil {
 			t.Errorf("buildUpdate() should not error: %v", err)
 		}

@@ -1,8 +1,9 @@
 package database
 
 import (
-	"tenant/config"
 	"testing"
+
+	"tenant/config"
 )
 
 func TestDBType_Constants(t *testing.T) {
@@ -427,8 +428,8 @@ func TestDatabase_IntegrationReadiness(t *testing.T) {
 	t.Run("database_initialization", func(t *testing.T) {
 		// Test that Database can be created and initialized
 		db := &Database{}
-		if db == nil {
-			t.Error("Database struct should be creatable")
+		if db.mysql == nil {
+			t.Log("Database struct created with empty mysql connection")
 		}
 
 		// Test method accessibility
@@ -443,8 +444,8 @@ func TestDatabase_IntegrationReadiness(t *testing.T) {
 		if false {
 			var db *Database
 			var config *config.Config
-			NewDatabase(config)
-			db.buildMysql(config)
+			_, _ = NewDatabase(config)
+			_ = db.buildMysql(config)
 			db.GetMysql()
 		}
 	})
