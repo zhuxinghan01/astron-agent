@@ -184,6 +184,7 @@ services:
       PGSQL_PASSWORD: "${POSTGRES_PASSWORD:-spark123}"
       PGSQL_DATABASE: "${DATABASE_POSTGRES_DATABASE:-sparkdb_manager}"
       OTLP_ENDPOINT: "${OTLP_ENDPOINT:-127.0.0.1:4317}"
+      OTLP_ENABLE: "${OTLP_ENABLE:-0}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,8 +199,8 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./config/database/config.env:/opt/database/memory/database/config.env
-      - ./config/database/logs/:/opt/database/memory/database/logs
+      - ./config/database/config.env:/opt/core/memory/database/config.env
+      - ./config/database/logs/:/opt/core/memory/database/logs
     networks:
       - astron-agent-network
     restart: always
@@ -281,9 +282,9 @@ services:
       OSS_BUCKET_NAME: "${OSS_BUCKET_NAME}"
       OSS_TTL: "${OSS_TTL:-157788000}"
       KAFKA_SERVERS: "${KAFKA_SERVERS:-kafka:29092}"
-      AI_APP_ID: "${AI_APP_ID}"
-      AI_API_KEY: "${AI_API_KEY}"
-      AI_API_SECRET: "${AI_API_SECRET}"
+      AI_APP_ID: "${PLATFORM_APP_ID}"
+      AI_API_KEY: "${PLATFORM_API_KEY}"
+      AI_API_SECRET: "${PLATFORM_API_SECRET}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -376,10 +377,12 @@ services:
     container_name: astron-agent-core-knowledge
     environment:
       SERVICE_PORT: "${CORE_KNOWLEDGE_PORT:-20010}"
+      OTLP_ENABLE: "${OTLP_ENABLE:-0}"
       RAGFLOW_BASE_URL: "${RAGFLOW_BASE_URL}"
       RAGFLOW_API_TOKEN: "${RAGFLOW_API_TOKEN}"
       RAGFLOW_TIMEOUT: "${RAGFLOW_TIMEOUT:-60}"
       RAGFLOW_DEFAULT_GROUP: "${RAGFLOW_DEFAULT_GROUP}"
+      XINGHUO_DATASET_ID: "${XINGHUO_DATASET_ID:-}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -568,6 +571,8 @@ services:
       MAAS_AUTH_API: "${MAAS_AUTH_API:-}"
       MAAS_MCP_REGISTER: "${MAAS_MCP_REGISTER:-}"
       MAAS_WORKFLOW_CONFIG: "${MAAS_WORKFLOW_CONFIG:-}"
+      BOT_API_CBM_BASE_URL: "${BOT_API_CBM_BASE_URL:-}"
+      BOT_API_MAAS_BASE_URL: "${BOT_API_MAAS_BASE_URL:-}"
       TENANT_CREATE_APP: "${TENANT_CREATE_APP:-}"
       TENANT_GET_APP_DETAIL: "${TENANT_GET_APP_DETAIL:-}"
       DEEPSEEK_URL: "${DEEPSEEK_URL:-https://api.deepseek.com/chat/completions}"

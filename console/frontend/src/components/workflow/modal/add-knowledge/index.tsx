@@ -217,7 +217,7 @@ const KnowledgeList = ({
                 >
                   {item.name}
                 </p>
-                <img src={item?.corner} className="w-[54px] h-[28px]" alt="" />
+                <img src={item?.corner} className="h-[20px]" alt="" />
               </div>
               <div
                 className="border border-[#E5E5E5] py-1 px-6 rounded-lg cursor-pointer"

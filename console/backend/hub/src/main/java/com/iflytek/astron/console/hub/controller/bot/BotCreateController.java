@@ -73,43 +73,38 @@ public class BotCreateController {
      * @param bot Assistant creation form
      * @return Created assistant ID
      */
-    @SpacePreAuth(key = "BotCreateController_create_POST")
+    @SpacePreAuth(key = "BotCreateController_createBot_POST")
     @PostMapping("/create")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     @Transactional
     public ApiResult<Integer> createBot(HttpServletRequest request, @RequestBody BotCreateForm bot) {
-        try {
-            String uid = RequestContextUtil.getUID();
-            Long spaceId = SpaceInfoUtil.getSpaceId();
+        String uid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
 
-            // Validate dataset ownership before creating bot
-            List<Long> datasetList = bot.getDatasetList();
-            List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
-                return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
-            }
-            boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
-            boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
-            int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
-            bot.setSupportDocument(supportDocument);
-            // Create bot basic information
-            BotInfoDto botInfo = botService.insertBotBasicInfo(uid, bot, spaceId);
-            Integer botId = botInfo.getBotId();
-
-            // Handle dataset associations
-            if (selfDocumentExist) {
-                botDatasetService.botAssociateDataset(uid, botId, datasetList, supportDocument);
-            }
-
-            if (maasDocumentExist) {
-                botDatasetMaasService.botAssociateDataset(uid, botId, maasDatasetList, supportDocument);
-            }
-
-            return ApiResult.success(botId);
-        } catch (Exception e) {
-            log.error("Failed to create basic assistant: {}", e.getMessage(), e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+        // Validate dataset ownership before creating bot
+        List<Long> datasetList = bot.getDatasetList();
+        List<Long> maasDatasetList = bot.getMaasDatasetList();
+        if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
         }
+        boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
+        boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
+        int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
+        bot.setSupportDocument(supportDocument);
+        // Create bot basic information
+        BotInfoDto botInfo = botService.insertBotBasicInfo(uid, bot, spaceId);
+        Integer botId = botInfo.getBotId();
+
+        // Handle dataset associations
+        if (selfDocumentExist) {
+            botDatasetService.botAssociateDataset(uid, botId, datasetList, supportDocument);
+        }
+
+        if (maasDocumentExist) {
+            botDatasetMaasService.botAssociateDataset(uid, botId, maasDatasetList, supportDocument);
+        }
+
+        return ApiResult.success(botId);
     }
 
     /**
@@ -119,13 +114,8 @@ public class BotCreateController {
      */
     @PostMapping("/type-list")
     public ApiResult<List<BotTypeList>> getBotTypeList() {
-        try {
-            List<BotTypeList> typeList = botService.getBotTypeList();
-            return ApiResult.success(typeList);
-        } catch (Exception e) {
-            log.error("Failed to get assistant type list: {}", e.getMessage(), e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
-        }
+        List<BotTypeList> typeList = botService.getBotTypeList();
+        return ApiResult.success(typeList);
     }
 
     /**
@@ -137,26 +127,21 @@ public class BotCreateController {
     @PostMapping("/ai-avatar-gen")
     @RateLimit(dimension = "USER", window = 86400, limit = 50)
     public ApiResult<String> generateAvatar(@Valid @RequestBody BotCreateForm requestBody) {
-        try {
-            String uid = RequestContextUtil.getUID();
-            String botName = requestBody.getName();
-            String botDesc = requestBody.getBotDesc();
+        String uid = RequestContextUtil.getUID();
+        String botName = requestBody.getName();
+        String botDesc = requestBody.getBotDesc();
 
-            if (botName == null || botName.trim().isEmpty()) {
-                return ApiResult.error(ResponseEnum.PARAMS_ERROR);
-            }
+        if (botName == null || botName.trim().isEmpty()) {
+            return ApiResult.error(ResponseEnum.PARAMS_ERROR);
+        }
 
-            String avatar = botAIService.generateAvatar(uid, botName, botDesc);
+        String avatar = botAIService.generateAvatar(uid, botName, botDesc);
 
-            if (avatar == null || avatar.trim().isEmpty()) {
-                return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
-            }
-
-            return ApiResult.success(avatar);
-        } catch (Exception e) {
-            log.error("User [{}] AI assistant avatar generation failed", RequestContextUtil.getUID(), e);
+        if (avatar == null || avatar.trim().isEmpty()) {
             return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
         }
+
+        return ApiResult.success(avatar);
     }
 
     /**
@@ -168,18 +153,13 @@ public class BotCreateController {
     @PostMapping("/ai-sentence-gen")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<BotGenerationDTO> sentence(@RequestParam String sentence) {
-        try {
-            if (sentence == null || sentence.trim().isEmpty()) {
-                return ApiResult.error(ResponseEnum.PARAMS_ERROR);
-            }
-
-            String uid = RequestContextUtil.getUID();
-            BotGenerationDTO botDetail = botAIService.sentenceBot(sentence, uid);
-            return ApiResult.success(botDetail);
-        } catch (Exception e) {
-            log.error("One sentence assistant generation failed", e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+        if (sentence == null || sentence.trim().isEmpty()) {
+            return ApiResult.error(ResponseEnum.PARAMS_ERROR);
         }
+
+        String uid = RequestContextUtil.getUID();
+        BotGenerationDTO botDetail = botAIService.sentenceBot(sentence, uid);
+        return ApiResult.success(botDetail);
     }
 
     /**
@@ -192,16 +172,11 @@ public class BotCreateController {
     public ApiResult<List<String>> generateInputExample(@RequestParam String botName,
             @RequestParam String botDesc,
             @RequestParam String prompt) {
-        try {
-            if (botName == null || botName.trim().isEmpty()) {
-                return ApiResult.error(ResponseEnum.PARAMS_ERROR);
-            }
-            List<String> examples = botAIService.generateInputExample(botName, botDesc, prompt);
-            return ApiResult.success(examples);
-        } catch (Exception e) {
-            log.error("AI generate input examples failed, botName = {}, botDesc = {}", botName, botDesc, e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+        if (botName == null || botName.trim().isEmpty()) {
+            return ApiResult.error(ResponseEnum.PARAMS_ERROR);
         }
+        List<String> examples = botAIService.generateInputExample(botName, botDesc, prompt);
+        return ApiResult.success(examples);
     }
 
     /**
@@ -213,17 +188,12 @@ public class BotCreateController {
     @PostMapping("/ai-prologue-gen")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<String> aiGenPrologue(@Valid @RequestBody BotCreateForm form) {
-        try {
-            String botName = form.getName();
-            if (botName == null || botName.trim().isEmpty()) {
-                return ApiResult.error(ResponseEnum.PARAMS_ERROR);
-            }
-            String aiPrologue = botAIService.generatePrologue(botName);
-            return ApiResult.success(aiPrologue);
-        } catch (Exception e) {
-            log.error("AI assistant prologue generation failed", e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+        String botName = form.getName();
+        if (botName == null || botName.trim().isEmpty()) {
+            return ApiResult.error(ResponseEnum.PARAMS_ERROR);
         }
+        String aiPrologue = botAIService.generatePrologue(botName);
+        return ApiResult.success(aiPrologue);
     }
 
     /**
@@ -233,45 +203,40 @@ public class BotCreateController {
      * @param bot Assistant update form (must contain botId)
      * @return Update result
      */
-    @SpacePreAuth(key = "BotCreateController_update_POST")
+    @SpacePreAuth(key = "BotCreateController_updateBot_POST")
     @PostMapping("/update")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     @Transactional
     public ApiResult<Boolean> updateBot(HttpServletRequest request, @RequestBody BotCreateForm bot) {
-        try {
-            // Validate botId is provided
-            if (bot.getBotId() == null) {
-                return ApiResult.error(ResponseEnum.PARAMS_ERROR);
-            }
-
-            String uid = RequestContextUtil.getUID();
-            Long spaceId = SpaceInfoUtil.getSpaceId();
-
-            // Permission validation
-            botPermissionUtil.checkBot(bot.getBotId());
-
-            // Validate dataset ownership before updating bot
-            List<Long> datasetList = bot.getDatasetList();
-            List<Long> maasDatasetList = bot.getMaasDatasetList();
-            if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
-                return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
-            }
-            boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
-            boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
-            int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
-            bot.setSupportDocument(supportDocument);
-            // Update bot basic information
-            Boolean result = botService.updateBotBasicInfo(uid, bot, spaceId);
-
-            // Handle dataset associations update
-            botDatasetService.updateDatasetByBot(uid, bot.getBotId(), datasetList, supportDocument);
-            botDatasetMaasService.updateDatasetByBot(uid, bot.getBotId(), maasDatasetList, supportDocument);
-
-            return ApiResult.success(result);
-        } catch (Exception e) {
-            log.error("Failed to update assistant: {}", e.getMessage(), e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+        // Validate botId is provided
+        if (bot.getBotId() == null) {
+            return ApiResult.error(ResponseEnum.PARAMS_ERROR);
         }
+
+        String uid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+
+        // Permission validation
+        botPermissionUtil.checkBot(bot.getBotId());
+
+        // Validate dataset ownership before updating bot
+        List<Long> datasetList = bot.getDatasetList();
+        List<Long> maasDatasetList = bot.getMaasDatasetList();
+        if (!botDatasetService.checkDatasetBelong(uid, spaceId, datasetList)) {
+            return ApiResult.error(ResponseEnum.BOT_BELONG_ERROR);
+        }
+        boolean selfDocumentExist = (datasetList != null && !datasetList.isEmpty());
+        boolean maasDocumentExist = (maasDatasetList != null && !maasDatasetList.isEmpty());
+        int supportDocument = (selfDocumentExist || maasDocumentExist) ? 1 : 0;
+        bot.setSupportDocument(supportDocument);
+        // Update bot basic information
+        Boolean result = botService.updateBotBasicInfo(uid, bot, spaceId);
+
+        // Handle dataset associations update
+        botDatasetService.updateDatasetByBot(uid, bot.getBotId(), datasetList, supportDocument);
+        botDatasetMaasService.updateDatasetByBot(uid, bot.getBotId(), maasDatasetList, supportDocument);
+
+        return ApiResult.success(result);
     }
 
     /**
@@ -373,47 +338,42 @@ public class BotCreateController {
      */
     @GetMapping("/template")
     public ApiResult<List<BotTemplate>> getTemplates(@RequestParam(required = false) Integer botId) {
-        try {
-            // Get current language from request
-            String language = I18nUtil.getLanguage();
-            // Default to 'zh' if language is not supported
-            if (!"en".equals(language)) {
-                language = "zh";
+        // Get current language from request
+        String language = I18nUtil.getLanguage();
+        // Default to 'zh' if language is not supported
+        if (!"en".equals(language)) {
+            language = "zh";
+        }
+
+        // Get templates from cache based on language
+        String cacheKey = "bot:template:list:" + language;
+        List<BotTemplate> templates = (List<BotTemplate>) redisUtil.get(cacheKey);
+
+        if (templates == null) {
+            templates = botTemplateMapper.selectListByLanguage(language);
+            if (templates != null && !templates.isEmpty()) {
+                redisUtil.put(cacheKey, templates, 10, TimeUnit.DAYS);
             }
+        }
 
-            // Get templates from cache based on language
-            String cacheKey = "bot:template:list:" + language;
-            List<BotTemplate> templates = (List<BotTemplate>) redisUtil.get(cacheKey);
+        if (templates == null) {
+            templates = new ArrayList<>();
+        }
 
-            if (templates == null) {
-                templates = botTemplateMapper.selectListByLanguage(language);
-                if (templates != null && !templates.isEmpty()) {
-                    redisUtil.put(cacheKey, templates, 10, TimeUnit.DAYS);
-                }
+        if (botId != null) {
+            // Filter single template from the list
+            BotTemplate template = templates.stream()
+                    .filter(t -> botId.equals(t.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (template == null) {
+                return ApiResult.error(ResponseEnum.INTERNAL_SERVER_ERROR);
             }
-
-            if (templates == null) {
-                templates = new ArrayList<>();
-            }
-
-            if (botId != null) {
-                // Filter single template from the list
-                BotTemplate template = templates.stream()
-                        .filter(t -> botId.equals(t.getId()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (template == null) {
-                    return ApiResult.error(ResponseEnum.INTERNAL_SERVER_ERROR);
-                }
-                return ApiResult.success(Collections.singletonList(template));
-            } else {
-                // Return all templates
-                return ApiResult.success(templates);
-            }
-        } catch (Exception e) {
-            log.error("Failed to get bot templates: {}", e.getMessage(), e);
-            return ApiResult.error(ResponseEnum.SYSTEM_ERROR);
+            return ApiResult.success(Collections.singletonList(template));
+        } else {
+            // Return all templates
+            return ApiResult.success(templates);
         }
     }
 }

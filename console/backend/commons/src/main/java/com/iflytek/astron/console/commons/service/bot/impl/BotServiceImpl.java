@@ -117,7 +117,18 @@ public class BotServiceImpl implements BotService {
 
     @Override
     public List<BotTypeList> getBotTypeList() {
-        return botTypeListService.getBotTypeList();
+        List<BotTypeList> typeList = botTypeListService.getBotTypeList();
+
+        String currentLang = I18nUtil.getLanguage();
+        if ("en".equals(currentLang)) {
+            typeList.forEach(botType -> {
+                if (StringUtils.isNotBlank(botType.getTypeNameEn())) {
+                    botType.setTypeName(botType.getTypeNameEn());
+                }
+            });
+        }
+
+        return typeList;
     }
 
     /**
