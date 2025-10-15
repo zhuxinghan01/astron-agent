@@ -397,8 +397,7 @@ public class MaasUtil {
      */
     private JSONObject createApiInternal(String flowId, String appid, String version, JSONObject data) {
         log.info("----- Publishing maas workflow flowId: {}", flowId);
-        // Create MaasApi without data parameter for publish request
-        MaasApi maasApi = new MaasApi(flowId, appid, version);
+        MaasApi maasApi = new MaasApi(flowId, appid, version, data);
 
         // Execute publish request
         String publishResponse = executeRequest(publishApi, maasApi);
@@ -464,7 +463,7 @@ public class MaasUtil {
 
     public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request) {
         log.info("----- Copying maas workflow id: {}", maasId);
-        HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl + "/workflow/internal-clone");
+        HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl);
         if (baseUrl == null) {
             log.error("Failed to parse clone workflow URL: {}", cloneWorkFlowUrl);
             throw new BusinessException(ResponseEnum.CLONE_BOT_FAILED);

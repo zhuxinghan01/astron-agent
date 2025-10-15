@@ -82,12 +82,6 @@ public class BotPublishServiceImpl implements BotPublishService {
     // Statistics data related
     private final BotConversationStatsMapper botConversationStatsMapper;
 
-    // MaaS API related
-    private final ChatBotApiMapper chatBotApiMapper;
-
-    @Value("${maas.appId}")
-    private String maasAppId;
-
     @Override
     public PageResponse<BotPublishInfoDto> getBotList(
             BotListRequestDto requestDto,
