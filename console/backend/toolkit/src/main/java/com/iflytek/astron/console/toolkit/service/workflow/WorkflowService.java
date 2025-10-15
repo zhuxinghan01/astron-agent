@@ -65,14 +65,12 @@ import com.iflytek.astron.console.toolkit.entity.table.relation.FlowDbRel;
 import com.iflytek.astron.console.toolkit.entity.table.relation.FlowRepoRel;
 import com.iflytek.astron.console.toolkit.entity.table.relation.FlowToolRel;
 import com.iflytek.astron.console.toolkit.entity.table.repo.FileInfoV2;
-import com.iflytek.astron.console.toolkit.entity.table.tool.ToolBox;
-import com.iflytek.astron.console.toolkit.entity.table.tool.ToolBoxOperateHistory;
+import com.iflytek.astron.console.toolkit.entity.table.tool.*;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.*;
 import com.iflytek.astron.console.toolkit.entity.tool.McpServerTool;
 import com.iflytek.astron.console.toolkit.entity.vo.*;
 import com.iflytek.astron.console.toolkit.entity.vo.eval.EvalSetVerDataVo;
-import com.iflytek.astron.console.toolkit.handler.McpServerHandler;
-import com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler;
+import com.iflytek.astron.console.toolkit.handler.*;
 import com.iflytek.astron.console.toolkit.mapper.ConfigInfoMapper;
 import com.iflytek.astron.console.toolkit.mapper.database.DbTableMapper;
 import com.iflytek.astron.console.toolkit.mapper.eval.EvalSetMapper;
@@ -82,8 +80,7 @@ import com.iflytek.astron.console.toolkit.mapper.relation.FlowDbRelMapper;
 import com.iflytek.astron.console.toolkit.mapper.relation.FlowRepoRelMapper;
 import com.iflytek.astron.console.toolkit.mapper.relation.FlowToolRelMapper;
 import com.iflytek.astron.console.toolkit.mapper.repo.FileInfoV2Mapper;
-import com.iflytek.astron.console.toolkit.mapper.tool.ToolBoxMapper;
-import com.iflytek.astron.console.toolkit.mapper.tool.ToolBoxOperateHistoryMapper;
+import com.iflytek.astron.console.toolkit.mapper.tool.*;
 import com.iflytek.astron.console.toolkit.mapper.trace.ChatInfoMapper;
 import com.iflytek.astron.console.toolkit.mapper.trace.NodeInfoMapper;
 import com.iflytek.astron.console.toolkit.mapper.workflow.*;
@@ -91,6 +88,7 @@ import com.iflytek.astron.console.toolkit.service.extra.AppService;
 import com.iflytek.astron.console.toolkit.service.extra.CoreSystemService;
 import com.iflytek.astron.console.toolkit.service.extra.OpenPlatformService;
 import com.iflytek.astron.console.toolkit.service.model.ModelService;
+import com.iflytek.astron.console.toolkit.service.tool.RpaAssistantService;
 import com.iflytek.astron.console.toolkit.sse.WorkflowSseEventSourceListener;
 import com.iflytek.astron.console.toolkit.tool.DataPermissionCheckTool;
 import com.iflytek.astron.console.toolkit.tool.JsonConverter;
@@ -169,6 +167,12 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     private static final String JSON_KEY_BOT_ID = "botId";
     private static final String PUBLISH_SUCCESS = "成功";
     private static final int DEFAULT_ORDER = 0;
+    private static final String NP_PROJECT_ID   = "projectId";
+    private static final String NP_ASSISTANT_ID = "assistantId";
+    private static final String NP_VERSION      = "version";
+    private static final String FIELD_IS_LATEST = "isLatest";
+    private static final String FIELD_LATEST_VER= "latestVersion";
+    private static final String FIELD_CURR_VER  = "currentVersion";
 
     @Value("${spring.profiles.active}")
     String env;
@@ -262,6 +266,12 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     private CommonConfig commonConfig;
     @Autowired
     private UserInfoDataService userInfoDataService;
+    @Autowired
+    private RpaAssistantService rpaAssistantService;
+    @Autowired
+    private RpaUserAssistantFieldMapper rpaUserAssistantFieldMapper;
+    @Autowired
+    private RpaHandler rpaHandler;
 
     /**
      * Query workflow list with pagination (in-memory pagination, can be replaced with database
@@ -477,7 +487,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         // Tool/node version tips
         workflow.setData(buildFlowToolLastVersion(workflow.getData()));
         workflow.setData(buildFlowLastVersion(workflow.getData()));
-
+        workflow.setData(buildFlowRpaLastVersion(workflow.getData()));
         WorkflowVo vo = new WorkflowVo();
         org.springframework.beans.BeanUtils.copyProperties(workflow, vo);
         vo.setAddress(s3Util.getS3Prefix());
@@ -513,6 +523,132 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
             }
         }
         return vo;
+    }
+
+    /**
+     * 判断rpa是否是最新的版本
+     * @param data
+     * @return
+     */
+
+    private String buildFlowRpaLastVersion(String data) {
+        if (StringUtils.isBlank(data)) {
+            return data;
+        }
+
+        BizWorkflowData bizWorkflowData = JSON.parseObject(data, BizWorkflowData.class);
+        if (bizWorkflowData == null || CollUtil.isEmpty(bizWorkflowData.getNodes())) {
+            return data;
+        }
+
+        final Map<String, Integer> flowProjectVersionMap = new HashMap<>();
+        final List<BizWorkflowNode> rpaNodes = new ArrayList<>();
+        final Set<Long> assistantIds = new HashSet<>();
+
+        for (BizWorkflowNode n : bizWorkflowData.getNodes()) {
+            if (n == null || n.getId() == null) continue;
+            if (!n.getId().startsWith(WorkflowConst.NodeType.RPA)) continue;
+
+            rpaNodes.add(n);
+
+            JSONObject nodeParam = Optional.ofNullable(n.getData()).map(BizNodeData::getNodeParam).orElse(null);
+            if (nodeParam == null) continue;
+
+            final String projectId = nodeParam.getString(NP_PROJECT_ID);
+            final Integer version  = nodeParam.getInteger(NP_VERSION);
+            final Long assistantId = nodeParam.getLong(NP_ASSISTANT_ID);
+
+            if (StringUtils.isNotBlank(projectId) && version != null) {
+                flowProjectVersionMap.merge(projectId, version, Math::max);
+            }
+            if (assistantId != null) {
+                assistantIds.add(assistantId);
+            }
+        }
+
+        if (flowProjectVersionMap.isEmpty() || assistantIds.isEmpty()) {
+            return data;
+        }
+
+        // Batch retrieve API keys through assistantId (deduplication)
+        List<RpaUserAssistantField> fields;
+        try {
+            fields = rpaUserAssistantFieldMapper.selectList(
+                    new LambdaQueryWrapper<RpaUserAssistantField>()
+                            .select(RpaUserAssistantField::getFieldValue)
+                            .in(RpaUserAssistantField::getAssistantId, assistantIds)
+            );
+        } catch (Exception ex) {
+            log.warn("buildFlowRpaLastVersion: query assistant fields failed, ids={}", assistantIds, ex);
+            fields = Collections.emptyList();
+        }
+        if (CollectionUtil.isEmpty(fields)) {
+            // Unable to obtain any key, still write the current Version back and treat isLatest as unknown (default false is safer)
+            for (BizWorkflowNode n : rpaNodes) {
+                final JSONObject nodeParam = Optional.ofNullable(n.getData()).map(BizNodeData::getNodeParam).orElse(null);
+                if (nodeParam == null) continue;
+                Integer curr = nodeParam.getInteger(NP_VERSION);
+                n.getData().setIsLatest(false);
+            }
+            return JSONObject.toJSONString(bizWorkflowData);
+        }
+
+        final Set<String> apiKeySet = fields.stream()
+                .map(RpaUserAssistantField::getFieldValue)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+        if (apiKeySet.isEmpty()) {
+            return JSONObject.toJSONString(bizWorkflowData);
+        }
+
+        // 3) Pull the latest online version: projectId ->latestVersion (multi key scenario: take the maximum version)
+        final Map<String, Integer> latestRpaVersionMap = new HashMap<>();
+        for (String apiKey : apiKeySet) {
+            try {
+                JSONObject rpaList = rpaHandler.getRpaList(1, 999, apiKey);
+                if (rpaList == null) continue;
+                JSONArray records = rpaList.getJSONArray("records");
+                if (records == null || records.isEmpty()) continue;
+
+                for (int i = 0; i < records.size(); i++) {
+                    JSONObject record = records.getJSONObject(i);
+                    if (record == null) continue;
+                    String projectId = record.getString("project_id");
+                    Integer version  = record.getInteger("version");
+                    if (StringUtils.isBlank(projectId) || version == null) continue;
+                    latestRpaVersionMap.merge(projectId, version, Math::max);
+                }
+            } catch (Exception ex) {
+                // Single key failure does not affect the overall performance
+                log.warn("buildFlowRpaLastVersion: fetch rpa list failed for one apiKey", ex);
+            }
+        }
+
+        // 4) Mark each RPA node as isLatest/latestVersion/CurrentVersion
+        boolean anyChanged = false;
+        for (BizWorkflowNode n : rpaNodes) {
+            final BizNodeData dataObj = n.getData();
+            final JSONObject nodeParam = Optional.ofNullable(dataObj).map(BizNodeData::getNodeParam).orElse(null);
+            if (nodeParam == null) continue;
+
+            final String projectId = nodeParam.getString(NP_PROJECT_ID);
+            final Integer currVer  = nodeParam.getInteger(NP_VERSION);
+            if (currVer != null) nodeParam.put(FIELD_CURR_VER, currVer);
+            //Default true (if online data cannot be obtained, it will be considered as "unknown/not negative")
+            boolean isLatest = true;
+            Integer latestVer = latestRpaVersionMap.get(projectId);
+            if (latestVer != null) {
+                nodeParam.put(FIELD_LATEST_VER, latestVer);
+                isLatest = Objects.equals(currVer, latestVer);
+            }
+            if (dataObj.getIsLatest() == null || dataObj.getIsLatest() != isLatest) {
+                dataObj.setIsLatest(isLatest);
+                anyChanged = true;
+            }
+        }
+
+        // 5) Write back only when there are real changes, reducing unnecessary string creation
+        return anyChanged ? JSONObject.toJSONString(bizWorkflowData) : data;
     }
 
     /**
