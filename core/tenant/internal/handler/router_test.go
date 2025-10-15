@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"tenant/config"
 	"tenant/tools/generator"
-	"testing"
 
 	"github.com/gin-gonic/gin"
 )
@@ -245,8 +246,10 @@ func TestRouterStructure(t *testing.T) {
 	// Test that we can create the necessary structures
 	t.Run("sid_generator_structure", func(t *testing.T) {
 		generator := &generator.SidGenerator2{}
-		if generator == nil {
-			t.Error("Failed to create SidGenerator2")
+		// Test that generator is properly initialized
+		generator.Init("test", "127.0.0.1", "8080")
+		if generator.Location == "" {
+			t.Error("SidGenerator2 should be initialized with location")
 		}
 	})
 

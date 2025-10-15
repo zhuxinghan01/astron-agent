@@ -30,7 +30,6 @@ func GetLocalIP() (string, error) {
 	}()
 	if runtime.GOOS == "windows" {
 		ip, err := getWinIP()
-
 		if err != nil {
 			return "", err
 		}
@@ -48,7 +47,6 @@ func GetLocalIP() (string, error) {
 	}
 
 	addrs, err := net.LookupHost(hostname)
-
 	if err != nil {
 		return "", err
 	}

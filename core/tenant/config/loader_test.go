@@ -47,7 +47,7 @@ func TestConfLoader_Interface(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test that the loader implements the interface
-			var _ ConfLoader = tt.loader
+			_ = tt.loader
 
 			// Test that interface methods can be called
 			cfg := &Config{}
@@ -78,6 +78,7 @@ func TestConfLoader_Methods(t *testing.T) {
 				// Test that we receive a Config pointer
 				if cfg == nil {
 					t.Errorf("Load method should receive non-nil Config pointer")
+					return nil
 				}
 
 				// Test that we can modify the config
@@ -88,7 +89,6 @@ func TestConfLoader_Methods(t *testing.T) {
 
 		cfg := &Config{}
 		err := loader.Load(cfg)
-
 		if err != nil {
 			t.Errorf("MockLoader.Load() should not return error: %v", err)
 		}
@@ -237,7 +237,6 @@ func TestConfLoader_InterfaceDocumentation(t *testing.T) {
 
 		cfg := &Config{}
 		err := loader.Load(cfg)
-
 		if err != nil {
 			t.Errorf("Load should not return error: %v", err)
 		}

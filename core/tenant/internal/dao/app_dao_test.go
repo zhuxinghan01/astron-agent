@@ -54,193 +54,134 @@ func TestNewAppDao(t *testing.T) {
 	}
 }
 
+type sqlOptionTest struct {
+	name        string
+	createFunc  func(*AppDao) SqlOption
+	expectedSQL string
+	expectedLen int
+	checkParams func([]interface{}) bool
+}
+
+func testSqlOption(t *testing.T, test sqlOptionTest, appDao *AppDao) {
+	t.Run(test.name, func(t *testing.T) {
+		option := test.createFunc(appDao)
+		if option == nil {
+			t.Errorf("%s should not return nil", test.name)
+			return
+		}
+
+		sql, params := option()
+		if sql != test.expectedSQL {
+			t.Errorf("%s sql = %s, want %s", test.name, sql, test.expectedSQL)
+		}
+
+		if len(params) != test.expectedLen {
+			t.Errorf("%s params length = %d, want %d", test.name, len(params), test.expectedLen)
+		}
+
+		if test.checkParams != nil && !test.checkParams(params) {
+			t.Errorf("%s params validation failed: %v", test.name, params)
+		}
+	})
+}
+
 func TestAppDao_SqlOptions(t *testing.T) {
-	// Create a mock AppDao to test SQL option functions
 	mockDb := &database.Database{}
 	appDao, err := NewAppDao(mockDb)
 	if err != nil {
 		t.Fatalf("Failed to create AppDao: %v", err)
 	}
 
-	t.Run("WithAppId", func(t *testing.T) {
-		appId := "test-app-123"
-		option := appDao.WithAppId(appId)
-		sql, params := option()
+	tests := []sqlOptionTest{
+		{
+			name:        "WithAppId",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithAppId("test-app-123") },
+			expectedSQL: "app_id=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test-app-123" },
+		},
+		{
+			name:        "WithNotAppId",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithNotAppId("test-app-123") },
+			expectedSQL: "app_id!=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test-app-123" },
+		},
+		{
+			name:        "WithSource",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithSource("admin") },
+			expectedSQL: "source=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "admin" },
+		},
+		{
+			name:        "WithIsDisable",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithIsDisable(true) },
+			expectedSQL: "is_disable=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == true },
+		},
+		{
+			name:        "WithIsDelete",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithIsDelete(false) },
+			expectedSQL: "is_delete=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == false },
+		},
+		{
+			name:        "WithUpdateTime",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithUpdateTime("2023-01-01 12:00:00") },
+			expectedSQL: "update_time=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "2023-01-01 12:00:00" },
+		},
+		{
+			name:        "WithName",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithName("test-app") },
+			expectedSQL: "app_name like ?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test-app" },
+		},
+		{
+			name:        "WithSetName",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithSetName("new-app-name") },
+			expectedSQL: "app_name=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "new-app-name" },
+		},
+		{
+			name:        "WithDesc",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithDesc("test description") },
+			expectedSQL: "app_desc=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "test description" },
+		},
+		{
+			name:        "WithDevId",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithDevId(int64(12345)) },
+			expectedSQL: "dev_id=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == int64(12345) },
+		},
+		{
+			name:        "WithChannelId",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithChannelId("cloud-123") },
+			expectedSQL: "channel_id=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "cloud-123" },
+		},
+		{
+			name:        "WithNoChannelId",
+			createFunc:  func(dao *AppDao) SqlOption { return dao.WithNoChannelId("cloud-123") },
+			expectedSQL: "channel_id!=?",
+			expectedLen: 1,
+			checkParams: func(params []interface{}) bool { return params[0] == "cloud-123" },
+		},
+	}
 
-		expectedSql := "app_id=?"
-		if sql != expectedSql {
-			t.Errorf("WithAppId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != appId {
-			t.Errorf("WithAppId() params = %v, want [%v]", params, appId)
-		}
-	})
-
-	t.Run("WithNotAppId", func(t *testing.T) {
-		appId := "test-app-123"
-		option := appDao.WithNotAppId(appId)
-		sql, params := option()
-
-		expectedSql := "app_id!=?"
-		if sql != expectedSql {
-			t.Errorf("WithNotAppId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != appId {
-			t.Errorf("WithNotAppId() params = %v, want [%v]", params, appId)
-		}
-	})
-
-	t.Run("WithSource", func(t *testing.T) {
-		source := "admin"
-		option := appDao.WithSource(source)
-		sql, params := option()
-
-		expectedSql := "source=?"
-		if sql != expectedSql {
-			t.Errorf("WithSource() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != source {
-			t.Errorf("WithSource() params = %v, want [%v]", params, source)
-		}
-	})
-
-	t.Run("WithIsDisable", func(t *testing.T) {
-		isDisable := true
-		option := appDao.WithIsDisable(isDisable)
-		sql, params := option()
-
-		expectedSql := "is_disable=?"
-		if sql != expectedSql {
-			t.Errorf("WithIsDisable() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != isDisable {
-			t.Errorf("WithIsDisable() params = %v, want [%v]", params, isDisable)
-		}
-	})
-
-	t.Run("WithIsDelete", func(t *testing.T) {
-		isDelete := false
-		option := appDao.WithIsDelete(isDelete)
-		sql, params := option()
-
-		expectedSql := "is_delete=?"
-		if sql != expectedSql {
-			t.Errorf("WithIsDelete() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != isDelete {
-			t.Errorf("WithIsDelete() params = %v, want [%v]", params, isDelete)
-		}
-	})
-
-	t.Run("WithUpdateTime", func(t *testing.T) {
-		updateTime := "2023-01-01 12:00:00"
-		option := appDao.WithUpdateTime(updateTime)
-		sql, params := option()
-
-		expectedSql := "update_time=?"
-		if sql != expectedSql {
-			t.Errorf("WithUpdateTime() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != updateTime {
-			t.Errorf("WithUpdateTime() params = %v, want [%v]", params, updateTime)
-		}
-	})
-
-	t.Run("WithName", func(t *testing.T) {
-		name := "test-app"
-		option := appDao.WithName(name)
-		sql, params := option()
-
-		expectedSql := "app_name like ?"
-		if sql != expectedSql {
-			t.Errorf("WithName() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != name {
-			t.Errorf("WithName() params = %v, want [%v]", params, name)
-		}
-	})
-
-	t.Run("WithSetName", func(t *testing.T) {
-		name := "new-app-name"
-		option := appDao.WithSetName(name)
-		sql, params := option()
-
-		expectedSql := "app_name=?"
-		if sql != expectedSql {
-			t.Errorf("WithSetName() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != name {
-			t.Errorf("WithSetName() params = %v, want [%v]", params, name)
-		}
-	})
-
-	t.Run("WithDesc", func(t *testing.T) {
-		desc := "test description"
-		option := appDao.WithDesc(desc)
-		sql, params := option()
-
-		expectedSql := "app_desc=?"
-		if sql != expectedSql {
-			t.Errorf("WithDesc() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != desc {
-			t.Errorf("WithDesc() params = %v, want [%v]", params, desc)
-		}
-	})
-
-	t.Run("WithDevId", func(t *testing.T) {
-		devId := int64(12345)
-		option := appDao.WithDevId(devId)
-		sql, params := option()
-
-		expectedSql := "dev_id=?"
-		if sql != expectedSql {
-			t.Errorf("WithDevId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != devId {
-			t.Errorf("WithDevId() params = %v, want [%v]", params, devId)
-		}
-	})
-
-	t.Run("WithChannelId", func(t *testing.T) {
-		cloudId := "cloud-123"
-		option := appDao.WithChannelId(cloudId)
-		sql, params := option()
-
-		expectedSql := "channel_id=?"
-		if sql != expectedSql {
-			t.Errorf("WithChannelId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != cloudId {
-			t.Errorf("WithChannelId() params = %v, want [%v]", params, cloudId)
-		}
-	})
-
-	t.Run("WithNoChannelId", func(t *testing.T) {
-		cloudId := "cloud-123"
-		option := appDao.WithNoChannelId(cloudId)
-		sql, params := option()
-
-		expectedSql := "channel_id!=?"
-		if sql != expectedSql {
-			t.Errorf("WithNoChannelId() sql = %s, want %s", sql, expectedSql)
-		}
-
-		if len(params) != 1 || params[0] != cloudId {
-			t.Errorf("WithNoChannelId() params = %v, want [%v]", params, cloudId)
-		}
-	})
+	for _, test := range tests {
+		testSqlOption(t, test, appDao)
+	}
 
 	t.Run("WithAppIds", func(t *testing.T) {
 		appIds := []string{"app1", "app2", "app3"}
@@ -642,7 +583,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Insert method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Insert(&models.App{}, nil)
 				return err
 			},
@@ -650,7 +591,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Update method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Update([]SqlOption{}, nil)
 				return err
 			},
@@ -658,7 +599,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Delete method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Delete(nil)
 				return err
 			},
@@ -666,7 +607,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Select method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Select()
 				return err
 			},
@@ -674,7 +615,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "Count method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.Count(false, nil)
 				return err
 			},
@@ -682,7 +623,7 @@ func TestAppDao_AllMethodsExist(t *testing.T) {
 		{
 			name: "BeginTx method signature",
 			testFunc: func() error {
-				defer func() { recover() }()
+				defer func() { _ = recover() }()
 				_, err := appDao.BeginTx()
 				return err
 			},
