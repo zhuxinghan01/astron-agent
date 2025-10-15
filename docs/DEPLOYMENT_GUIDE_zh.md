@@ -82,6 +82,11 @@ docker compose logs -f ragflow
 **访问地址：**
 - RagFlow Web界面：http://localhost:10080
 
+**模型配置步骤：**  
+1. 点击头像进入 **Model Providers（模型提供商）** 页面，选择 **Add Model（添加模型）**，填写对应的 **API 地址** 和 **API Key**，分别添加 **Chat 模型** 和 **Embedding 模型**。  
+2. 在同一页面右上角点击 **Set Default Models（设置默认模型）**，将第一步中添加的 **Chat 模型** 和 **Embedding 模型** 设为默认。
+
+
 **重要配置说明：**
 - 默认使用 Elasticsearch，如需使用 opensearch、infinity，请修改 .env 中的 DOC_ENGINE 配置
 - 支持GPU加速，使用 `docker-compose-gpu.yml` 启动
@@ -143,10 +148,16 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 **获取 Casdoor 配置信息：**
 1. 访问 Casdoor 管理控制台： [http://localhost:8000](http://localhost:8000)  
 2. 使用默认管理员账号登录：`admin / 123`  
-3. 进入 **“应用管理”** 页面： [http://localhost:8000/applications](http://localhost:8000/applications)  
-4. 创建一个新的应用，填写以下信息：  
-   - **Name**：自定义应用名称  
-   - **Redirect URL**：设置为项目的回调地址，例如 `http://localhost:80/callback `（该地址为项目中 Nginx 容器的回调端口，默认 `80`）  
+3. **创建组织**  
+   进入 [http://localhost:8000/organizations](http://localhost:8000/organizations) 页面，点击“添加”，填写组织名称后保存并退出。
+4. **创建应用并绑定组织**  
+   进入 [http://localhost:8000/applications](http://localhost:8000/applications) 页面，点击“添加”。
+
+   创建应用时填写以下信息：
+   - **Name**：自定义应用名称，例如 `agent`
+   - **Redirect URL**：设置为项目的回调地址，例如 `http://your-local-ip:80/callback`  
+     （该地址为项目中 Nginx 容器的回调端口，默认 `80`）
+   - **Organization**：选择刚创建的组织名称
 5. 保存应用后，记录以下信息并与项目配置项一一对应：  
 
 | Casdoor 信息项 | 示例值 | `.env` 中对应配置项 |
