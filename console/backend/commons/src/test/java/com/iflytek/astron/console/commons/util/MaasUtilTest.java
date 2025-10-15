@@ -74,15 +74,13 @@ class MaasUtilTest {
     void setUp() {
         // Set @Value fields using ReflectionTestUtils
         ReflectionTestUtils.setField(maasUtil, "synchronizeUrl", "http://test.com/sync");
-        ReflectionTestUtils.setField(maasUtil, "publishUrl", "http://test.com/publish");
-        ReflectionTestUtils.setField(maasUtil, "trailStatusUrl", "http://test.com/trail");
         ReflectionTestUtils.setField(maasUtil, "cloneWorkFlowUrl", "http://test.com/clone");
         ReflectionTestUtils.setField(maasUtil, "getInputsUrl", "http://test.com/inputs");
         ReflectionTestUtils.setField(maasUtil, "maasAppId", "test-app-id");
         ReflectionTestUtils.setField(maasUtil, "consumerId", "test-consumer-id");
         ReflectionTestUtils.setField(maasUtil, "consumerSecret", "test-secret");
         ReflectionTestUtils.setField(maasUtil, "consumerKey", "test-key");
-        ReflectionTestUtils.setField(maasUtil, "publishApi", "http://test.com/api");
+        ReflectionTestUtils.setField(maasUtil, "publishApi", "http://test.com/publish");
         ReflectionTestUtils.setField(maasUtil, "authApi", "http://test.com/auth");
         ReflectionTestUtils.setField(maasUtil, "mcpHost", "http://test.com/mcp");
         ReflectionTestUtils.setField(maasUtil, "mcpReleaseUrl", "http://test.com/mcp/release");
@@ -173,7 +171,7 @@ class MaasUtilTest {
 
         String result = MaasUtil.generatePrefix(uid, botId);
 
-        assertEquals("mass_copy_user123_456", result);
+        assertEquals("maas_copy_user123_456", result);
     }
 
     @Test

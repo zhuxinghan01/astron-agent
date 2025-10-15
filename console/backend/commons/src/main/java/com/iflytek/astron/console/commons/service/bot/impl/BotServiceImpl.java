@@ -117,7 +117,18 @@ public class BotServiceImpl implements BotService {
 
     @Override
     public List<BotTypeList> getBotTypeList() {
-        return botTypeListService.getBotTypeList();
+        List<BotTypeList> typeList = botTypeListService.getBotTypeList();
+
+        String currentLang = I18nUtil.getLanguage();
+        if ("en".equals(currentLang)) {
+            typeList.forEach(botType -> {
+                if (StringUtils.isNotBlank(botType.getTypeNameEn())) {
+                    botType.setTypeName(botType.getTypeNameEn());
+                }
+            });
+        }
+
+        return typeList;
     }
 
     /**
@@ -141,7 +152,7 @@ public class BotServiceImpl implements BotService {
     @Override
     public BotInfoDto getBotInfo(HttpServletRequest request, Integer botId, Long chatId, String workflowVersion) {
         String uid = RequestContextUtil.getUID();
-        String langCode = request.getHeader("Lang-Code") == null ? "" : request.getHeader("Lang-Code");
+        String langCode = I18nUtil.getLanguage();
         ChatBotBase chatBotBase = chatBotDataService.findById(botId).orElse(null);
 
         if (chatBotBase == null) {
@@ -353,7 +364,7 @@ public class BotServiceImpl implements BotService {
         botBase.setStyle(bot.getStyle());
         botBase.setBackground(bot.getBackground());
         botBase.setVirtualCharacter(bot.getVirtualCharacter());
-        botBase.setMassBotId(bot.getMassBotId());
+        botBase.setMaasBotId(bot.getMaasBotId());
         botBase.setVersion(1);
         botBase.setSpaceId(spaceId);
         setInputExamples(botBase, bot.getInputExample(), bot.getInputExampleEn());
@@ -478,7 +489,7 @@ public class BotServiceImpl implements BotService {
                 .style(bot.getStyle())
                 .background(bot.getBackground())
                 .virtualCharacter(bot.getVirtualCharacter())
-                .massBotId(bot.getMassBotId())
+                .maasBotId(bot.getMaasBotId())
                 .inputExample(bot.getInputExample() != null && !bot.getInputExample().isEmpty() ? String.join(BOT_INPUT_EXAMPLE_SPLIT, bot.getInputExample()) : null)
                 .modelId(bot.getModelId())
                 .build();

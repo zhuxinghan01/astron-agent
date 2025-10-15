@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -150,7 +151,7 @@ class BotChainServiceImplTest {
         data.put("id", 111L);
         data.put("flowId", "newFlow123");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(999L, uid)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(999L, request)).thenReturn(response);
 
         // When
         botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId);
@@ -178,7 +179,7 @@ class BotChainServiceImplTest {
         data.put("id", 111L);
         data.put("flowId", "newFlow123");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(999L, uid)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(999L, request)).thenReturn(response);
 
         // When
         botChainService.cloneWorkFlow(uid, sourceId, targetId, request, null);
@@ -201,7 +202,7 @@ class BotChainServiceImplTest {
         botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId);
 
         // Then
-        verify(maasUtil, never()).copyWorkFlow(anyLong(), anyString());
+        verify(maasUtil, never()).copyWorkFlow(anyLong(), request);
         verify(userLangChainDataService, never()).insertUserLangChainInfo(any());
     }
 
@@ -214,7 +215,7 @@ class BotChainServiceImplTest {
         botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId);
 
         // Then
-        verify(maasUtil, never()).copyWorkFlow(anyLong(), anyString());
+        verify(maasUtil, never()).copyWorkFlow(anyLong(), request);
         verify(userLangChainDataService, never()).insertUserLangChainInfo(any());
     }
 
@@ -223,7 +224,7 @@ class BotChainServiceImplTest {
         // Given
         List<UserLangChainInfo> botList = List.of(mockChainInfo);
         when(userLangChainDataService.findListByBotId(Math.toIntExact(sourceId))).thenReturn(botList);
-        when(maasUtil.copyWorkFlow(999L, uid)).thenReturn(null);
+        when(maasUtil.copyWorkFlow(999L, request)).thenReturn(null);
 
         // When & Then
         BusinessException exception = assertThrows(BusinessException.class, () -> {
@@ -335,12 +336,12 @@ class BotChainServiceImplTest {
         data.put("id", 67890L);
         data.put("flowId", "testFlow");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(12345L, uid)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(12345L, request)).thenReturn(response);
 
         // When
         botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId);
 
         // Then
-        verify(maasUtil).copyWorkFlow(12345L, uid);
+        verify(maasUtil).copyWorkFlow(12345L, request);
     }
 }

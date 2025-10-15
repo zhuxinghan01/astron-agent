@@ -5,15 +5,16 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.dto.bot.ChatBotReqDto;
+import com.iflytek.astron.console.commons.dto.chat.ChatListCreateResponse;
 import com.iflytek.astron.console.commons.dto.llm.SparkChatRequest;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotMarket;
-import com.iflytek.astron.console.commons.dto.bot.ChatBotReqDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
-import com.iflytek.astron.console.commons.dto.chat.ChatListCreateResponse;
 import com.iflytek.astron.console.commons.entity.chat.ChatReqRecords;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.enums.bot.BotTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.DefaultBotModelEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.ChatBotDataService;
@@ -21,8 +22,11 @@ import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatHistoryService;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.service.workflow.WorkflowBotChatService;
+import com.iflytek.astron.console.commons.util.I18nUtil;
 import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.hub.data.ReqKnowledgeRecordsDataService;
+import com.iflytek.astron.console.hub.entity.ReqKnowledgeRecords;
 import com.iflytek.astron.console.hub.service.PromptChatService;
 import com.iflytek.astron.console.hub.service.SparkChatService;
 import com.iflytek.astron.console.hub.service.chat.BotChatService;
@@ -30,6 +34,7 @@ import com.iflytek.astron.console.hub.service.chat.ChatListService;
 import com.iflytek.astron.console.hub.service.knowledge.KnowledgeService;
 import com.iflytek.astron.console.toolkit.entity.vo.CategoryTreeVO;
 import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
+import com.iflytek.astron.console.toolkit.service.model.LLMService;
 import com.iflytek.astron.console.toolkit.service.model.ModelService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -72,13 +77,11 @@ public class BotChatServiceImpl implements BotChatService {
     @Value("${spark.chat.max.input.tokens:8000}")
     private int maxInputTokens;
 
-    public static final String LOOSE_PREFIX_PROMPT = """
-            请将下列文档的片段作为已知信息:[]
-            请根据以上文段的原文和你所知道的知识准确地回答问题
-            当回答用户问题时，请使用户提问的语言回答问题
-            如果以上内容无法回答用户信息，结合你所知道的信息, 回答用户提问
-            简洁而专业地充分回答用户的问题，不允许在答案中添加编造成分。
-            """;
+    @Value("${deepseek.url}")
+    private String deepseekUrl;
+
+    @Value("${deepseek.api-key}")
+    private String deepseekApiKey;
 
     @Autowired
     private ChatListDataService chatListDataService;
@@ -116,17 +119,25 @@ public class BotChatServiceImpl implements BotChatService {
             if (botConfig.version.equals(BotTypeEnum.WORKFLOW_BOT.getType())) {
                 workflowBotChatService.chatWorkflowBot(chatBotReqDto, sseEmitter, sseId, workflowOperation, workflowVersion);
             } else {
-                ChatReqRecords chatReqRecords = createChatRequest(chatBotReqDto);
                 int maxInputTokens = this.maxInputTokens;
+                ChatReqRecords chatReqRecords = createChatRequest(chatBotReqDto);
                 if (botConfig.modelId == null) {
-                    List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
-                    SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
-                    sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                    if (botConfig.model.equals(DefaultBotModelEnum.X1.getDomain()) || botConfig.model.equals(DefaultBotModelEnum.SPARK_4_0.getDomain())) {
+                        List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
+                        SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
+                        sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                    } else {
+                        maxInputTokens = 32000;
+                        List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
+                        LLMInfoVo llmInfoVo = new LLMInfoVo();
+                        llmInfoVo.setUrl(deepseekUrl);
+                        llmInfoVo.setApiKey(deepseekApiKey);
+                        llmInfoVo.setDomain(botConfig.model);
+                        JSONObject jsonObject = buildPromptChatRequest(llmInfoVo, messages);
+                        promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
+                    }
                 } else {
                     ModelConfigResult modelConfig = getModelConfiguration(botConfig.modelId, sseEmitter);
-                    if (modelConfig == null) {
-                        return;
-                    }
                     List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, modelConfig.maxInputTokens(), chatReqRecords.getId());
                     JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo(), messages);
                     promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, false, false);
@@ -161,9 +172,20 @@ public class BotChatServiceImpl implements BotChatService {
             chatBotReqDto.setEdit(true);
             int maxInputTokens = this.maxInputTokens;
             if (botConfig.modelId == null) {
-                List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
-                SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
-                sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, false, false);
+                if (botConfig.model.equals(DefaultBotModelEnum.X1.getDomain()) || botConfig.model.equals(DefaultBotModelEnum.SPARK_4_0.getDomain())) {
+                    List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
+                    SparkChatRequest sparkChatRequest = buildSparkChatRequest(chatBotReqDto, botConfig, messages);
+                    sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, chatReqRecords, true, false);
+                } else {
+                    maxInputTokens = 32000;
+                    List<SparkChatRequest.MessageDto> messages = buildMessageList(chatBotReqDto, botConfig.supportContext, botConfig.supportDocument, botConfig.prompt, maxInputTokens, chatReqRecords.getId());
+                    LLMInfoVo llmInfoVo = new LLMInfoVo();
+                    llmInfoVo.setUrl(deepseekUrl);
+                    llmInfoVo.setApiKey(deepseekApiKey);
+                    llmInfoVo.setDomain(botConfig.model);
+                    JSONObject jsonObject = buildPromptChatRequest(llmInfoVo, messages);
+                    promptChatService.chatStream(jsonObject, sseEmitter, sseId, chatReqRecords, true, false);
+                }
             } else {
                 ModelConfigResult modelConfig = getModelConfiguration(botConfig.modelId, sseEmitter);
                 if (modelConfig == null) {
@@ -195,26 +217,44 @@ public class BotChatServiceImpl implements BotChatService {
      */
     @Override
     public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, List<String> maasDatasetList, SseEmitter sseEmitter, String sseId) {
-        int maxInputTokens = this.maxInputTokens;
-        List<SparkChatRequest.MessageDto> messageList;
+        try {
+            int maxInputTokens = this.maxInputTokens;
+            List<SparkChatRequest.MessageDto> messageList;
 
-        if (modelId == null) {
-            messageList = buildDebugMessageList(text, prompt, messages, maxInputTokens, maasDatasetList);
-            SparkChatRequest sparkChatRequest = new SparkChatRequest();
-            sparkChatRequest.setModel(model);
-            sparkChatRequest.setMessages(messageList);
-            sparkChatRequest.setChatId(null);
-            sparkChatRequest.setUserId(uid);
-            sparkChatRequest.setEnableWebSearch(enableWebSearch(openedTool));
-            sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, null, false, true);
-        } else {
-            ModelConfigResult modelConfig = getModelConfiguration(modelId, sseEmitter);
-            if (modelConfig == null) {
-                return;
+            if (modelId == null) {
+                if (model.equals(DefaultBotModelEnum.X1.getDomain()) || model.equals(DefaultBotModelEnum.SPARK_4_0.getDomain())) {
+                    messageList = buildDebugMessageList(text, prompt, messages, maxInputTokens, maasDatasetList);
+                    SparkChatRequest sparkChatRequest = new SparkChatRequest();
+                    sparkChatRequest.setModel(model);
+                    sparkChatRequest.setMessages(messageList);
+                    sparkChatRequest.setChatId(null);
+                    sparkChatRequest.setUserId(uid);
+                    sparkChatRequest.setEnableWebSearch(enableWebSearch(openedTool));
+                    sparkChatService.chatStream(sparkChatRequest, sseEmitter, sseId, null, false, true);
+                } else {
+                    maxInputTokens = 32000;
+                    messageList = buildDebugMessageList(text, prompt, messages, maxInputTokens, maasDatasetList);
+                    LLMInfoVo llmInfoVo = new LLMInfoVo();
+                    llmInfoVo.setUrl(deepseekUrl);
+                    llmInfoVo.setApiKey(deepseekApiKey);
+                    llmInfoVo.setDomain(model);
+                    JSONObject jsonObject = buildPromptChatRequest(llmInfoVo, messageList);
+                    promptChatService.chatStream(jsonObject, sseEmitter, sseId, null, false, true);
+                }
+            } else {
+                ModelConfigResult modelConfig = getModelConfiguration(modelId, sseEmitter);
+                messageList = buildDebugMessageList(text, prompt, messages, modelConfig.maxInputTokens(), maasDatasetList);
+                Long spaceId = SpaceInfoUtil.getSpaceId();
+                if (!modelService.checkModelBase(LLMService.generate9DigitRandomFromId(modelConfig.llmInfoVo.getLlmId()),
+                        modelConfig.llmInfoVo().getServiceId(), modelConfig.llmInfoVo.getUrl(), uid, spaceId)) {
+                    throw new BusinessException(ResponseEnum.MODEL_CHECK_FAILED);
+                }
+                JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo(), messageList);
+                promptChatService.chatStream(jsonObject, sseEmitter, sseId, null, false, true);
             }
-            messageList = buildDebugMessageList(text, prompt, messages, modelConfig.maxInputTokens(), maasDatasetList);
-            JSONObject jsonObject = buildPromptChatRequest(modelConfig.llmInfoVo(), messageList);
-            promptChatService.chatStream(jsonObject, sseEmitter, sseId, null, false, false);
+        } catch (Exception e) {
+            log.error("Bot debug error for sseId: {}, uid: {}", sseId, uid, e);
+            SseEmitterUtil.completeWithError(sseEmitter, "Failed to process chat request: " + e.getMessage());
         }
     }
 
@@ -266,8 +306,7 @@ public class BotChatServiceImpl implements BotChatService {
     private ModelConfigResult getModelConfiguration(Long modelId, SseEmitter sseEmitter) {
         LLMInfoVo llmInfoVo = (LLMInfoVo) modelService.getDetail(0, modelId, null).data();
         if (llmInfoVo == null) {
-            SseEmitterUtil.completeWithError(sseEmitter, "Model is not exist!");
-            return null;
+            throw new BusinessException(ResponseEnum.MODEL_NOT_EXIST);
         }
 
         int maxInputTokens = this.maxInputTokens;
@@ -290,7 +329,7 @@ public class BotChatServiceImpl implements BotChatService {
      * @param botId Bot ID
      * @return Returns BotConfiguration object
      */
-    private BotConfiguration getBotConfiguration(Integer botId) {
+    private BotConfiguration getBotConfiguration(Integer botId) throws BusinessException{
         ChatBotMarket chatBotMarket = chatBotDataService.findMarketBotByBotId(botId);
 
         if (chatBotMarket != null && ShelfStatusEnum.isOnShelf(chatBotMarket.getBotStatus())) {
@@ -350,13 +389,11 @@ public class BotChatServiceImpl implements BotChatService {
 
         List<SparkChatRequest.MessageDto> historyMessages = chatHistoryService.getSystemBotHistory(chatBotReqDto.getUid(), chatBotReqDto.getChatId(), supportDocument);
 
+        // delete current ask
+        historyMessages.removeLast();
         // If it's a re-answer request, need to remove the last Q&A pair
-        if (chatBotReqDto.getEdit() && !historyMessages.isEmpty()) {
+        if (chatBotReqDto.getEdit()) {
             historyMessages.removeLast();
-        }
-
-        if (historyMessages.isEmpty()) {
-            return historyMessages;
         }
 
         List<SparkChatRequest.MessageDto> truncatedHistory = truncateHistoryByTokens(historyMessages, availableTokens);
@@ -400,12 +437,39 @@ public class BotChatServiceImpl implements BotChatService {
         systemMessage.setRole("system");
         systemMessage.setContent(prompt);
 
-        TokenStatistics tokenStats = calculateTokenStatistics(prompt, chatBotReqDto.getAsk(), maxInputTokens);
+
+        SparkChatRequest.MessageDto queryMessage = new SparkChatRequest.MessageDto();
+        StringBuilder askBuilder = new StringBuilder();
+        if (supportDocument) {
+            // Parse knowledge string (it's stored as a string representation of a list)
+            List<String> knowledgeList = knowledgeService.getChuncksByBotId(chatBotReqDto.getBotId(), chatBotReqDto.getAsk(), 3);
+            askBuilder.append(I18nUtil.getMessage("loose.prefix.prompt"));
+
+            // Insert knowledge content into the placeholder
+            String knowledgeStr = knowledgeList.toString();
+            reqKnowledgeRecordsDataService.create(ReqKnowledgeRecords.builder()
+                    .uid(chatBotReqDto.getUid())
+                    .chatId(chatBotReqDto.getChatId())
+                    .reqId(reqId)
+                    .reqMessage(chatBotReqDto.getAsk())
+                    .knowledge(knowledgeStr.substring(0, Math.min(3900, knowledgeStr.length())))
+                    .build());
+            askBuilder.insert(askBuilder.indexOf("[") + 1, knowledgeStr);
+            askBuilder.append(I18nUtil.getMessage("loose.suffix.prompt"));
+            askBuilder.insert(askBuilder.indexOf("{{") + 2, chatBotReqDto.getAsk());
+        } else {
+            askBuilder.append(chatBotReqDto.getAsk());
+        }
+        queryMessage.setRole("user");
+        queryMessage.setContent(askBuilder.toString());
+
+        TokenStatistics tokenStats = calculateTokenStatistics(prompt, askBuilder.toString(), maxInputTokens);
 
         messageDtoList.add(systemMessage);
 
-        List<SparkChatRequest.MessageDto> historyMessages = getHistoryMessages(chatBotReqDto, supportContext, supportContext, tokenStats.availableTokens());
+        List<SparkChatRequest.MessageDto> historyMessages = getHistoryMessages(chatBotReqDto, supportContext, supportDocument, tokenStats.availableTokens());
         messageDtoList.addAll(historyMessages);
+        messageDtoList.add(queryMessage);
 
         int totalTokens = messageDtoList.stream()
                 .mapToInt(msg -> estimateTokenCount(msg.getContent()))
@@ -438,10 +502,10 @@ public class BotChatServiceImpl implements BotChatService {
         // Concatenate current question
         StringBuilder askBuilder = new StringBuilder();
         if (CollectionUtil.isNotEmpty(maasDatasetList)) {
-            askBuilder.append(LOOSE_PREFIX_PROMPT);
+            askBuilder.append(I18nUtil.getMessage("loose.prefix.prompt"));
             List<String> askKnowledgeList = knowledgeService.getChuncks(maasDatasetList, text, 3, true);
             askBuilder.insert(askBuilder.indexOf("[") + 1, askKnowledgeList);
-            askBuilder.append("\n接下来我的输入是：{{}}");
+            askBuilder.append(I18nUtil.getMessage("loose.suffix.prompt"));
             askBuilder.insert(askBuilder.indexOf("{{") + 2, text);
         } else {
             askBuilder.append(text);
@@ -461,10 +525,10 @@ public class BotChatServiceImpl implements BotChatService {
                     String ask = messageDto.getContent();
                     StringBuilder builder = new StringBuilder();
                     if (CollectionUtil.isNotEmpty(maasDatasetList)) {
-                        builder.append(LOOSE_PREFIX_PROMPT);
+                        builder.append(I18nUtil.getMessage("loose.prefix.prompt"));
                         List<String> knowledgeList = knowledgeService.getChuncks(maasDatasetList, ask, 3, true);
                         builder.insert(builder.indexOf("[") + 1, knowledgeList);
-                        builder.append("\n接下来我的输入是：{{}}");
+                        builder.append(I18nUtil.getMessage("loose.suffix.prompt"));
                         builder.insert(builder.indexOf("{{") + 2, ask);
                     } else {
                         builder.append(ask);

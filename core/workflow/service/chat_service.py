@@ -203,12 +203,15 @@ async def _get_or_build_workflow_engine(
         )
         span_context.add_info_event("Engine not found in cache, rebuilding from DSL")
 
-        set_flow_node_output_mode(
-            sparkflow_engine.engine_ctx.variable_pool,
-            sparkflow_engine.engine_ctx.built_nodes,
-            app_alias_id,
-            span_context,
-        )
+        for key in sparkflow_engine.engine_ctx.built_nodes:
+            if key.startswith(NodeType.FLOW.value):
+                set_flow_node_output_mode(
+                    variable_pool=sparkflow_engine.engine_ctx.variable_pool,
+                    node_instance=sparkflow_engine.engine_ctx.built_nodes[
+                        key
+                    ].node_instance,
+                    span=span_context,
+                )
         sparkflow_engine.engine_ctx.variable_pool.system_params.set(
             ParamKey.IsRelease, is_release
         )

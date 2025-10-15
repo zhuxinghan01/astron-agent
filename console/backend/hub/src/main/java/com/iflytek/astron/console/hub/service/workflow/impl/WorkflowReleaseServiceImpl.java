@@ -22,6 +22,8 @@ import okhttp3.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Random;
+
 import java.time.Duration;
 
 /**
@@ -129,70 +131,69 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
     }
 
     /**
-     * Get next version name for workflow release This method calls the workflow service to generate the
-     * next version name for a new release
+     * Get next version name for workflow release Simplified to match old project logic exactly - no
+     * fallback
      */
     private String getNextVersionName(String flowId, Long spaceId) {
         log.info("Getting next workflow version name: flowId={}, spaceId={}", flowId, spaceId);
 
-        String fallbackVersion = "v" + System.currentTimeMillis();
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("flowId", flowId);
 
-        try {
-            // Build request parameters
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("flowId", flowId);
+        String jsonBody = requestBody.toJSONString();
+        String authHeader = getAuthorizationHeader();
 
-            String jsonBody = requestBody.toJSONString();
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(baseUrl + GET_VERSION_NAME_URL)
+                .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", authHeader);
 
-            // Send request using OkHttp
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(baseUrl + GET_VERSION_NAME_URL)
-                    .post(RequestBody.create(jsonBody, JSON_MEDIA_TYPE))
-                    .addHeader("Content-Type", "application/json");
-
-            // Add spaceId to header
-            if (spaceId != null) {
-                requestBuilder.addHeader("space-id", spaceId.toString());
-            }
-
-            try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
-                ResponseBody body = response.body();
-                String responseBody = body != null ? body.string() : null;
-
-                if (!response.isSuccessful()) {
-                    log.error("Failed to get next version name: flowId={}, responseCode={}, response={}",
-                            flowId, response.code(), responseBody);
-                    return fallbackVersion;
-                }
-
-                if (!StringUtils.hasText(responseBody)) {
-                    log.warn("Empty response while getting next version name: flowId={}", flowId);
-                    return fallbackVersion;
-                }
-
-                JSONObject responseJson = JSON.parseObject(responseBody);
-                if (responseJson == null) {
-                    log.warn("Failed to parse response while getting version name: flowId={}, response={}",
-                            flowId, responseBody);
-                    return fallbackVersion;
-                }
-
-                JSONObject data = responseJson.getJSONObject("data");
-
-                if (data != null && data.containsKey("workflowVersionName")) {
-                    String versionName = data.getString("workflowVersionName");
-                    log.info("Successfully got next version name: flowId={}, versionName={}", flowId, versionName);
-                    return versionName;
-                }
-
-                log.warn("Version name not found in response: flowId={}, response={}", flowId, responseBody);
-                return fallbackVersion;
-            }
-
-        } catch (Exception e) {
-            log.error("Exception occurred while getting next workflow version name: flowId={}, spaceId={}", flowId, spaceId, e);
-            return fallbackVersion;
+        if (spaceId != null) {
+            requestBuilder.addHeader("space-id", spaceId.toString());
         }
+
+        try (Response response = okHttpClient.newCall(requestBuilder.build()).execute()) {
+            ResponseBody body = response.body();
+            if (body != null && response.isSuccessful()) {
+                String responseStr = body.string();
+                log.debug("Version name API response: {}", responseStr);
+
+                JSONObject responseJson = JSON.parseObject(responseStr);
+                if (responseJson != null && responseJson.getInteger("code") == 0) {
+                    JSONObject data = responseJson.getJSONObject("data");
+                    if (data != null && data.containsKey("workflowVersionName")) {
+                        String versionName = data.getString("workflowVersionName");
+                        if (versionName != null && !versionName.trim().isEmpty()) {
+                            log.info("Got version name from API: {} for flowId: {}", versionName, flowId);
+                            return versionName;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("getVersionName-获取助手版本号异常,flowId={}", flowId, e);
+            return null;
+        }
+
+        // If we reach here, API call failed - return null like old project
+        return null;
+    }
+
+    /**
+     * Generate timestamp-based version number like old project
+     *
+     * @return Timestamp version number (e.g., "1760323182721")
+     */
+    private String generateTimestampVersionNumber() {
+        long timestamp = System.currentTimeMillis();
+        Random random = new Random();
+        int randomNumber = random.nextInt(900000) + 100000;
+        String versionNumber = String.valueOf(timestamp) + String.valueOf(randomNumber);
+        if (versionNumber.length() > 19) {
+            versionNumber = versionNumber.substring(0, 19);
+        }
+        return versionNumber;
     }
 
     /**
@@ -229,7 +230,21 @@ public class WorkflowReleaseServiceImpl implements WorkflowReleaseService {
         log.info("Creating workflow version: request={}", request);
 
         try {
-            String jsonBody = JSON.toJSONString(request);
+            // Generate timestamp-based version number like old project
+            String timestampVersionNum = generateTimestampVersionNumber();
+            log.info("Generated timestamp version number: {}", timestampVersionNum);
+
+            // Create a new request with timestamp version number
+            WorkflowReleaseRequestDto requestWithVersionNum = new WorkflowReleaseRequestDto();
+            requestWithVersionNum.setBotId(request.getBotId());
+            requestWithVersionNum.setFlowId(request.getFlowId());
+            requestWithVersionNum.setPublishChannel(request.getPublishChannel());
+            requestWithVersionNum.setPublishResult(request.getPublishResult());
+            requestWithVersionNum.setDescription(request.getDescription());
+            requestWithVersionNum.setName(request.getName());
+            requestWithVersionNum.setVersionNum(timestampVersionNum);
+
+            String jsonBody = JSON.toJSONString(requestWithVersionNum);
             String authHeader = getAuthorizationHeader();
 
             if (authHeader.isEmpty()) {
