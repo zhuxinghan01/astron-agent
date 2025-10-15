@@ -200,6 +200,20 @@ XINGHUO_DATASET_ID=
 
 #### 4.3 启动 astronAgent 服务
 
+启动之请配置一些必须的环境变量
+
+```bash
+# 进入 astronAgent 目录
+cd docker/astronAgent
+
+# 根据需要修改配置
+vim .env
+```
+
+```env
+CONSOLE_DOMAIN=http://localhost:10080 (项目nginx容器端口,默认10080)
+```
+
 启动 astronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
 ```bash
