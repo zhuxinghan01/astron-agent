@@ -32,7 +32,6 @@ import com.iflytek.astron.console.hub.service.SparkChatService;
 import com.iflytek.astron.console.hub.service.chat.BotChatService;
 import com.iflytek.astron.console.hub.service.chat.ChatListService;
 import com.iflytek.astron.console.hub.service.knowledge.KnowledgeService;
-import com.iflytek.astron.console.hub.util.BotPermissionUtil;
 import com.iflytek.astron.console.toolkit.entity.vo.CategoryTreeVO;
 import com.iflytek.astron.console.toolkit.entity.vo.LLMInfoVo;
 import com.iflytek.astron.console.toolkit.service.model.LLMService;
@@ -101,9 +100,6 @@ public class BotChatServiceImpl implements BotChatService {
 
     @Autowired
     private ReqKnowledgeRecordsDataService reqKnowledgeRecordsDataService;
-
-    @Autowired
-    private BotPermissionUtil botPermissionUtil;
 
     /**
      * Function to handle chat messages
@@ -346,7 +342,6 @@ public class BotChatServiceImpl implements BotChatService {
                     chatBotMarket.getModelId(),
                     chatBotMarket.getSupportDocument() == 1);
         } else {
-            botPermissionUtil.checkBot(botId);
             ChatBotBase chatBotBase = chatBotDataService.findById(botId)
                     .orElseThrow(() -> new BusinessException(ResponseEnum.BOT_NOT_EXISTS));
             return new BotConfiguration(
