@@ -4,32 +4,39 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.iflytek.astron.console.commons.constant.ResponseEnum;
-import com.iflytek.astron.console.commons.dto.bot.BotListRequestDto;
-import com.iflytek.astron.console.commons.dto.bot.BotPublishQueryResult;
-import com.iflytek.astron.console.commons.dto.bot.BotQueryCondition;
-import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
+import com.iflytek.astron.console.hub.dto.PageResponse;
+import com.iflytek.astron.console.commons.dto.bot.BotListRequestDto;
+import com.iflytek.astron.console.hub.dto.publish.BotPublishInfoDto;
+import com.iflytek.astron.console.hub.dto.publish.BotDetailResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotVersionVO;
+import com.iflytek.astron.console.hub.dto.publish.BotSummaryStatsVO;
+import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotTimeSeriesStatsVO;
+import com.iflytek.astron.console.hub.dto.publish.WechatAuthUrlResponseDto;
+import com.iflytek.astron.console.hub.dto.publish.BotTraceRequestDto;
+import com.iflytek.astron.console.hub.dto.publish.UnifiedPrepareDto;
+import com.iflytek.astron.console.hub.dto.publish.prepare.*;
+import com.iflytek.astron.console.hub.dto.publish.prepare.WechatPrepareDto;
+import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
+import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.enums.PublishChannelEnum;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
-import com.iflytek.astron.console.commons.enums.bot.ReleaseTypeEnum;
-import com.iflytek.astron.console.commons.exception.BusinessException;
-import com.iflytek.astron.console.commons.mapper.bot.ChatBotApiMapper;
-import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotMarketMapper;
-import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
-import com.iflytek.astron.console.commons.util.BotFileParamUtil;
+import com.iflytek.astron.console.commons.mapper.bot.ChatBotApiMapper;
+import com.iflytek.astron.console.hub.mapper.BotDashboardCountLogMapper;
+import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.hub.converter.BotPublishConverter;
 import com.iflytek.astron.console.hub.converter.WorkflowVersionConverter;
-import com.iflytek.astron.console.hub.dto.PageResponse;
-import com.iflytek.astron.console.hub.dto.publish.*;
-import com.iflytek.astron.console.hub.dto.publish.prepare.*;
-import com.iflytek.astron.console.hub.entity.BotConversationStats;
-import com.iflytek.astron.console.hub.event.BotPublishStatusChangedEvent;
-import com.iflytek.astron.console.hub.mapper.BotConversationStatsMapper;
-import com.iflytek.astron.console.hub.service.publish.BotPublishService;
 import com.iflytek.astron.console.hub.service.publish.PublishChannelService;
 import com.iflytek.astron.console.hub.service.wechat.WechatThirdpartyService;
+import com.iflytek.astron.console.commons.dto.bot.BotPublishQueryResult;
+import com.iflytek.astron.console.commons.dto.bot.ChatBotApi;
+import com.iflytek.astron.console.hub.entity.BotDashboardCountLog;
+import com.iflytek.astron.console.hub.service.publish.BotPublishService;
+import com.iflytek.astron.console.commons.exception.BusinessException;
+import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.util.BotFileParamUtil;
 import com.iflytek.astron.console.toolkit.entity.table.workflow.WorkflowVersion;
 import com.iflytek.astron.console.toolkit.mapper.workflow.WorkflowVersionMapper;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import com.iflytek.astron.console.commons.dto.bot.BotQueryCondition;
+import com.iflytek.astron.console.hub.event.BotPublishStatusChangedEvent;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -46,7 +55,7 @@ import java.util.stream.Collectors;
 
 /**
  * Bot Publishing Management Service Implementation
- * <p>
+ *
  * Unified bot publishing management service implementation, including: - Bot list query and detail
  * retrieval - Publishing status management (publish/take offline) - Version management - Statistics
  * data query
@@ -71,7 +80,7 @@ public class BotPublishServiceImpl implements BotPublishService {
     private final WorkflowVersionConverter workflowVersionConverter;
 
     // Statistics data related
-    private final BotConversationStatsMapper botConversationStatsMapper;
+    private final BotDashboardCountLogMapper botDashboardCountLogMapper;
 
     // MaaS API related
     private final ChatBotApiMapper chatBotApiMapper;
@@ -138,6 +147,7 @@ public class BotPublishServiceImpl implements BotPublishService {
                 botId, detailDto.getPublishChannels(), maasId);
         return detailDto;
     }
+
 
 
     // ==================== MaaS Integration ====================
@@ -211,7 +221,7 @@ public class BotPublishServiceImpl implements BotPublishService {
         }
 
         // 2. Query summary statistics data
-        BotSummaryStatsVO summaryStats = botConversationStatsMapper.selectSummaryStats(botId, null, null);
+        BotSummaryStatsVO summaryStats = botDashboardCountLogMapper.selectSummaryStats(botId, null, null);
         if (summaryStats == null) {
             // If no statistics data, return default values (using primitive type long, will be 0 automatically)
             summaryStats = new BotSummaryStatsVO();
@@ -225,7 +235,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     @Override
     public BotTimeSeriesResponseDto getBotTimeSeriesStats(Integer botId, Integer overviewDays,
-                                                          String currentUid, Long currentSpaceId) {
+            String currentUid, Long currentSpaceId) {
         log.info("Get bot time series statistics: botId={}, overviewDays={}, uid={}, spaceId={}",
                 botId, overviewDays, currentUid, currentSpaceId);
 
@@ -237,7 +247,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
         // 2. Query time series statistics data
         LocalDate startDate = LocalDate.now().minusDays(overviewDays);
-        List<BotTimeSeriesStatsVO> timeSeriesStats = botConversationStatsMapper.selectTimeSeriesStats(
+        List<BotTimeSeriesStatsVO> timeSeriesStats = botDashboardCountLogMapper.selectTimeSeriesStats(
                 botId, startDate, null, null);
 
         // 3. Build time series data response
@@ -255,29 +265,31 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     @Override
     public void recordDashboardCountLog(String uid, Long spaceId, Integer botId, Long chatId,
-                                        String sid, Integer tokenConsumed) {
-        log.info("Record conversation statistics: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}",
-                uid, spaceId, botId, chatId, tokenConsumed);
+            String sid, Integer tokenConsumed, Integer messageRounds) {
+        log.info("Record dashboard count log: uid={}, spaceId={}, botId={}, chatId={}, tokenConsumed={}, messageRounds={}",
+                uid, spaceId, botId, chatId, tokenConsumed, messageRounds);
 
         try {
-            BotConversationStats conversationStats = BotConversationStats.createBuilder()
+            BotDashboardCountLog countLog = BotDashboardCountLog.createBuilder()
                     .uid(uid)
-                    .spaceId(spaceId)
                     .botId(botId)
+                    .channel(1)
                     .chatId(chatId)
+                    .chatTime(0)
+                    .token(tokenConsumed)
                     .sid(sid)
-                    .tokenConsumed(tokenConsumed)
                     .build();
-            int result = botConversationStatsMapper.insert(conversationStats);
+            int result = botDashboardCountLogMapper.insert(countLog);
 
             if (result > 0) {
-                log.info("Conversation statistics recorded successfully: chatId={}, statsId={}", chatId, conversationStats.getId());
+                log.info("Dashboard count log recorded successfully: chatId={}, logId={}", chatId, countLog.getId());
 
             } else {
-                log.warn("Conversation statistics record failed: chatId={}", chatId);
+                log.warn("Dashboard count log record failed: chatId={}", chatId);
             }
         } catch (Exception e) {
-            log.error("Record conversation statistics exception: chatId={}", chatId, e);
+            log.error("Record dashboard count log exception: chatId={}", chatId, e);
+            // Do not throw exception to avoid affecting main business flow
         }
     }
 
@@ -420,7 +432,7 @@ public class BotPublishServiceImpl implements BotPublishService {
 
     @Override
     public WechatAuthUrlResponseDto getWechatAuthUrl(Integer botId, String appid, String redirectUrl,
-                                                     String uid, Long spaceId) {
+            String uid, Long spaceId) {
         log.info("Get WeChat authorization URL: botId={}, appid={}, redirectUrl={}, uid={}, spaceId={}",
                 botId, appid, redirectUrl, uid, spaceId);
 
