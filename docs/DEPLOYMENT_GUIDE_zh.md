@@ -91,7 +91,7 @@ docker-compose logs -f ragflow
 
 ### 第三步：集成配置 Casdoor、RagFlow 服务（根据需要配置相关信息）
 
-在启动 astronAgent 服务之前，根据需要配置相关的连接信息以集成 Casdoor 和 RagFlow。
+在启动 astronAgent 服务之前，配置相关的连接信息以集成 Casdoor 和 RagFlow。
 
 ```bash
 # 进入 astronAgent 目录
@@ -135,11 +135,13 @@ CONSOLE_CASDOOR_APP=your-casdoor-app-name
 CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 ```
 
-**根据您的需求配置 Casdoor 认证集成，主要包括：**
-1. **OAuth 应用注册**：在 Casdoor 中注册 astronAgent 应用
-2. **回调地址配置**：设置正确的回调URL
-3. **权限配置**：配置用户角色和权限
-4. **配置文件更新**
+**获取 Casdoor 配置信息：**
+1. 访问 Casdoor Web界面：http://localhost:8000
+2. 默认账号: admin/123 登陆进入管理页面
+3. 进入 http://localhost:8000/organizations 页创建组织
+4. 进入http://localhost:8000/applications页 创建应用，并绑定组织
+5. 设置应用的重定向URL为：http://localhost:10080/callback (项目nginx容器端口,默认10080)
+6. 将Casdoor地址，应用的客户端ID，应用名称，组织名称等信息更新到配置文件中
 
 ### 第四步：启动 astronAgent 核心服务（必要部署步骤）
 
@@ -161,6 +163,40 @@ PLATFORM_API_SECRET=your-api-secret
 
 SPARK_API_PASSWORD=your-api-password
 ```
+
+#### 4.2 如果您想使用星火RAG云服务，请按照如下配置
+
+星火RAG云服务提供两种使用方式：
+
+##### 方式一：在页面中获取
+
+1. 使用讯飞开放平台创建的 APP_ID 和 API_SECRET
+2. 直接在页面中获取星火数据集ID，详见：[xinghuo_rag_tool.html](/docs/xinghuo_rag_tool.html)
+
+##### 方式二：使用 cURL 命令行方式
+
+如果您更喜欢使用命令行工具，可以通过以下 cURL 命令创建数据集：
+
+```bash
+# 创建星火RAG数据集
+curl -X PUT 'https://chatdoc.xfyun.cn/openapi/v1/dataset/create' \
+    -H "Accept: application/json" \
+    -H "appId: your_app_id" \
+    -H "timestamp: $(date +%s)" \
+    -H "signature: $(echo -n "$(echo -n "your_app_id$(date +%s)" | md5sum | awk '{print $1}')" | openssl dgst -sha1 -hmac 'your_api_secret' -binary | base64)" \
+    -F "name=我的数据集"
+```
+
+**注意事项：**
+- 请将 `your_app_id` 替换为您的实际 APP ID
+- 请将 `your_api_secret` 替换为您的实际 API Secret
+
+获取到数据集ID后，请将数据集ID更新到 docker/astronAgent/.env 文件中：
+```env
+XINGHUO_DATASET_ID=
+```
+
+#### 4.3 启动 astronAgent 服务
 
 启动 astronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
 
