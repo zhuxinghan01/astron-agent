@@ -214,7 +214,7 @@ vim .env
 ```
 
 ```env
-CONSOLE_DOMAIN=http://localhost:80 (项目nginx容器端口,默认80)
+HOST_BASE_ADDRESS=http://localhost (主机地址)
 ```
 
 启动 astronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。在运行安装命令之前，请确保您的机器上安装了 Docker 和 Docker Compose。
