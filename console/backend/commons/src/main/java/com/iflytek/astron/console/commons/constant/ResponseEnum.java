@@ -80,11 +80,12 @@ public enum ResponseEnum {
 
     BOT_API_CREATE_REPEAT(60035, "error.bot.api.create.repeat"),
 
-    USER_APP_ID_NOT_EXISTE(60036, "error.app.not.exists"),
+    USER_API_ID_NOT_EXISTE(60036, "error.api.not.exists"),
 
     BOT_API_CREATE_ERROR(60037, "error.bot.api.create.failed"),
 
-    BOT_TYPE_NOT_EXISTS(60038, "error.bot.type.not.exists"),
+    BOT_TYPE_NOT_SUPPORT(60038, "error.bot.type.temporarily.not.support"),
+    USER_APP_ID_NOT_EXISTE(60039, "error.app.not.exists"),
 
     // Space application related errors
     SPACE_APPLICATION_PLEASE_JOIN_ENTERPRISE_FIRST(61001, "space.application.please.join.enterprise.first"),

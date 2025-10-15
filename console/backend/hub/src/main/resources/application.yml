@@ -133,6 +133,8 @@ maas:
   mcpHost: ${MAAS_MCP_HOST:https://xingchen-api.xf-yun.com/mcp/xingchen/flow/%s/sse}
   mcpRegister: ${MAAS_MCP_REGISTER:http://127.0.0.1:8080/workflow/release}
   workflowConfig: ${MAAS_WORKFLOW_CONFIG:http://127.0.0.1:8080/workflow/get-flow-advanced-config}
+  botApiCbmBaseUrl: ${BOT_API_CBM_BASE_URL:ws(s)://spark-openapi.cn-huabei-1.xf-yun.com}
+  botApiMaasBaseUrl: ${BOT_API_MAAS_BASE_URL:http(s)://xingchen-api.xf-yun.com}
 
 bot:
   default:
