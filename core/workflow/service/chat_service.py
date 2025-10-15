@@ -203,12 +203,15 @@ async def _get_or_build_workflow_engine(
         )
         span_context.add_info_event("Engine not found in cache, rebuilding from DSL")
 
-        set_flow_node_output_mode(
-            sparkflow_engine.engine_ctx.variable_pool,
-            sparkflow_engine.engine_ctx.built_nodes,
-            app_alias_id,
-            span_context,
-        )
+        for key in sparkflow_engine.engine_ctx.built_nodes:
+            if key.startswith(NodeType.FLOW.value):
+                set_flow_node_output_mode(
+                    variable_pool=sparkflow_engine.engine_ctx.variable_pool,
+                    node_instance=sparkflow_engine.engine_ctx.built_nodes[
+                        key
+                    ].node_instance,
+                    span=span_context,
+                )
         sparkflow_engine.engine_ctx.variable_pool.system_params.set(
             ParamKey.IsRelease, is_release
         )
@@ -804,6 +807,9 @@ def _filter_response_frame(
 
     if is_stop:
         response_frame.workflow_step.seq = last_workflow_step.seq + 1
+        if not is_stream:
+            delta.content = "".join(message_cache)
+            delta.reasoning_content = "".join(reasoning_content_cache)
         return response_frame
 
     # Only process specific node types (flow_obj or MESSAGE/END/QUESTION_ANSWER)
@@ -828,11 +834,7 @@ def _filter_response_frame(
     )
 
     if not is_stream and not is_interrupted:
-        if is_stop:
-            delta.content = "".join(message_cache)
-            delta.reasoning_content = "".join(reasoning_content_cache)
-        else:
-            return None
+        return None
 
     # Standardize index
     choice.index = 0
@@ -889,7 +891,7 @@ def _cache_content_and_reasoning_content(
     :param reasoning_content_cache: Cached reasoning content for non-streaming mode
     :return: None
     """
-    if is_stream:
+    if not is_stream:
         message_cache.append(response_frame.choices[0].delta.content)
         reasoning_content_cache.append(
             response_frame.choices[0].delta.reasoning_content

@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author mingsuiyongheng
@@ -75,7 +77,7 @@ public class BotChainServiceImpl implements BotChainService {
 
         UserLangChainInfo chainInfo = botList.getFirst();
         Long massId = Long.valueOf(String.valueOf(chainInfo.getMaasId()));
-        JSONObject res = maasUtil.copyWorkFlow(massId, uid);
+        JSONObject res = maasUtil.copyWorkFlow(massId, request);
         if (Objects.isNull(res)) {
             // Throw exception to maintain data transactionality
             throw new BusinessException(ResponseEnum.BOT_CHAIN_UPDATE_ERROR);
@@ -125,7 +127,7 @@ public class BotChainServiceImpl implements BotChainService {
      *
      * @param original Original node ID string
      * @return New node ID string, if the original string contains a colon, add a random UUID after the
-     *         colon, otherwise throw an exception
+     * colon, otherwise throw an exception
      */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');

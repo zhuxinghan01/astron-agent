@@ -88,16 +88,8 @@ spark:
 
 # DeepSeek configuration example
 deepseek:
-  # DeepSeek API key (required)
-  api-key: sk-your-deepseek-api-key-here
-  # API base URL (optional, default is https://api.deepseek.com)
-  base-url: https://api.deepseek.com
-  # Chat completion API path (optional, default is /chat/completions)
-  chat-completion-path: /chat/completions
-  # HTTP client configuration
-  connect-timeout: PT30S  # Connection timeout (ISO 8601 format)
-  read-timeout: PT60S     # Read timeout
-  write-timeout: PT60S    # Write timeout
+  url: ${DEEPSEEK_URL:https://api.deepseek.com}
+  api-key: ${DEEPSEEK_API_KEY:your-deepseek-api-key}    # Write timeout
 
 # Workflow configuration
 workflow:
@@ -141,6 +133,8 @@ maas:
   mcpHost: ${MAAS_MCP_HOST:https://xingchen-api.xf-yun.com/mcp/xingchen/flow/%s/sse}
   mcpRegister: ${MAAS_MCP_REGISTER:http://127.0.0.1:8080/workflow/release}
   workflowConfig: ${MAAS_WORKFLOW_CONFIG:http://127.0.0.1:8080/workflow/get-flow-advanced-config}
+  botApiCbmBaseUrl: ${BOT_API_CBM_BASE_URL:ws(s)://spark-openapi.cn-huabei-1.xf-yun.com}
+  botApiMaasBaseUrl: ${BOT_API_MAAS_BASE_URL:http(s)://xingchen-api.xf-yun.com}
 
 bot:
   default:

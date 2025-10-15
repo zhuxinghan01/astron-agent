@@ -16,6 +16,7 @@ import com.iflytek.astron.console.commons.service.bot.BotMarketDataService;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.util.BotUtil;
+import com.iflytek.astron.console.commons.util.I18nUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +95,7 @@ public class BotMarketDataServiceImpl implements BotMarketDataService {
      */
     @Override
     public Map<String, Object> getBotListCheckNextPage(HttpServletRequest request, BotMarketForm botMarketForm, String uid, Long spaceId) {
-        String langCode = request.getHeader("Lang-Code") == null ? "" : request.getHeader("Lang-Code");
+        String langCode = I18nUtil.getLanguage();
         Map<String, Object> param = getBotCheckParam(botMarketForm, uid);
         param.put("spaceId", spaceId);
         if (botMarketForm.getVersion() != null) {

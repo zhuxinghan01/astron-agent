@@ -264,9 +264,16 @@ class PromptUtils:
         ]
 
         # Build the regularity to capture all delimiters
-        pattern = "(" + "|".join(map(re.escape, placeholders_with_brackets)) + ")"
-        parts = re.split(pattern, template)
+        if placeholders_with_brackets:
+            pattern = "(" + "|".join(map(re.escape, placeholders_with_brackets)) + ")"
+            parts = re.split(pattern, template)
+        else:
+            parts = [template]
+
         for i, part in enumerate(parts):
+
+            if part == "":
+                continue
 
             # Handle placeholder information
             if part in placeholders_with_brackets:
