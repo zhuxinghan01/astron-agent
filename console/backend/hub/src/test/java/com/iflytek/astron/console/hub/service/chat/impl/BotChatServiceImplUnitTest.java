@@ -68,6 +68,8 @@ class BotChatServiceImplUnitTest {
     private PromptChatService promptChatService;
     @Mock
     private ReqKnowledgeRecordsDataService reqKnowledgeRecordsDataService;
+    @Mock
+    private com.iflytek.astron.console.hub.util.BotPermissionUtil botPermissionUtil;
 
     @InjectMocks
     private BotChatServiceImpl botChatService;
@@ -233,6 +235,7 @@ class BotChatServiceImplUnitTest {
         botChatService.chatMessageBot(chatBotReqDto, sseEmitter, sseId, null, null);
 
         // Then
+        verify(chatBotDataService).findMarketBotByBotId(eq(chatBotReqDto.getBotId()));
         verify(chatBotDataService).findById(eq(chatBotReqDto.getBotId()));
         verify(sparkChatService).chatStream(any(SparkChatRequest.class), eq(sseEmitter), eq(sseId), any(), eq(false), eq(false));
     }
@@ -245,7 +248,7 @@ class BotChatServiceImplUnitTest {
         String sseId = "test-sse-id";
 
         when(chatBotDataService.findMarketBotByBotId(anyInt())).thenReturn(null);
-        when(chatBotDataService.findById(anyInt())).thenReturn(Optional.empty());
+        lenient().when(chatBotDataService.findById(anyInt())).thenReturn(Optional.empty());
 
         // When & Then
         assertDoesNotThrow(() -> botChatService.chatMessageBot(chatBotReqDto, sseEmitter, sseId, null, null));
@@ -333,6 +336,7 @@ class BotChatServiceImplUnitTest {
 
         LLMInfoVo llmInfoVo = createLLMInfoVo();
         when(modelService.getDetail(anyInt(), anyLong(), any())).thenReturn(new ApiResult<>(0, "success", llmInfoVo, 1L));
+        when(modelService.checkModelBase(anyLong(), anyString(), anyString(), anyString(), anyLong())).thenReturn(true);
         when(knowledgeService.getChuncks(any(), anyString(), anyInt(), anyBoolean())).thenReturn(Arrays.asList("knowledge"));
         doNothing().when(promptChatService).chatStream(any(), any(), any(), any(), anyBoolean(), anyBoolean());
 
@@ -341,7 +345,7 @@ class BotChatServiceImplUnitTest {
 
         // Then
         verify(modelService).getDetail(eq(0), eq(modelId), isNull());
-        verify(promptChatService).chatStream(any(JSONObject.class), eq(sseEmitter), eq(sseId), isNull(), eq(false), eq(false));
+        verify(promptChatService).chatStream(any(JSONObject.class), eq(sseEmitter), eq(sseId), isNull(), eq(false), eq(true));
         verify(sparkChatService, never()).chatStream(any(), any(), any(), any(), anyBoolean(), anyBoolean());
     }
 
@@ -466,7 +470,7 @@ class BotChatServiceImplUnitTest {
         market.setBotStatus(ShelfStatusEnum.ON_SHELF.getCode());
         market.setPrompt("test prompt");
         market.setSupportContext(1);
-        market.setModel("x1");  // Use Spark model to trigger sparkChatService
+        market.setModel("x1"); // Use Spark model to trigger sparkChatService
         market.setOpenedTool("ifly_search");
         market.setVersion(1);
         market.setModelId(null);
@@ -481,7 +485,7 @@ class BotChatServiceImplUnitTest {
                 .botName("Test Bot")
                 .prompt("test prompt")
                 .supportContext(1)
-                .model("x1")  // Use Spark model to trigger sparkChatService
+                .model("x1") // Use Spark model to trigger sparkChatService
                 .openedTool("ifly_search")
                 .version(1)
                 .modelId(null)
