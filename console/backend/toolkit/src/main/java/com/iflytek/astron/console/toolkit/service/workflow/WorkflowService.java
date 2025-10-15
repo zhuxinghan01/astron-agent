@@ -88,7 +88,6 @@ import com.iflytek.astron.console.toolkit.service.extra.AppService;
 import com.iflytek.astron.console.toolkit.service.extra.CoreSystemService;
 import com.iflytek.astron.console.toolkit.service.extra.OpenPlatformService;
 import com.iflytek.astron.console.toolkit.service.model.ModelService;
-import com.iflytek.astron.console.toolkit.service.tool.RpaAssistantService;
 import com.iflytek.astron.console.toolkit.sse.WorkflowSseEventSourceListener;
 import com.iflytek.astron.console.toolkit.tool.DataPermissionCheckTool;
 import com.iflytek.astron.console.toolkit.tool.JsonConverter;
@@ -266,8 +265,6 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
     private CommonConfig commonConfig;
     @Autowired
     private UserInfoDataService userInfoDataService;
-    @Autowired
-    private RpaAssistantService rpaAssistantService;
     @Autowired
     private RpaUserAssistantFieldMapper rpaUserAssistantFieldMapper;
     @Autowired
