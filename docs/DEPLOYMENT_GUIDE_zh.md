@@ -141,12 +141,30 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 ```
 
 **获取 Casdoor 配置信息：**
-1. 访问 Casdoor Web界面：http://localhost:8000
-2. 默认账号: admin/123 登陆进入管理页面
-3. 进入 http://localhost:8000/organizations 页创建组织
-4. 进入http://localhost:8000/applications页 创建应用，并绑定组织
-5. 设置应用的重定向URL为：http://localhost:80/callback (项目nginx容器端口,默认80)
-6. 将Casdoor地址，应用的客户端ID，应用名称，组织名称等信息更新到配置文件中
+1. 访问 Casdoor 管理控制台： [http://localhost:8000](http://localhost:8000)  
+2. 使用默认管理员账号登录：`admin / 123`  
+3. 进入 **“应用管理”** 页面： [http://localhost:8000/applications](http://localhost:8000/applications)  
+4. 创建一个新的应用，填写以下信息：  
+   - **Name**：自定义应用名称  
+   - **Redirect URL**：设置为项目的回调地址，例如 `http://localhost:10080/callback `（该地址为项目中 Nginx 容器的回调端口，默认 `10080`）  
+5. 保存应用后，记录以下信息并与项目配置项一一对应：  
+
+| Casdoor 信息项 | 示例值 | `.env` 中对应配置项 |
+|----------------|--------|----------------------|
+| Casdoor 服务地址（URL） | `http://localhost:8000` | `CONSOLE_CASDOOR_URL=http://localhost:8000` |
+| 客户端 ID（Client ID） | `your-casdoor-client-id` | `CONSOLE_CASDOOR_ID=your-casdoor-client-id` |
+| 应用名称（Name） | `your-casdoor-app-name` | `CONSOLE_CASDOOR_APP=your-casdoor-app-name` |
+| 组织名称（Organization） | `your-casdoor-org-name` | `CONSOLE_CASDOOR_ORG=your-casdoor-org-name` |
+
+6. 将以上配置信息填写到项目的环境变量文件中： docker/astronAgent/.env
+```bash
+# 进入 astronAgent 目录
+cd docker/astronAgent
+
+# 编辑环境变量配置
+vim .env
+```
+
 
 ### 第四步：启动 astronAgent 核心服务（必要部署步骤）
 
@@ -224,13 +242,13 @@ HOST_BASE_ADDRESS=http://localhost (主机地址)
 cd docker/astronAgent
 
 # 启动所有服务
-docker-compose up -d
+docker compose up -d
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 查看服务日志
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## 📊 服务访问地址
