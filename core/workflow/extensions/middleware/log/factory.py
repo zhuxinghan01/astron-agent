@@ -69,7 +69,7 @@ class LogServiceFactory(ServiceFactory):
                 colorize=True,
             )
 
-        logger.debug(
-            f"Loguru initialized successfully. Log file: {log_path}, Log level: {log_level}"
+        logger.info(
+            f"✅ Loguru initialized successfully. Log file: {log_path}, Log level: {log_level}",
         )
         return LogService()
