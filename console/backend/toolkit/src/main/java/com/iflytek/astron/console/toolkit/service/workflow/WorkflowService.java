@@ -690,7 +690,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
         for (String key : apiKeys) {
             try {
                 // If the remote API is paginated, extend here with a loop to fetch all pages.
-                JSONObject rpaList = rpaHandler.getRpaList(1, 999, key);
+                JSONObject rpaList = rpaHandler.getRpaList(1, 99, key);
                 if (rpaList == null)
                     continue;
                 JSONArray records = rpaList.getJSONArray("records");
@@ -763,7 +763,7 @@ public class WorkflowService extends ServiceImpl<WorkflowMapper, Workflow> {
                 isLatest = Objects.equals(currVer, latestVer);
             } else {
                 // No online version found: conservative false
-                isLatest = false;
+                isLatest = true;
             }
             if (d != null && !Objects.equals(d.getIsLatest(), isLatest)) {
                 d.setIsLatest(isLatest);
