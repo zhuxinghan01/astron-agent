@@ -276,6 +276,7 @@ services:
     container_name: astron-agent-core-aitools
     environment:
       SERVICE_PORT: "${CORE_AITOOLS_PORT:-18668}"
+      OSS_TYPE: "${OSS_TYPE:-s3}"
       OSS_ENDPOINT: "${OSS_ENDPOINT:-http://minio:9000}"
       OSS_ACCESS_KEY_ID: "${OSS_ACCESS_KEY_ID:-minioadmin}"
       OSS_ACCESS_KEY_SECRET: "${OSS_ACCESS_KEY_SECRET:-minioadmin123}"
