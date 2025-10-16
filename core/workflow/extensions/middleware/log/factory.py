@@ -48,7 +48,7 @@ class LogServiceFactory(ServiceFactory):
         # Initialize loguru
         logger.remove()  # Remove default logger configuration
 
-        log_format = "{level} | {time:YYYY-MM-DD HH:mm:ss} | {file} - {function}: {line} {message}"
+        log_format = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} | {message}"
 
         # Add file handler with log level and relative path
         logger.add(
