@@ -1972,7 +1972,7 @@ CREATE TABLE `config_info`
 -- Records of config_info
 -- ----------------------------
 BEGIN;
-INSERT INTO `config_info` (id,category,code,name,value,is_valid,remarks,create_time,update_time) VALUES
+INSERT INTO astron_console.config_info (id,category,code,name,value,is_valid,remarks,create_time,update_time) VALUES
 	 (1019,'DOCUMENT_LINK','1','SparkBotHelpDoc','https://experience.pro.iflyaicloud.com/aicloud-sparkbot-doc/',1,'你好','2023-08-17 00:00:00','2024-09-03 11:51:23'),
 	 (1021,'COMPRESSED_FOLDER','1','SparkBotSDK','https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/sdk%E6%8E%A5%E5%85%A5%E8%AF%B4%E6%98%8E.zip',1,'','2000-01-01 00:00:00','2024-06-27 10:35:15'),
 	 (1023,'SPARKBOT_CONFIG','1','SparkBotApi','{"sdkHtml":"<div className=\\"sdk-content\\">\\n      <p className=\\"title\\">Sparkbot接入文档</p>\\n      <h1>JS SDK</h1>\\n      <p>\\n        安装之前，请确保您已通过我们的平台注册或我们已为您提供了<b>AppId</b>。\\n        如果没有密钥，您将无法使用该SDK。\\n      </p>\\n      <hr></hr>\\n      <h2>JS SDK</h2>\\n      <p>\\n        要将 Sparkbot 与 JS SDK 一起使用，您需要在 HTML 文件中包含脚本标签。\\n      </p>\\n      <h3>浮动机器人</h3>\\n      <p style={{ margin: ''20px 0'' }}>\\n        浮动机器人非常简单。 只需将这 2 个脚本标签添加到您的 HTML 中即可。\\n      </p>\\n      <div className=\\"code-content\\">\\n        <div className=\\"code-container\\">\\n          <span className=\\"normal\\">&lt;</span>\\n          <span className=\\"tagColor\\">script&nbsp;</span>\\n          <span className=\\"light\\" style={{ whiteSpace: ''nowrap'' }}>\\n            src=''https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/Sparkbot.js''\\n            <span className=\\"normal\\">&gt;</span>\\n            <span className=\\"normal\\">&lt;/</span>\\n            <span className=\\"tagColor\\">script</span>\\n            <span className=\\"normal\\"> &gt;</span>\\n          </span>\\n          <br></br>\\n          <span className=\\"normal\\">&lt;</span>\\n          <span className=\\"tagColor\\">script</span>\\n          <span className=\\"normal\\"> &gt;</span>\\n          <br></br>\\n          <span style={{ marginLeft: 10 }}>Sparkbot</span>\\n          <span className=\\"normal\\">.</span>\\n          <span className=\\"tagColor\\">init</span>\\n          <span className=\\"normal\\">(&#123;</span>\\n          <br></br>\\n          <span className=\\"light\\" style={{ marginLeft: 20 }}>\\n            appId: ''您的appId'',\\n            <br></br>\\n            <span style={{ marginLeft: 20 }}>apiKey: ''您的apiKey'',</span>\\n            <br></br>\\n            <span style={{ marginLeft: 20 }}>apiSecret: ''您的apiSecret''</span>\\n            <br></br>\\n          </span>\\n          <span className=\\"normal\\" style={{ marginLeft: 10 }}>\\n            &#125;)\\n          </span>\\n          <br></br>\\n          <span className=\\"normal\\">&lt;/</span>\\n          <span className=\\"tagColor\\">script</span>\\n          <span className=\\"normal\\"> &gt;</span>\\n        </div>\\n      </div>\\n    </div>","sdkMd":"/pro-bucket/sparkBot/README.md"}',1,'','2000-01-01 00:00:00','2024-06-27 10:35:15'),
@@ -3411,146 +3411,122 @@ main
 
 ## 请直接返回代码块',1,'','2000-01-01 00:00:00','2024-10-16 17:47:31'),
 	 (1457,'WORKFLOW','python-dependency','代码执行器py依赖','{
-    "anyio": "3.7.1",
-    "argon2-cffi": "23.1.0",
-    "argon2-cffi-bindings": "21.2.0",
-    "asttokens": "2.4.1",
-    "attrs": "23.1.0",
-    "Babel": "2.13.1",
-    "backcall": "0.2.0",
-    "beautifulsoup4": "4.12.2",
-    "bleach": "6.1.0",
-    "boltons": "23.0.0",
-    "Brotli": "1.1.0",
-    "certifi": "2023.11.17",
-    "cffi": "1.16.0",
-    "charset-normalizer": "3.3.2",
-    "colorama": "0.4.6",
-    "comm": "0.1.4",
-    "conda": "23.3.1",
-    "conda-package-handling": "2.2.0",
-    "conda_package_streaming": "0.9.0",
-    "cryptography": "39.0.0",
-    "cycler": "0.12.1",
-    "debugpy": "1.8.0",
-    "decorator": "5.1.1",
-    "defusedxml": "0.7.1",
-    "dill": "0.3.5",
-    "entrypoints": "0.4",
-    "et-xmlfile": "1.1.0",
-    "exceptiongroup": "1.2.0",
-    "executing": "2.0.1",
-    "fastjsonschema": "2.19.0",
-    "gensim": "4.1.0",
-    "gmpy2": "2.1.2",
-    "idna": "3.4",
-    "importlib-metadata": "6.8.0",
-    "importlib-resources": "6.1.1",
-    "ipykernel": "6.26.0",
-    "ipython": "8.12.2",
-    "ipython-genutils": "0.2.0",
-    "jedi": "0.19.1",
-    "Jinja2": "3.1.2",
-    "joblib": "1.3.2",
-    "json5": "0.9.14",
-    "jsonpatch": "1.33",
-    "jsonpointer": "2.4",
-    "jsonschema": "4.20.0",
-    "jsonschema-specifications": "2023.11.1",
-    "jupyter_client": "8.6.0",
-    "jupyter_core": "5.1.3",
-    "jupyter-server": "1.24.0",
-    "jupyterlab": "3.4.8",
-    "jupyterlab_pygments": "0.3.0",
-    "jupyterlab_server": "2.25.2",
-    "kiwisolver": "1.4.5",
-    "libmambapy": "1.2.0",
-    "lxml": "4.9.2",
-    "mamba": "1.2.0",
-    "MarkupSafe": "2.1.3",
-    "matplotlib": "3.4.3",
-    "matplotlib-inline": "0.1.6",
-    "matplotlib-venn": "0.11.6",
-    "mistune": "3.0.2",
-    "mpmath": "1.3.0",
-    "nbclassic": "0.4.5",
-    "nbclient": "0.8.0",
-    "nbconvert": "7.11.0",
-    "nbformat": "5.9.2",
-    "nest-asyncio": "1.5.8",
-    "notebook": "6.5.1",
-    "notebook_shim": "0.2.3",
-    "numpy": "1.21.2",
-    "numpy-financial": "1.0.0",
-    "olefile": "0.46",
-    "openpyxl": "3.0.10",
-    "packaging": "23.2",
-    "pandas": "1.3.2",
-    "pandocfilters": "1.5.0",
-    "parso": "0.8.3",
-    "patsy": "0.5.4",
-    "pexpect": "4.8.0",
-    "pickleshare": "0.7.5",
-    "Pillow": "8.4.0",
-    "pip": "23.3.1",
-    "pkgutil_resolve_name": "1.3.10",
-    "platformdirs": "4.0.0",
-    "pluggy": "1.3.0",
-    "prometheus-client": "0.19.0",
-    "prompt-toolkit": "3.0.41",
-    "psutil": "5.9.5",
-    "ptyprocess": "0.7.0",
-    "pure-eval": "0.2.2",
-    "pycosat": "0.6.6",
-    "pycparser": "2.21",
-    "Pygments": "2.17.2",
-    "pyOpenSSL": "23.2.0",
-    "pyparsing": "3.1.1",
-    "PyPDF2": "1.28.6",
-    "PyQt5": "5.15.4",
-    "PyQt5-sip": "12.9.0",
-    "PySocks": "1.7.1",
-    "python-dateutil": "2.8.2",
-    "python-docx": "0.8.11",
-    "python-pptx": "1.0.2",
-    "pytz": "2023.3.post1",
-    "pyzmq": "25.1.1",
-    "referencing": "0.31.0",
-    "requests": "2.31.0",
-    "rpds-py": "0.13.1",
-    "ruamel.yaml": "0.17.40",
-    "ruamel.yaml.clib": "0.2.7",
-    "scikit-learn": "1.0",
-    "scipy": "1.7.1",
-    "seaborn": "0.11.2",
-    "Send2Trash": "1.8.2",
-    "setuptools": "59.8.0",
-    "sip": "6.5.1",
-    "six": "1.16.0",
-    "smart-open": "6.4.0",
-    "sniffio": "1.3.0",
-    "soupsieve": "2.5",
-    "stack-data": "0.6.2",
-    "statsmodels": "0.13.5",
-    "sympy": "1.8",
-    "terminado": "0.18.0",
-    "threadpoolctl": "3.2.0",
-    "tinycss2": "1.2.1",
-    "toml": "0.10.2",
-    "tomli": "2.0.1",
-    "toolz": "0.12.0",
-    "tornado": "6.3.3",
-    "tqdm": "4.66.1",
-    "traitlets": "5.9.0",
-    "typing_extensions": "4.8.0",
-    "urllib3": "2.1.0",
-    "wcwidth": "0.2.12",
-    "webencodings": "0.5.1",
-    "websocket-client": "1.6.4",
-    "wheel": "0.41.3",
-    "zipp": "3.17.0",
-    "zstandard": "0.22.0"
-}',1,'','2000-01-01 00:00:00','2025-07-10 15:47:31'),
+  "aiohappyeyeballs": "2.4.3",
+  "aiohttp": "3.10.10",
+  "aiosignal": "1.3.1",
+  "annotated-types": "0.7.0",
+  "anyio": "4.4.0",
+  "appdirs": "1.4.4",
+  "astroid": "3.1.0",
+  "attrs": "23.2.0",
+  "black": "24.4.2",
+  "boto3": "1.40.22",
+  "botocore": "1.40.22",
+  "certifi": "2024.7.4",
+  "charset-normalizer": "3.3.2",
+  "click": "8.1.7",
+  "confluent-kafka": "2.5.0",
+  "coverage": "7.10.7",
+  "Deprecated": "1.2.14",
+  "dill": "0.4.0",
+  "distro": "1.9.0",
+  "dnspython": "2.6.1",
+  "email_validator": "2.2.0",
+  "fastapi": "0.111.1",
+  "fastapi-cli": "0.0.4",
+  "flake8": "7.0.0",
+  "frozenlist": "1.5.0",
+  "grpcio": "1.64.1",
+  "h11": "0.14.0",
+  "httpcore": "1.0.5",
+  "httptools": "0.6.4",
+  "httpx": "0.27.0",
+  "idna": "3.7",
+  "importlib_metadata": "7.1.0",
+  "iniconfig": "2.0.0",
+  "isort": "5.13.2",
+  "Jinja2": "3.1.4",
+  "jiter": "0.10.0",
+  "jmespath": "1.0.1",
+  "jsonpatch": "1.33",
+  "jsonpointer": "3.0.0",
+  "jsonschema": "4.23.0",
+  "jsonschema-specifications": "2023.12.1",
+  "langchain-core": "0.3.75",
+  "langchain_sandbox": "0.0.6",
+  "langgraph": "0.6.6",
+  "langgraph-checkpoint": "2.1.1",
+  "langgraph-prebuilt": "0.6.4",
+  "langgraph-sdk": "0.2.4",
+  "langsmith": "0.4.21",
+  "loguru": "0.7.2",
+  "markdown-it-py": "3.0.0",
+  "MarkupSafe": "2.1.5",
+  "mccabe": "0.7.0",
+  "mdurl": "0.1.2",
+  "multidict": "6.1.0",
+  "openai": "1.60.2",
+  "orjson": "3.10.6",
+  "ormsgpack": "1.10.0",
+  "packaging": "24.1",
+  "pathspec": "0.12.1",
+  "pip": "23.2.1",
+  "platformdirs": "4.4.0",
+  "pluggy": "1.5.0",
+  "propcache": "0.2.0",
+  "protobuf": "3.20.3",
+  "py-spy": "0.4.1",
+  "pycodestyle": "2.11.1",
+  "pydantic": "2.9.2",
+  "pydantic_core": "2.23.4",
+  "pyflakes": "3.2.0",
+  "Pygments": "2.18.0",
+  "pylint": "3.1.0",
+  "PyMySQL": "1.1.1",
+  "pytest": "8.2.2",
+  "pytest-asyncio": "1.2.0",
+  "pytest-cov": "7.0.0",
+  "python-dateutil": "2.9.0.post0",
+  "python-dotenv": "1.0.1",
+  "python-multipart": "0.0.9",
+  "PyYAML": "6.0.1",
+  "redis": "3.5.3",
+  "redis-py-cluster": "2.1.3",
+  "referencing": "0.35.1",
+  "requests": "2.32.3",
+  "requests-toolbelt": "1.0.0",
+  "rich": "13.7.1",
+  "rpds-py": "0.19.0",
+  "s3transfer": "0.13.1",
+  "setuptools": "70.3.0",
+  "shellingham": "1.5.4",
+  "six": "1.17.0",
+  "sniffio": "1.3.1",
+  "snowflake-id": "1.0.2",
+  "SQLAlchemy": "2.0.31",
+  "sqlmodel": "0.0.19",
+  "starlette": "0.37.2",
+  "tenacity": "9.1.2",
+  "toml": "0.10.2",
+  "tomlkit": "0.13.3",
+  "tqdm": "4.67.1",
+  "typer": "0.12.3",
+  "typing_extensions": "4.12.2",
+  "urllib3": "2.2.2",
+  "uvicorn": "0.36.0",
+  "uvloop": "0.21.0",
+  "versioned-fastapi": "1.0.2",
+  "watchfiles": "0.22.0",
+  "websocket-client": "1.8.0",
+  "websockets": "12.0",
+  "wheel": "0.41.2",
+  "wrapt": "1.16.0",
+  "xingchen_utils": "1.0.7",
+  "xxhash": "3.5.0",
+  "yarl": "1.16.0",
+  "zipp": "3.19.2",
+  "zstandard": "0.24.0"
+}',1,'','2000-01-01 00:00:00','2025-10-15 16:25:41'),
 	 (1458,'TEMPLATE','node','','[
     {
         "idType": "spark-llm",
@@ -4411,268 +4387,6 @@ main
     "description": "通过智能策略调用知识库，可以指定知识库进行知识检索和总结答复",
     "nodeType": "基础节点"
 }',0,'知识库pro节点','2000-01-01 00:00:00','2025-09-29 15:54:42'),
-	 (1651,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','固定节点','{"idType":"node-start","type":"开始节点","position":{"x":100,"y":300},"data":{"label":"开始","description":"工作流的开启节点，用于定义流程调用所需的业务变量信息。","nodeMeta":{"nodeType":"基础节点","aliasName":"开始节点"},"inputs":[],"outputs":[{"id":"","name":"AGENT_USER_INPUT","deleteDisabled":true,"required":true,"schema":{"type":"string","default":"用户本轮对话输入内容"}}],"nodeParam":{},"allowInputReference":false,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/start-node-icon.png"}}',1,'开始节点','2000-01-01 00:00:00','2024-10-18 10:49:36'),
-	 (1653,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','固定节点','{"idType":"node-end","type":"结束节点","position":{"x":1000,"y":300},"data":{"label":"结束","description":"工作流的结束节点，用于输出工作流运行后的最终结果。","nodeMeta":{"nodeType":"基础节点","aliasName":"结束节点"},"inputs":[{"id":"","name":"output","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[],"nodeParam":{"outputMode":1,"template":"","streamOutput":true},"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/end-node-icon.png"}}',1,'结束节点','2000-01-01 00:00:00','2025-04-09 20:41:00'),
-	 (1655,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','基础节点','{"idType":"spark-llm","nodeType":"基础节点","aliasName":"大模型","description":"根据输入的提示词，调用选定的大模型，对提示词作出回答","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"大模型"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"string","default":""}}],"nodeParam":{"maxTokens":2048,"temperature":0.5,"topK":4,"auditing":"default","domain":"4.0Ultra","template":"","model":"spark","serviceId":"bm4","respFormat":0,"patchId":"0","url":"wss://spark-api.xf-yun.com/v4.0/chat","appId":"d1590f30","uid":"2171","enableChatHistoryV2":{"isEnabled":false,"rounds":1}},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/largeModelIcon.png"}}',1,'大模型','2000-01-01 00:00:00','2025-03-24 19:42:30'),
-	 (1657,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','基础节点','{"idType":"ifly-code","nodeType":"基础节点","aliasName":"代码","description":"面向开发者提供代码开发能力，目前仅支持python语言，允许使用该节点已定义的变量作为参数传入，返回语句用于输出函数的结果","data":{"nodeMeta":{"nodeType":"工具","aliasName":"代码"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"key0","schema":{"type":"string","default":""}},{"id":"","name":"key1","schema":{"type":"array-string","default":""}},{"id":"","name":"key2","schema":{"type":"object","default":"","properties":[{"id":"","name":"key21","type":"string","default":"","required":true,"nameErrMsg":""}]}}],"nodeParam":{"code":"def main(input):\\n    ret = {\\n        \\"key0\\": input + \\"hello\\",\\n        \\"key1\\": [\\"hello\\", \\"world\\"],\\n        \\"key2\\": {\\"key21\\": \\"hi\\"}\\n    }\\n    return ret"},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/codeIcon.png"}}',1,'代码','2000-01-01 00:00:00','2024-10-21 17:06:50'),
-	 (1659,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','基础节点','{"idType":"knowledge-base","nodeType":"基础节点","aliasName":"知识库","description":"调用知识库，可以指定知识库进行知识检索和答复","data":{"nodeMeta":{"nodeType":"工具","aliasName":"知识库"},"inputs":[{"id":"","name":"query","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"results","schema":{"type":"array-object","properties":[{"id":"","name":"score","type":"number","default":"","required":true,"nameErrMsg":""},{"id":"","name":"docId","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"title","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"content","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"context","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"references","type":"object","default":"","required":true,"nameErrMsg":""}]},"required":true,"nameErrMsg":""}],"nodeParam":{"repoId":[],"repoList":[],"topN":3},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/knowledgeIcon.png"}}',1,'知识库','2000-01-01 00:00:00','2024-10-18 11:03:49'),
-	 (1661,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','工具','{"idType":"flow","nodeType":"工具","aliasName":"工作流","description":"快速集成已发布工作流，高效复用已有能力","data":{"nodeMeta":{"nodeType":"工具","aliasName":"工作流"},"inputs":[],"outputs":[],"nodeParam":{"appId":"","flowId":"","uid":""},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/flow-icon.png"}}',1,'工作流','2000-01-01 00:00:00','2025-05-16 11:12:07'),
-	 (1663,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','逻辑','{"idType":"decision-making","nodeType":"基础节点","aliasName":"决策","description":"结合输入的参数与填写的意图，决定后续的逻辑走向","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"决策"},"nodeParam":{"maxTokens":2048,"temperature":0.5,"topK":4,"auditing":"default","domain":"4.0Ultra","enableChatHistoryV2":{"isEnabled":false,"rounds":1},"uid":"2171","intentChains":[{"intentType":2,"name":"","description":"","id":"intent-one-of::4724514d-ffc8-4412-bf7f-13cc3375110d"},{"intentType":1,"name":"default","description":"默认意图","id":"intent-one-of::506841e4-3f6c-40b1-a804-dc5ffe723b34"}],"reasonMode":1,"model":"spark","useFunctionCall":true,"serviceId":"bm4","promptPrefix":"","patchId":"0","url":"wss://spark-api.xf-yun.com/v4.0/chat","appId":"d1590f30"},"inputs":[{"id":"","name":"Query","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"class_name","schema":{"type":"string","default":""}}],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/designMakeIcon.png"}}',1,'决策','2000-01-01 00:00:00','2025-03-24 19:42:39'),
-	 (1665,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','逻辑','{"idType":"if-else","nodeType":"分支器","aliasName":"分支器","description":"根据设立的条件，判断选择分支走向","data":{"nodeMeta":{"nodeType":"分支器","aliasName":"分支器"},"nodeParam":{"cases":[{"id":"branch_one_of::","level":1,"logicalOperator":"and","conditions":[{"id":"","leftVarIndex":null,"rightVarIndex":null,"compareOperator":null}]},{"id":"branch_one_of::","level":999,"logicalOperator":"and","conditions":[]}]},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{"nodeId":"","name":""}}}},{"id":"","name":"input1","schema":{"type":"string","value":{"type":"ref","content":{"nodeId":"","name":""}}}}],"outputs":[],"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/if-else-node-icon.png"}}',1,'分支器','2000-01-01 00:00:00','2024-10-18 10:52:56'),
-	 (1667,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','逻辑','{"idType":"iteration","nodeType":"基础节点","aliasName":"迭代","description":"该节点用于处理循环逻辑，仅支持嵌套一次","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"迭代"},"nodeParam":{},"inputs":[{"id":"","name":"input","schema":{"type":"","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"array-string","default":""}}],"iteratorNodes":[],"iteratorEdges":[],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/iteration-icon.png"}}',1,'迭代','2000-01-01 00:00:00','2024-10-18 10:55:30'),
-	 (1669,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','转换','{"idType":"node-variable","nodeType":"基础节点","aliasName":"变量存储器","description":"可以设定多个变量，用于长期保存数据，且持续生效和更新","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"变量存储器"},"nodeParam":{"method":"set"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/variable-memory-icon.png"}}',1,'变量存储器','2000-01-01 00:00:00','2025-03-12 18:05:50'),
-	 (1671,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','转换','{
-    "idType": "extractor-parameter",
-    "nodeType": "基础节点",
-    "aliasName": "变量提取器",
-    "description": "结合提取变量描述，将上一节点输出的自然语言进行提取",
-    "data":
-    {
-        "nodeMeta":
-        {
-            "nodeType": "基础节点",
-            "aliasName": "变量提取器"
-        },
-        "nodeParam":
-        {
-            "maxTokens": 2048,
-            "temperature": 0.5,
-            "topK": 4,
-            "auditing": "default",
-            "domain": "4.0Ultra",
-            "model": "spark",
-            "serviceId": "bm4",
-            "patchId": "0",
-            "url": "wss://spark-api.xf-yun.com/v4.0/chat",
-            "appId": "d1590f30",
-            "uid": "2171"
-        },
-        "inputs":
-        [
-            {
-                "id": "",
-                "name": "input",
-                "schema":
-                {
-                    "type": "string",
-                    "value":
-                    {
-                        "type": "ref",
-                        "content":
-                        {}
-                    }
-                }
-            }
-        ],
-        "outputs":
-        [
-            {
-                "id": "",
-                "name": "output",
-                "schema":
-                {
-                    "type": "string",
-                    "description": ""
-                },
-                "required": true
-            }
-        ],
-        "references":
-        [],
-        "allowInputReference": true,
-        "allowOutputReference": true,
-        "icon": "https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/variable-extractor-icon.png"
-    }
-}',1,'变量提取器','2000-01-01 00:00:00','2025-05-29 15:28:27'),
-	 (1673,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','转换','{"idType":"text-joiner","nodeType":"工具","aliasName":"文本处理节点","description":"用于按照指定格式规则处理多个字符串变量","data":{"nodeMeta":{"nodeType":"工具","aliasName":"文本拼接"},"nodeParam":{"prompt":""},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"string"}}],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/text-splicing-icon.png"}}',1,'文本处理节点','2000-01-01 00:00:00','2025-03-25 16:27:14'),
-	 (1675,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','其他','{"idType":"message","nodeType":"基础节点","aliasName":"消息","description":"在工作流中可以对中间过程的产物进行输出","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"消息"},"nodeParam":{"template":"","startFrameEnabled":false},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output_m","schema":{"type":"string"}}],"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/message-node-icon.png"}}',1,'消息','2000-01-01 00:00:00','2024-10-18 10:57:28'),
-	 (1677,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','工具','{"idType":"plugin","nodeType":"工具","aliasName":"工具","description":"通过添加外部工具，快捷获取技能，满足用户需求","data":{"nodeMeta":{"nodeType":"工具","aliasName":"工具"},"inputs":[],"outputs":[],"nodeParam":{"appId":"4eea957b","code":""},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/tool-icon.png"}}',1,'工具','2000-01-01 00:00:00','2024-10-18 10:52:15'),
-	 (1679,'WORKFLOW_NODE_TEMPLATE_INNER','1,2','逻辑','{
-  "aliasName": "Agent智能决策",
-  "idType": "agent",
-  "data": {
-    "outputs": [
-  {
-    "id": "",
-    "customParameterType": "deepseekr1",
-    "name": "REASONING_CONTENT",
-    "nameErrMsg": "",
-    "schema": {
-      "default": "模型思考过程",
-      "type": "string"
-    }
-  },
-  {
-    "id": "",
-    "name": "output",
-    "nameErrMsg": "",
-    "schema": {
-      "default": "",
-      "type": "string"
-    }
-  }
-],
-    "references": [],
-    "allowInputReference": true,
-    "inputs": [
-      {
-        "schema": {
-          "type": "string",
-          "value": {
-            "type": "ref",
-            "content": {}
-          }
-        },
-        "name": "input",
-        "id": ""
-      }
-    ],
-    "icon": "https://oss-beijing-m8.openstorage.cn/SparkBotProd/icon/common/agent.png",
-    "allowOutputReference": true,
-    "nodeMeta": {
-      "aliasName": "智能体节点",
-      "nodeType": "Agent节点"
-    },
-    "nodeParam": {
-     "appId": "",
-     "serviceId": "xdeepseekv3",
-    "enableChatHistoryV2":{
-"isEnabled": false,
-"rounds": 1
-},
-      "modelConfig": {
-          "domain": "xdeepseekv3",
-          "api": "wss://maas-api.cn-huabei-1.xf-yun.com/v1.1/chat",
-          "agentStrategy": 1
-      },
-      "instruction": {
-          "reasoning": "",
-          "answer": "",
-          "query": ""
-      },
-      "plugin": {
-          "tools": [
-
-          ],
-          "toolsList": [
-
-          ],
-          "mcpServerIds": [
-
-          ],
-          "mcpServerUrls": [
-
-          ],
-          "workflowIds": [
-
-          ]
-      },
-      "maxLoopCount": 10
-    }
-  },
-  "description": "依据任务需求，通过选择合适的工具列表，实现大 模型的智能调度",
-  "nodeType": "基础节点"
-}',1,'agent','2000-01-01 00:00:00','2025-04-08 20:02:25'),
-	 (1681,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','固定节点','{"idType":"node-start","type":"开始节点","position":{"x":100,"y":300},"data":{"label":"开始","description":"工作流的开启节点，用于定义流程调用所需的业务变量信息。","nodeMeta":{"nodeType":"基础节点","aliasName":"开始节点"},"inputs":[],"outputs":[{"id":"","name":"AGENT_USER_INPUT","deleteDisabled":true,"required":true,"schema":{"type":"string","default":"用户本轮对话输入内容"}}],"nodeParam":{},"allowInputReference":false,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/start-node-icon.png"}}',1,'开始节点','2000-01-01 00:00:00','2024-10-18 10:49:36'),
-	 (1683,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','固定节点','{"idType":"node-end","type":"结束节点","position":{"x":1000,"y":300},"data":{"label":"结束","description":"工作流的结束节点，用于输出工作流运行后的最终结果。","nodeMeta":{"nodeType":"基础节点","aliasName":"结束节点"},"inputs":[{"id":"","name":"output","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[],"nodeParam":{"outputMode":1,"template":"","streamOutput":true},"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/end-node-icon.png"}}',1,'结束节点','2000-01-01 00:00:00','2025-04-09 14:57:28'),
-	 (1685,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','基础节点','{"idType":"spark-llm","nodeType":"基础节点","aliasName":"大模型","description":"根据输入的提示词，调用选定的大模型，对提示词作出回答","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"大模型"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"string","default":""}}],"nodeParam":{"maxTokens":2048,"temperature":0.5,"topK":4,"auditing":"default","domain":"4.0Ultra","template":"","model":"spark","serviceId":"bm4","respFormat":0,"patchId":"0","url":"wss://spark-api.xf-yun.com/v4.0/chat","appId":"d1590f30","uid":"2171","enableChatHistoryV2":{"isEnabled":false,"rounds":1}},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/largeModelIcon.png"}}',1,'大模型','2000-01-01 00:00:00','2025-03-24 14:47:14'),
-	 (1687,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','基础节点','{"idType":"ifly-code","nodeType":"基础节点","aliasName":"代码","description":"面向开发者提供代码开发能力，目前仅支持python语言，允许使用该节点已定义的变量作为参数传入，返回语句用于输出函数的结果","data":{"nodeMeta":{"nodeType":"工具","aliasName":"代码"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"key0","schema":{"type":"string","default":""}},{"id":"","name":"key1","schema":{"type":"array-string","default":""}},{"id":"","name":"key2","schema":{"type":"object","default":"","properties":[{"id":"","name":"key21","type":"string","default":"","required":true,"nameErrMsg":""}]}}],"nodeParam":{"code":"def main(input):\\n    ret = {\\n        \\"key0\\": input + \\"hello\\",\\n        \\"key1\\": [\\"hello\\", \\"world\\"],\\n        \\"key2\\": {\\"key21\\": \\"hi\\"}\\n    }\\n    return ret"},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/codeIcon.png"}}',1,'代码','2000-01-01 00:00:00','2024-10-21 17:06:50'),
-	 (1689,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','基础节点','{"idType":"knowledge-base","nodeType":"基础节点","aliasName":"知识库","description":"调用知识库，可以指定知识库进行知识检索和答复","data":{"nodeMeta":{"nodeType":"工具","aliasName":"知识库"},"inputs":[{"id":"","name":"query","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"results","schema":{"type":"array-object","properties":[{"id":"","name":"score","type":"number","default":"","required":true,"nameErrMsg":""},{"id":"","name":"docId","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"title","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"content","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"context","type":"string","default":"","required":true,"nameErrMsg":""},{"id":"","name":"references","type":"object","default":"","required":true,"nameErrMsg":""}]},"required":true,"nameErrMsg":""}],"nodeParam":{"repoId":[],"repoList":[],"topN":3},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/knowledgeIcon.png"}}',1,'知识库','2000-01-01 00:00:00','2024-10-18 11:03:49'),
-	 (1691,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','工具','{"idType":"plugin","nodeType":"工具","aliasName":"工具","description":"通过添加外部工具，快捷获取技能，满足用户需求","data":{"nodeMeta":{"nodeType":"工具","aliasName":"工具"},"inputs":[],"outputs":[],"nodeParam":{"appId":"4eea957b","code":""},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/tool-icon.png"}}',1,'工具','2000-01-01 00:00:00','2024-10-18 10:52:15'),
-	 (1693,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','工具','{"idType":"flow","nodeType":"工具","aliasName":"工作流","description":"快速集成已发布工作流，高效复用已有能力","data":{"nodeMeta":{"nodeType":"工具","aliasName":"工作流"},"inputs":[],"outputs":[],"nodeParam":{"appId":"","flowId":"","uid":""},"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/flow-icon.png"}}',1,'工作流','2000-01-01 00:00:00','2025-05-16 11:10:09'),
-	 (1695,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','逻辑','{"idType":"decision-making","nodeType":"基础节点","aliasName":"决策","description":"结合输入的参数与填写的意图，决定后续的逻辑走向","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"决策"},"nodeParam":{"maxTokens":2048,"temperature":0.5,"topK":4,"auditing":"default","domain":"4.0Ultra","enableChatHistoryV2":{"isEnabled":false,"rounds":1},"uid":"2171","intentChains":[{"intentType":2,"name":"","description":"","id":"intent-one-of::4724514d-ffc8-4412-bf7f-13cc3375110d"},{"intentType":1,"name":"default","description":"默认意图","id":"intent-one-of::506841e4-3f6c-40b1-a804-dc5ffe723b34"}],"reasonMode":1,"model":"spark","useFunctionCall":true,"serviceId":"bm4","promptPrefix":"","patchId":"0","url":"wss://spark-api.xf-yun.com/v4.0/chat","appId":"d1590f30"},"inputs":[{"id":"","name":"Query","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"class_name","schema":{"type":"string","default":""}}],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/designMakeIcon.png"}}',1,'决策','2000-01-01 00:00:00','2025-03-24 14:47:24'),
-	 (1697,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','逻辑','{"idType":"if-else","nodeType":"分支器","aliasName":"分支器","description":"根据设立的条件，判断选择分支走向","data":{"nodeMeta":{"nodeType":"分支器","aliasName":"分支器"},"nodeParam":{"cases":[{"id":"branch_one_of::","level":1,"logicalOperator":"and","conditions":[{"id":"","leftVarIndex":null,"rightVarIndex":null,"compareOperator":null}]},{"id":"branch_one_of::","level":999,"logicalOperator":"and","conditions":[]}]},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{"nodeId":"","name":""}}}},{"id":"","name":"input1","schema":{"type":"string","value":{"type":"ref","content":{"nodeId":"","name":""}}}}],"outputs":[],"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/if-else-node-icon.png"}}',1,'分支器','2000-01-01 00:00:00','2024-10-18 10:52:56'),
-	 (1699,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','逻辑','{"idType":"iteration","nodeType":"基础节点","aliasName":"迭代","description":"该节点用于处理循环逻辑，仅支持嵌套一次","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"迭代"},"nodeParam":{},"inputs":[{"id":"","name":"input","schema":{"type":"","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"array-string","default":""}}],"iteratorNodes":[],"iteratorEdges":[],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/iteration-icon.png"}}',1,'迭代','2000-01-01 00:00:00','2024-10-18 10:55:30'),
-	 (1701,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','转换','{"idType":"node-variable","nodeType":"基础节点","aliasName":"变量存储器","description":"可定义多个变量，在整个多轮会话期间持续生效，用于多轮会话期间内容保存，新建会话或者删除聊天记录后，变量将会清空","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"变量存储器"},"nodeParam":{"method":"set"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/variable-memory-icon.png"}}',1,'变量存储器','2000-01-01 00:00:00','2024-10-18 10:55:30'),
-	 (1703,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','转换','{"idType":"extractor-parameter","nodeType":"基础节点","aliasName":"变量提取器","description":"结合提取变量描述，将上一节点输出的自然语言进行提取","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"变量提取器"},"nodeParam":{"maxTokens":2048,"temperature":0.5,"topK":4,"auditing":"default","domain":"4.0Ultra","model":"spark","serviceId":"bm4","patchId":"0","url":"wss://spark-api.xf-yun.com/v4.0/chat","appId":"d1590f30","uid":"2171"},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"string","description":""},"required":true}],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/variable-extractor-icon.png"}}',1,'变量提取器','2000-01-01 00:00:00','2025-03-24 14:47:33'),
-	 (1705,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','转换','{"idType":"text-joiner","nodeType":"工具","aliasName":"文本处理节点","description":"用于按照指定格式规则处理多个字符串变量","data":{"nodeMeta":{"nodeType":"工具","aliasName":"文本拼接"},"nodeParam":{"prompt":""},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output","schema":{"type":"string"}}],"references":[],"allowInputReference":true,"allowOutputReference":true,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/text-splicing-icon.png"}}',1,'文本处理节点','2000-01-01 00:00:00','2025-03-25 16:33:24'),
-	 (1707,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','其他','{"idType":"message","nodeType":"基础节点","aliasName":"消息","description":"在工作流中可以对中间过程的产物进行输出","data":{"nodeMeta":{"nodeType":"基础节点","aliasName":"消息"},"nodeParam":{"template":"","startFrameEnabled":false},"inputs":[{"id":"","name":"input","schema":{"type":"string","value":{"type":"ref","content":{}}}}],"outputs":[{"id":"","name":"output_m","schema":{"type":"string"}}],"references":[],"allowInputReference":true,"allowOutputReference":false,"icon":"https://oss-beijing-m8.openstorage.cn/pro-bucket/sparkBot/common/workflow/icon/message-node-icon.png"}}',1,'消息','2000-01-01 00:00:00','2024-10-18 10:57:28'),
-	 (1709,'WORKFLOW_NODE_TEMPLATE_INNER_PRE','1,2','逻辑','{
-  "aliasName": "Agent智能决策",
-  "idType": "agent",
-  "data": {
-    "outputs": [
-  {
-    "id": "",
-    "customParameterType": "deepseekr1",
-    "name": "REASONING_CONTENT",
-    "nameErrMsg": "",
-    "schema": {
-      "default": "模型思考过程",
-      "type": "string"
-    }
-  },
-  {
-    "id": "",
-    "name": "output",
-    "nameErrMsg": "",
-    "schema": {
-      "default": "",
-      "type": "string"
-    }
-  }
-],
-    "references": [],
-    "allowInputReference": true,
-    "inputs": [
-      {
-        "schema": {
-          "type": "string",
-          "value": {
-            "type": "ref",
-            "content": {}
-          }
-        },
-        "name": "input",
-        "id": ""
-      }
-    ],
-    "icon": "https://oss-beijing-m8.openstorage.cn/SparkBotProd/icon/common/agent.png",
-    "allowOutputReference": true,
-    "nodeMeta": {
-      "aliasName": "智能体节点",
-      "nodeType": "Agent节点"
-    },
-    "nodeParam": {
-     "appId": "",
-     "serviceId": "xdeepseekv3",
-    "enableChatHistoryV2":{
-"isEnabled": false,
-"rounds": 1
-},
-      "modelConfig": {
-          "domain": "xdeepseekv3",
-          "api": "wss://maas-api.cn-huabei-1.xf-yun.com/v1.1/chat",
-          "agentStrategy": 1
-      },
-      "instruction": {
-          "reasoning": "",
-          "answer": "",
-          "query": ""
-      },
-      "plugin": {
-          "tools": [
-
-          ],
-          "toolsList": [
-
-          ],
-          "mcpServerIds": [
-
-          ],
-          "mcpServerUrls": [
-
-          ],
-          "workflowIds": [
-
-          ]
-      },
-      "maxLoopCount": 10
-    }
-  },
-  "description": "依据任务需求，通过选择合适的工具列表，实现大 模型的智能调度",
-  "nodeType": "基础节点"
-}',1,'agent','2000-01-01 00:00:00','2025-04-08 20:02:25'),
 	 (1711,'SPECIAL_MODEL','10000012','dsv3t128k','{
     "llmSource": 1,
     "llmId": 10000012,
@@ -6900,8 +6614,7 @@ main
     "url": "wss://maas-api.cn-huabei-1.xf-yun.com/v1.1/chat",
     "appId": null,
     "licChannel": "xopgptoss20b"
-}',1,'亚谋理想项目测试使用','2000-01-01 00:00:00','2025-08-07 11:40:58');
-INSERT INTO astron_console.config_info (id,category,code,name,value,is_valid,remarks,create_time,update_time) VALUES
+}',1,'亚谋理想项目测试使用','2000-01-01 00:00:00','2025-08-07 11:40:58'),
 	 (1809,'SPECIAL_MODEL_CONFIG','10000014','xopgptoss120b','{
         "id": 2431162637211660,
         "name": "xopgptoss120b",
@@ -7181,7 +6894,6 @@ INSERT INTO astron_console.config_info (id,category,code,name,value,is_valid,rem
 	 (1824,'NODE_API_K_S','NODE','node判断是否需要apikey','node-start,node-end,text-joiner,node-variable',1,'','2000-01-01 00:00:00','2025-09-29 16:26:33'),
 	 (1825,'ICON','rag','http://oss-beijing-m8.openstorage.cn/SparkBotProd/','icon/rag/20251011-140414.png',1,'Ragflow-RAG','2025-07-31 19:50:09','2025-10-11 14:06:20'),
 	 (1826,'ICON','rpa_robot','http://oss-beijing-m8.openstorage.cn/SparkBotProd/','icon/tool/rpa_robot_icon.png',1,'','2025-07-31 19:50:09','2025-10-11 14:06:20');
-
 COMMIT;
 
 -- ----------------------------
