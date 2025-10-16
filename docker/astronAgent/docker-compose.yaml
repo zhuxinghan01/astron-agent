@@ -300,7 +300,7 @@ services:
         condition: service_healthy
     volumes:
       - ./config/aitools/config.env:/opt/core/plugin/aitools/config.env
-      - ./config/aitools/logs/:/opt/core/plugin/aitools/logs/
+      - ./config/aitools/logs/:/opt/core/logs/
     networks:
       - astron-agent-network
     restart: always
