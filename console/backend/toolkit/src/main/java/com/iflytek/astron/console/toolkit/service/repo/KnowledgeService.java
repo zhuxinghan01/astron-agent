@@ -410,7 +410,7 @@ public class KnowledgeService {
         // try {
         // session.startTransaction();
         // knowledgeRepository.deleteById(id);
-        if(mysqlKnowledge.getEnabled().equals(1)) {
+        if (mysqlKnowledge.getEnabled().equals(1)) {
             JSONArray delKbList = new JSONArray();
             delKbList.add(knowledge.getId());
             this.deleteKnowledgeChunks(uuids.getFirst(), delKbList);
@@ -444,7 +444,7 @@ public class KnowledgeService {
         // 1/2: Parse the user-provided text and perform chunking (completed in one interface)
         String source = fileInfoV2.getSource();
         KnowledgeResponse response;
-        
+
         // Compatibility for old and new knowledge bases, handled by new CBG knowledge base
         if (ProjectContent.isCbgRagCompatible(source)) {
             // Use upload mode for CBG compatible sources
@@ -456,36 +456,34 @@ public class KnowledgeService {
                     this.updateTaskAndFileStatus(fileInfoV2, extractKnowledgeTask, "Failed to get file from S3", false);
                     return;
                 }
-                
+
                 // Convert InputStream to MultipartFile
                 byte[] fileBytes = inputStreamToByteArray(fileStream);
                 MultipartFile multipartFile = new MockMultipartFile(
-                    "file",
-                    fileInfoV2.getName(),
-                    "application/octet-stream",
-                    fileBytes
-                );
-                
+                        "file",
+                        fileInfoV2.getName(),
+                        "application/octet-stream",
+                        fileBytes);
+
                 try {
                     fileStream.close();
                 } catch (Exception e) {
                     log.warn("Failed to close file stream", e);
                 }
-                
+
                 List<String> sliceConf = sliceConfig.getSeperator();
-                List<String> separator = (sliceConf != null && !sliceConf.isEmpty()) 
-                    ? Collections.singletonList(sliceConf.get(0)) 
-                    : Collections.singletonList("\n");
-                
+                List<String> separator = (sliceConf != null && !sliceConf.isEmpty())
+                        ? Collections.singletonList(sliceConf.get(0))
+                        : Collections.singletonList("\n");
+
                 Integer resourceType = ProjectContent.HTML_FILE_TYPE.equals(fileInfoV2.getType()) ? 1 : 0;
-                
+
                 response = knowledgeV2ServiceCallHandler.documentUpload(
-                    multipartFile,
-                    sliceConfig.getLengthRange(), 
-                    separator, 
-                    source, 
-                    resourceType
-                );
+                        multipartFile,
+                        sliceConfig.getLengthRange(),
+                        separator,
+                        source,
+                        resourceType);
             } catch (Exception e) {
                 log.error("Failed to upload file for chunking: {}", e.getMessage(), e);
                 this.updateTaskAndFileStatus(fileInfoV2, extractKnowledgeTask, "Failed to upload file: " + e.getMessage(), false);
@@ -503,7 +501,7 @@ public class KnowledgeService {
             request.setRagType(source);
             response = knowledgeV2ServiceCallHandler.documentSplit(request);
         }
-        
+
         if (response.getCode() != 0) {
             String errMsg = response.getMessage();
             log.error("Document chunking failed : {}", errMsg);
@@ -584,7 +582,7 @@ public class KnowledgeService {
         // 1/2: Parse the user-provided text and perform chunking (completed in one interface)
         String source = fileInfoV2.getSource();
         KnowledgeResponse response;
-        
+
         // Compatibility for old and new knowledge bases, handled by new CBG knowledge base
         if (ProjectContent.isCbgRagCompatible(source)) {
             // Use upload mode for CBG compatible sources
@@ -596,36 +594,34 @@ public class KnowledgeService {
                     this.updateTaskAndFileStatus(fileInfoV2, extractKnowledgeTask, "Failed to get file from S3", false);
                     return;
                 }
-                
+
                 // Convert InputStream to MultipartFile
                 byte[] fileBytes = inputStreamToByteArray(fileStream);
                 MultipartFile multipartFile = new MockMultipartFile(
-                    "file",
-                    fileInfoV2.getName(),
-                    "application/octet-stream",
-                    fileBytes
-                );
-                
+                        "file",
+                        fileInfoV2.getName(),
+                        "application/octet-stream",
+                        fileBytes);
+
                 try {
                     fileStream.close();
                 } catch (Exception e) {
                     log.warn("Failed to close file stream", e);
                 }
-                
+
                 List<String> sliceConf = sliceConfig.getSeperator();
-                List<String> separator = (sliceConf != null && !sliceConf.isEmpty()) 
-                    ? Collections.singletonList(sliceConf.get(0)) 
-                    : Collections.singletonList("\n");
-                
+                List<String> separator = (sliceConf != null && !sliceConf.isEmpty())
+                        ? Collections.singletonList(sliceConf.get(0))
+                        : Collections.singletonList("\n");
+
                 Integer resourceType = ProjectContent.HTML_FILE_TYPE.equals(fileInfoV2.getType()) ? 1 : 0;
-                
+
                 response = knowledgeV2ServiceCallHandler.documentUpload(
-                    multipartFile,
-                    sliceConfig.getLengthRange(), 
-                    separator, 
-                    source, 
-                    resourceType
-                );
+                        multipartFile,
+                        sliceConfig.getLengthRange(),
+                        separator,
+                        source,
+                        resourceType);
             } catch (Exception e) {
                 log.error("Failed to upload file for chunking: {}", e.getMessage(), e);
                 this.updateTaskAndFileStatus(fileInfoV2, extractKnowledgeTask, "Failed to upload file: " + e.getMessage(), false);
@@ -643,7 +639,7 @@ public class KnowledgeService {
             request.setRagType(source);
             response = knowledgeV2ServiceCallHandler.documentSplit(request);
         }
-        
+
         if (response.getCode() != 0) {
             String errMsg = response.getMessage();
             log.error("Document chunking failed : {}", errMsg);
