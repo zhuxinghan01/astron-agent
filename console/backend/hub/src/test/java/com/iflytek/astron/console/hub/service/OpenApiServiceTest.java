@@ -24,7 +24,7 @@ public class OpenApiServiceTest {
 
     @Test
     void getOpenApi() {
-        ApiResult<List<JSONObject>> result = openApiController.getWorkflowIoTransformations("Bearer 17e9c079c3a70c42e45526c2b9ba176f:ZGM3ZWFlZmI4YWU0Y2NlOGViMGY0ZDJi");
+        ApiResult<List<JSONObject>> result = openApiController.getWorkflowIoInfoList("Bearer 17e9c079c3a70c42e45526c2b9ba176f:ZGM3ZWFlZmI4YWU0Y2NlOGViMGY0ZDJi");
         List<JSONObject> workflowIoTransformations = result.data();
         for (JSONObject workflowIoTransformation : workflowIoTransformations) {
             log.info("workflowIoTransformation:{}", workflowIoTransformation.toString());

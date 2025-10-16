@@ -36,10 +36,10 @@ public class OpenApiController {
      * @param authorization Authorization header in format "Bearer apiKey:apiSecret"
      * @return List of IO transformation data
      */
-    @GetMapping("/workflow-io-transformations")
+    @GetMapping("/workflow-io-info-list")
     @Operation(summary = "Get workflow IO transformations",
             description = "Retrieve workflow IO transformation data using API key authentication")
-    public ApiResult<List<JSONObject>> getWorkflowIoTransformations(
+    public ApiResult<List<JSONObject>> getWorkflowIoInfoList(
             @RequestHeader("authorization") String authorization) {
 
         // Parse authorization header
