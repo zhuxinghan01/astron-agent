@@ -10,7 +10,7 @@
       "enableSignUp": true,
       "clientId": "astron-agent-client",
       "redirectUris": [
-        "http://47.242.221.161/callback"
+        "http://localhost/callback"
       ],
       "tokenFormat": "JWT",
       "expireInHours": 168,
