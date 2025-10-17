@@ -189,7 +189,7 @@ vim .env
 创建应用完成后可能需要购买或领取相应能力的API授权服务量
 - 星火大模型API: https://xinghuo.xfyun.cn/sparkapi
   (对于大模型API会有额外的SPARK_API_PASSWORD需要在页面上获取)
-- 语音转写API: https://www.xfyun.cn/services/lfasr
+- 实时语音转写API: https://www.xfyun.cn/services/rtasr
 - 图片生成API: https://www.xfyun.cn/services/wtop
 
 最后编辑 docker/astronAgent/.env 文件，更新相关环境变量：
@@ -199,6 +199,7 @@ PLATFORM_API_KEY=your-api-key
 PLATFORM_API_SECRET=your-api-secret
 
 SPARK_API_PASSWORD=your-api-password
+SPARK_RTASR_API_KEY=your-rtasr-api-key
 ```
 
 #### 4.2 如果您想使用星火RAG云服务，请按照如下配置
