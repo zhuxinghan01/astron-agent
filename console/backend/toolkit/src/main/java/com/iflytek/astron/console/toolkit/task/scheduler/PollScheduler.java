@@ -29,7 +29,6 @@ public class PollScheduler {
             long last = lastPollAt.getOrDefault(key, 0L);
             if (now - last >= s.getNextPollMs()) {
                 lastPollAt.put(key, now);
-                // 可选：支持不同会话携带不同 Token，这里简化为不覆盖；如需覆盖，可把 token 缓存在 session 上
                 debugService.pollOnce(s, s.getApiToken());
             }
         }

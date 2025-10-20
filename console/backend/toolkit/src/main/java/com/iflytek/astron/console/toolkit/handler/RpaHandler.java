@@ -183,7 +183,7 @@ public class RpaHandler {
                 throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "execute-async missing executionId");
             }
         } catch (BusinessException e) {
-            throw new RuntimeException(e);
+            throw e;
         } catch (Exception e) {
             log.error("execute-async failed", e);
             throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "execute-async failed");
