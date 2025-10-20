@@ -2,21 +2,26 @@ package com.iflytek.astron.console.toolkit.controller.tool;
 
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.toolkit.common.anno.ResponseResultBody;
+import com.iflytek.astron.console.toolkit.entity.dto.rpa.StartReq;
 import com.iflytek.astron.console.toolkit.entity.table.tool.RpaInfo;
 import com.iflytek.astron.console.toolkit.entity.table.tool.RpaUserAssistant;
 import com.iflytek.astron.console.toolkit.entity.tool.CreateRpaAssistantReq;
 import com.iflytek.astron.console.toolkit.entity.tool.RpaAssistantResp;
 import com.iflytek.astron.console.toolkit.entity.tool.UpdateRpaAssistantReq;
+import com.iflytek.astron.console.toolkit.entity.vo.rpa.DebugSession;
 import com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler;
-import com.iflytek.astron.console.toolkit.service.tool.RpaAssistantService;
-import com.iflytek.astron.console.toolkit.service.tool.RpaInfoService;
+import com.iflytek.astron.console.toolkit.service.tool.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for RPA resources.
@@ -40,6 +45,9 @@ public class RpaController {
 
     @Autowired
     private RpaAssistantService rpaAssistantService;
+
+    @Autowired
+    private RpaDebugService rpaDebugService;
 
     /**
      * Get all available RPA platforms/sources.
@@ -123,5 +131,72 @@ public class RpaController {
     public void delete(@PathVariable("id") Long id) {
         String userId = UserInfoManagerHandler.getUserId();
         rpaAssistantService.delete(userId, id);
+    }
+
+    @PostMapping("/debug/start")
+    public Map<String, Object> start(@RequestBody StartReq req,
+            @RequestHeader(value = "X-RPA-Token") String tokenOverride) {
+        DebugSession s = rpaDebugService.start(req.projectId, req.version, req.execPosition, req.params, tokenOverride);
+        return Map.of(
+                "debugId", s.getDebugId(),
+                "executionId", s.getExecutionId(),
+                "status", s.getStatus().name(),
+                "message", s.getMessage(),
+                "updatedAt", s.getUpdatedAt().toString());
+    }
+
+    /**
+     * SSE 事件流 事件名：status（过程更新）、final（终态）
+     */
+    @GetMapping(value = "/debug/{debugId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@PathVariable String debugId) {
+        DebugSession s = rpaDebugService.get(debugId);
+        // 不超时，由服务器控制完成
+        SseEmitter emitter = new SseEmitter(0L);
+        if (s == null) {
+            try {
+                emitter.send(SseEmitter.event().name("final").data(Map.of("status", "FAILED", "message", "debug not found")));
+            } catch (IOException ignored) {
+            }
+            emitter.complete();
+            return emitter;
+        }
+
+        // 立即推一次当前状态
+        try {
+            emitter.send(SseEmitter.event().name("status").data(rpaDebugService.toView(s)));
+        } catch (IOException ignored) {
+        }
+
+        rpaDebugService.onUpdate(debugId, updated -> {
+            String eventName = switch (updated.getStatus()) {
+                case SUCCEEDED, FAILED, CANCELED, TIMEOUT -> "final";
+                default -> "status";
+            };
+            try {
+                emitter.send(SseEmitter.event().name(eventName).data(rpaDebugService.toView(updated)));
+                if ("final".equals(eventName)) {
+                    emitter.complete();
+                    rpaDebugService.offAll(debugId);
+                }
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+                rpaDebugService.offAll(debugId);
+            }
+        });
+
+        return emitter;
+    }
+
+    /**
+     * 轮询兜底接口（前端断线或不支持 SSE 时使用）
+     */
+    @GetMapping("/debug/{debugId}/status")
+    public Object status(@PathVariable String debugId) {
+        DebugSession s = rpaDebugService.get(debugId);
+        if (s == null) {
+            return Map.of("code", "B0404", "message", "debug not found");
+        }
+        return rpaDebugService.toView(s);
     }
 }
