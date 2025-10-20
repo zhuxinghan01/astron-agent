@@ -4,7 +4,7 @@
 
 ![Logo](docs/logo.svg)
 
-**星辰Agent是一款专为AI开发者和中小企业打造的企业级Agent开发平台。**
+**星辰Agent是一款专为AI开发者和各类组织打造的企业级Agent开发平台。**
 
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
@@ -31,7 +31,7 @@
 
 ## 🔭 星辰 Agent 是什么
 
-星辰 Agent 是一款面向**AI开发者与中小企业** 的企业级 Agent 开发平台。它不仅提供从**模型托管、应用开发、效果优化到权限管控**的全链路能力，更创新性地融合了**智能RPA**，让 Agent 不仅能“思考”，还能真正“执行”，在跨数字系统与桌面环境中完成复杂任务链。
+星辰 Agent 是一款面向**AI开发者与各类组织**的企业级 Agent 开发平台。它不仅提供从**模型托管、应用开发、效果优化到权限管控**的全链路能力，更创新性地融合了**智能RPA**，让 Agent 不仅能“思考”，还能真正“执行”，在跨数字系统与桌面环境中完成复杂任务链。
 
 ### 为什么选择 星辰 Agent？
 - **内外同源，稳定可信**：技术内核与[讯飞星辰Agent平台](https://agent.xfyun.cn)保持一致，继承其成熟的企业级稳定性。
