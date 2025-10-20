@@ -59,6 +59,10 @@ It not only provides end-to-end capabilities covering model hosting, application
 - **Infrastructure**: Docker, MinIO
 - **Quality Tools**: Checkstyle, PMD, SpotBugs, ESLint, gocyclo, staticcheck, golangci-lint, black, isort, flake8, mypy, pylint
 
+## Architecture Overview
+
+![Architecture Overview](./docs/imgs/structure.png "Architecture Overview")
+
 ## 🚀 Quick Start
 
 ### Using Docker
