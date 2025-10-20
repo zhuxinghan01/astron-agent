@@ -4,7 +4,7 @@
 
 ![Logo](docs/logo.svg)
 
-**Astron Agent is an enterprise-grade Agent development platform designed for AI developers and small to medium-sized enterprises.**
+**Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all sizes.**
 
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
@@ -30,7 +30,7 @@ English | [简体中文](README-zh.md)
 - [📄 License](#-license)
 
 ## 🔭 What is Astron Agent
-Astron Agent is an enterprise-grade Agent development platform designed for AI developers and small to medium-sized enterprises.  
+Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all sizes. 
 It not only provides end-to-end capabilities covering model hosting, application development, performance optimization, and access control, but also innovatively integrates intelligent RPA. This allows Agents not only to “think,” but also to truly “act,” completing complex task chains across digital systems and desktop environments.
 
 ### Why Choose Astron Agent?
