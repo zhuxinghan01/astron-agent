@@ -9,7 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Bot Conversation Statistics Entity Corresponds to bot_conversation_stats table
+ * Bot Conversation Statistics Entity
+ * Corresponds to bot_conversation_stats table
  *
  * @author Omuigix
  */
