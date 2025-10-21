@@ -171,24 +171,6 @@ jobs:
             echo "- No improvements in this release" >> "$CHANGELOG_FILE"
           fi
 
-          # Get contributors
-          echo "" >> "$CHANGELOG_FILE"
-          echo "### 👥 Contributors" >> "$CHANGELOG_FILE"
-          CONTRIBUTORS=$(git log --pretty=format:"%an" $COMMIT_RANGE | sort -u)
-          if [[ -n "$CONTRIBUTORS" ]]; then
-            while IFS= read -r contributor; do
-              GITHUB_USER=$(git log --author="$contributor" --pretty=format:"%ae" -1 | sed 's/@.*$//')
-              if [[ "$GITHUB_USER" =~ ^[0-9]+\+.*$ ]]; then
-                # GitHub no-reply email format
-                echo "- @$contributor" >> "$CHANGELOG_FILE"
-              else
-                echo "- $contributor" >> "$CHANGELOG_FILE"
-              fi
-            done <<< "$CONTRIBUTORS"
-          else
-            echo "- No contributors information available" >> "$CHANGELOG_FILE"
-          fi
-
           # Output to GitHub Output
           {
             echo "changelog<<EOF"
