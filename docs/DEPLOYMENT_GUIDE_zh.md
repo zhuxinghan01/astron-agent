@@ -34,12 +34,6 @@ Casdoor 是一个开源的身份和访问管理平台，提供OAuth 2.0、OIDC�
 # 进入 Casdoor 目录
 cd docker/casdoor
 
-# 创建日志挂载目录
-mkdir -p logs
-
-# 设置日志目录权限
-chown -R 1000:1000 logs
-
 # 启动 Casdoor 服务
 docker-compose up -d
 
@@ -55,9 +49,10 @@ docker-compose logs -f
 - 容器名称：casdoor
 - 默认配置：生产模式 (GIN_MODE=release)
 
-**配置目录：**
-- 配置文件：`./conf` 目录
-- 日志文件：`./logs` 目录
+**数据存储说明：**
+- 配置文件：`./conf` 目录（本地挂载）
+- 日志文件：Docker命名卷 `casdoor-logs`（自动管理权限，跨平台兼容）
+- 数据库数据：Docker命名卷 `casdoor-mysql-data`（持久化存储）
 
 ### 第二步：启动 RagFlow 知识库服务（根据需要部署）
 

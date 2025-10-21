@@ -34,12 +34,6 @@ To start Casdoor service, run our [docker-compose.yaml](/docker/casdoor/docker-c
 # Navigate to Casdoor directory
 cd docker/casdoor
 
-# Create logs directory for mounting
-mkdir -p logs
-
-# Set permissions for logs directory
-chown -R 1000:1000 logs
-
 # Start Casdoor service
 docker-compose up -d
 
@@ -55,9 +49,10 @@ docker-compose logs -f
 - Container name: casdoor
 - Default configuration: Production mode (GIN_MODE=release)
 
-**Configuration Directories:**
-- Configuration files: `./conf` directory
-- Log files: `./logs` directory
+**Data Storage:**
+- Configuration files: `./conf` directory (local mount)
+- Log files: Docker named volume `casdoor-logs` (automatic permission management, cross-platform compatible)
+- Database data: Docker named volume `casdoor-mysql-data` (persistent storage)
 
 ### Step 2: Start RagFlow Knowledge Base Service (Deploy as Needed)
 
