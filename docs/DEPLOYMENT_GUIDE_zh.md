@@ -158,7 +158,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 
    创建应用时填写以下信息：
    - **Name**：自定义应用名称，例如 `agent`
-   - **Redirect URL**：设置为项目的回调地址。如果 Nginx 暴露的端口号是 `80` 或 `443`，使用 `http://your-local-ip/callback`；如果是其他端口（例如 `888`），使用 `http://your-local-ip:888/callback`
+   - **Redirect URL**：设置为项目的回调地址。如果 Nginx 暴露的端口号是 `80`，使用 `http://your-local-ip/callback`；如果是其他端口（例如 `888`），使用 `http://your-local-ip:888/callback`
    - **Organization**：选择刚创建的组织名称
 5. 保存应用后，记录以下信息并与项目配置项一一对应：  
 
