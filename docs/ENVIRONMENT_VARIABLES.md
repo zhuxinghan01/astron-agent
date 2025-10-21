@@ -254,10 +254,10 @@ Configuration items in this document are marked as follows:
 | SPARK_IMAGE_APP_ID | Required | string | Spark image generation application ID (defaults from PLATFORM_APP_ID) | ${PLATFORM_APP_ID} |
 | SPARK_IMAGE_API_KEY | Required | string | Spark image generation API Key (defaults from PLATFORM_API_KEY) | ${PLATFORM_API_KEY} |
 | SPARK_IMAGE_API_SECRET | Required | string | Spark image generation API Secret (defaults from PLATFORM_API_SECRET) | ${PLATFORM_API_SECRET} |
-| WECHAT_COMPONENT_APPID | Required | string | WeChat third-party platform AppID | your-wechat-component-appid |
-| WECHAT_COMPONENT_SECRET | Required | string | WeChat third-party platform Secret | your-wechat-secret |
-| WECHAT_TOKEN | Required | string | WeChat message verification Token | your-wechat-token |
-| WECHAT_ENCODING_AES_KEY | Required | string | WeChat message encryption key | your-wechat-encoding-aes-key |
+| WECHAT_COMPONENT_APPID | Optional | string | WeChat third-party platform AppID | your-wechat-component-appid |
+| WECHAT_COMPONENT_SECRET | Optional | string | WeChat third-party platform Secret | your-wechat-secret |
+| WECHAT_TOKEN | Optional | string | WeChat message verification Token | your-wechat-token |
+| WECHAT_ENCODING_AES_KEY | Optional | string | WeChat message encryption key | your-wechat-encoding-aes-key |
 | WORKFLOW_CHAT_URL | Required | url | Workflow chat API address (port defaults from CORE_WORKFLOW_PORT) | http://core-workflow:${CORE_WORKFLOW_PORT:-7880}/workflow/v1/chat/completions |
 | WORKFLOW_DEBUG_URL | Required | url | Workflow debug API address (port defaults from CORE_WORKFLOW_PORT) | http://core-workflow:${CORE_WORKFLOW_PORT:-7880}/workflow/v1/debug/chat/completions |
 | WORKFLOW_RESUME_URL | Required | url | Workflow resume API address (port defaults from CORE_WORKFLOW_PORT) | http://core-workflow:${CORE_WORKFLOW_PORT:-7880}/workflow/v1/resume |
