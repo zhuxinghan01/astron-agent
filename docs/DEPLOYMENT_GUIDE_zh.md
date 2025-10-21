@@ -38,7 +38,7 @@ cd docker/casdoor
 mkdir -p logs
 
 # 设置日志目录权限
-chmod -R 777 logs
+chown -R 1000:1000 logs
 
 # 启动 Casdoor 服务
 docker-compose up -d
@@ -158,8 +158,7 @@ CONSOLE_CASDOOR_ORG=your-casdoor-org-name
 
    创建应用时填写以下信息：
    - **Name**：自定义应用名称，例如 `agent`
-   - **Redirect URL**：设置为项目的回调地址，例如 `http://your-local-ip:80/callback`  
-     （该地址为项目中 Nginx 容器的回调端口，默认 `80`）
+   - **Redirect URL**：设置为项目的回调地址。如果 Nginx 暴露的端口号是 `80`，使用 `http://your-local-ip/callback`；如果是其他端口（例如 `888`），使用 `http://your-local-ip:888/callback`
    - **Organization**：选择刚创建的组织名称
 5. 保存应用后，记录以下信息并与项目配置项一一对应：  
 
