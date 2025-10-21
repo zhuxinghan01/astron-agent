@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -164,6 +165,16 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
 
     @Override
     public ChatBotBase updateBot(ChatBotBase chatBotBase) {
+        // If modelId is null, need to explicitly set it to null in database
+        if (chatBotBase.getModelId() == null) {
+            LambdaUpdateWrapper<ChatBotBase> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(ChatBotBase::getId, chatBotBase.getId())
+                    .set(ChatBotBase::getModelId, null);
+
+            // Update other fields using updateById (it will skip null fields by default)
+            chatBotBaseMapper.update(null, updateWrapper);
+        }
+        // Then update other non-null fields
         chatBotBaseMapper.updateById(chatBotBase);
         return chatBotBase;
     }
@@ -475,12 +486,14 @@ public class ChatBotDataServiceImpl implements ChatBotDataService {
         BotDetail botDetail = chatBotBaseMapper.botDetail(Math.toIntExact(botId));
         botDetail.setId(null);
         ChatBotBase base = new ChatBotBase();
+        BeanUtils.copyProperties(botDetail, base);
         // Set a new assistant name as differentiation
         base.setUid(uid);
         base.setSpaceId(spaceId);
         base.setBotName(base.getBotName() + RandomUtil.randomString(6));
         base.setUpdateTime(LocalDateTime.now());
         base.setCreateTime(LocalDateTime.now());
+        log.info("--------------------------------old bot is :{}, new bot is :{}", JSONObject.toJSONString(botDetail), base);
         chatBotBaseMapper.insert(base);
         return base;
     }
