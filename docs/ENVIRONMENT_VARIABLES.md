@@ -327,8 +327,8 @@ Configuration items in this document are marked as follows:
 
 ## Related Documentation
 
-- [Deployment Guide](../../../envTest/DEPLOYMENT_GUIDE.md) - Detailed deployment steps
-- [Quick Start](README.md) - Quick start guide
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Detailed deployment steps
+- [Quick Start](../README.md) - Quick start guide
 
 ## Contributing
 

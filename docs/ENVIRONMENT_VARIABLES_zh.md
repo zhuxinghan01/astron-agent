@@ -327,8 +327,8 @@
 
 ## 相关文档
 
-- [部署指南](../../../envTest/DEPLOYMENT_GUIDE.md) - 详细的部署步骤说明
-- [快速启动](README.md) - 快速启动指南
+- [部署指南](./DEPLOYMENT_GUIDE_zh.md) - 详细的部署步骤说明
+- [快速启动](../README.md) - 快速启动指南
 
 ## 贡献
 
