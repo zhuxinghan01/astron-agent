@@ -10,13 +10,13 @@ services:
       - CONSOLE_DOMAIN=${CONSOLE_DOMAIN:-http://localhost}
     volumes:
       - ./casdoor/conf:/conf
-      - ./casdoor/entrypoint.sh:/entrypoint.sh:ro
+      - ./casdoor/entrypoint.sh:/custom-entrypoint.sh:ro
       - casdoor-logs:/logs
     networks:
       - astron-agent-network
     depends_on:
       - casdoor-mysql
-    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    command: ["/bin/sh", "-c", "sh /custom-entrypoint.sh && /server --createDatabase=true"]
 
   casdoor-mysql:
     image: mysql:8.4
