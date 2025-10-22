@@ -65,6 +65,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -1807,11 +1808,11 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
      */
     public void createFolder(CreateFolderVO folderVO) {
         String name = folderVO.getName();
-        String regex = ".*[\\\\/:*?\"<>|].*";
+        Pattern pattern = Pattern.compile("[\\\\/:*?\"<>|]");
         if (ObjectIsNull.check(name)) {
             throw new BusinessException(ResponseEnum.REPO_FILE_NAME_CANNOT_EMPTY);
         } else {
-            boolean flag = name.matches(regex);
+            boolean flag = pattern.matcher(name).find();
             if (flag) {
                 throw new BusinessException(ResponseEnum.REPO_FOLDER_NAME_ILLEGAL);
             }
@@ -1851,11 +1852,11 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
      */
     public void updateFolder(CreateFolderVO folderVO) {
         String name = folderVO.getName();
-        String regex = ".*[\\\\/:*?\"<>|].*";
+        Pattern pattern = Pattern.compile("[\\\\/:*?\"<>|]");
         if (ObjectIsNull.check(name)) {
             throw new BusinessException(ResponseEnum.REPO_FILE_NAME_CANNOT_EMPTY);
         } else {
-            boolean flag = name.matches(regex);
+            boolean flag = pattern.matcher(name).find();
             if (flag) {
                 throw new BusinessException(ResponseEnum.REPO_FOLDER_NAME_ILLEGAL);
             }
