@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     user: root
     ports:
-      - "8000:8000"
+      - "${CASDOOR_PORT:-8000}:8000"
     environment:
       - GIN_MODE=release
       - CONSOLE_DOMAIN=${CONSOLE_DOMAIN:-http://localhost}
