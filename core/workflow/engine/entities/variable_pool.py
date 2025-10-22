@@ -1,8 +1,11 @@
+import ast
 import asyncio
 import copy
 import re
 from enum import Enum, unique
 from typing import Any, Dict, Optional, cast
+
+from common.utils.json_schema.json_schema_cn import CNValidator
 
 from workflow.consts.engine.value_type import ValueType
 from workflow.domain.entities.chat import HistoryItem
@@ -14,7 +17,6 @@ from workflow.exception.e import CustomException
 from workflow.exception.errors.err_code import CodeEnum
 from workflow.extensions.otlp.trace.span import Span
 from workflow.infra.providers.llm.iflytek_spark.schemas import SparkAiMessage
-from workflow.utils.json_schema.json_schema_cn import CNValidator
 
 
 class RefNodeInfo:
@@ -357,7 +359,7 @@ class VariablePool:
                             )
                         else:
                             try:
-                                input_content = eval(input_content)
+                                input_content = ast.literal_eval(input_content)
                             except Exception:
                                 raise Exception(
                                     f"Failed to convert literal value {input_key} to type {json_input_type}, literal value: {input_content_org}"

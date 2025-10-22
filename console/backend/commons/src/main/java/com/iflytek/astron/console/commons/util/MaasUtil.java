@@ -21,6 +21,7 @@ import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.commons.service.bot.ChatBotTagService;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
 import com.iflytek.astron.console.commons.service.workflow.impl.WorkflowBotParamServiceImpl;
+import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -477,6 +478,7 @@ public class MaasUtil {
                 .url(httpUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
+                .addHeader("space-id", String.valueOf(SpaceInfoUtil.getSpaceId()))
                 .addHeader(AUTHORIZATION_HEADER, MaasUtil.getAuthorizationHeader(request))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
                 .get()
