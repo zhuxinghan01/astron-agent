@@ -1,29 +1,21 @@
 #!/bin/sh
-
-# Casdoor configuration script
-# This script dynamically replaces redirectUris in init_data.json
-
 set -e
 
-CONFIG_FILE="/conf/init_data.json"
+echo "===== Initializing Casdoor Configuration ====="
+echo "CONSOLE_DOMAIN: ${CONSOLE_DOMAIN:-http://localhost}"
 
-# Check if CONSOLE_DOMAIN is set
-if [ -z "$CONSOLE_DOMAIN" ]; then
-    echo "Warning: CONSOLE_DOMAIN environment variable is not set. Using default value."
-    CONSOLE_DOMAIN="http://localhost"
+# Install envsubst if not available
+if ! command -v envsubst >/dev/null 2>&1; then
+    echo "Installing gettext-base for envsubst..."
+    apk add --no-cache gettext
 fi
 
-# Construct the redirect URI
-REDIRECT_URI="${CONSOLE_DOMAIN}/callback"
+# Generate config from template using envsubst
+echo "Generating init_data.json from template..."
+envsubst < /conf/init_data.json.template > /conf/init_data.json
 
-echo "===== Casdoor Configuration ====="
-echo "CONSOLE_DOMAIN: $CONSOLE_DOMAIN"
-echo "REDIRECT_URI: $REDIRECT_URI"
-echo "================================="
+echo "Configuration updated: redirectUris set to [${CONSOLE_DOMAIN}/callback]"
+echo "=========================================="
 
-# Use sed to replace the redirectUris value
-echo "Updating redirectUris in init_data.json..."
-sed -i "s|\"redirectUris\": \[[^]]*\]|\"redirectUris\": [\"${REDIRECT_URI}\"]|g" "$CONFIG_FILE"
-
-echo "Configuration updated successfully!"
-echo "RedirectUris set to: [\"${REDIRECT_URI}\"]"
+# Start Casdoor
+exec /server --createDatabase=true
