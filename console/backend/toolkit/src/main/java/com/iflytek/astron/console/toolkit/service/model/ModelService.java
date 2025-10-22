@@ -235,8 +235,7 @@ public class ModelService extends ServiceImpl<ModelMapper, Model> {
                     "169.254.0.0/16",
                     // IPv6 loopback and link-local
                     "::1/128",
-                    "fe80::/10"
-            );
+                    "fe80::/10");
 
             // Merge database blacklist with default blacklist
             List<String> mergedBlacklist = new ArrayList<>(defaultBlacklist);

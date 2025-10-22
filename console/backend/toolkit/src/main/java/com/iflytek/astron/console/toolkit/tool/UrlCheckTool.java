@@ -199,8 +199,8 @@ public class UrlCheckTool {
      * @throws BusinessException if validation fails
      */
     private void validateUrlAgainstBlacklist(String url, List<String> ipBlackList,
-                                             List<String> segmentBlackList,
-                                             List<String> domainWhiteList) throws Exception {
+            List<String> segmentBlackList,
+            List<String> domainWhiteList) throws Exception {
         URI uri = new URI(url);
         String host = uri.getHost();
         if (StringUtils.isBlank(host))
