@@ -1,6 +1,5 @@
 package com.iflytek.astron.console.toolkit.entity.dto.rpa;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 

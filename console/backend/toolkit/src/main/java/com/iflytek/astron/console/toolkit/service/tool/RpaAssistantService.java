@@ -15,7 +15,6 @@ import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
 import com.iflytek.astron.console.toolkit.entity.biz.workflow.BizWorkflowData;
 import com.iflytek.astron.console.toolkit.entity.biz.workflow.BizWorkflowNode;
-import com.iflytek.astron.console.toolkit.entity.core.workflow.sse.ChatResponse;
 import com.iflytek.astron.console.toolkit.entity.dto.rpa.StartReq;
 import com.iflytek.astron.console.toolkit.entity.table.ConfigInfo;
 import com.iflytek.astron.console.toolkit.entity.table.tool.*;
@@ -25,7 +24,6 @@ import com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler;
 import com.iflytek.astron.console.toolkit.mapper.ConfigInfoMapper;
 import com.iflytek.astron.console.toolkit.mapper.tool.*;
 import com.iflytek.astron.console.toolkit.service.workflow.WorkflowService;
-import com.iflytek.astron.console.toolkit.sse.WorkflowSseEventSourceListener;
 import com.iflytek.astron.console.toolkit.util.JacksonUtil;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import lombok.RequiredArgsConstructor;
@@ -522,21 +520,26 @@ public class RpaAssistantService {
 
             SseEmitter emitter = SseEmitterUtil.create(sseId, 1_800_000L);
             Map<String, Object> body = new HashMap<>();
-            body.put("project_id",  startReq.getProjectId());
+            body.put("project_id", startReq.getProjectId());
             body.put("exec_position",
-                    (startReq.getExecPosition()==null||startReq.getExecPosition().isBlank()) ? "EXECUTOR" : startReq.getExecPosition());
-            body.put("params", startReq.getParams()==null ? Map.of() : startReq.getParams());
+                    (startReq.getExecPosition() == null || startReq.getExecPosition().isBlank()) ? "EXECUTOR" : startReq.getExecPosition());
+            body.put("params", startReq.getParams() == null ? Map.of() : startReq.getParams());
             String reqBody = JacksonUtil.toJSONString(body, JacksonUtil.NON_NULL_OBJECT_MAPPER);
             log.info("[SSE] rpa debug url={}, headers={}, reqBody={}", url, headerMap, reqBody);
 
             EventSourceListener listener = new EventSourceListener() {
-                @Override public void onOpen(EventSource es, okhttp3.Response response) {
+                @Override
+                public void onOpen(EventSource es, okhttp3.Response response) {
                     log.info("[SSE][{}] open, code={}", sseId, response.code());
                     SseEmitterUtil.EVENTSOURCE_MAP.put(sseId, es);
-                    try { emitter.send(SseEmitter.event().name("open").data("ok")); } catch (Exception ignore) {}
+                    try {
+                        emitter.send(SseEmitter.event().name("open").data("ok"));
+                    } catch (Exception ignore) {
+                    }
                 }
 
-                @Override public void onEvent(EventSource es, String id, String type, String data) {
+                @Override
+                public void onEvent(EventSource es, String id, String type, String data) {
                     try {
                         String event = (type == null || type.isBlank()) ? "data" : type;
                         if ("data".equals(event)) {
@@ -554,17 +557,20 @@ public class RpaAssistantService {
                     }
                 }
 
-                @Override public void onClosed(EventSource es) {
+                @Override
+                public void onClosed(EventSource es) {
                     log.info("[SSE][{}] downstream closed", sseId);
                     SseEmitterUtil.sendEndAndComplete(emitter);
                     SseEmitterUtil.EVENTSOURCE_MAP.remove(sseId);
                 }
 
-                @Override public void onFailure(EventSource es, Throwable t, okhttp3.Response resp) {
+                @Override
+                public void onFailure(EventSource es, Throwable t, okhttp3.Response resp) {
                     String msg = (t != null) ? t.getMessage() : (resp != null ? ("http " + resp.code()) : "unknown");
                     log.error("[SSE][{}] downstream failure: {}", sseId, msg, t);
                     SseEmitterUtil.completeWithError(emitter, msg);
-                    if (es != null) es.cancel();
+                    if (es != null)
+                        es.cancel();
                     SseEmitterUtil.EVENTSOURCE_MAP.remove(sseId);
                 }
             };

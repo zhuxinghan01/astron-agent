@@ -8,7 +8,6 @@ import com.iflytek.astron.console.toolkit.entity.table.tool.RpaUserAssistant;
 import com.iflytek.astron.console.toolkit.entity.tool.CreateRpaAssistantReq;
 import com.iflytek.astron.console.toolkit.entity.tool.RpaAssistantResp;
 import com.iflytek.astron.console.toolkit.entity.tool.UpdateRpaAssistantReq;
-import com.iflytek.astron.console.toolkit.entity.vo.rpa.DebugSession;
 import com.iflytek.astron.console.toolkit.handler.UserInfoManagerHandler;
 import com.iflytek.astron.console.toolkit.service.tool.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,9 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for RPA resources.
@@ -135,7 +132,7 @@ public class RpaController {
      */
     @PostMapping(value = "/debug", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@RequestBody StartReq req,
-                             @RequestHeader(value = "X-RPA-Token") String apiToken) {
-       return rpaAssistantService.debug(req, apiToken);
+            @RequestHeader(value = "X-RPA-Token") String apiToken) {
+        return rpaAssistantService.debug(req, apiToken);
     }
 }

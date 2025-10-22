@@ -877,6 +877,7 @@ public class OkHttpUtil {
         RealEventSource realEventSource = new RealEventSource(request, listener);
         realEventSource.connect(HTTP_CLIENT); // The actual start of the request
     }
+
     public static EventSource connectRealEventSourceReturn(
             String url,
             Map<String, String> headers,
@@ -889,9 +890,11 @@ public class OkHttpUtil {
                 .addHeader("Accept", "text/event-stream")
                 .addHeader("Content-Type", "application/json");
 
-        if (headers != null) headers.forEach((k, v) -> {
-            if (v != null) rb.addHeader(k, v);
-        });
+        if (headers != null)
+            headers.forEach((k, v) -> {
+                if (v != null)
+                    rb.addHeader(k, v);
+            });
 
         Request req = rb.post(body).build();
         EventSource.Factory factory = EventSources.createFactory(HTTP_CLIENT);
