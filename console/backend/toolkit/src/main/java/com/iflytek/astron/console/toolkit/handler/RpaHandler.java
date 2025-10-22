@@ -7,12 +7,10 @@ import java.util.*;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
-import com.iflytek.astron.console.toolkit.entity.dto.rpa.ExecutionStatusResponse;
 import com.iflytek.astron.console.toolkit.entity.enumVo.VarType;
 import com.iflytek.astron.console.toolkit.util.OkHttpUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -151,67 +149,5 @@ public class RpaHandler {
         // Try to truncate on character boundary
         String cut = new String(bytes, 0, max, StandardCharsets.UTF_8);
         return cut + "...(" + bytes.length + "B)";
-    }
-
-    public String executeAsync(String projectId, String execPosition, Map<String, Object> params, Integer version, String bearerToken) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("project_id", projectId);
-        body.put("exec_position", execPosition == null ? "EXECUTOR" : execPosition);
-        body.put("params", params == null ? Map.of() : params);
-        if (version != null)
-            body.put("version", version);
-
-        Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("Authorization", "Bearer " + bearerToken);
-        String url = apiUrl.getRpaUrl() + "/api/rpa-openapi/workflows/execute-async";
-        JSONObject data = null;
-        try {
-            log.info("executeAsync rpa uri: {}, body: {},token: {}", url, body, headerMap);
-            String post = OkHttpUtil.post(url, headerMap, JSON.toJSONString(body));
-
-            if (StringUtils.isBlank(post)) {
-                throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Empty response from execute-async");
-            }
-            log.info("executeAsync rpa response {}", post);
-            JSONObject resp = JSONObject.parseObject(post);
-            String code = resp.getString("code");
-            if (!"0000".equals(code)) {
-                throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "execute-async failed: " + code + " " + resp.getString("msg"));
-            }
-            data = resp.getJSONObject("data");
-            if (data == null || data.getString("executionId") == null) {
-                throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "execute-async missing executionId");
-            }
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("execute-async failed", e);
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "execute-async failed");
-        }
-        return data.getString("executionId");
-    }
-
-    public ExecutionStatusResponse.Execution getExecution(String executionId, String bearerToken) {
-        String url = apiUrl.getRpaUrl() + "/api/rpa-openapi/executions/" + executionId;
-        Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("Authorization", "Bearer " + bearerToken);
-        log.info("getExecution rpa uri: {}, executionId: {},token: {}", url, executionId, headerMap);
-
-        String responseStr = OkHttpUtil.get(url, headerMap);
-        log.info("getExecution response: {}", responseStr);
-
-        if (StringUtils.isBlank(responseStr))
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "Empty response from executions");
-        JSONObject resp = JSONObject.parseObject(responseStr);
-        String code = resp.getString("code");
-        if (!"0000".equals(code)) {
-            throw new RuntimeException("getExecution failed: " + code + " " + resp.getString("msg"));
-        }
-        JSONObject data = resp.getJSONObject("data");
-        if (data == null || data.getJSONObject("execution") == null) {
-            throw new BusinessException(ResponseEnum.RESPONSE_FAILED, "getExecution missing execution payload");
-        }
-        ExecutionStatusResponse.Execution execution = JSON.parseObject(String.valueOf(data.getJSONObject("execution")), ExecutionStatusResponse.Execution.class);
-        return execution;
     }
 }

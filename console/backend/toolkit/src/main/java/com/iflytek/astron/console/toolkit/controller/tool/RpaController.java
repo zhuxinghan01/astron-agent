@@ -46,9 +46,6 @@ public class RpaController {
     @Autowired
     private RpaAssistantService rpaAssistantService;
 
-    @Autowired
-    private RpaDebugService rpaDebugService;
-
     /**
      * Get all available RPA platforms/sources.
      *
@@ -133,70 +130,12 @@ public class RpaController {
         rpaAssistantService.delete(userId, id);
     }
 
-    @PostMapping("/debug/start")
-    public Map<String, Object> start(@RequestBody StartReq req,
-            @RequestHeader(value = "X-RPA-Token") String tokenOverride) {
-        DebugSession s = rpaDebugService.start(req.projectId, req.version, req.execPosition, req.params, tokenOverride);
-        return Map.of(
-                "debugId", s.getDebugId(),
-                "executionId", s.getExecutionId(),
-                "status", s.getStatus().name(),
-                "message", s.getMessage(),
-                "updatedAt", s.getUpdatedAt().toString());
-    }
-
     /**
-     * SSE 事件流 事件名：status（过程更新）、final（终态）
+     * 调试RPA机器人
      */
-    @GetMapping(value = "/debug/{debugId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable String debugId) {
-        DebugSession s = rpaDebugService.get(debugId);
-        // 不超时，由服务器控制完成
-        SseEmitter emitter = new SseEmitter(0L);
-        if (s == null) {
-            try {
-                emitter.send(SseEmitter.event().name("final").data(Map.of("status", "FAILED", "message", "debug not found")));
-            } catch (IOException ignored) {
-            }
-            emitter.complete();
-            return emitter;
-        }
-
-        // 立即推一次当前状态
-        try {
-            emitter.send(SseEmitter.event().name("status").data(rpaDebugService.toView(s)));
-        } catch (IOException ignored) {
-        }
-
-        rpaDebugService.onUpdate(debugId, updated -> {
-            String eventName = switch (updated.getStatus()) {
-                case SUCCEEDED, FAILED, CANCELED, TIMEOUT -> "final";
-                default -> "status";
-            };
-            try {
-                emitter.send(SseEmitter.event().name(eventName).data(rpaDebugService.toView(updated)));
-                if ("final".equals(eventName)) {
-                    emitter.complete();
-                    rpaDebugService.offAll(debugId);
-                }
-            } catch (IOException e) {
-                emitter.completeWithError(e);
-                rpaDebugService.offAll(debugId);
-            }
-        });
-
-        return emitter;
-    }
-
-    /**
-     * 轮询兜底接口（前端断线或不支持 SSE 时使用）
-     */
-    @GetMapping("/debug/{debugId}/status")
-    public Object status(@PathVariable String debugId) {
-        DebugSession s = rpaDebugService.get(debugId);
-        if (s == null) {
-            return Map.of("code", "B0404", "message", "debug not found");
-        }
-        return rpaDebugService.toView(s);
+    @PostMapping(value = "/debug", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@RequestBody StartReq req,
+                             @RequestHeader(value = "X-RPA-Token") String apiToken) {
+       return rpaAssistantService.debug(req, apiToken);
     }
 }
