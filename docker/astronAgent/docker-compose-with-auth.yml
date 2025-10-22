@@ -16,7 +16,8 @@ services:
       - astron-agent-network
     depends_on:
       - casdoor-mysql
-    command: ["/bin/sh", "-c", "sh /custom-entrypoint.sh && /server --createDatabase=true"]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sh /custom-entrypoint.sh && /server --createDatabase=true"]
 
   casdoor-mysql:
     image: mysql:8.4
