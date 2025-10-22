@@ -3,6 +3,7 @@ services:
     image: casbin/casdoor:latest
     container_name: astron-agent-casdoor
     restart: unless-stopped
+    user: root
     ports:
       - "8000:8000"
     environment:
