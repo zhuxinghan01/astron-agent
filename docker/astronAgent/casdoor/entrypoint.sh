@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# 确保 /conf 目录有写权限
+chmod -R 777 /conf 2>/dev/null || true
+
 echo "===== Initializing Casdoor Configuration ====="
 echo "CONSOLE_DOMAIN: ${CONSOLE_DOMAIN:-http://localhost}"
 echo "HOST_BASE_ADDRESS: ${HOST_BASE_ADDRESS:-http://localhost}"
