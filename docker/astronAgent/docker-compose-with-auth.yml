@@ -1,32 +1,35 @@
 services:
   casdoor:
     image: casbin/casdoor:latest
-    container_name: casdoor
+    container_name: astron-agent-casdoor
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - GIN_MODE=release
+      - CONSOLE_DOMAIN=${CONSOLE_DOMAIN:-http://localhost}
     volumes:
-      - ./conf:/conf
+      - ./casdoor/conf:/conf
+      - ./casdoor/entrypoint.sh:/entrypoint.sh:ro
       - casdoor-logs:/logs
     networks:
-      - casdoor-network
+      - astron-agent-network
     depends_on:
-      - mysql
+      - casdoor-mysql
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
 
-  mysql:
+  casdoor-mysql:
     image: mysql:8.4
-    container_name: casdoor-mysql
+    container_name: astron-agent-casdoor-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: casdoor
-      MYSQL_USER: ${MYSQL_USER:-casdoor}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-casdoor123}
+      MYSQL_USER: casdoor
+      MYSQL_PASSWORD: casdoor123
     volumes:
       - casdoor-mysql-data:/var/lib/mysql
     networks:
-      - casdoor-network
+      - astron-agent-network
     restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -36,7 +39,3 @@ services:
 volumes:
   casdoor-logs:
   casdoor-mysql-data:
-
-networks:
-  casdoor-network:
-    driver: bridge
