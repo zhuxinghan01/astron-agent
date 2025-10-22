@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-# 确保 /conf 目录有写权限
 chmod -R 777 /conf 2>/dev/null || true
 
 echo "===== Initializing Casdoor Configuration ====="

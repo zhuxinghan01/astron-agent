@@ -48,7 +48,7 @@ docker compose logs -f ragflow
 ```
 
 **访问地址：**
-- RagFlow Web界面：http://localhost:10080
+- RagFlow Web界面：http://localhost:18080
 
 **模型配置步骤：**  
 1. 点击头像进入 **Model Providers（模型提供商）** 页面，选择 **Add Model（添加模型）**，填写对应的 **API 地址** 和 **API Key**，分别添加 **Chat 模型** 和 **Embedding 模型**。  
@@ -87,14 +87,14 @@ vim .env
 
 ```env
 # RAGFlow配置
-RAGFLOW_BASE_URL=http://localhost:10080
+RAGFLOW_BASE_URL=http://localhost:18080
 RAGFLOW_API_TOKEN=ragflow-your-api-token-here
 RAGFLOW_TIMEOUT=60
 RAGFLOW_DEFAULT_GROUP=星辰知识库
 ```
 
 **获取 RagFlow API Token：**
-1. 访问 RagFlow Web界面：http://localhost:10080
+1. 访问 RagFlow Web界面：http://localhost:18080
 2. 登录并点击头像进入用户设置
 3. 点击API生成 API KEY
 4. 将生成的 API KEY 更新到.env文件中的RAGFLOW_API_TOKEN
@@ -272,7 +272,7 @@ docker compose restart console-frontend console-hub
 - **Casdoor 管理界面**：http://localhost:8000
 
 ### 知识库服务
-- **RagFlow Web界面**：http://localhost:10080
+- **RagFlow Web界面**：http://localhost:18080
 
 ### AstronAgent 核心服务
 - **控制台前端(nginx代理)**：http://localhost/
