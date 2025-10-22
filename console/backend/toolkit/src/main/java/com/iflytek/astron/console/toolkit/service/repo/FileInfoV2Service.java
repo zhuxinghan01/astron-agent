@@ -56,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -1946,10 +1947,18 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
 
     /* ======================== Spark Branch ======================== */
     private void streamSparkSearch(SseEmitter emitter, Long repoId, String fileName, HttpServletRequest request) throws IOException {
+        // Encode user input to prevent SSRF attacks
+        String encodedFileName;
+        try {
+            encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("Failed to encode fileName", e);
+            encodedFileName = fileName;
+        }
         String url = apiUrl.getDatasetFileUrl() + "?datasetId="
                 .concat(repoId.toString())
                 .concat("&searchValue=")
-                .concat(fileName);
+                .concat(encodedFileName);
         log.info("searchFile request url: {}", url);
 
         Map<String, String> header = new HashMap<>();
