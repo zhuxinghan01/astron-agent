@@ -534,7 +534,13 @@ public class RpaAssistantService {
                     SseEmitterUtil.EVENTSOURCE_MAP.put(sseId, es);
                     try {
                         emitter.send(SseEmitter.event().name("open").data("ok"));
-                    } catch (Exception ignore) {
+                    } catch (Exception e) {
+                        log.warn("[SSE][{}] send open event failed: {}", sseId, e.getMessage(), e);
+                        SseEmitterUtil.completeWithError(emitter, "send open event failed: " + e.getMessage());
+                        if (es != null) {
+                            es.cancel();
+                        }
+                        SseEmitterUtil.EVENTSOURCE_MAP.remove(sseId);
                     }
                 }
 

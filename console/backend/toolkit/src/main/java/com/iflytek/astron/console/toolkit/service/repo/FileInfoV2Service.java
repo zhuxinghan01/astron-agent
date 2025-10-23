@@ -951,24 +951,7 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
                 FileInfoV2 fileInfoV2 = this.getOnly(new QueryWrapper<FileInfoV2>().eq("uuid", fileId));
                 String source = fileInfoV2.getSource();
                 MysqlKnowledge knowledgeTemp = new MysqlKnowledge();
-                if (ProjectContent.isCbgRagCompatible(source)) {
-                    BeanUtils.copyProperties(knowledge, knowledgeTemp);
-                    ChunkInfo chunkInfo = knowledgeTemp.getContent().toJavaObject(ChunkInfo.class);
-                    JSONObject references = chunkInfo.getReferences();
-                    Set<String> referenceUnusedSet = new HashSet<>();
-                    if (!CollectionUtils.isEmpty(references)) {
-                        referenceUnusedSet = references.keySet();
-                    }
-                    if (!CollectionUtils.isEmpty(referenceUnusedSet)) {
-                        JSONObject newReference = new JSONObject();
-                        for (String referenceUnused : referenceUnusedSet) {
-                            buildNewMode(referenceUnused, references, newReference);
-                        }
-                        chunkInfo.setReferences(newReference);
-                        JSONObject updatedContent = (JSONObject) JSON.toJSON(chunkInfo);
-                        knowledgeTemp.setContent(updatedContent);
-                    }
-                }
+                checkSourceFixed(knowledge, source, knowledgeTemp);
                 KnowledgeDto knowledgeDto = new KnowledgeDto();
                 knowledgeDtoList.add(knowledgeDto);
                 if (ProjectContent.isCbgRagCompatible(source)) {
@@ -989,6 +972,27 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
         pageData.setExtMap(extMap);
         pageData.setTotalCount(count);
         return pageData;
+    }
+
+    private static void checkSourceFixed(MysqlKnowledge knowledge, String source, MysqlKnowledge knowledgeTemp) {
+        if (ProjectContent.isCbgRagCompatible(source)) {
+            BeanUtils.copyProperties(knowledge, knowledgeTemp);
+            ChunkInfo chunkInfo = knowledgeTemp.getContent().toJavaObject(ChunkInfo.class);
+            JSONObject references = chunkInfo.getReferences();
+            Set<String> referenceUnusedSet = new HashSet<>();
+            if (!CollectionUtils.isEmpty(references)) {
+                referenceUnusedSet = references.keySet();
+            }
+            if (!CollectionUtils.isEmpty(referenceUnusedSet)) {
+                JSONObject newReference = new JSONObject();
+                for (String referenceUnused : referenceUnusedSet) {
+                    buildNewMode(referenceUnused, references, newReference);
+                }
+                chunkInfo.setReferences(newReference);
+                JSONObject updatedContent = (JSONObject) JSON.toJSON(chunkInfo);
+                knowledgeTemp.setContent(updatedContent);
+            }
+        }
     }
 
     private static void buildNewMode(String referenceUnused, JSONObject references, JSONObject newReference) {
@@ -1982,9 +1986,6 @@ public class FileInfoV2Service extends ServiceImpl<FileInfoV2Mapper, FileInfoV2>
             }
 
             log.info("searchFile request url: {}", url);
-        } catch (NullPointerException e) {
-            log.error("Null pointer exception while constructing URL", e);
-            throw new IOException("Failed to construct request URL", e);
         } catch (IllegalArgumentException e) {
             log.error("Invalid URL format", e);
             throw new IOException("Invalid URL format", e);

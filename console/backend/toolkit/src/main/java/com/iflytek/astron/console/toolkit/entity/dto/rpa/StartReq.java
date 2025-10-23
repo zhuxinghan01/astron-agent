@@ -8,9 +8,9 @@ import java.util.Map;
 @Data
 public class StartReq {
     @NotBlank
-    public String projectId;
-    public String execPosition = "EXECUTOR";
+    private String projectId;
+    private String execPosition = "EXECUTOR";
     // 可空，默认 RPA 当前启用版本
-    public Integer version;
-    public Map<String, Object> params = Map.of();
+    private Integer version;
+    private Map<String, Object> params = Map.of();
 }
