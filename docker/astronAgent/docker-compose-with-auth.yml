@@ -3,11 +3,13 @@ services:
     image: casbin/casdoor:latest
     container_name: astron-agent-casdoor
     restart: unless-stopped
+    user: root
     ports:
-      - "8000:8000"
+      - "${CASDOOR_PORT:-8000}:8000"
     environment:
       - GIN_MODE=release
       - CONSOLE_DOMAIN=${CONSOLE_DOMAIN:-http://localhost}
+      - HOST_BASE_ADDRESS=${HOST_BASE_ADDRESS:-http://localhost}
     volumes:
       - ./casdoor/conf:/conf
       - ./casdoor/entrypoint.sh:/entrypoint.sh:ro
