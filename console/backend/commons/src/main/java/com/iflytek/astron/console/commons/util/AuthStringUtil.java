@@ -86,8 +86,9 @@ public class AuthStringUtil {
     /**
      * Generate URL for authentication
      */
-    public static String assembleRequestUrl(String httpRequestUrl, String method, String apiKey, String apiSecret) {
+    public static String assembleRequestUrl(String requestUrl, String method, String apiKey, String apiSecret) {
         URL url;
+        String httpRequestUrl = requestUrl.replace("ws://", "http://").replace("wss://", "https://");
         try {
             url = new URL(httpRequestUrl);
             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
@@ -151,7 +152,7 @@ public class AuthStringUtil {
     /**
      * Get signature
      *
-     * @param appId Signature key
+     * @param appId  Signature key
      * @param secret Signature secret
      * @return Return signature
      */
@@ -168,7 +169,7 @@ public class AuthStringUtil {
      * SHA1 encryption
      *
      * @param encryptText Encryption text
-     * @param encryptKey Encryption key
+     * @param encryptKey  Encryption key
      * @return Encryption result
      */
     private static String hmacSHA1Encrypt(String encryptText, String encryptKey) throws SignatureException {

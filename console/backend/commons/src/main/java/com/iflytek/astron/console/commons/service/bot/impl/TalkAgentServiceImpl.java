@@ -38,7 +38,7 @@ public class TalkAgentServiceImpl implements TalkAgentService {
 
     @Override
     public String getSignature() {
-        return AuthStringUtil.assembleRequestUrl(SIGNATURE_URL, apiKey, apiSecret, "GET");
+        return AuthStringUtil.assembleRequestUrl(SIGNATURE_URL, "GET", apiKey, apiSecret);
     }
 
     @Override
