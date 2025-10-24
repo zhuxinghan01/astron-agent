@@ -1,4 +1,4 @@
-package com.iflytek.astron.console.hub.enums;
+package com.iflytek.astron.console.commons.enums.bot;
 
 import lombok.Getter;
 

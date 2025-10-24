@@ -22,7 +22,7 @@ public interface BotService {
 
     List<BotTypeList> getBotTypeList();
 
-    BotInfoDto insertWorkflowBot(String uid, BotCreateForm bot, Long spaceId);
+    BotInfoDto insertWorkflowBot(String uid, BotCreateForm bot, Long spaceId, Integer version);
 
     BotInfoDto insertBotBasicInfo(String uid, BotCreateForm bot, Long spaceId);
 

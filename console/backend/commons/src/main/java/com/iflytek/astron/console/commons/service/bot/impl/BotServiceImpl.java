@@ -16,6 +16,7 @@ import com.iflytek.astron.console.commons.entity.bot.*;
 import com.iflytek.astron.console.commons.entity.user.UserInfo;
 import com.iflytek.astron.console.commons.enums.ShelfStatusEnum;
 import com.iflytek.astron.console.commons.enums.bot.BotTypeEnum;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotBaseMapper;
 import com.iflytek.astron.console.commons.mapper.bot.ChatBotPromptStructMapper;
@@ -173,10 +174,10 @@ public class BotServiceImpl implements BotService {
     }
 
     @Override
-    public BotInfoDto insertWorkflowBot(String uid, BotCreateForm bot, Long spaceId) {
+    public BotInfoDto insertWorkflowBot(String uid, BotCreateForm bot, Long spaceId, Integer version) {
         return executeWithLock("user:create:workflow:bot:uid:" + uid, () -> {
             validateBotCreation(uid, bot.getName(), spaceId);
-            ChatBotBase botBase = createWorkflowBotBase(uid, bot, spaceId);
+            ChatBotBase botBase = createWorkflowBotBase(uid, bot, spaceId, version);
             saveBotAndAddToList(botBase);
             return createBotInfoDto(botBase.getId());
         });
@@ -308,7 +309,7 @@ public class BotServiceImpl implements BotService {
         }
     }
 
-    private ChatBotBase createWorkflowBotBase(String uid, BotCreateForm bot, Long spaceId) {
+    private ChatBotBase createWorkflowBotBase(String uid, BotCreateForm bot, Long spaceId, Integer version) {
         ChatBotBase botBase = new ChatBotBase();
         botBase.setUid(uid);
         botBase.setBotType(bot.getBotType());
@@ -325,7 +326,7 @@ public class BotServiceImpl implements BotService {
         botBase.setSpaceId(spaceId);
         setInputExamples(botBase, bot.getInputExample(), null);
         botBase.setBotwebStatus(0);
-        botBase.setVersion(3);
+        botBase.setVersion(version);
         return botBase;
     }
 
@@ -434,7 +435,7 @@ public class BotServiceImpl implements BotService {
     private void synchronizeWorkflowIfNeeded(Integer botId, BotCreateForm bot, HttpServletRequest request, Long spaceId) {
         UserLangChainInfo userLangChainInfo = userLangChainDataService.findOneByBotId(botId);
         if (Objects.nonNull(userLangChainInfo)) {
-            maasUtil.synchronizeWorkFlow(userLangChainInfo, bot, request, spaceId);
+            maasUtil.synchronizeWorkFlow(userLangChainInfo, bot, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
         }
     }
 

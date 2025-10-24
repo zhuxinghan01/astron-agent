@@ -11,6 +11,7 @@ import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.AdvancedConfig;
 import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
 import com.iflytek.astron.console.commons.dto.bot.BotTag;
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentConfigDto;
 import com.iflytek.astron.console.commons.dto.workflow.MaasApi;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotTag;
@@ -169,7 +170,7 @@ public class MaasUtil {
     }
 
     public JSONObject synchronizeWorkFlow(UserLangChainInfo userLangChainInfo, BotCreateForm botCreateForm,
-            HttpServletRequest request, Long spaceId) {
+                                          HttpServletRequest request, Long spaceId, Integer version, TalkAgentConfigDto talkAgentConfig) {
         AdvancedConfig advancedConfig = new AdvancedConfig(botCreateForm.getPrologue(), botCreateForm.getInputExample(), botCreateForm.getAppBackground());
         JSONObject param = new JSONObject();
         param.put("avatarIcon", botCreateForm.getAvatar());
@@ -183,6 +184,15 @@ public class MaasUtil {
         JSONObject ext = new JSONObject();
         ext.put("botId", botCreateForm.getBotId());
         param.put("ext", ext);
+        param.put("flowType", version);
+        if (Objects.nonNull(talkAgentConfig)) {
+            param.put("flowConfig", talkAgentConfig);
+        }
+        if (botCreateForm.getBotType() != 0) {
+            param.put("category", botCreateForm.getBotType());
+        }
+
+
         String authHeader = getAuthorizationHeader(request);
 
         // Not empty, use PUT request for update

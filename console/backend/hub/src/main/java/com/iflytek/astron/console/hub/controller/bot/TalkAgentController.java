@@ -3,12 +3,14 @@ package com.iflytek.astron.console.hub.controller.bot;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
 import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentCreateDto;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.TalkAgentService;
 import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.hub.enums.TalkAgentSceneEnum;
 import com.iflytek.astron.console.hub.enums.TalkAgentVCNEnum;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,13 +46,14 @@ public class TalkAgentController {
     }
 
     @PostMapping("/create")
-    public ApiResult createTalkAgent(HttpServletRequest request, @RequestBody BotCreateForm bot){
+    public ApiResult createTalkAgent(HttpServletRequest request, @RequestBody TalkAgentCreateDto bot){
         String uid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
-        BotInfoDto dto = botService.insertWorkflowBot(uid, bot, spaceId);
+        //create talk assistant
+        BotInfoDto dto = botService.insertWorkflowBot(uid, bot, spaceId, BotVersionEnum.TALK.getVersion());
         int botId = dto.getBotId();
         bot.setBotId(botId);
-        JSONObject maas = maasUtil.synchronizeWorkFlow(null, bot, request, spaceId);
+        JSONObject maas = maasUtil.synchronizeWorkFlow(null, bot, request, spaceId, BotVersionEnum.TALK.getVersion(), bot.getTalkAgentConfig());
         dto.setFlowId(maas.getJSONObject("data").getLong("flowId"));
         dto.setMaasId(maas.getJSONObject("data").getLong("id"));
         botService.addMaasInfo(uid, maas, botId, spaceId);

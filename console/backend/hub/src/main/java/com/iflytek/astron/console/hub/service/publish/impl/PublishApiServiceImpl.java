@@ -18,7 +18,7 @@ import com.iflytek.astron.console.hub.dto.publish.BotApiInfoDTO;
 import com.iflytek.astron.console.hub.dto.publish.CreateAppVo;
 import com.iflytek.astron.console.hub.dto.publish.CreateBotApiVo;
 import com.iflytek.astron.console.hub.dto.user.TenantAuth;
-import com.iflytek.astron.console.hub.enums.BotVersionEnum;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.hub.service.chat.ChatBotApiService;
 import com.iflytek.astron.console.hub.service.publish.PublishApiService;
 import com.iflytek.astron.console.hub.service.publish.ReleaseManageClientService;
