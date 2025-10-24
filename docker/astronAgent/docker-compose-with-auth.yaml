@@ -1,3 +1,6 @@
+include:
+  - docker-compose-auth.yml
+
 services:
   # ============================================================================
   # Infrastructure Services
@@ -475,6 +478,8 @@ services:
       CONSOLE_CASDOOR_ORG: "${CONSOLE_CASDOOR_ORG:-}"
     expose:
       - "1881"
+    depends_on:
+      - casdoor
     networks:
       - astron-agent-network
     restart: always
@@ -561,6 +566,8 @@ services:
     expose:
       - "8080"
     depends_on:
+      casdoor:
+        condition: service_started
       postgres:
         condition: service_healthy
       mysql:

@@ -38,6 +38,13 @@ services:
       timeout: 20s
       retries: 10
 
+# ============================================================================
+# Network Configuration
+# ============================================================================
+networks:
+  astron-agent-network:
+    driver: bridge
+
 volumes:
   casdoor-logs:
   casdoor-mysql-data:
