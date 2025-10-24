@@ -3,7 +3,7 @@ x-env-file: &env_file
   - .env
 
 services:
-  mysql:
+  rpa-mysql:
     image: mysql:8.4.6
     container_name: rpa-opensource-mysql
     restart: always
@@ -36,9 +36,9 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
-  redis:
+  rpa-redis:
     image: bitnami/redis:latest
     container_name: rpa-opensource-redis
     restart: always
@@ -70,9 +70,9 @@ services:
       retries: 10
       start_period: 10s
     networks:
-      - rpa-opensource-network
-  
-  minio:
+      - astron-agent-network
+
+  rpa-minio:
     image: minio/minio:RELEASE.2025-06-13T11-33-47Z-cpuv1
     container_name: rpa-opensource-minio
     user: root
@@ -119,7 +119,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
   openresty-nginx:
     image: openresty/openresty:1.27.1.1-alpine
@@ -143,31 +143,33 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
-  casdoor:
-    image: casbin/casdoor:v2.67.0
-    container_name: rpa-opensource-casdoor
-    restart: always
-    env_file: *env_file
-    environment:
-      - driverName=mysql
-      - dataSourceName=${DATABASE_USERNAME}:${DATABASE_PASSWORD}@tcp(${DATABASE_HOST}:${DATABASE_PORT})/
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./volumes/casdoor/init_data_dump.json:/init_data.json
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - rpa-opensource-network
+  # casdoor service is disabled in integrated mode
+  # Use astronAgent's shared casdoor instead
+  # casdoor:
+  #   image: casbin/casdoor:v2.67.0
+  #   container_name: rpa-opensource-casdoor
+  #   restart: always
+  #   env_file: *env_file
+  #   environment:
+  #     - driverName=mysql
+  #     - dataSourceName=${DATABASE_USERNAME}:${DATABASE_PASSWORD}@tcp(${DATABASE_HOST}:${DATABASE_PORT})/
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./volumes/casdoor/init_data_dump.json:/init_data.json
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   networks:
+  #     - astron-agent-network
 
   mysql-init:
     image: mysql:8.4.6
     container_name: rpa-opensource-mysql-init
     depends_on:
-      mysql:
+      rpa-mysql:
         condition: service_healthy
       resource-service:
         condition: service_started
@@ -182,11 +184,11 @@ services:
         echo 'Waiting for robot-service to be ready...'
         sleep 10
         echo 'Executing robot example data initialization...'
-        mysql -h mysql -u root -p$$MYSQL_ROOT_PASSWORD --default-character-set=utf8mb4 --init-command='SET NAMES utf8mb4;' $$MYSQL_DATABASE < /init_robot_example_data.sql
+        mysql -h rpa-mysql -u root -p$$MYSQL_ROOT_PASSWORD --default-character-set=utf8mb4 --init-command='SET NAMES utf8mb4;' $$MYSQL_DATABASE < /init_robot_example_data.sql
         echo 'Robot example data initialization completed!'
       "
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
   ai-service:
     build:
@@ -196,8 +198,8 @@ services:
     restart: always
     env_file: *env_file
     environment:
-      - DATABASE_URL=mysql+aiomysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@mysql:3306/${DATABASE_NAME}
-      - REDIS_URL=redis://${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      - DATABASE_URL=mysql+aiomysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@rpa-mysql:3306/${DATABASE_NAME}
+      - REDIS_URL=redis://rpa-redis:6379/${REDIS_DB}
       - AICHAT_BASE_URL=${AICHAT_BASE_URL}
       - AICHAT_API_KEY=${AICHAT_API_KEY}
     # ports:
@@ -205,14 +207,14 @@ services:
     volumes:
       - ../backend/ai-service/app:/app/app
     depends_on:
-      mysql:
+      rpa-mysql:
         condition: service_healthy
-      redis:
+      rpa-redis:
         condition: service_healthy
       casdoor:
         condition: service_started
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
   openapi-service:
     build:
@@ -222,8 +224,8 @@ services:
     restart: always
     env_file: *env_file
     environment:
-      - DATABASE_URL=mysql+aiomysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@mysql:3306/${DATABASE_NAME}
-      - REDIS_URL=redis://${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      - DATABASE_URL=mysql+aiomysql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@rpa-mysql:3306/${DATABASE_NAME}
+      - REDIS_URL=redis://rpa-redis:6379/${REDIS_DB}
       - AICHAT_BASE_URL=${AICHAT_BASE_URL}
       - AICHAT_API_KEY=${AICHAT_API_KEY}
     # ports:
@@ -231,14 +233,14 @@ services:
     volumes:
       - ../backend/openapi-service/app:/app/app
     depends_on:
-      mysql:
+      rpa-mysql:
         condition: service_healthy
-      redis:
+      rpa-redis:
         condition: service_healthy
       casdoor:
         condition: service_started
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
   resource-service:
     build:
@@ -252,16 +254,16 @@ services:
     volumes:
       - ./logs/resource-service:/app/logs
     depends_on:
-      mysql:
+      rpa-mysql:
         condition: service_healthy
-      redis:
+      rpa-redis:
         condition: service_healthy
-      minio:
+      rpa-minio:
         condition: service_healthy
       casdoor:
         condition: service_started
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
   robot-service:
     build:
@@ -275,15 +277,17 @@ services:
     volumes:
       - ./logs/robot-service:/app/logs
     depends_on:
-      mysql:
+      rpa-mysql:
         condition: service_healthy
-      redis:
+      rpa-redis:
         condition: service_healthy
       casdoor:
         condition: service_started
     networks:
-      - rpa-opensource-network
+      - astron-agent-network
 
 networks:
-  rpa-opensource-network:
-    driver: bridge
+  astron-agent-network:
+    # In integrated mode (via include), this network is created by docker-compose-with-auth.yaml
+    # Docker Compose will automatically use the same network without needing 'external: true'
+    name: astron-agent-network
