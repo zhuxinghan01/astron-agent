@@ -48,7 +48,7 @@ docker compose logs -f ragflow
 ```
 
 **访问地址：**
-- RagFlow Web界面：http://localhost:10080
+- RagFlow Web界面：http://localhost:18080
 
 **模型配置步骤：**  
 1. 点击头像进入 **Model Providers（模型提供商）** 页面，选择 **Add Model（添加模型）**，填写对应的 **API 地址** 和 **API Key**，分别添加 **Chat 模型** 和 **Embedding 模型**。  
@@ -87,14 +87,14 @@ vim .env
 
 ```env
 # RAGFlow配置
-RAGFLOW_BASE_URL=http://localhost:10080
+RAGFLOW_BASE_URL=http://localhost:18080
 RAGFLOW_API_TOKEN=ragflow-your-api-token-here
 RAGFLOW_TIMEOUT=60
 RAGFLOW_DEFAULT_GROUP=星辰知识库
 ```
 
 **获取 RagFlow API Token：**
-1. 访问 RagFlow Web界面：http://localhost:10080
+1. 访问 RagFlow Web界面：http://localhost:18080
 2. 登录并点击头像进入用户设置
 3. 点击API生成 API KEY
 4. 将生成的 API KEY 更新到.env文件中的RAGFLOW_API_TOKEN
@@ -164,41 +164,9 @@ HOST_BASE_ADDRESS=http://localhost
 - 如果您使用域名访问，请将 `localhost` 替换为您的域名
 - 确保 nginx 和 minio 的端口已正确开放
 
-#### 2.5 配置 Casdoor 认证服务
-
-编辑 docker/astronAgent/.env 文件，配置 Casdoor 连接信息：
-
-```env
-# Casdoor配置
-CONSOLE_CASDOOR_URL=http://localhost:8000
-CONSOLE_CASDOOR_ID=astron-agent-client
-CONSOLE_CASDOOR_APP=astron-agent-app
-CONSOLE_CASDOOR_ORG=built-in
-```
-
-**说明：**
-- `CONSOLE_CASDOOR_URL`: Casdoor 服务地址
-- 默认使用内置的应用配置 (`astron-agent-app`) 和组织 (`built-in`)
-
-**如果修改了 Casdoor 服务地址或 Nginx 端口，需要同步修改回调地址：**
-
-编辑 `docker/astronAgent/casdoor/conf/init_data.json` 文件，修改 `redirectUris`:
-
-```json
-"redirectUris": [
-  "http://your-domain/callback"
-]
-```
-
-**回调地址配置示例：**
-- 如果 Nginx 端口为 `80`: `http://your-domain/callback`
-- 如果 Nginx 端口为 `888`: `http://your-domain:888/callback`
-- 如果使用 localhost: `http://localhost/callback` (默认配置)
-
-
 ### 第三步：启动 AstronAgent 核心服务（包含 Casdoor 认证服务）
 
-启动 AstronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。**该文件已通过 `include` 机制集成了 Casdoor 认证服务**,会自动启动 Casdoor 及其 MySQL 数据库。
+启动 AstronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。**该文件已通过 `include` 机制集成了 Casdoor 认证服务**，会自动启动 Casdoor。
 
 ```bash
 # 进入 astronAgent 目录
@@ -213,6 +181,9 @@ docker compose ps
 # 查看服务日志
 docker compose logs -f
 ```
+
+**说明：**
+- Casdoor默认的登录账户名：`admin`，密码：`123`
 
 ### 第四步：修改 Casdoor 认证（可选）
 
@@ -272,7 +243,7 @@ docker compose restart console-frontend console-hub
 - **Casdoor 管理界面**：http://localhost:8000
 
 ### 知识库服务
-- **RagFlow Web界面**：http://localhost:10080
+- **RagFlow Web界面**：http://localhost:18080
 
 ### AstronAgent 核心服务
 - **控制台前端(nginx代理)**：http://localhost/
