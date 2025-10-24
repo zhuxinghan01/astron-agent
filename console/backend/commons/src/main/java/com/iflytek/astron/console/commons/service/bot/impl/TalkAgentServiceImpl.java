@@ -2,6 +2,7 @@ package com.iflytek.astron.console.commons.service.bot.impl;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentUpgradeDto;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
 import com.iflytek.astron.console.commons.entity.chat.ChatReqRecords;
 import com.iflytek.astron.console.commons.entity.chat.ChatRespRecords;
@@ -11,6 +12,7 @@ import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.util.AuthStringUtil;
 import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,5 +90,10 @@ public class TalkAgentServiceImpl implements TalkAgentService {
         return ResponseEnum.SUCCESS;
 
 
+    }
+
+    @Override
+    public ResponseEnum upgradeWorkflow(Integer sourceId, String uid, Long spaceId, HttpServletRequest request, TalkAgentUpgradeDto talkAgentUpgradeDto) {
+        return null;
     }
 }

@@ -15,8 +15,9 @@ public interface BotChainService {
     /**
      * Copy workflow
      *
-     * @param uid uid
+     * @param uid     uid
      * @param spaceId
+     * @param version
      */
-    void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId);
+    void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version);
 }

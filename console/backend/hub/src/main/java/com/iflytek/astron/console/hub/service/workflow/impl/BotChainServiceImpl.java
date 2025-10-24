@@ -67,7 +67,7 @@ public class BotChainServiceImpl implements BotChainService {
      */
     @Override
     @Transactional
-    public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId) {
+    public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version) {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
@@ -77,7 +77,7 @@ public class BotChainServiceImpl implements BotChainService {
 
         UserLangChainInfo chainInfo = botList.getFirst();
         Long massId = Long.valueOf(String.valueOf(chainInfo.getMaasId()));
-        JSONObject res = maasUtil.copyWorkFlow(massId, request);
+        JSONObject res = maasUtil.copyWorkFlow(massId, request, version, targetId);
         if (Objects.isNull(res)) {
             // Throw exception to maintain data transactionality
             throw new BusinessException(ResponseEnum.BOT_CHAIN_UPDATE_ERROR);
@@ -127,7 +127,7 @@ public class BotChainServiceImpl implements BotChainService {
      *
      * @param original Original node ID string
      * @return New node ID string, if the original string contains a colon, add a random UUID after the
-     *         colon, otherwise throw an exception
+     * colon, otherwise throw an exception
      */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');

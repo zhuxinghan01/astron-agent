@@ -1,6 +1,7 @@
 package com.iflytek.astron.console.hub.service.bot.impl;
 
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.hub.service.workflow.BotChainService;
@@ -91,7 +92,7 @@ class BotTransactionalServiceImplTest {
             verify(redissonClient, times(2)).getBucket(redisKey);
             verify(rBucket).set(String.valueOf(botId));
             verify(rBucket).expire(Duration.ofSeconds(60));
-            verify(botChainService).cloneWorkFlow(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), request, spaceId);
+            verify(botChainService).cloneWorkFlow(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
         }
     }
 

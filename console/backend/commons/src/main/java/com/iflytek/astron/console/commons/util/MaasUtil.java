@@ -373,7 +373,7 @@ public class MaasUtil {
      * Create API (without version)
      *
      * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param appid  Application ID
      * @return JSONObject response result
      */
     public JSONObject createApi(String flowId, String appid) {
@@ -387,10 +387,10 @@ public class MaasUtil {
     /**
      * Create API (with version) - data parameter is not sent to workflow/v1/publish
      *
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param flowId  Workflow ID
+     * @param appid   Application ID
      * @param version Version number
-     * @param data Version data (not used in publish request)
+     * @param data    Version data (not used in publish request)
      * @return JSONObject response result
      */
     public JSONObject createApi(String flowId, String appid, String version, JSONObject data) {
@@ -401,8 +401,8 @@ public class MaasUtil {
     /**
      * Internal generic method for creating API
      *
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param flowId  Workflow ID
+     * @param appid   Application ID
      * @param version Version number (can be null)
      * @return JSONObject response result
      */
@@ -425,7 +425,7 @@ public class MaasUtil {
     /**
      * Execute HTTP POST request and return response string
      *
-     * @param url Request URL
+     * @param url      Request URL
      * @param bodyData Request body data object
      * @return String representation of response content
      */
@@ -459,9 +459,9 @@ public class MaasUtil {
      * Validate whether the response is successful
      *
      * @param responseStr Response content string representation
-     * @param action Description of current operation being performed (e.g., "publish", "bind")
-     * @param flowId Workflow ID
-     * @param appid Application ID
+     * @param action      Description of current operation being performed (e.g., "publish", "bind")
+     * @param flowId      Workflow ID
+     * @param appid       Application ID
      */
     private void validateResponse(String responseStr, String action, String flowId, String appid) {
         log.info("----- {} maas api response: {}", action, responseStr);
@@ -473,7 +473,7 @@ public class MaasUtil {
     }
 
 
-    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request) {
+    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request, Integer version, Long targetId) {
         log.info("----- Copying maas workflow id: {}", maasId);
         HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl);
         if (baseUrl == null) {
@@ -482,6 +482,8 @@ public class MaasUtil {
         }
         HttpUrl httpUrl = baseUrl.newBuilder()
                 .addQueryParameter("id", String.valueOf(maasId))
+                .addQueryParameter("flowType", String.valueOf(version))
+                .addQueryParameter("botId", String.valueOf(targetId))
                 .addQueryParameter("password", "xfyun")
                 .build();
         Request httpRequest = new Request.Builder()

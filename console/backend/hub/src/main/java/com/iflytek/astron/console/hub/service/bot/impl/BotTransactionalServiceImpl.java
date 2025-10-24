@@ -1,6 +1,7 @@
 package com.iflytek.astron.console.hub.service.bot.impl;
 
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.util.MaasUtil;
 import com.iflytek.astron.console.hub.service.bot.BotTransactionalService;
@@ -33,8 +34,8 @@ public class BotTransactionalServiceImpl implements BotTransactionalService {
     /**
      * Copy bot
      *
-     * @param uid User ID
-     * @param botId Bot ID
+     * @param uid     User ID
+     * @param botId   Bot ID
      * @param request HTTP request object
      * @param spaceId Space ID
      */
@@ -45,14 +46,20 @@ public class BotTransactionalServiceImpl implements BotTransactionalService {
         log.info("copy bot : new bot : {}", base);
         // The botId of the new assistant is the target id
         Long targetId = Long.valueOf(base.getId());
-        if (base.getVersion() == 2) {
+        if (BotVersionEnum.isBaseBot(base.getVersion())) {
             botChainService.copyBot(uid, Long.valueOf(botId), targetId, spaceId);
-        } else if (base.getVersion() == 3) {
+        } else if (BotVersionEnum.isWorkflow(base.getVersion())) {
             // Create an event to be consumed at /maasCopySynchronize
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).set(String.valueOf(botId));
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).expire(Duration.ofSeconds(60));
             // Synchronize Xingchen MAAS
-            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId);
+            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+        } else if (BotVersionEnum.isTalkAgent(base.getVersion())) {
+            // Create an event to be consumed at /maasCopySynchronize
+            redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).set(String.valueOf(botId));
+            redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).expire(Duration.ofSeconds(60));
+            // Synchronize Xingchen MAAS
+            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.TALK.getVersion());
         }
     }
 }

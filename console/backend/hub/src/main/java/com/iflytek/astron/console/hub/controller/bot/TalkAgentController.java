@@ -1,10 +1,7 @@
 package com.iflytek.astron.console.hub.controller.bot;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
-import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
-import com.iflytek.astron.console.commons.dto.bot.TalkAgentCreateDto;
-import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;
+import com.iflytek.astron.console.commons.dto.bot.*;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.TalkAgentService;
@@ -14,6 +11,7 @@ import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.hub.enums.TalkAgentSceneEnum;
 import com.iflytek.astron.console.hub.enums.TalkAgentVCNEnum;
+import com.iflytek.astron.console.hub.util.BotPermissionUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +31,9 @@ public class TalkAgentController {
 
     @Autowired
     private MaasUtil maasUtil;
+
+    @Autowired
+    private BotPermissionUtil botPermissionUtil;
 
     @PostMapping("/getSceneList")
     public ApiResult<List<TalkAgentSceneEnum>> getSceneList() {
@@ -62,8 +63,13 @@ public class TalkAgentController {
     }
 
     @PostMapping("/upgradeWorkflow")
-    public ApiResult upgradeWorkflow(HttpServletRequest request, @RequestBody BotCreateForm bot) {
-        return ApiResult.success();
+    public ApiResult upgradeWorkflow(HttpServletRequest request, @RequestBody TalkAgentUpgradeDto talkAgentUpgradeDto) {
+        String uid = RequestContextUtil.getUID();
+        Long spaceId = SpaceInfoUtil.getSpaceId();
+        Integer sourceId = talkAgentUpgradeDto.getSourceId();
+        botPermissionUtil.checkBot(sourceId);
+
+        return ApiResult.of(talkAgentService.upgradeWorkflow(sourceId, uid, spaceId, request, talkAgentUpgradeDto), null);
     }
 
     @PostMapping("/saveHistory")
