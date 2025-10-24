@@ -53,13 +53,13 @@ public class BotTransactionalServiceImpl implements BotTransactionalService {
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).set(String.valueOf(botId));
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).expire(Duration.ofSeconds(60));
             // Synchronize Xingchen MAAS
-            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
         } else if (BotVersionEnum.isTalkAgent(base.getVersion())) {
             // Create an event to be consumed at /maasCopySynchronize
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).set(String.valueOf(botId));
             redissonClient.getBucket(MaasUtil.generatePrefix(uid, botId)).expire(Duration.ofSeconds(60));
             // Synchronize Xingchen MAAS
-            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.TALK.getVersion());
+            botChainService.cloneWorkFlow(uid, Long.valueOf(botId), targetId, request, spaceId, BotVersionEnum.TALK.getVersion(), null);
         }
     }
 }

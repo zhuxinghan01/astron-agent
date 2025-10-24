@@ -152,10 +152,10 @@ class BotChainServiceImplTest {
         data.put("id", 111L);
         data.put("flowId", "newFlow123");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId, null)).thenReturn(response);
 
         // When
-        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
 
         // Then
         ArgumentCaptor<UserLangChainInfo> captor = ArgumentCaptor.forClass(UserLangChainInfo.class);
@@ -180,10 +180,10 @@ class BotChainServiceImplTest {
         data.put("id", 111L);
         data.put("flowId", "newFlow123");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId, null)).thenReturn(response);
 
         // When
-        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, null, BotVersionEnum.WORKFLOW.getVersion());
+        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, null, BotVersionEnum.WORKFLOW.getVersion(), null);
 
         // Then
         ArgumentCaptor<UserLangChainInfo> captor = ArgumentCaptor.forClass(UserLangChainInfo.class);
@@ -200,10 +200,10 @@ class BotChainServiceImplTest {
         when(userLangChainDataService.findListByBotId(Math.toIntExact(sourceId))).thenReturn(null);
 
         // When
-        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
 
         // Then
-        verify(maasUtil, never()).copyWorkFlow(anyLong(), any(), BotVersionEnum.WORKFLOW.getVersion(), targetId);
+        verify(maasUtil, never()).copyWorkFlow(anyLong(), any(), BotVersionEnum.WORKFLOW.getVersion(), targetId, null);
         verify(userLangChainDataService, never()).insertUserLangChainInfo(any());
     }
 
@@ -213,10 +213,10 @@ class BotChainServiceImplTest {
         when(userLangChainDataService.findListByBotId(Math.toIntExact(sourceId))).thenReturn(Collections.emptyList());
 
         // When
-        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
 
         // Then
-        verify(maasUtil, never()).copyWorkFlow(anyLong(), any(), BotVersionEnum.WORKFLOW.getVersion(), targetId);
+        verify(maasUtil, never()).copyWorkFlow(anyLong(), any(), BotVersionEnum.WORKFLOW.getVersion(), targetId, null);
         verify(userLangChainDataService, never()).insertUserLangChainInfo(any());
     }
 
@@ -225,11 +225,11 @@ class BotChainServiceImplTest {
         // Given
         List<UserLangChainInfo> botList = List.of(mockChainInfo);
         when(userLangChainDataService.findListByBotId(Math.toIntExact(sourceId))).thenReturn(botList);
-        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId)).thenReturn(null);
+        when(maasUtil.copyWorkFlow(999L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId, null)).thenReturn(null);
 
         // When & Then
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+            botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
         });
 
         assertEquals(ResponseEnum.BOT_CHAIN_UPDATE_ERROR, exception.getResponseEnum());
@@ -337,12 +337,12 @@ class BotChainServiceImplTest {
         data.put("id", 67890L);
         data.put("flowId", "testFlow");
         response.put("data", data);
-        when(maasUtil.copyWorkFlow(12345L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId)).thenReturn(response);
+        when(maasUtil.copyWorkFlow(12345L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId, null)).thenReturn(response);
 
         // When
-        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+        botChainService.cloneWorkFlow(uid, sourceId, targetId, request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
 
         // Then
-        verify(maasUtil).copyWorkFlow(12345L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId);
+        verify(maasUtil).copyWorkFlow(12345L, request, BotVersionEnum.WORKFLOW.getVersion(), targetId, null);
     }
 }

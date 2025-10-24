@@ -473,7 +473,7 @@ public class MaasUtil {
     }
 
 
-    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request, Integer version, Long targetId) {
+    public JSONObject copyWorkFlow(Long maasId, HttpServletRequest request, Integer version, Long targetId, TalkAgentConfigDto talkAgentConfig) {
         log.info("----- Copying maas workflow id: {}", maasId);
         HttpUrl baseUrl = HttpUrl.parse(cloneWorkFlowUrl);
         if (baseUrl == null) {

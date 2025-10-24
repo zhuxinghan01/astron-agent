@@ -92,7 +92,7 @@ class BotTransactionalServiceImplTest {
             verify(redissonClient, times(2)).getBucket(redisKey);
             verify(rBucket).set(String.valueOf(botId));
             verify(rBucket).expire(Duration.ofSeconds(60));
-            verify(botChainService).cloneWorkFlow(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), request, spaceId, BotVersionEnum.WORKFLOW.getVersion());
+            verify(botChainService).cloneWorkFlow(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), request, spaceId, BotVersionEnum.WORKFLOW.getVersion(), null);
         }
     }
 

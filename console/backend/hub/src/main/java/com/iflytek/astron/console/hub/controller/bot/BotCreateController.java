@@ -70,7 +70,7 @@ public class BotCreateController {
      * Create workflow assistant
      *
      * @param request HTTP request containing space context
-     * @param bot Assistant creation form
+     * @param bot     Assistant creation form
      * @return Created assistant ID
      */
     @SpacePreAuth(key = "BotCreateController_createBot_POST")
@@ -164,14 +164,14 @@ public class BotCreateController {
 
     /**
      * AI generate input examples
-     *
+     * <p>
      * Path: /bot/generateInputExample
      */
     @PostMapping(value = "/generate-input-example")
     @RateLimit(dimension = "USER", window = 1, limit = 1)
     public ApiResult<List<String>> generateInputExample(@RequestParam String botName,
-            @RequestParam String botDesc,
-            @RequestParam String prompt) {
+                                                        @RequestParam String botDesc,
+                                                        @RequestParam String prompt) {
         if (botName == null || botName.trim().isEmpty()) {
             return ApiResult.error(ResponseEnum.PARAMS_ERROR);
         }
@@ -200,7 +200,7 @@ public class BotCreateController {
      * Update workflow assistant
      *
      * @param request HTTP request containing space context
-     * @param bot Assistant update form (must contain botId)
+     * @param bot     Assistant update form (must contain botId)
      * @return Update result
      */
     @SpacePreAuth(key = "BotCreateController_updateBot_POST")

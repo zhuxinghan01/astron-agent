@@ -3,6 +3,7 @@ package com.iflytek.astron.console.hub.service.workflow.impl;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentConfigDto;
 import com.iflytek.astron.console.commons.entity.bot.UserLangChainInfo;
 import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.service.data.UserLangChainDataService;
@@ -67,7 +68,7 @@ public class BotChainServiceImpl implements BotChainService {
      */
     @Override
     @Transactional
-    public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version) {
+    public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version, TalkAgentConfigDto talkAgentConfig) {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
@@ -77,7 +78,7 @@ public class BotChainServiceImpl implements BotChainService {
 
         UserLangChainInfo chainInfo = botList.getFirst();
         Long massId = Long.valueOf(String.valueOf(chainInfo.getMaasId()));
-        JSONObject res = maasUtil.copyWorkFlow(massId, request, version, targetId);
+        JSONObject res = maasUtil.copyWorkFlow(massId, request, version, targetId, talkAgentConfig);
         if (Objects.isNull(res)) {
             // Throw exception to maintain data transactionality
             throw new BusinessException(ResponseEnum.BOT_CHAIN_UPDATE_ERROR);

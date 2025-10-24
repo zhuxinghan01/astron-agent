@@ -69,7 +69,7 @@ public class BotMaasServiceImpl implements BotMaasService {
             throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
         }
         // Copy a new workflow for the assistant
-        JSONObject res = maasUtil.copyWorkFlow(maasDuplicate.getMaasId(), request, BotVersionEnum.WORKFLOW.getVersion(), Long.valueOf(botInfoDto.getBotId()));
+        JSONObject res = maasUtil.copyWorkFlow(maasDuplicate.getMaasId(), request, BotVersionEnum.WORKFLOW.getVersion(), Long.valueOf(botInfoDto.getBotId()), null);
         if (Objects.isNull(res) || res.isEmpty()) {
             throw new BusinessException(ResponseEnum.CREATE_BOT_FAILED);
         }

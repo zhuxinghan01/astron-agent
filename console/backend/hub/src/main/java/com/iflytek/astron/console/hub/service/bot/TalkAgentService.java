@@ -1,4 +1,4 @@
-package com.iflytek.astron.console.commons.service.bot;
+package com.iflytek.astron.console.hub.service.bot;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;

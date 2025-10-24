@@ -1,23 +1,30 @@
-package com.iflytek.astron.console.commons.service.bot.impl;
+package com.iflytek.astron.console.hub.service.bot.impl;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentUpgradeDto;
+import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.chat.ChatList;
 import com.iflytek.astron.console.commons.entity.chat.ChatReqRecords;
 import com.iflytek.astron.console.commons.entity.chat.ChatRespRecords;
 import com.iflytek.astron.console.commons.entity.chat.ChatTreeIndex;
-import com.iflytek.astron.console.commons.service.bot.TalkAgentService;
+import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
+import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.data.ChatDataService;
 import com.iflytek.astron.console.commons.service.data.ChatListDataService;
 import com.iflytek.astron.console.commons.util.AuthStringUtil;
-import com.iflytek.astron.console.commons.util.SseEmitterUtil;
+import com.iflytek.astron.console.commons.util.MaasUtil;
+import com.iflytek.astron.console.hub.service.bot.TalkAgentService;
+import com.iflytek.astron.console.hub.service.workflow.BotChainService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +41,15 @@ public class TalkAgentServiceImpl implements TalkAgentService {
 
     @Autowired
     private ChatDataService chatDataService;
+
+    @Autowired
+    private BotService botService;
+
+    @Autowired
+    private BotChainService botChainService;
+
+    @Autowired
+    private RedissonClient redissonClient;
     private static final String SIGNATURE_URL = "wss://avatar.cn-huadong-1.xf-yun.com/v1/interact";
 
     @Override
@@ -93,7 +109,17 @@ public class TalkAgentServiceImpl implements TalkAgentService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEnum upgradeWorkflow(Integer sourceId, String uid, Long spaceId, HttpServletRequest request, TalkAgentUpgradeDto talkAgentUpgradeDto) {
+        ChatBotBase base = botService.upgradeCopyBot(uid, sourceId, spaceId, BotVersionEnum.TALK.getVersion());
+        log.info("upgrade bot : new bot : {}", base);
+        Long targetId = Long.valueOf(base.getId());
+        // Create an event to be consumed at /maasCopySynchronize
+        redissonClient.getBucket(MaasUtil.generatePrefix(uid, sourceId)).set(String.valueOf(sourceId));
+        redissonClient.getBucket(MaasUtil.generatePrefix(uid, sourceId)).expire(Duration.ofSeconds(60));
+        // Synchronize Xingchen MAAS
+        botChainService.cloneWorkFlow(uid, Long.valueOf(sourceId), targetId, request, spaceId,
+                BotVersionEnum.TALK.getVersion(), talkAgentUpgradeDto.getTalkAgentConfig());
         return null;
     }
 }
