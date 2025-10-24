@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
 import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentCreateDto;
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;
 import com.iflytek.astron.console.commons.response.ApiResult;
 import com.iflytek.astron.console.commons.service.bot.BotService;
 import com.iflytek.astron.console.commons.service.bot.TalkAgentService;
@@ -46,7 +47,7 @@ public class TalkAgentController {
     }
 
     @PostMapping("/create")
-    public ApiResult createTalkAgent(HttpServletRequest request, @RequestBody TalkAgentCreateDto bot){
+    public ApiResult createTalkAgent(HttpServletRequest request, @RequestBody TalkAgentCreateDto bot) {
         String uid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
         //create talk assistant
@@ -62,16 +63,17 @@ public class TalkAgentController {
 
     @PostMapping("/upgradeWorkflow")
     public ApiResult upgradeWorkflow(HttpServletRequest request, @RequestBody BotCreateForm bot) {
-        return  ApiResult.success();
-    }
-
-    @PostMapping("/saveHistory")
-    public ApiResult saveHistory() {
         return ApiResult.success();
     }
 
+    @PostMapping("/saveHistory")
+    public ApiResult saveHistory(HttpServletRequest request, @RequestBody TalkAgentHistoryDto talkAgentHistoryDto) {
+        String uid = RequestContextUtil.getUID();
+        return ApiResult.of(talkAgentService.saveHistory(uid, talkAgentHistoryDto), null);
+    }
+
     @GetMapping("/signature")
-    public ApiResult getSignature(){
+    public ApiResult getSignature() {
         return ApiResult.success(talkAgentService.getSignature());
     }
 }
