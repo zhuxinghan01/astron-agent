@@ -73,18 +73,78 @@ We offer two deployment methods to meet different scenarios:
 ```bash
 # Clone the repository
 git clone https://github.com/iflytek/astron-agent.git
-cd astron-agent
 
-# Start Casdoor authentication service
-cd docker/casdoor
-docker-compose up -d
+# Navigate to astronAgent directory
+cd docker/astronAgent
 
-# Start AstronAgent core services
-cd ../astronAgent
-docker compose up -d
+# Copy environment configuration
+cp .env.example .env
+
+# Edit environment configuration
+vim .env
 ```
 
-Access the platform at http://localhost/
+#### Configure iFLYTEK Open Platform APP_ID, API_KEY, and Related Information
+
+For documentation, see: https://www.xfyun.cn/doc/platform/quickguide.html
+
+After creating your application, you may need to purchase or claim API authorization service quotas for the corresponding capabilities:
+- Spark LLM API: https://xinghuo.xfyun.cn/sparkapi
+  (For the LLM API, you'll need an additional SPARK_API_PASSWORD available on the page)
+  (The text AI generation/optimization feature for instructional assistants requires enabling Spark Ultra capability at https://console.xfyun.cn/services/bm4)
+- Real-time Speech Recognition API: https://console.xfyun.cn/services/rta
+- Image Generation API: https://www.xfyun.cn/services/wtop
+
+Edit the `docker/astronAgent/.env` file and update the relevant environment variables:
+```env
+PLATFORM_APP_ID=your-app-id
+PLATFORM_API_KEY=your-api-key
+PLATFORM_API_SECRET=your-api-secret
+
+SPARK_API_PASSWORD=your-api-password
+SPARK_RTASR_API_KEY=your-rtasr-api-key
+```
+
+#### Configure Service Host Address
+
+Edit the `docker/astronAgent/.env` file to configure the AstronAgent service host address:
+
+```env
+HOST_BASE_ADDRESS=http://localhost
+```
+
+**Note:**
+- If you're using a domain name for access, replace `localhost` with your domain name
+- Ensure nginx and minio ports are properly exposed
+
+#### Start the Project
+
+```bash
+# Navigate to astronAgent directory
+cd docker/astronAgent
+
+# Start all services (including Casdoor)
+docker compose -f docker-compose-with-auth.yaml up -d
+
+# Check service status
+docker compose ps
+
+# View service logs
+docker compose logs -f
+```
+
+#### 📊 Service Access Addresses
+
+After startup, you can access the services at the following addresses:
+
+**Authentication Service**
+- **Casdoor Admin Interface**: http://localhost:8000
+
+**AstronAgent**
+- **Application Frontend (nginx proxy)**: http://localhost/
+
+**Note**
+- Default Casdoor login credentials: username: `admin`, password: `123`
 
 ### Option 2: Helm (For Kubernetes Environments)
 
