@@ -1,23 +1,23 @@
 package com.iflytek.astron.console.toolkit.entity.enumVo;
 
 /**
- * RPA调试任务状态
+ * RPA debug task status
  */
 public enum DebugStatus {
-    // local creation
+    // Created locally
     CREATED,
-    // Received ExecutionId
+    // Execution ID obtained
     SUBMITTED,
-    // RPA PENDING Running
+    // RPA PENDING (running)
     RUNNING,
     // RPA COMPLETED
     SUCCEEDED,
-    // RPA FAILED Or local failure
+    // RPA FAILED or local failure
     FAILED,
-    // (Reserved, if later supported to be cancelled)
+    // Reserved for future cancellation support
     CANCELED,
-    // Attempt again after query failure
+    // Retry after query failure
     RETRYING,
-    // timeout
+    // Timeout
     TIMEOUT
 }
