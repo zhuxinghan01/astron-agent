@@ -19,3 +19,9 @@ include:
     env_file:
       - .env
       - astronRPA/.env
+
+# Override RPA_URL to use local astronRPA service instead of external API
+services:
+  console-hub:
+    environment:
+      RPA_URL: "http://openresty-nginx"
