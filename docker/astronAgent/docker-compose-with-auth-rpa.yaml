@@ -7,9 +7,11 @@
 include:
   # Include astronAgent core services with Casdoor authentication
   # This includes: docker-compose-auth.yml + docker-compose.yaml
-  # Uses: docker/astronAgent/.env
+  # Uses: docker/astronAgent/.env + .env.with-rpa (overrides RPA_URL)
   - path: docker-compose-with-auth.yaml
-    env_file: .env
+    env_file:
+      - .env
+      - .env.with-rpa
 
   # Include astronRPA services
   # Uses: docker/astronAgent/.env + docker/astronAgent/astronRPA/.env
@@ -19,9 +21,3 @@ include:
     env_file:
       - .env
       - astronRPA/.env
-
-# Override RPA_URL to use local astronRPA service instead of external API
-services:
-  console-hub:
-    environment:
-      RPA_URL: "http://openresty-nginx"
