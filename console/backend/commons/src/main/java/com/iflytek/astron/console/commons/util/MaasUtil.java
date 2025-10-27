@@ -8,10 +8,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
-import com.iflytek.astron.console.commons.dto.bot.AdvancedConfig;
-import com.iflytek.astron.console.commons.dto.bot.BotCreateForm;
-import com.iflytek.astron.console.commons.dto.bot.BotTag;
-import com.iflytek.astron.console.commons.dto.bot.TalkAgentConfigDto;
+import com.iflytek.astron.console.commons.dto.bot.*;
 import com.iflytek.astron.console.commons.dto.workflow.MaasApi;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotTag;
@@ -480,20 +477,22 @@ public class MaasUtil {
             log.error("Failed to parse clone workflow URL: {}", cloneWorkFlowUrl);
             throw new BusinessException(ResponseEnum.CLONE_BOT_FAILED);
         }
-        HttpUrl httpUrl = baseUrl.newBuilder()
-                .addQueryParameter("id", String.valueOf(maasId))
-                .addQueryParameter("flowType", String.valueOf(version))
-                .addQueryParameter("botId", String.valueOf(targetId))
-                .addQueryParameter("password", "xfyun")
-                .build();
+        BotCloneWorkflowDto cloneWorkflowDto = new BotCloneWorkflowDto();
+        cloneWorkflowDto.setMaasId(maasId);
+        cloneWorkflowDto.setFlowType(version);
+        cloneWorkflowDto.setBotId(Math.toIntExact(targetId));
+        cloneWorkflowDto.setPassword("xfyun");
+        cloneWorkflowDto.setFlowConfig(talkAgentConfig);
+        RequestBody requestBody = RequestBody.create(JSONObject.toJSONString(cloneWorkflowDto), MediaType.parse("application/json; charset=utf-8"));
+
         Request httpRequest = new Request.Builder()
-                .url(httpUrl)
+                .url(baseUrl)
                 .addHeader("X-Consumer-Username", consumerId)
                 .addHeader("Lang-Code", I18nUtil.getLanguage())
                 .addHeader("space-id", String.valueOf(SpaceInfoUtil.getSpaceId()))
                 .addHeader(AUTHORIZATION_HEADER, MaasUtil.getAuthorizationHeader(request))
                 .addHeader(X_AUTH_SOURCE_HEADER, X_AUTH_SOURCE_VALUE)
-                .get()
+                .post(requestBody)
                 .build();
         String responseBody;
         try (Response response = client.newCall(httpRequest).execute()) {
