@@ -1,10 +1,12 @@
 package com.iflytek.astron.console.hub.enums;
 
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentSceneDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 对话Agent场景枚举
@@ -13,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public enum TalkAgentSceneEnum {
 
-    XIAOYUN("110022010", "x4_xiaoyuan", "晓云", "女", "大半身", 
+    XIAOYUN("110022010", "x4_xiaoyuan", "晓云", "女", "大半身",
             Arrays.asList("教育学习"),
             "https://openstorage.xfyousheng.com/asset/asset/20221230/d8fe865d-50e0-4861-9a8d-7eed6962f62b.png",
             "https://openres.xfyun.cn/xfyundoc/2025-10-20/ee441da4-71cc-435f-971b-842e560b56ca/1760939979089/%E6%99%93%E4%BA%911.png"),
@@ -126,8 +128,21 @@ public enum TalkAgentSceneEnum {
     private final List<String> type;
     private final String avatar;
     private final String sampleAvatar;
-    public static List<TalkAgentSceneEnum> getAllScenes() {
-        return Arrays.asList(values());
+
+
+    public static List<TalkAgentSceneDto> getAllScenes() {
+        return Arrays.stream(values())
+                .map(scene -> new TalkAgentSceneDto(
+                        scene.getSceneId(),
+                        scene.getDefaultVCN(),
+                        scene.getName(),
+                        scene.getGender(),
+                        scene.getPosture(),
+                        scene.getType(),
+                        scene.getAvatar(),
+                        scene.getSampleAvatar()
+                ))
+                .collect(Collectors.toList());
     }
 
 }

@@ -1,10 +1,12 @@
 package com.iflytek.astron.console.hub.enums;
 
+import com.iflytek.astron.console.commons.dto.bot.TalkAgentVCNDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor
@@ -26,7 +28,21 @@ public enum TalkAgentVCNEnum {
     private final String vcn;
     private final String avatar;
 
-    public static List<TalkAgentVCNEnum> getAllVCN() {
-        return Arrays.asList(values());
+
+    /**
+     * 获取所有音色的DTO列表
+     *
+     * @return 音色DTO列表
+     */
+    public static List<TalkAgentVCNDto> getAllVCN() {
+        return Arrays.stream(values())
+                .map(vcn -> new TalkAgentVCNDto(
+                        vcn.getVcnName(),
+                        vcn.getGender(),
+                        vcn.getLanguage(),
+                        vcn.getVcn(),
+                        vcn.getAvatar()
+                ))
+                .collect(Collectors.toList());
     }
 }

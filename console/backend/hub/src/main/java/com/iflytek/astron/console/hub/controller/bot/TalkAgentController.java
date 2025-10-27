@@ -36,14 +36,14 @@ public class TalkAgentController {
     private BotPermissionUtil botPermissionUtil;
 
     @PostMapping("/getSceneList")
-    public ApiResult<List<TalkAgentSceneEnum>> getSceneList() {
-        List<TalkAgentSceneEnum> sceneList = TalkAgentSceneEnum.getAllScenes();
+    public ApiResult<List<TalkAgentSceneDto>> getSceneList() {
+        List<TalkAgentSceneDto> sceneList = TalkAgentSceneEnum.getAllScenes();
         return ApiResult.success(sceneList);
     }
 
     @PostMapping("/getVCNList")
-    public ApiResult<List<TalkAgentVCNEnum>> getVcnList() {
-        List<TalkAgentVCNEnum> vcnList = TalkAgentVCNEnum.getAllVCN();
+    public ApiResult<List<TalkAgentVCNDto>> getVcnList() {
+        List<TalkAgentVCNDto> vcnList = TalkAgentVCNEnum.getAllVCN();
         return ApiResult.success(vcnList);
     }
 
