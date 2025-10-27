@@ -1,10 +1,6 @@
 ![Astron_Readme](./docs/imgs/Astron_Readme.png)
 
-# 星辰Agent - 智能体开发平台
-
 <div align="center">
-
-![Logo](docs/logo.svg)
 
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
@@ -13,6 +9,8 @@
 [![GitHub Stars](https://img.shields.io/github/stars/iflytek/astron-agent?style=social)](https://github.com/iflytek/astron-agent/stargazers)
 
 [English](README.md) | 简体中文
+
+**星辰Agent是一款专为AI开发者和各类组织打造的企业级Agent开发平台。**
 
 </div>
 

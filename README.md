@@ -1,10 +1,6 @@
 ![Astron_Readme](./docs/imgs/Astron_Readme.png)
 
-# Astron Agent - Agent Development Platform
-
 <div align="center">
-
-![Logo](docs/logo.svg)
 
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
@@ -13,6 +9,8 @@
 [![GitHub Stars](https://img.shields.io/github/stars/iflytek/astron-agent?style=social)](https://github.com/iflytek/astron-agent/stargazers)
 
 English | [简体中文](README-zh.md)
+
+**Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all types.**
 
 </div>
 
