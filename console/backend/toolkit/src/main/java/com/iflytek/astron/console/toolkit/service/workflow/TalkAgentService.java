@@ -67,6 +67,9 @@ public class TalkAgentService {
                 // Obtain the maximum available version for the bot when in chat mode
                 ApiResult<JSONObject> maxVersion = versionService.getMaxVersion(String.valueOf(botId));
                 String versionNum = maxVersion.data().getString("versionNum");
+                if("0".equals(versionNum)){
+                    versionNum = "-1";
+                }
                 lqw.eq(WorkflowConfig::getVersionNum, versionNum);
             } else {
                 // If not chat mode and version not specified, use default placeholder "-1"
