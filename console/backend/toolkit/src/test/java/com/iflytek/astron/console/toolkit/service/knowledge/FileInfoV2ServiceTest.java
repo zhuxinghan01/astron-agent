@@ -26,6 +26,7 @@ import com.iflytek.astron.console.toolkit.service.task.ExtractKnowledgeTaskServi
 import com.iflytek.astron.console.toolkit.tool.DataPermissionCheckTool;
 import com.iflytek.astron.console.toolkit.tool.FileUploadTool;
 import com.iflytek.astron.console.toolkit.util.S3Util;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -1177,6 +1178,423 @@ class FileInfoV2ServiceTest {
             assertThat(FileInfoV2Service.checkIsPic("image.png")).isTrue();
             assertThat(FileInfoV2Service.checkIsPic("document.pdf")).isFalse();
             assertThat(FileInfoV2Service.checkIsPic("document.txt")).isFalse();
+        }
+
+        /**
+         * Test getRequestCookies with no cookies.
+         */
+        @Test
+        @DisplayName("getRequestCookies - no cookies")
+        void testGetRequestCookies_NoCookies() {
+            when(request.getCookies()).thenReturn(null);
+            assertThat(FileInfoV2Service.getRequestCookies(request)).isEqualTo("");
+        }
+
+        /**
+         * Test getRequestCookies with cookies.
+         */
+        @Test
+        @DisplayName("getRequestCookies - with cookies")
+        void testGetRequestCookies_WithCookies() {
+            Cookie[] cookies = {
+                new Cookie("cookie1", "value1"),
+                new Cookie("cookie2", "value2")
+            };
+            when(request.getCookies()).thenReturn(cookies);
+
+            String result = FileInfoV2Service.getRequestCookies(request);
+
+            assertThat(result).isNotNull();
+            assertThat(result).contains("cookie1=value1");
+            assertThat(result).contains("cookie2=value2");
+        }
+    }
+
+    /**
+     * Test cases for listFileDirectoryTree method.
+     */
+    @Nested
+    @DisplayName("listFileDirectoryTree Tests")
+    class ListFileDirectoryTreeTests {
+
+        /**
+         * Test listFileDirectoryTree - success with multiple levels.
+         */
+        @Test
+        @DisplayName("List file directory tree - success with multiple levels")
+        void testListFileDirectoryTree_Success() {
+            // Given
+            Long fileId = 1L;
+            String appId = "app-001";
+
+            FileDirectoryTree tree1 = new FileDirectoryTree();
+            tree1.setId(1L);
+            tree1.setName("file.txt");
+            tree1.setParentId(2L);
+            tree1.setAppId(appId);
+
+            FileDirectoryTree tree2 = new FileDirectoryTree();
+            tree2.setId(2L);
+            tree2.setName("folder");
+            tree2.setParentId(0L);
+            tree2.setAppId(appId);
+
+            when(fileDirectoryTreeService.getById(1L)).thenReturn(tree1);
+
+            // When
+            List<FileDirectoryTree> result = fileInfoV2Service.listFileDirectoryTree(fileId);
+
+            // Then
+            assertThat(result).isNotNull();
+            // Note: The actual behavior depends on recursiveFindFatherPath implementation
+            verify(fileDirectoryTreeService, times(1)).getById(fileId);
+        }
+
+        /**
+         * Test listFileDirectoryTree - file not found.
+         */
+        @Test
+        @DisplayName("List file directory tree - file not found")
+        void testListFileDirectoryTree_FileNotFound() {
+            // Given
+            Long fileId = 999L;
+
+            when(fileDirectoryTreeService.getById(999L)).thenReturn(null);
+
+            // When
+            List<FileDirectoryTree> result = fileInfoV2Service.listFileDirectoryTree(fileId);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    /**
+     * Test cases for getFileInfoV2ByRepoId method.
+     */
+    @Nested
+    @DisplayName("getFileInfoV2ByRepoId Tests")
+    class GetFileInfoV2ByRepoIdTests {
+
+        /**
+         * Test getFileInfoV2ByRepoId - success with multiple files.
+         */
+        @Test
+        @DisplayName("Get files by repo ID - success with multiple files")
+        void testGetFileInfoV2ByRepoId_Success() {
+            // Given
+            Long repoId = 100L;
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setRepoId(repoId);
+            file1.setName("file1.txt");
+
+            FileInfoV2 file2 = new FileInfoV2();
+            file2.setId(2L);
+            file2.setRepoId(repoId);
+            file2.setName("file2.txt");
+
+            List<FileInfoV2> fileList = Arrays.asList(file1, file2);
+
+            when(fileInfoV2Mapper.getFileInfoV2ByRepoId(repoId)).thenReturn(fileList);
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2ByRepoId(repoId);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getName()).isEqualTo("file1.txt");
+            assertThat(result.get(1).getName()).isEqualTo("file2.txt");
+        }
+
+        /**
+         * Test getFileInfoV2ByRepoId - empty result.
+         */
+        @Test
+        @DisplayName("Get files by repo ID - empty result")
+        void testGetFileInfoV2ByRepoId_EmptyResult() {
+            // Given
+            Long repoId = 999L;
+
+            when(fileInfoV2Mapper.getFileInfoV2ByRepoId(repoId)).thenReturn(Collections.emptyList());
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2ByRepoId(repoId);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    /**
+     * Test cases for getFileInfoV2ByNames method.
+     */
+    @Nested
+    @DisplayName("getFileInfoV2ByNames Tests")
+    class GetFileInfoV2ByNamesTests {
+
+        /**
+         * Test getFileInfoV2ByNames - success.
+         */
+        @Test
+        @DisplayName("Get files by names - success")
+        void testGetFileInfoV2ByNames_Success() {
+            // Given
+            String repoCoreId = "core-repo-001";
+            List<String> fileNames = Arrays.asList("file1.txt", "file2.txt");
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setName("file1.txt");
+
+            FileInfoV2 file2 = new FileInfoV2();
+            file2.setId(2L);
+            file2.setName("file2.txt");
+
+            List<FileInfoV2> fileList = Arrays.asList(file1, file2);
+
+            when(fileInfoV2Mapper.getFileInfoV2ByNames(repoCoreId, fileNames)).thenReturn(fileList);
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2ByNames(repoCoreId, fileNames);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result).hasSize(2);
+        }
+
+        /**
+         * Test getFileInfoV2ByNames - empty result.
+         */
+        @Test
+        @DisplayName("Get files by names - empty result")
+        void testGetFileInfoV2ByNames_EmptyResult() {
+            // Given
+            String repoCoreId = "nonexistent-repo";
+            List<String> fileNames = Arrays.asList("file1.txt");
+
+            when(fileInfoV2Mapper.getFileInfoV2ByNames(repoCoreId, fileNames)).thenReturn(Collections.emptyList());
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2ByNames(repoCoreId, fileNames);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+
+        /**
+         * Test getFileInfoV2ByNames - empty file names list.
+         */
+        @Test
+        @DisplayName("Get files by names - empty file names list")
+        void testGetFileInfoV2ByNames_EmptyFileNames() {
+            // Given
+            String repoCoreId = "core-repo-001";
+            List<String> fileNames = Collections.emptyList();
+
+            when(fileInfoV2Mapper.getFileInfoV2ByNames(repoCoreId, fileNames)).thenReturn(Collections.emptyList());
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2ByNames(repoCoreId, fileNames);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    /**
+     * Test cases for getFileInfoV2UUIDS method.
+     */
+    @Nested
+    @DisplayName("getFileInfoV2UUIDS Tests")
+    class GetFileInfoV2UUIDSTests {
+
+        /**
+         * Test getFileInfoV2UUIDS - success.
+         */
+        @Test
+        @DisplayName("Get files by UUIDs - success")
+        void testGetFileInfoV2UUIDS_Success() {
+            // Given
+            String repoCoreId = "core-repo-001";
+            List<String> existSourceIds = Arrays.asList("uuid-001", "uuid-002");
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+
+            FileInfoV2 file2 = new FileInfoV2();
+            file2.setId(2L);
+            file2.setUuid("uuid-002");
+
+            List<FileInfoV2> fileList = Arrays.asList(file1, file2);
+
+            when(fileInfoV2Mapper.getFileInfoV2UUIDS(repoCoreId, existSourceIds)).thenReturn(fileList);
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2UUIDS(repoCoreId, existSourceIds);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result).hasSize(2);
+        }
+
+        /**
+         * Test getFileInfoV2UUIDS - empty result.
+         */
+        @Test
+        @DisplayName("Get files by UUIDs - empty result")
+        void testGetFileInfoV2UUIDS_EmptyResult() {
+            // Given
+            String repoCoreId = "nonexistent-repo";
+            List<String> existSourceIds = Arrays.asList("uuid-001");
+
+            when(fileInfoV2Mapper.getFileInfoV2UUIDS(repoCoreId, existSourceIds)).thenReturn(Collections.emptyList());
+
+            // When
+            List<FileInfoV2> result = fileInfoV2Service.getFileInfoV2UUIDS(repoCoreId, existSourceIds);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    /**
+     * Test cases for getModelCountByRepoIdAndFileUUIDS method.
+     */
+    @Nested
+    @DisplayName("getModelCountByRepoIdAndFileUUIDS Tests")
+    class GetModelCountByRepoIdAndFileUUIDSTests {
+
+        /**
+         * Test getModelCountByRepoIdAndFileUUIDS - success with count.
+         */
+        @Test
+        @DisplayName("Get model count - success with count")
+        void testGetModelCountByRepoIdAndFileUUIDS_Success() {
+            // Given
+            String repoId = "core-repo-001";
+            String sourceId = "uuid-001";
+
+            when(fileDirectoryTreeMapper.getModelCountByRepoIdAndFileUUIDS(repoId, sourceId)).thenReturn(10);
+
+            // When
+            Integer result = fileInfoV2Service.getModelCountByRepoIdAndFileUUIDS(repoId, sourceId);
+
+            // Then
+            assertThat(result).isEqualTo(10);
+        }
+
+        /**
+         * Test getModelCountByRepoIdAndFileUUIDS - zero count.
+         */
+        @Test
+        @DisplayName("Get model count - zero count")
+        void testGetModelCountByRepoIdAndFileUUIDS_ZeroCount() {
+            // Given
+            String repoId = "nonexistent-repo";
+            String sourceId = "uuid-001";
+
+            when(fileDirectoryTreeMapper.getModelCountByRepoIdAndFileUUIDS(repoId, sourceId)).thenReturn(0);
+
+            // When
+            Integer result = fileInfoV2Service.getModelCountByRepoIdAndFileUUIDS(repoId, sourceId);
+
+            // Then
+            assertThat(result).isEqualTo(0);
+        }
+    }
+
+    /**
+     * Test cases for updateFileInfoV2Status method.
+     */
+    @Nested
+    @DisplayName("updateFileInfoV2Status Tests")
+    class UpdateFileInfoV2StatusTests {
+
+        /**
+         * Test updateFileInfoV2Status - success.
+         */
+        @Test
+        @DisplayName("Update file status - success")
+        void testUpdateFileInfoV2Status_Success() {
+            // Given
+            mockFileInfo.setStatus(ProjectContent.FILE_PARSE_DOING);
+
+            // Mock updateById to avoid MyBatis-Plus dependency
+            doReturn(true).when(fileInfoV2Service).updateById(any(FileInfoV2.class));
+
+            // When
+            fileInfoV2Service.updateFileInfoV2Status(mockFileInfo);
+
+            // Then
+            verify(fileInfoV2Service, times(1)).updateById(mockFileInfo);
+            assertThat(mockFileInfo.getUpdateTime()).isNotNull();
+        }
+    }
+
+    /**
+     * Test cases for getFileSizeMapByUid method.
+     */
+    @Nested
+    @DisplayName("getFileSizeMapByUid Tests")
+    class GetFileSizeMapByUidTests {
+
+        /**
+         * Test getFileSizeMapByUid - success.
+         */
+        @Test
+        @DisplayName("Get file size map by UID - success")
+        void testGetFileSizeMapByUid_Success() {
+            // Given
+            String uid = "user-001";
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setSize(1024L); // 1024 bytes
+
+            FileInfoV2 file2 = new FileInfoV2();
+            file2.setId(2L);
+            file2.setUuid("uuid-002");
+            file2.setSize(2048L); // 2048 bytes
+
+            List<FileInfoV2> fileList = Arrays.asList(file1, file2);
+
+            when(fileInfoV2Mapper.getFileInfoV2byUserId(uid)).thenReturn(fileList);
+
+            // When
+            Map<String, Long> result = fileInfoV2Service.getFileSizeMapByUid(uid);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result).hasSize(2);
+            // Note: The method divides size by 1024, so 1024 bytes becomes 1 KB
+            assertThat(result.get("uuid-001")).isEqualTo(1L); // 1024 / 1024 = 1
+            assertThat(result.get("uuid-002")).isEqualTo(2L); // 2048 / 1024 = 2
+        }
+
+        /**
+         * Test getFileSizeMapByUid - empty result.
+         */
+        @Test
+        @DisplayName("Get file size map by UID - empty result")
+        void testGetFileSizeMapByUid_EmptyResult() {
+            // Given
+            String uid = "nonexistent-user";
+
+            when(fileInfoV2Mapper.getFileInfoV2byUserId(uid)).thenReturn(Collections.emptyList());
+
+            // When
+            Map<String, Long> result = fileInfoV2Service.getFileSizeMapByUid(uid);
+
+            // Then
+            assertThat(result).isEmpty();
         }
     }
 }
