@@ -7,8 +7,6 @@
 
 ![Logo](docs/logo.svg)
 
-**Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all types.**
-
 [![License](https://img.shields.io/badge/license-apache2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/iflytek/astron-agent)](https://github.com/iflytek/astron-agent/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/iflytek/astron-agent/ci.yml)](https://github.com/iflytek/astron-agent/actions)
@@ -34,13 +32,13 @@ English | [简体中文](README-zh.md)
 - [📄 License](#-license)
 
 ## 🔭 What is Astron Agent
-Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all types. 
-It not only provides full-lifecycle capabilities covering model hosting, application development, performance optimization, and access control, but also innovatively integrates intelligent RPA. This allows Agents not only to “think,” but also to truly “act,” completing complex task chains across digital systems and desktop environments.
+Astron Agent is an **enterprise-grade, commercial-friendly** Agentic Workflow development platform that integrates AI workflow orchestration, model management, AI and MCP tool integration, RPA automation, and team collaboration features.
+The platform supports **high-availability** deployment, enabling organizations to rapidly build **scalable, production-ready** intelligent agent applications and establish their AI foundation for the future.
 
 ### Why Choose Astron Agent?
 - **Unified Technology Base, Stable and Reliable:** Shares the same core technology with [iFLYTEK Astron Agent Platform](https://agent.xfyun.cn), inheriting its proven enterprise-grade stability.  
 - **Closed Loop of Thinking + Acting:** Deep integration of intelligent RPA enables Agents to move from "generating answers" to "automatically completing tasks."  
-- **Dual Value for Developers and Enterprises:** Developers can quickly get started and expand, while SMEs can efficiently implement digital workflows.  
+- **Dual Value for Developers and Enterprises:** Developers can quickly get started and expand, while enterprises can efficiently implement digital workflows.  
 
 ### Key Features
 - **Enterprise-Grade High Availability:** Full-stack capabilities for development, building, optimization, and management. Supports one-click deployment with strong reliability.  
