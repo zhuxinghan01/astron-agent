@@ -1,4 +1,4 @@
-![GitHub_README](./docs/imgs/GitHub_README.png)
+![Astron_Readme](./docs/imgs/Astron_Readme.png)
 
 # 星辰Agent - 智能体开发平台
 
