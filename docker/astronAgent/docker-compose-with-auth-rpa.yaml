@@ -12,7 +12,10 @@ include:
     env_file: .env
 
   # Include astronRPA services
-  # Uses: docker/astronAgent/astronRPA/.env
+  # Uses: docker/astronAgent/.env + docker/astronAgent/astronRPA/.env
+  # Parent .env is loaded first, astronRPA/.env can override if needed
   - path: astronRPA/docker-compose.yml
     project_directory: astronRPA
-    env_file: astronRPA/.env
+    env_file:
+      - .env
+      - astronRPA/.env
