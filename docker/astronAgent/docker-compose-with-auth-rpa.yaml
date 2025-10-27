@@ -21,3 +21,11 @@ include:
     env_file:
       - .env
       - astronRPA/.env
+
+# ============================================================================
+# Network Configuration
+# ============================================================================
+# Unified network definition to avoid conflicts from multiple includes
+networks:
+  astron-agent-network:
+    driver: bridge
