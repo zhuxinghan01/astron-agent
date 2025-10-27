@@ -166,20 +166,14 @@ HOST_BASE_ADDRESS=http://localhost
 
 ### 第三步：启动 AstronAgent 核心服务（包含 Casdoor 认证服务）
 
-启动 AstronAgent 服务请运行我们的 [docker-compose.yaml](/docker/astronAgent/docker-compose.yaml) 文件。**该文件已通过 `include` 机制集成了 Casdoor 认证服务**，会自动启动 Casdoor。
+启动 AstronAgent 服务请运行我们的 [docker-compose-with-auth.yaml](/docker/astronAgent/docker-compose-with-auth.yaml) 文件。**该文件已通过 `include` 机制集成了 Casdoor 认证服务**，会自动启动 Casdoor。
 
 ```bash
 # 进入 astronAgent 目录
 cd docker/astronAgent
 
 # 启动所有服务（包含 Casdoor）
-docker compose up -d
-
-# 查看服务状态
-docker compose ps
-
-# 查看服务日志
-docker compose logs -f
+docker compose -f docker-compose-with-auth.yaml up -d
 ```
 
 **说明：**
