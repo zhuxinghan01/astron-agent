@@ -1,3 +1,6 @@
+![GitHub_README](./docs/imgs/GitHub_README.png)
+
+
 # Astron Agent - Agent Development Platform
 
 <div align="center">
