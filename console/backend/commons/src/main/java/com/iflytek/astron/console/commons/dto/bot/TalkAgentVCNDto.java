@@ -4,16 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TalkAgentVCNDto {
-    private String vcnName;
-    private String gender;
-    private List<String> language;
     private String vcn;
+    private String gender;
+    private String tag;
+    private String language;
+    private String vcnName;
+    private String example;
     private String avatar;
+    private String emotion;
 }
 
