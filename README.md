@@ -15,6 +15,7 @@ English | [简体中文](README-zh.md)
 ## 📑 Table of Contents
 
 - [🔭 What is Astron Agent?](#-What-is-Astron-Agent)
+- [📰 News](#-news)
 - [🚀 Quick Start](#-quick-start)
   - [Option 1: Docker Compose](#option-1-docker-compose-recommended-for-quick-start)
   - [Option 2: Helm](#option-2-helm-for-kubernetes-environments)
@@ -49,6 +50,10 @@ The platform supports **high-availability** deployment, enabling organizations t
 
 ![Architecture Overview](./docs/imgs/structure.png "Architecture Overview")
 
+## 📰 News
+
+- **[Astron Hackathon @ 2025 iFLYTEK Global 1024 Developer Festival](https://luma.com/9zmbc6xb)**
+
 ## 🚀 Quick Start
 
 We offer two deployment methods to meet different scenarios:
@@ -65,57 +70,11 @@ cd docker/astronAgent
 # Copy environment configuration
 cp .env.example .env
 
-# Edit environment configuration
+# Edit environment configuration (refer to docs/DEPLOYMENT_GUIDE_WITH_AUTH.md for details)
 vim .env
-```
-
-#### Configure iFLYTEK Open Platform APP_ID, API_KEY, and Related Information
-
-For documentation, see: https://www.xfyun.cn/doc/platform/quickguide.html
-
-After creating your application, you may need to purchase or claim API authorization service quotas for the corresponding capabilities:
-- Spark LLM API: https://xinghuo.xfyun.cn/sparkapi
-  (For the LLM API, you'll need an additional SPARK_API_PASSWORD available on the page)
-  (The text AI generation/optimization feature for instructional assistants requires enabling Spark Ultra capability at https://console.xfyun.cn/services/bm4)
-- Real-time Speech Recognition API: https://console.xfyun.cn/services/rta
-- Image Generation API: https://www.xfyun.cn/services/wtop
-
-Edit the `docker/astronAgent/.env` file and update the relevant environment variables:
-```env
-PLATFORM_APP_ID=your-app-id
-PLATFORM_API_KEY=your-api-key
-PLATFORM_API_SECRET=your-api-secret
-
-SPARK_API_PASSWORD=your-api-password
-SPARK_RTASR_API_KEY=your-rtasr-api-key
-```
-
-#### Configure Service Host Address
-
-Edit the `docker/astronAgent/.env` file to configure the AstronAgent service host address:
-
-```env
-HOST_BASE_ADDRESS=http://localhost
-```
-
-**Note:**
-- If you're using a domain name for access, replace `localhost` with your domain name
-- Ensure nginx and minio ports are properly exposed
-
-#### Start the Project
-
-```bash
-# Navigate to astronAgent directory
-cd docker/astronAgent
 
 # Start all services (including Casdoor)
 docker compose -f docker-compose-with-auth.yaml up -d
-
-# Check service status
-docker compose ps
-
-# View service logs
-docker compose logs -f
 ```
 
 #### 📊 Service Access Addresses
@@ -175,6 +134,11 @@ We welcome contributions of all kinds! Please see our [Contributing Guide](CONTR
 
 - 💬 Community Discussion: [GitHub Discussions](https://github.com/iflytek/astron-agent/discussions)
 - 🐛 Bug Reports: [Issues](https://github.com/iflytek/astron-agent/issues)
+- 👥 WeChat Work Group:
+
+<div align="center">
+  <img src="./docs/imgs/WeCom_Group.png" alt="WeChat Work Group" width="300">
+</div>
 
 ## 📄 Open Source License
 
