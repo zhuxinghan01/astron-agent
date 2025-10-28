@@ -12,20 +12,6 @@
 
 </div>
 
-## 📑 目录
-
-- [🔭 星辰 Agent 是什么](#-星辰-agent-是什么)
-- [📰 新闻动态](#-新闻动态)
-- [🚀 快速开始](#-快速开始)
-  - [方式一：Docker Compose](#方式一docker-compose推荐快速体验)
-  - [方式二：Helm](#方式二helm适用于-kubernetes-环境)
-- [📖 使用星辰](#-使用星辰)
-- [📚 文档](#-文档)
-- [🤝 参与贡献](#-参与贡献)
-- [🌟 Star 历史](#-star-历史)
-- [📞 支持](#-支持)
-- [📄 开源协议](#-开源协议)
-
 ## 🔭 星辰 Agent 是什么
 
 星辰Agent是一个**企业级、商业友好**的 Agentic Workflow开发平台，融合了 AI 工作流编排、模型管理、AI 与 MCP 工具集、RPA 自动化和团队空间等特性。
@@ -42,15 +28,6 @@
 - **智能RPA融合**：跨系统流程自动化，让Agent具备高可控执行力，实现“从决策到动作”的完整闭环。
 - **即用工具生态**：集成[讯飞开放平台](https://www.xfyun.cn)海量AI能力与工具，历经数百万开发者验证，免开发快速接入。
 - **灵活模型支持**：多种接入方式，支持大模型API快速接入验证到企业级MaaS本地集群一键部署，满足不同规模需求。
-
-### 开发支持
-- **多语言后端**：支持 Java、Go、Python 等主流语言，前端适配 TypeScript + React 技术栈。
-- **完整工具链**：提供 API 文档、部署指南、故障排查手册，降低学习与维护成本。
-- **一键部署**：内置 Docker 化环境，开箱即用，快速启动项目。
-
-## 架构概览
-
-![Architecture Overview](./docs/imgs/structure-zh.png "Architecture Overview")
 
 ## 📰 新闻动态
 
@@ -104,7 +81,7 @@ docker compose -f docker-compose-with-auth.yaml up -d
 
 ---
 
-> 📖 完整的部署说明和配置详情，请查看[部署指南](docs/DEPLOYMENT_GUIDE_zh.md)
+> 📖 完整的部署说明和配置详情，请查看[部署指南](docs/DEPLOYMENT_GUIDE_WITH_AUTH_zh.md)
 
 ## 📖 使用星辰Agent云服务
 
