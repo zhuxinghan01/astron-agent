@@ -125,7 +125,7 @@ docker compose logs -f
 
 > 📖 完整的部署说明和配置详情，请查看[部署指南](docs/DEPLOYMENT_GUIDE_zh.md)
 
-## 📖 使用星辰
+## 📖 使用星辰Agent云服务
 
 **快速体验**：星辰Agent提供一个即开即用的云服务环境，用于创建和管理智能体。免费快速体验地址： [https://agent.xfyun.cn](https://agent.xfyun.cn)。
 
@@ -158,17 +158,4 @@ docker compose logs -f
 
 ## 📄 开源协议
 
-本项目基于 [Apache 2.0 License](LICENSE) 协议开源。
-
----
-
-<div align="center">
-
-**由 iFLYTEK 开发维护**
-
-[![Follow](https://img.shields.io/github/followers/iflytek?style=social&label=关注)](https://github.com/iflytek)
-[![Star](https://img.shields.io/github/stars/iflytek/astron-agent?style=social&label=Star)](https://github.com/iflytek/astron-agent)
-[![Fork](https://img.shields.io/github/forks/iflytek/astron-agent?style=social&label=Fork)](https://github.com/iflytek/astron-agent/fork)
-[![Watch](https://img.shields.io/github/watchers/iflytek/astron-agent?style=social&label=Watch)](https://github.com/iflytek/astron-agent/watchers)
-
-</div>
+本项目基于 [Apache 2.0 License](LICENSE) 协议开源，允许自由使用、修改、分发，并可无限制地进行商业使用。。
