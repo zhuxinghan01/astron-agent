@@ -10,8 +10,6 @@
 
 English | [简体中文](README-zh.md)
 
-**Astron Agent is an enterprise-grade Agent development platform designed for AI developers and organizations of all types.**
-
 </div>
 
 ## 📑 Table of Contents
