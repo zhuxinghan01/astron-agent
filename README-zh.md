@@ -12,6 +12,20 @@
 
 </div>
 
+## 📑 目录
+
+- [🔭 星辰 Agent 是什么](#-星辰-agent-是什么)
+- [📰 新闻动态](#-新闻动态)
+- [🚀 快速开始](#-快速开始)
+  - [方式一：Docker Compose](#方式一docker-compose推荐快速体验)
+  - [方式二：Helm](#方式二helm适用于-kubernetes-环境)
+- [📖 使用星辰](#-使用星辰)
+- [📚 文档](#-文档)
+- [🤝 参与贡献](#-参与贡献)
+- [🌟 Star 历史](#-star-历史)
+- [📞 支持](#-支持)
+- [📄 开源协议](#-开源协议)
+
 ## 🔭 星辰 Agent 是什么
 
 星辰Agent是一个**企业级、商业友好**的 Agentic Workflow开发平台，融合了 AI 工作流编排、模型管理、AI 与 MCP 工具集、RPA 自动化和团队空间等特性。
@@ -29,6 +43,19 @@
 - **即用工具生态**：集成[讯飞开放平台](https://www.xfyun.cn)海量AI能力与工具，历经数百万开发者验证，免开发快速接入。
 - **灵活模型支持**：多种接入方式，支持大模型API快速接入验证到企业级MaaS本地集群一键部署，满足不同规模需求。
 
+### 开发支持
+- **多语言后端**：支持 Java、Go、Python 等主流语言，前端适配 TypeScript + React 技术栈。
+- **完整工具链**：提供 API 文档、部署指南、故障排查手册，降低学习与维护成本。
+- **一键部署**：内置 Docker 化环境，开箱即用，快速启动项目。
+
+## 架构概览
+
+![Architecture Overview](./docs/imgs/structure-zh.png "Architecture Overview")
+
+## 📰 新闻动态
+
+- **[Astron 黑客松@2025科大讯飞全球1024开发者节](https://luma.com/9zmbc6xb)**
+
 ## 🚀 快速开始
 
 我们提供两种部署方式，满足不同场景需求:
@@ -45,57 +72,11 @@ cd docker/astronAgent
 # 复制环境变量配置
 cp .env.example .env
 
-# 编辑环境变量配置
+# 编辑环境变量配置（参考 docs/DEPLOYMENT_GUIDE_WITH_AUTH_zh.md 文档）
 vim .env
-```
-
-#### 配置 讯飞开放平台 相关 APP_ID API_KEY 等信息
-
-获取文档详见：https://www.xfyun.cn/doc/platform/quickguide.html
-
-创建应用完成后可能需要购买或领取相应能力的API授权服务量
-- 星火大模型API: https://xinghuo.xfyun.cn/sparkapi
-  (对于大模型API会有额外的SPARK_API_PASSWORD需要在页面上获取)
-  (指令型助手对应的文本AI生成/优化功能需要开通Spark Ultra能力，页面地址为https://console.xfyun.cn/services/bm4)
-- 实时语音转写API: https://console.xfyun.cn/services/rta
-- 图片生成API: https://www.xfyun.cn/services/wtop
-
-编辑 docker/astronAgent/.env 文件，更新相关环境变量：
-```env
-PLATFORM_APP_ID=your-app-id
-PLATFORM_API_KEY=your-api-key
-PLATFORM_API_SECRET=your-api-secret
-
-SPARK_API_PASSWORD=your-api-password
-SPARK_RTASR_API_KEY=your-rtasr-api-key
-```
-
-#### 配置服务主机地址
-
-编辑 docker/astronAgent/.env 文件，配置 AstronAgent 服务的主机地址：
-
-```env
-HOST_BASE_ADDRESS=http://localhost
-```
-
-**说明：**
-- 如果您使用域名访问，请将 `localhost` 替换为您的域名
-- 确保 nginx 和 minio 的端口已正确开放
-
-#### 启动项目
-
-```bash
-# 进入 astronAgent 目录
-cd docker/astronAgent
 
 # 启动所有服务（包含 Casdoor）
 docker compose -f docker-compose-with-auth.yaml up -d
-
-# 查看服务状态
-docker compose ps
-
-# 查看服务日志
-docker compose logs -f
 ```
 
 #### 📊 服务访问地址
@@ -155,6 +136,11 @@ docker compose logs -f
 
 - 💬 社区讨论: [GitHub Discussions](https://github.com/iflytek/astron-agent/discussions)
 - 🐛 问题反馈: [Issues](https://github.com/iflytek/astron-agent/issues)
+- 👥 企业微信群:
+
+<div align="center">
+  <img src="./docs/imgs/WeCom_Group.png" alt="企业微信群" width="300">
+</div>
 
 ## 📄 开源协议
 

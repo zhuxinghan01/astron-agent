@@ -12,6 +12,20 @@ English | [简体中文](README-zh.md)
 
 </div>
 
+## 📑 Table of Contents
+
+- [🔭 What is Astron Agent?](#-What-is-Astron-Agent)
+- [📰 News](#-news)
+- [🚀 Quick Start](#-quick-start)
+  - [Option 1: Docker Compose](#option-1-docker-compose-recommended-for-quick-start)
+  - [Option 2: Helm](#option-2-helm-for-kubernetes-environments)
+- [📖 Using Astron](#-using-astron)
+- [📚 Documentation](#-documentation)
+- [🤝 Contributing](#-contributing)
+- [🌟 Star History](#-star-history)
+- [📞 Support](#-support)
+- [📄 License](#-license)
+
 ## 🔭 What is Astron Agent
 Astron Agent is an **enterprise-grade, commercial-friendly** Agentic Workflow development platform that integrates AI workflow orchestration, model management, AI and MCP tool integration, RPA automation, and team collaboration features.
 The platform supports **high-availability** deployment, enabling organizations to rapidly build **scalable, production-ready** intelligent agent applications and establish their AI foundation for the future.
@@ -27,6 +41,19 @@ The platform supports **high-availability** deployment, enabling organizations t
 - **Intelligent RPA Integration:** Enables cross-system process automation, empowering Agents with controllable execution to achieve a complete loop “from decision to action.”  
 - **Ready-to-Use Tool Ecosystem:** Integrates massive AI capabilities and tools from the [iFLYTEK Open Platform](https://www.xfyun.cn), validated by millions of developers, supporting plug-and-play integration without extra development.  
 - **Flexible Large Model Support:** Offers diverse access methods, from rapid API-based model access and validation to one-click deployment of enterprise-level MaaS (Model as a Service) on-premises clusters, meeting needs of all scales.  
+
+### Developer Support
+- **Multi-language Backend:** Supports mainstream languages such as Java, Go, and Python; frontend adapted to TypeScript + React stack.  
+- **Comprehensive Toolchain:** Provides API documentation, deployment guides, and troubleshooting manuals to reduce learning and maintenance costs.  
+- **One-Click Deployment:** Built-in Dockerized environment for out-of-the-box setup and rapid project launch.  
+
+## Architecture Overview
+
+![Architecture Overview](./docs/imgs/structure.png "Architecture Overview")
+
+## 📰 News
+
+- **[Astron Hackathon @ 2025 iFLYTEK Global 1024 Developer Festival](https://luma.com/9zmbc6xb)**
 
 ## 🚀 Quick Start
 
@@ -44,57 +71,11 @@ cd docker/astronAgent
 # Copy environment configuration
 cp .env.example .env
 
-# Edit environment configuration
+# Edit environment configuration (refer to docs/DEPLOYMENT_GUIDE_WITH_AUTH.md for details)
 vim .env
-```
-
-#### Configure iFLYTEK Open Platform APP_ID, API_KEY, and Related Information
-
-For documentation, see: https://www.xfyun.cn/doc/platform/quickguide.html
-
-After creating your application, you may need to purchase or claim API authorization service quotas for the corresponding capabilities:
-- Spark LLM API: https://xinghuo.xfyun.cn/sparkapi
-  (For the LLM API, you'll need an additional SPARK_API_PASSWORD available on the page)
-  (The text AI generation/optimization feature for instructional assistants requires enabling Spark Ultra capability at https://console.xfyun.cn/services/bm4)
-- Real-time Speech Recognition API: https://console.xfyun.cn/services/rta
-- Image Generation API: https://www.xfyun.cn/services/wtop
-
-Edit the `docker/astronAgent/.env` file and update the relevant environment variables:
-```env
-PLATFORM_APP_ID=your-app-id
-PLATFORM_API_KEY=your-api-key
-PLATFORM_API_SECRET=your-api-secret
-
-SPARK_API_PASSWORD=your-api-password
-SPARK_RTASR_API_KEY=your-rtasr-api-key
-```
-
-#### Configure Service Host Address
-
-Edit the `docker/astronAgent/.env` file to configure the AstronAgent service host address:
-
-```env
-HOST_BASE_ADDRESS=http://localhost
-```
-
-**Note:**
-- If you're using a domain name for access, replace `localhost` with your domain name
-- Ensure nginx and minio ports are properly exposed
-
-#### Start the Project
-
-```bash
-# Navigate to astronAgent directory
-cd docker/astronAgent
 
 # Start all services (including Casdoor)
 docker compose -f docker-compose-with-auth.yaml up -d
-
-# Check service status
-docker compose ps
-
-# View service logs
-docker compose logs -f
 ```
 
 #### 📊 Service Access Addresses
@@ -154,6 +135,11 @@ We welcome contributions of all kinds! Please see our [Contributing Guide](CONTR
 
 - 💬 Community Discussion: [GitHub Discussions](https://github.com/iflytek/astron-agent/discussions)
 - 🐛 Bug Reports: [Issues](https://github.com/iflytek/astron-agent/issues)
+- 👥 WeChat Work Group:
+
+<div align="center">
+  <img src="./docs/imgs/WeCom_Group.png" alt="WeChat Work Group" width="300">
+</div>
 
 ## 📄 Open Source License
 
