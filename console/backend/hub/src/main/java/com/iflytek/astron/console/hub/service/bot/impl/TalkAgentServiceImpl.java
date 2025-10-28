@@ -120,6 +120,6 @@ public class TalkAgentServiceImpl implements TalkAgentService {
         // Synchronize Xingchen MAAS
         botChainService.cloneWorkFlow(uid, Long.valueOf(sourceId), targetId, request, spaceId,
                 BotVersionEnum.TALK.getVersion(), talkAgentUpgradeDto.getTalkAgentConfig());
-        return null;
+        return ResponseEnum.SUCCESS;
     }
 }
