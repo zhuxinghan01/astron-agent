@@ -9,6 +9,10 @@ import com.iflytek.astron.console.commons.exception.BusinessException;
 import com.iflytek.astron.console.commons.util.ChatFileHttpClient;
 import com.iflytek.astron.console.commons.util.S3ClientUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
+import com.iflytek.astron.console.toolkit.entity.dto.KnowledgeDto;
+import com.iflytek.astron.console.toolkit.entity.table.knowledge.MysqlKnowledge;
+import com.iflytek.astron.console.toolkit.entity.table.knowledge.MysqlPreviewKnowledge;
+import com.iflytek.astron.console.toolkit.entity.vo.repo.KnowledgeQueryVO;
 import com.iflytek.astron.console.toolkit.util.SpringUtils;
 import com.iflytek.astron.console.toolkit.common.Result;
 import com.iflytek.astron.console.toolkit.common.constant.ProjectContent;
@@ -36,8 +40,13 @@ import com.iflytek.astron.console.toolkit.service.task.ExtractKnowledgeTaskServi
 import com.iflytek.astron.console.toolkit.tool.DataPermissionCheckTool;
 import com.iflytek.astron.console.toolkit.tool.FileUploadTool;
 import com.iflytek.astron.console.toolkit.util.S3Util;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.ByteArrayOutputStream;
+
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -3208,6 +3217,558 @@ class FileInfoV2ServiceTest {
             PageData pageData = (PageData) result;
             assertThat(pageData.getTotalCount()).isEqualTo(0L);
             assertThat(pageData.getPageData()).isEmpty();
+        }
+    }
+
+    /**
+     * Test cases for listPreviewKnowledgeByPage method.
+     */
+    @Nested
+    @DisplayName("listPreviewKnowledgeByPage Tests")
+    class ListPreviewKnowledgeByPageTests {
+
+        /**
+         * Test listPreviewKnowledgeByPage - success with MySQL/MongoDB (non-Spark).
+         */
+        @Test
+        @DisplayName("List preview knowledge - success (non-Spark)")
+        void testListPreviewKnowledgeByPage_Success_NonSpark() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1", "2"));
+            queryVO.setTag("AIUI-RAG2");
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setLastUuid("last-uuid-001");
+
+            FileInfoV2 file2 = new FileInfoV2();
+            file2.setId(2L);
+            file2.setUuid("uuid-002");
+            file2.setLastUuid("last-uuid-002");
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1, file2));
+            doNothing().when(dataPermissionCheckTool).checkFileInfoListVisible(anyList());
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+
+            MysqlPreviewKnowledge knowledge1 = new MysqlPreviewKnowledge();
+            knowledge1.setId("k1");
+            knowledge1.setFileId("last-uuid-001");
+            knowledge1.setContent(new JSONObject());
+            knowledge1.setCharCount(100L);
+
+            MysqlPreviewKnowledge knowledge2 = new MysqlPreviewKnowledge();
+            knowledge2.setId("k2");
+            knowledge2.setFileId("last-uuid-002");
+            knowledge2.setContent(new JSONObject());
+            knowledge2.setCharCount(150L);
+
+            when(previewKnowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+            when(previewKnowledgeMapper.findByFileIdIn(anyList()))
+                    .thenReturn(Arrays.asList(knowledge1, knowledge2));
+
+            QueryWrapper<FileInfoV2> wrapper1 = new QueryWrapper<>();
+            wrapper1.eq("last_uuid", "last-uuid-001");
+            QueryWrapper<FileInfoV2> wrapper2 = new QueryWrapper<>();
+            wrapper2.eq("last_uuid", "last-uuid-002");
+
+            when(fileInfoV2Mapper.selectOne(any(QueryWrapper.class), anyBoolean()))
+                    .thenReturn(file1, file2);
+
+            // When
+            Object result = fileInfoV2Service.listPreviewKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result).isInstanceOf(PageData.class);
+            PageData pageData = (PageData) result;
+            assertThat(pageData.getTotalCount()).isEqualTo(2L);
+            assertThat(pageData.getPageData()).isNotNull();
+        }
+
+        /**
+         * Test listPreviewKnowledgeByPage - empty result.
+         */
+        @Test
+        @DisplayName("List preview knowledge - empty result")
+        void testListPreviewKnowledgeByPage_EmptyResult() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setTag("AIUI-RAG2");
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setLastUuid("last-uuid-001");
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileInfoListVisible(anyList());
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(previewKnowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+            when(previewKnowledgeMapper.findByFileIdIn(anyList()))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            Object result = fileInfoV2Service.listPreviewKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            PageData pageData = (PageData) result;
+            assertThat(pageData.getTotalCount()).isEqualTo(0L);
+            assertThat(pageData.getPageData()).isEmpty();
+        }
+
+        /**
+         * Test listPreviewKnowledgeByPage - with audit block count.
+         */
+        @Test
+        @DisplayName("List preview knowledge - with audit block count")
+        void testListPreviewKnowledgeByPage_WithAuditBlock() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setTag("AIUI-RAG2");
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setLastUuid("last-uuid-001");
+
+            MysqlPreviewKnowledge blockedKnowledge = new MysqlPreviewKnowledge();
+            blockedKnowledge.setId("kb1");
+            blockedKnowledge.setFileId("last-uuid-001");
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileInfoListVisible(anyList());
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(previewKnowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Arrays.asList(blockedKnowledge));
+            when(previewKnowledgeMapper.findByFileIdIn(anyList()))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            Object result = fileInfoV2Service.listPreviewKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            PageData pageData = (PageData) result;
+            assertThat(pageData.getExtMap()).containsKey("auditBlockCount");
+            assertThat(pageData.getExtMap().get("auditBlockCount")).isEqualTo(1L);
+        }
+    }
+
+    /**
+     * Test cases for listKnowledgeByPage method.
+     */
+    @Nested
+    @DisplayName("listKnowledgeByPage Tests")
+    class ListKnowledgeByPageTests {
+
+        /**
+         * Test listKnowledgeByPage - success with basic query.
+         */
+        @Test
+        @DisplayName("List knowledge by page - success")
+        void testListKnowledgeByPage_Success() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setSource("AIUI-RAG2");
+
+            MysqlKnowledge knowledge = new MysqlKnowledge();
+            knowledge.setId("k1");
+            knowledge.setFileId("uuid-001");
+            JSONObject content = new JSONObject();
+            content.put("content", "test knowledge content");
+            knowledge.setContent(content);
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(knowledgeMapper.findByFileIdIn(anyList())).thenReturn(Arrays.asList(knowledge));
+            when(knowledgeMapper.countByFileIdIn(anyList())).thenReturn(1L);
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+            when(fileInfoV2Mapper.selectOne(any(QueryWrapper.class), anyBoolean())).thenReturn(file1);
+
+            // When
+            PageData<KnowledgeDto> result = fileInfoV2Service.listKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalCount()).isEqualTo(1L);
+            assertThat(result.getPageData()).hasSize(1);
+            assertThat(result.getExtMap()).containsKey("auditBlockCount");
+        }
+
+        /**
+         * Test listKnowledgeByPage - with content query filter.
+         */
+        @Test
+        @DisplayName("List knowledge by page - with content query")
+        void testListKnowledgeByPage_WithContentQuery() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+            queryVO.setQuery("test");
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setSource("AIUI-RAG2");
+
+            MysqlKnowledge knowledge = new MysqlKnowledge();
+            knowledge.setId("k1");
+            knowledge.setFileId("uuid-001");
+            JSONObject content = new JSONObject();
+            content.put("content", "test knowledge content");
+            knowledge.setContent(content);
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(knowledgeMapper.findByFileIdInAndContentLike(anyList(), eq("test")))
+                    .thenReturn(Arrays.asList(knowledge));
+            when(knowledgeMapper.countByFileIdInAndContentLike(anyList(), eq("test")))
+                    .thenReturn(1L);
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+            when(fileInfoV2Mapper.selectOne(any(QueryWrapper.class), anyBoolean())).thenReturn(file1);
+
+            // When
+            PageData<KnowledgeDto> result = fileInfoV2Service.listKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalCount()).isEqualTo(1L);
+            verify(knowledgeMapper, times(1)).findByFileIdInAndContentLike(anyList(), eq("test"));
+        }
+
+        /**
+         * Test listKnowledgeByPage - with audit type filter.
+         */
+        @Test
+        @DisplayName("List knowledge by page - with audit type filter")
+        void testListKnowledgeByPage_WithAuditType() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+            queryVO.setAuditType(1);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setSource("AIUI-RAG2");
+
+            MysqlKnowledge knowledge = new MysqlKnowledge();
+            knowledge.setId("k1");
+            knowledge.setFileId("uuid-001");
+            JSONObject content = new JSONObject();
+            content.put("content", "blocked content");
+            knowledge.setContent(content);
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Arrays.asList(knowledge));
+            when(knowledgeMapper.countByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(1L);
+            when(fileInfoV2Mapper.selectOne(any(QueryWrapper.class), anyBoolean())).thenReturn(file1);
+
+            // When
+            PageData<KnowledgeDto> result = fileInfoV2Service.listKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalCount()).isEqualTo(1L);
+            verify(knowledgeMapper, times(2)).findByFileIdInAndAuditType(anyList(), eq(1));
+        }
+
+        /**
+         * Test listKnowledgeByPage - empty result.
+         */
+        @Test
+        @DisplayName("List knowledge by page - empty result")
+        void testListKnowledgeByPage_EmptyResult() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(knowledgeMapper.findByFileIdIn(anyList())).thenReturn(Collections.emptyList());
+            when(knowledgeMapper.countByFileIdIn(anyList())).thenReturn(0L);
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            PageData<KnowledgeDto> result = fileInfoV2Service.listKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getTotalCount()).isEqualTo(0L);
+            assertThat(result.getPageData()).isEmpty();
+        }
+
+        /**
+         * Test listKnowledgeByPage - with space ID (skip permission check).
+         */
+        @Test
+        @DisplayName("List knowledge by page - with space ID")
+        void testListKnowledgeByPage_WithSpaceId() {
+            // Given
+            spaceInfoUtilMock.when(SpaceInfoUtil::getSpaceId).thenReturn(123L);
+
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setPageNo(1);
+            queryVO.setPageSize(10);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setSource("AIUI-RAG2");
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            when(knowledgeMapper.findByFileIdIn(anyList())).thenReturn(Collections.emptyList());
+            when(knowledgeMapper.countByFileIdIn(anyList())).thenReturn(0L);
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Collections.emptyList());
+
+            // When
+            PageData<KnowledgeDto> result = fileInfoV2Service.listKnowledgeByPage(queryVO);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(dataPermissionCheckTool, never()).checkFileBelong(any(FileInfoV2.class));
+        }
+    }
+
+    /**
+     * Test cases for downloadKnowledgeByViolation method.
+     */
+    @Nested
+    @DisplayName("downloadKnowledgeByViolation Tests")
+    class DownloadKnowledgeByViolationTests {
+
+        private HttpServletResponse response;
+        private ByteArrayOutputStream byteArrayOutputStream;
+        private ServletOutputStream servletOutputStream;
+
+        @BeforeEach
+        void setUpDownloadTests() throws IOException {
+            response = mock(HttpServletResponse.class);
+            byteArrayOutputStream = new ByteArrayOutputStream();
+
+            // Create a real ServletOutputStream that delegates to ByteArrayOutputStream
+            servletOutputStream = new ServletOutputStream() {
+                @Override
+                public void write(int b) throws IOException {
+                    byteArrayOutputStream.write(b);
+                }
+
+                @Override
+                public void write(byte[] b, int off, int len) throws IOException {
+                    byteArrayOutputStream.write(b, off, len);
+                }
+
+                @Override
+                public boolean isReady() {
+                    return true;
+                }
+
+                @Override
+                public void setWriteListener(jakarta.servlet.WriteListener writeListener) {
+                }
+            };
+
+            lenient().when(response.getOutputStream()).thenReturn(servletOutputStream);
+            lenient().doNothing().when(response).reset();
+        }
+
+        /**
+         * Test downloadKnowledgeByViolation - success with preview source.
+         */
+        @Test
+        @DisplayName("Download knowledge by violation - success (preview)")
+        void testDownloadKnowledgeByViolation_Success_Preview() throws IOException {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setSource(0);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setName("test-file.txt");
+            file1.setRepoId(100L);
+
+            MysqlPreviewKnowledge knowledge = new MysqlPreviewKnowledge();
+            knowledge.setId("k1");
+            knowledge.setFileId("uuid-001");
+            JSONObject content = new JSONObject();
+            content.put("content", "violation content");
+            content.put("auditSuggest", "block");
+            content.put("auditReason", "inappropriate content");
+            knowledge.setContent(content);
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            when(repoService.getById(100L)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+            when(previewKnowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Arrays.asList(knowledge));
+
+            // When
+            fileInfoV2Service.downloadKnowledgeByViolation(response, queryVO);
+
+            // Then
+            verify(response, times(1)).reset();
+            verify(response, times(1)).setContentType("application/msexcel");
+            verify(response, times(1)).setHeader(eq("Content-disposition"), anyString());
+            // Verify data was written to the output stream
+            assertThat(byteArrayOutputStream.size()).isGreaterThan(0);
+        }
+
+        /**
+         * Test downloadKnowledgeByViolation - success with formal source.
+         */
+        @Test
+        @DisplayName("Download knowledge by violation - success (formal)")
+        void testDownloadKnowledgeByViolation_Success_Formal() throws IOException {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("1"));
+            queryVO.setSource(1);
+
+            FileInfoV2 file1 = new FileInfoV2();
+            file1.setId(1L);
+            file1.setUuid("uuid-001");
+            file1.setName("test-file.txt");
+            file1.setRepoId(100L);
+
+            MysqlKnowledge knowledge = new MysqlKnowledge();
+            knowledge.setId("k1");
+            knowledge.setFileId("uuid-001");
+            JSONObject content = new JSONObject();
+            content.put("content", "violation content");
+            knowledge.setContent(content);
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Arrays.asList(file1));
+            when(repoService.getById(100L)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+            when(knowledgeMapper.findByFileIdInAndAuditType(anyList(), eq(1)))
+                    .thenReturn(Arrays.asList(knowledge));
+
+            // When
+            fileInfoV2Service.downloadKnowledgeByViolation(response, queryVO);
+
+            // Then
+            verify(response, times(1)).reset();
+            verify(response, times(1)).setContentType("application/msexcel");
+            verify(response, times(1)).setHeader(eq("Content-disposition"), anyString());
+            verify(knowledgeMapper, times(1)).findByFileIdInAndAuditType(anyList(), eq(1));
+            // Verify data was written to the output stream
+            assertThat(byteArrayOutputStream.size()).isGreaterThan(0);
+        }
+
+        /**
+         * Test downloadKnowledgeByViolation - file not found.
+         */
+        @Test
+        @DisplayName("Download knowledge by violation - file not found")
+        void testDownloadKnowledgeByViolation_FileNotFound() {
+            // Given
+            KnowledgeQueryVO queryVO = new KnowledgeQueryVO();
+            queryVO.setFileIds(Arrays.asList("999"));
+
+            when(fileInfoV2Mapper.listByIds(anyList())).thenReturn(Collections.emptyList());
+
+            // When & Then
+            assertThatThrownBy(() -> fileInfoV2Service.downloadKnowledgeByViolation(response, queryVO))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting("responseEnum")
+                    .isEqualTo(ResponseEnum.REPO_FILE_NOT_EXIST);
+        }
+    }
+
+    /**
+     * Test cases for embeddingBack method.
+     */
+    @Nested
+    @DisplayName("embeddingBack Tests")
+    class EmbeddingBackTests {
+
+        /**
+         * Test embeddingBack - success with non-Spark tag.
+         */
+        @Test
+        @DisplayName("Embedding back - success (non-Spark)")
+        void testEmbeddingBack_Success_NonSpark() {
+            // Given
+            DealFileVO dealFileVO = new DealFileVO();
+            dealFileVO.setFileIds(Arrays.asList("1"));
+            dealFileVO.setTag("AIUI-RAG2");
+
+            mockFileInfo.setStatus(ProjectContent.FILE_PARSE_SUCCESSED);
+
+            FileDirectoryTree tree = new FileDirectoryTree();
+            tree.setId(1L);
+            tree.setFileId(1L);
+            tree.setAppId("100");
+
+            when(fileInfoV2Mapper.selectById(1L)).thenReturn(mockFileInfo);
+            doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
+            when(fileDirectoryTreeService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(tree);
+            when(fileDirectoryTreeMapper.updateById(any(FileDirectoryTree.class))).thenReturn(1);
+            doReturn(mockFileInfo).when(fileInfoV2Service).getById(1L);
+
+            // When
+            fileInfoV2Service.embeddingBack(dealFileVO, mockRequest);
+
+            // Then
+            verify(fileDirectoryTreeMapper, times(1)).updateById(any(FileDirectoryTree.class));
+        }
+
+        /**
+         * Test embeddingBack - file not found (should skip).
+         */
+        @Test
+        @DisplayName("Embedding back - file not found")
+        void testEmbeddingBack_FileNotFound() {
+            // Given
+            DealFileVO dealFileVO = new DealFileVO();
+            dealFileVO.setFileIds(Arrays.asList("999"));
+            dealFileVO.setTag("AIUI-RAG2");
+
+            doReturn(null).when(fileInfoV2Service).getById(999L);
+
+            // When
+            fileInfoV2Service.embeddingBack(dealFileVO, mockRequest);
+
+            // Then - method completes without error
+            verify(fileDirectoryTreeMapper, never()).updateById(any(FileDirectoryTree.class));
         }
     }
 }
