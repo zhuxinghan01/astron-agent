@@ -59,10 +59,6 @@
 - **基础设施**: Docker, MinIO
 - **代码质量工具**: Checkstyle, PMD, SpotBugs, ESLint, gocyclo, staticcheck, golangci-lint, black, isort, flake8, mypy, pylint
 
-## 架构概览
-
-![Architecture Overview](./docs/imgs/structure-zh.png "Architecture Overview")
-
 ## 🚀 快速开始
 
 我们提供两种部署方式，满足不同场景需求:
