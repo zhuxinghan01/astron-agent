@@ -45,9 +45,6 @@ The platform supports **high-availability** deployment, enabling organizations t
 - **Comprehensive Toolchain:** Provides API documentation, deployment guides, and troubleshooting manuals to reduce learning and maintenance costs.  
 - **One-Click Deployment:** Built-in Dockerized environment for out-of-the-box setup and rapid project launch.  
 
-## Architecture Overview
-
-![Architecture Overview](./docs/imgs/structure.png "Architecture Overview")
 
 ## 🚀 Quick Start
 

@@ -46,10 +46,6 @@
 - **完整工具链**：提供 API 文档、部署指南、故障排查手册，降低学习与维护成本。
 - **一键部署**：内置 Docker 化环境，开箱即用，快速启动项目。
 
-## 架构概览
-
-![Architecture Overview](./docs/imgs/structure-zh.png "Architecture Overview")
-
 ## 🚀 快速开始
 
 我们提供两种部署方式，满足不同场景需求:
