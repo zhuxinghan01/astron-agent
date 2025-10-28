@@ -10,7 +10,6 @@ import com.iflytek.astron.console.commons.util.RequestContextUtil;
 import com.iflytek.astron.console.commons.util.space.SpaceInfoUtil;
 import com.iflytek.astron.console.commons.enums.bot.BotVersionEnum;
 import com.iflytek.astron.console.hub.enums.TalkAgentSceneEnum;
-import com.iflytek.astron.console.hub.enums.TalkAgentVCNEnum;
 import com.iflytek.astron.console.hub.util.BotPermissionUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,12 +38,6 @@ public class TalkAgentController {
     public ApiResult<List<TalkAgentSceneDto>> getSceneList() {
         List<TalkAgentSceneDto> sceneList = TalkAgentSceneEnum.getAllScenes();
         return ApiResult.success(sceneList);
-    }
-
-    @PostMapping("/getVCNList")
-    public ApiResult<List<TalkAgentVCNDto>> getVcnList() {
-        List<TalkAgentVCNDto> vcnList = TalkAgentVCNEnum.getAllVCN();
-        return ApiResult.success(vcnList);
     }
 
     @PostMapping("/create")
