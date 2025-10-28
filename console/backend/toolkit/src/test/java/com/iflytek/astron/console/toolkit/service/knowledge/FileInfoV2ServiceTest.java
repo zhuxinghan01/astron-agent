@@ -58,6 +58,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -3738,7 +3739,6 @@ class FileInfoV2ServiceTest {
             tree.setFileId(1L);
             tree.setAppId("100");
 
-            when(fileInfoV2Mapper.selectById(1L)).thenReturn(mockFileInfo);
             doNothing().when(dataPermissionCheckTool).checkFileBelong(any(FileInfoV2.class));
             when(fileDirectoryTreeService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(tree);
             when(fileDirectoryTreeMapper.updateById(any(FileDirectoryTree.class))).thenReturn(1);
@@ -3769,6 +3769,216 @@ class FileInfoV2ServiceTest {
 
             // Then - method completes without error
             verify(fileDirectoryTreeMapper, never()).updateById(any(FileDirectoryTree.class));
+        }
+    }
+
+    /**
+     * Test cases for searchFile method.
+     */
+    @Nested
+    @DisplayName("searchFile Tests")
+    class SearchFileTests {
+
+        /**
+         * Test searchFile - success with local (non-Spark) search.
+         */
+        @Test
+        @DisplayName("Search file - success (local search)")
+        void testSearchFile_Success_LocalSearch() {
+            // Given
+            Long repoId = 100L;
+            String fileName = "test";
+            Integer isFile = 1;
+            Long pid = 0L;
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            FileDirectoryTree tree1 = new FileDirectoryTree();
+            tree1.setId(1L);
+            tree1.setName("test-file.txt");
+            tree1.setFileId(1L);
+            tree1.setIsFile(1);
+            tree1.setParentId(0L);
+
+            List<FileDirectoryTree> matchedFiles = Arrays.asList(tree1);
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(matchedFiles);
+            when(repoService.getById(repoId)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(fileDirectoryTreeMapper, times(1)).getModelListSearchByFileName(anyMap());
+            verify(repoService, times(1)).getById(repoId);
+            verify(dataPermissionCheckTool, times(1)).checkRepoBelong(mockRepo);
+        }
+
+        /**
+         * Test searchFile - empty search results.
+         */
+        @Test
+        @DisplayName("Search file - empty results")
+        void testSearchFile_EmptyResults() {
+            // Given
+            Long repoId = 100L;
+            String fileName = "nonexistent";
+            Integer isFile = 1;
+            Long pid = 0L;
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(Collections.emptyList());
+            when(repoService.getById(repoId)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(fileDirectoryTreeMapper, times(1)).getModelListSearchByFileName(anyMap());
+        }
+
+        /**
+         * Test searchFile - repository not found.
+         */
+        @Test
+        @DisplayName("Search file - repository not found")
+        void testSearchFile_RepoNotFound() {
+            // Given
+            Long repoId = 999L;
+            String fileName = "test";
+            Integer isFile = 1;
+            Long pid = 0L;
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(Collections.emptyList());
+            when(repoService.getById(repoId)).thenReturn(null);
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then - SSE emitter returned but will complete with error
+            assertThat(result).isNotNull();
+        }
+
+        /**
+         * Test searchFile - search with folder (isFile=0).
+         */
+        @Test
+        @DisplayName("Search file - search folders")
+        void testSearchFile_SearchFolders() {
+            // Given
+            Long repoId = 100L;
+            String fileName = "folder";
+            Integer isFile = 0; // Search folders
+            Long pid = 0L;
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            FileDirectoryTree folder = new FileDirectoryTree();
+            folder.setId(1L);
+            folder.setName("test-folder");
+            folder.setIsFile(0);
+            folder.setParentId(0L);
+
+            List<FileDirectoryTree> matchedFolders = Arrays.asList(folder);
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(matchedFolders);
+            when(repoService.getById(repoId)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(fileDirectoryTreeMapper, times(1)).getModelListSearchByFileName(anyMap());
+        }
+
+        /**
+         * Test searchFile - search with null isFile (search both files and folders).
+         */
+        @Test
+        @DisplayName("Search file - search both files and folders")
+        void testSearchFile_SearchAll() {
+            // Given
+            Long repoId = 100L;
+            String fileName = "test";
+            Integer isFile = null; // Search both
+            Long pid = 0L;
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            FileDirectoryTree file = new FileDirectoryTree();
+            file.setId(1L);
+            file.setName("test-file.txt");
+            file.setIsFile(1);
+            file.setFileId(1L);
+
+            FileDirectoryTree folder = new FileDirectoryTree();
+            folder.setId(2L);
+            folder.setName("test-folder");
+            folder.setIsFile(0);
+
+            List<FileDirectoryTree> matchedItems = Arrays.asList(file, folder);
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(matchedItems);
+            when(repoService.getById(repoId)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(fileDirectoryTreeMapper, times(1)).getModelListSearchByFileName(anyMap());
+        }
+
+        /**
+         * Test searchFile - with specific parent ID filter.
+         */
+        @Test
+        @DisplayName("Search file - with parent ID filter")
+        void testSearchFile_WithParentIdFilter() {
+            // Given
+            Long repoId = 100L;
+            String fileName = "test";
+            Integer isFile = 1;
+            Long pid = 5L; // Specific parent ID
+            String tag = "AIUI-RAG2";
+            Integer isRepoPage = 1;
+
+            FileDirectoryTree tree1 = new FileDirectoryTree();
+            tree1.setId(1L);
+            tree1.setName("test-file.txt");
+            tree1.setFileId(1L);
+            tree1.setIsFile(1);
+            tree1.setParentId(5L); // Matches pid
+
+            FileDirectoryTree tree2 = new FileDirectoryTree();
+            tree2.setId(2L);
+            tree2.setName("test-file2.txt");
+            tree2.setFileId(2L);
+            tree2.setIsFile(1);
+            tree2.setParentId(10L); // Does not match pid
+
+            List<FileDirectoryTree> matchedFiles = Arrays.asList(tree1, tree2);
+
+            when(fileDirectoryTreeMapper.getModelListSearchByFileName(anyMap())).thenReturn(matchedFiles);
+            when(repoService.getById(repoId)).thenReturn(mockRepo);
+            doNothing().when(dataPermissionCheckTool).checkRepoBelong(any(Repo.class));
+
+            // When
+            SseEmitter result = fileInfoV2Service.searchFile(repoId, fileName, isFile, pid, tag, isRepoPage, mockRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(fileDirectoryTreeMapper, times(1)).getModelListSearchByFileName(anyMap());
         }
     }
 }
