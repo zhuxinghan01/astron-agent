@@ -12,27 +12,15 @@ English | [简体中文](README-zh.md)
 
 </div>
 
-## 📑 Table of Contents
-
-- [🔭 What is Astron Agent?](#-What-is-Astron-Agent)
-- [🚀 Quick Start](#-quick-start)
-  - [Option 1: Docker Compose](#option-1-docker-compose-recommended-for-quick-start)
-  - [Option 2: Helm](#option-2-helm-for-kubernetes-environments)
-- [📖 Using Astron](#-using-astron)
-- [📚 Documentation](#-documentation)
-- [🤝 Contributing](#-contributing)
-- [🌟 Star History](#-star-history)
-- [📞 Support](#-support)
-- [📄 License](#-license)
-
 ## 🔭 What is Astron Agent
 Astron Agent is an **enterprise-grade, commercial-friendly** Agentic Workflow development platform that integrates AI workflow orchestration, model management, AI and MCP tool integration, RPA automation, and team collaboration features.
 The platform supports **high-availability** deployment, enabling organizations to rapidly build **scalable, production-ready** intelligent agent applications and establish their AI foundation for the future.
 
 ### Why Choose Astron Agent?
-- **Unified Technology Base, Stable and Reliable:** Shares the same core technology with [iFLYTEK Astron Agent Platform](https://agent.xfyun.cn), inheriting its proven enterprise-grade stability.  
-- **Closed Loop of Thinking + Acting:** Deep integration of intelligent RPA enables Agents to move from "generating answers" to "automatically completing tasks."  
-- **Dual Value for Developers and Enterprises:** Developers can quickly get started and expand, while enterprises can efficiently implement digital workflows.  
+- **Stable and Reliable**: Built on the same core technology as the iFLYTEK Astron Agent Platform, providing enterprise-grade reliability with a fully available high-availability version open source.
+- **Cross-System Integration**: Natively integrates intelligent RPA, efficiently connecting internal and external enterprise systems, enabling seamless interaction between Agents and enterprise systems.
+- **Enterprise-Grade Open Ecosystem**: Deeply compatible with various industry models and tools, supporting custom extensions and flexibly adapting to diverse enterprise scenarios.
+- **Business-Friendly**: Released under the Apache 2.0 License, with no commercial restrictions, allowing free commercial use.
 
 ### Key Features
 - **Enterprise-Grade High Availability:** Full-stack capabilities for development, building, optimization, and management. Supports one-click deployment with strong reliability.  
