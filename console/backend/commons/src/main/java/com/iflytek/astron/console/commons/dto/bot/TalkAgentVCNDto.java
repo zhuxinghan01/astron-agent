@@ -17,4 +17,3 @@ public class TalkAgentVCNDto {
     private String avatar;
     private String emotion;
 }
-

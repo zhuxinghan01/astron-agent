@@ -140,8 +140,7 @@ public enum TalkAgentSceneEnum {
                         scene.getPosture(),
                         scene.getType(),
                         scene.getAvatar(),
-                        scene.getSampleAvatar()
-                ))
+                        scene.getSampleAvatar()))
                 .collect(Collectors.toList());
     }
 

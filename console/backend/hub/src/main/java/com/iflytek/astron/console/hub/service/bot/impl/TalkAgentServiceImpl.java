@@ -68,20 +68,20 @@ public class TalkAgentServiceImpl implements TalkAgentService {
         if (chatId == null) {
             return ResponseEnum.CHAT_REQ_ERROR;
         }
-        //get latest chatId
+        // get latest chatId
         List<ChatTreeIndex> chatTreeIndexList = chatListDataService.findChatTreeIndexByChatIdOrderById(chatId);
         if (chatTreeIndexList.isEmpty()) {
             log.warn("chatTreeList is empty, chatId:{}, sid:{}", chatId, sid);
             return ResponseEnum.CHAT_REQ_ERROR;
         }
         Long lastChatId = chatTreeIndexList.getFirst().getChildChatId();
-        //check chatId available
+        // check chatId available
         ChatList chatList = chatListDataService.findByUidAndChatId(uid, lastChatId);
         if (chatList == null) {
             log.warn("Chat window is unavailable or illegal access,uid: {}, chatId: {}", uid, chatId);
             return ResponseEnum.CHAT_REQ_NOT_BELONG_ERROR;
         }
-        //record request
+        // record request
         chatId = lastChatId;
         ChatReqRecords chatReqRecords = new ChatReqRecords();
         chatReqRecords.setChatId(chatId);
@@ -93,7 +93,7 @@ public class TalkAgentServiceImpl implements TalkAgentService {
         chatReqRecords.setNewContext(1);
         chatReqRecords = chatDataService.createRequest(chatReqRecords);
         Long reqId = chatReqRecords.getId();
-        //record response
+        // record response
         ChatRespRecords chatRespRecords = new ChatRespRecords();
         chatRespRecords.setChatId(chatId);
         chatRespRecords.setUid(uid);

@@ -19,4 +19,3 @@ public class TalkAgentSceneDto {
     private String avatar;
     private String sampleAvatar;
 }
-

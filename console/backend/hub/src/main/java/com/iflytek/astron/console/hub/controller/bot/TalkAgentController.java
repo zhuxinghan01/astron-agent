@@ -51,7 +51,7 @@ public class TalkAgentController {
     public ApiResult createTalkAgent(HttpServletRequest request, @RequestBody TalkAgentCreateDto bot) {
         String uid = RequestContextUtil.getUID();
         Long spaceId = SpaceInfoUtil.getSpaceId();
-        //create talk assistant
+        // create talk assistant
         BotInfoDto dto = botService.insertWorkflowBot(uid, bot, spaceId, BotVersionEnum.TALK.getVersion());
         int botId = dto.getBotId();
         bot.setBotId(botId);

@@ -97,11 +97,11 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Function to handle chat messages
      *
-     * @param chatBotReqDto     Chat bot request data object
-     * @param sseEmitter        Server-sent events emitter
-     * @param sseId             Server-sent events ID
+     * @param chatBotReqDto Chat bot request data object
+     * @param sseEmitter Server-sent events emitter
+     * @param sseId Server-sent events ID
      * @param workflowOperation Workflow operation
-     * @param workflowVersion   Workflow version
+     * @param workflowVersion Workflow version
      */
     @Override
     public void chatMessageBot(ChatBotReqDto chatBotReqDto, SseEmitter sseEmitter, String sseId, String workflowOperation, String workflowVersion) {
@@ -134,10 +134,10 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Method to re-answer messages
      *
-     * @param requestId  Request ID
-     * @param botId      Bot ID
+     * @param requestId Request ID
+     * @param botId Bot ID
      * @param sseEmitter SSE emitter
-     * @param sseId      SSE ID
+     * @param sseId SSE ID
      */
     @Override
     public void reAnswerMessageBot(Long requestId, Integer botId, SseEmitter sseEmitter, String sseId) {
@@ -172,16 +172,16 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Debug chat bot messages
      *
-     * @param text            User input text
-     * @param prompt          Prompt text
-     * @param messages        Chat message list
-     * @param uid             User ID
-     * @param openedTool      Opened tools
-     * @param model           Model to use
-     * @param modelId         Model ID
+     * @param text User input text
+     * @param prompt Prompt text
+     * @param messages Chat message list
+     * @param uid User ID
+     * @param openedTool Opened tools
+     * @param model Model to use
+     * @param modelId Model ID
      * @param maasDatasetList MaaS dataset list
-     * @param sseEmitter      SSE emitter
-     * @param sseId           SSE ID
+     * @param sseEmitter SSE emitter
+     * @param sseId SSE ID
      */
     @Override
     public void debugChatMessageBot(String text, String prompt, List<String> messages, String uid, String openedTool, String model, Long modelId, List<String> maasDatasetList, SseEmitter sseEmitter, String sseId) {
@@ -218,9 +218,9 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Clear chat window content
      *
-     * @param chatId  Chat window ID
-     * @param uid     User ID
-     * @param botId   Bot ID
+     * @param chatId Chat window ID
+     * @param uid User ID
+     * @param botId Bot ID
      * @param botBase Chat bot base information
      * @return Chat window response object after clearing
      */
@@ -256,7 +256,7 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Get model configuration and extract max input tokens
      *
-     * @param modelId    Model ID
+     * @param modelId Model ID
      * @param sseEmitter SSE emitter for error handling
      * @return ModelConfigResult containing LLMInfoVo and maxInputTokens, or null if model doesn't exist
      */
@@ -334,8 +334,8 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Get historical conversation messages
      *
-     * @param chatBotReqDto   Chat bot request data transfer object
-     * @param supportContext  Whether to support context
+     * @param chatBotReqDto Chat bot request data transfer object
+     * @param supportContext Whether to support context
      * @param availableTokens Available token count for history messages
      * @return List of historical message data transfer objects
      */
@@ -363,7 +363,7 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Calculate token statistics for system and user messages
      *
-     * @param prompt      System prompt text
+     * @param prompt System prompt text
      * @param userMessage User message text
      * @return TokenStatistics object containing token counts
      */
@@ -382,9 +382,9 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Build message list, truncate historical conversation data based on maximum input tokens
      *
-     * @param chatBotReqDto  Chat bot request data transfer object
+     * @param chatBotReqDto Chat bot request data transfer object
      * @param supportContext Whether to support context
-     * @param prompt         Prompt text
+     * @param prompt Prompt text
      * @return List of message data transfer objects
      */
     private List<SparkChatRequest.MessageDto> buildMessageList(ChatBotReqDto chatBotReqDto, boolean supportContext, boolean supportDocument, String prompt, int maxInputTokens, Long reqId) {
@@ -441,9 +441,9 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Build debug message list with token-based truncation
      *
-     * @param text           Current user message text
-     * @param prompt         System prompt text
-     * @param messages       List of history message strings
+     * @param text Current user message text
+     * @param prompt System prompt text
+     * @param messages List of history message strings
      * @param maxInputTokens Maximum input token limit
      * @return List of message data transfer objects with truncation applied
      */
@@ -532,7 +532,7 @@ public class BotChatServiceImpl implements BotChatService {
     /**
      * Truncate history messages based on token limit, trim from front to back
      *
-     * @param historyMessages  History message list
+     * @param historyMessages History message list
      * @param maxHistoryTokens Maximum token count for history messages
      * @return Truncated history message list
      */
@@ -600,8 +600,8 @@ public class BotChatServiceImpl implements BotChatService {
      * Utility method to build SparkChatRequest object
      *
      * @param chatBotReqDto Chat bot request data transfer object
-     * @param botConfig     Bot configuration
-     * @param messages      List of message data transfer objects
+     * @param botConfig Bot configuration
+     * @param messages List of message data transfer objects
      * @return Built SparkChatRequest object
      */
     private SparkChatRequest buildSparkChatRequest(ChatBotReqDto chatBotReqDto, BotConfiguration botConfig, List<SparkChatRequest.MessageDto> messages) {
@@ -618,7 +618,7 @@ public class BotChatServiceImpl implements BotChatService {
      * Build JSON object for prompt chat request
      *
      * @param llmInfoVo LLMInfoVo object containing URL, API key and model information
-     * @param messages  List of chat messages
+     * @param messages List of chat messages
      * @return JSON object representing the prompt chat request
      */
     private JSONObject buildPromptChatRequest(LLMInfoVo llmInfoVo, List<SparkChatRequest.MessageDto> messages) {
@@ -663,14 +663,11 @@ public class BotChatServiceImpl implements BotChatService {
     }
 
     private record BotConfiguration(String prompt, boolean supportContext, String model, String openedTool,
-                                    Integer version, Long modelId, boolean supportDocument) {
-    }
+            Integer version, Long modelId, boolean supportDocument) {}
 
-    private record TokenStatistics(int systemTokens, int currentUserTokens, int reservedTokens, int availableTokens) {
-    }
+    private record TokenStatistics(int systemTokens, int currentUserTokens, int reservedTokens, int availableTokens) {}
 
-    private record ModelConfigResult(LLMInfoVo llmInfoVo, int maxInputTokens) {
-    }
+    private record ModelConfigResult(LLMInfoVo llmInfoVo, int maxInputTokens) {}
 
     /**
      * Determine whether to enable web search

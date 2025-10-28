@@ -10,7 +10,7 @@ import lombok.Getter;
 public enum BotVersionEnum {
     BASE_BOT(1, "Command Assistant"),
     WORKFLOW(3, "Workflow Assistant"),
-    TALK(4,"Talk Assistant");
+    TALK(4, "Talk Assistant");
 
     public final Integer version;
     public final String desc;
@@ -20,17 +20,17 @@ public enum BotVersionEnum {
         this.desc = desc;
     }
 
-    public static boolean isBaseBot(Integer version){
-        if(null == version){
+    public static boolean isBaseBot(Integer version) {
+        if (null == version) {
             return false;
         } else {
             return BASE_BOT.getVersion().equals(version);
         }
-        
+
     }
 
-    public static boolean isWorkflow(Integer version){
-        if(null == version){
+    public static boolean isWorkflow(Integer version) {
+        if (null == version) {
             return false;
         } else {
             return WORKFLOW.getVersion().equals(version);
@@ -38,7 +38,7 @@ public enum BotVersionEnum {
     }
 
     public static boolean isTalkAgent(Integer version) {
-        if(null == version){
+        if (null == version) {
             return false;
         } else {
             return TALK.getVersion().equals(version);

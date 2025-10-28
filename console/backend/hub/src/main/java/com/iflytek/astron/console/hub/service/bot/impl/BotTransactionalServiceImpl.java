@@ -34,8 +34,8 @@ public class BotTransactionalServiceImpl implements BotTransactionalService {
     /**
      * Copy bot
      *
-     * @param uid     User ID
-     * @param botId   Bot ID
+     * @param uid User ID
+     * @param botId Bot ID
      * @param request HTTP request object
      * @param spaceId Space ID
      */

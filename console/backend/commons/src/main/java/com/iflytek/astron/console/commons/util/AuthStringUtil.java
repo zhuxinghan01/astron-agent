@@ -152,7 +152,7 @@ public class AuthStringUtil {
     /**
      * Get signature
      *
-     * @param appId  Signature key
+     * @param appId Signature key
      * @param secret Signature secret
      * @return Return signature
      */
@@ -169,7 +169,7 @@ public class AuthStringUtil {
      * SHA1 encryption
      *
      * @param encryptText Encryption text
-     * @param encryptKey  Encryption key
+     * @param encryptKey Encryption key
      * @return Encryption result
      */
     private static String hmacSHA1Encrypt(String encryptText, String encryptKey) throws SignatureException {
