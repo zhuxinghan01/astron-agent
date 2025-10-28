@@ -1,5 +1,6 @@
 package com.iflytek.astron.console.toolkit.service.knowledge;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -10,6 +11,8 @@ import com.iflytek.astron.console.toolkit.common.constant.ProjectContent;
 import com.iflytek.astron.console.toolkit.config.properties.ApiUrl;
 import com.iflytek.astron.console.toolkit.entity.core.knowledge.*;
 import com.iflytek.astron.console.toolkit.entity.mongo.Knowledge;
+import com.iflytek.astron.console.toolkit.entity.pojo.DealFileResult;
+import com.iflytek.astron.console.toolkit.entity.pojo.SliceConfig;
 import com.iflytek.astron.console.toolkit.entity.table.knowledge.MysqlKnowledge;
 import com.iflytek.astron.console.toolkit.entity.table.knowledge.MysqlPreviewKnowledge;
 import com.iflytek.astron.console.toolkit.entity.table.repo.*;
@@ -1657,6 +1660,533 @@ class KnowledgeServiceTest {
             assertThat(mockExtractTask.getStatus()).isEqualTo(2);
             assertThat(mockExtractTask.getReason()).isEqualTo("No corresponding file found");
             verify(extractKnowledgeTaskService, times(1)).updateById(mockExtractTask);
+        }
+    }
+
+    /**
+     * Test cases for the dealTaskForKnowledgeExtract method.
+     * Validates callback handling for knowledge extraction tasks.
+     */
+    @Nested
+    @DisplayName("dealTaskForKnowledgeExtract Tests")
+    class DealTaskForKnowledgeExtractTests {
+
+        /**
+         * Test successful callback handling.
+         */
+        @Test
+        @DisplayName("Deal task callback successfully")
+        void testDealTaskForKnowledgeExtract_Success() {
+            // Given
+            JSONObject retResult = new JSONObject();
+            retResult.put("taskId", "task-001");
+            retResult.put("success", true);
+            retResult.put("knowledgeUrl", "http://example.com/knowledge.json");
+
+            mockExtractTask.setStatus(0);
+            when(extractKnowledgeTaskService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(mockExtractTask);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(repoService.getById(anyLong())).thenReturn(mockRepo);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+
+            // When
+            knowledgeService.dealTaskForKnowledgeExtract(retResult);
+
+            // Then
+            verify(extractKnowledgeTaskService, times(1)).getOnly(any(LambdaQueryWrapper.class));
+        }
+
+        /**
+         * Test callback handling when task not found.
+         */
+        @Test
+        @DisplayName("Deal task callback when task not found")
+        void testDealTaskForKnowledgeExtract_TaskNotFound() {
+            // Given
+            JSONObject retResult = new JSONObject();
+            retResult.put("taskId", "task-not-exist");
+            retResult.put("success", true);
+
+            when(extractKnowledgeTaskService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(null);
+
+            // When & Then
+            assertThatThrownBy(() -> knowledgeService.dealTaskForKnowledgeExtract(retResult))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("responseEnum", ResponseEnum.REPO_KNOWLEDGE_NO_TASK);
+        }
+
+        /**
+         * Test callback handling when task already processed.
+         */
+        @Test
+        @DisplayName("Deal task callback when task already processed")
+        void testDealTaskForKnowledgeExtract_TaskAlreadyProcessed() {
+            // Given
+            JSONObject retResult = new JSONObject();
+            retResult.put("taskId", "task-001");
+            retResult.put("success", true);
+
+            mockExtractTask.setStatus(1); // Already processed
+            when(extractKnowledgeTaskService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(mockExtractTask);
+
+            // When & Then
+            assertThatThrownBy(() -> knowledgeService.dealTaskForKnowledgeExtract(retResult))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("responseEnum", ResponseEnum.REPO_KNOWLEDGE_NO_TASK);
+        }
+
+        /**
+         * Test callback handling with failure result.
+         */
+        @Test
+        @DisplayName("Deal task callback with failure")
+        void testDealTaskForKnowledgeExtract_Failure() {
+            // Given
+            JSONObject retResult = new JSONObject();
+            retResult.put("taskId", "task-001");
+            retResult.put("success", false);
+            retResult.put("err", "Extraction failed");
+            retResult.put("knowledgeUrl", "http://example.com/knowledge.json");
+
+            mockExtractTask.setStatus(0);
+            when(extractKnowledgeTaskService.getOnly(any(LambdaQueryWrapper.class))).thenReturn(mockExtractTask);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+
+            // When
+            knowledgeService.dealTaskForKnowledgeExtract(retResult);
+
+            // Then
+            verify(extractKnowledgeTaskService, times(1)).getOnly(any(LambdaQueryWrapper.class));
+        }
+    }
+
+    /**
+     * Test cases for the knowledgeExtractAsync method.
+     * Validates asynchronous knowledge extraction functionality.
+     */
+    @Nested
+    @DisplayName("knowledgeExtractAsync Tests")
+    class KnowledgeExtractAsyncTests {
+
+        private SliceConfig mockSliceConfig;
+
+        @BeforeEach
+        void setUp() {
+            mockSliceConfig = new SliceConfig();
+            mockSliceConfig.setLengthRange(Arrays.asList(300, 800));
+            mockSliceConfig.setSeperator(Arrays.asList("\n"));
+        }
+
+        /**
+         * Test successful knowledge extraction with AIUI source.
+         */
+        @Test
+        @DisplayName("Extract knowledge successfully with AIUI source")
+        void testKnowledgeExtractAsync_Success_AIUI() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            JSONArray dataArray = new JSONArray();
+
+            ChunkInfo chunk = new ChunkInfo();
+            chunk.setContent("Test chunk content");
+            chunk.setDocId("file-uuid-001");
+            dataArray.add(JSON.parseObject(JSON.toJSONString(chunk)));
+            response.setData(dataArray);
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(previewKnowledgeMapper.countByFileId(anyString())).thenReturn(0L);
+            when(previewKnowledgeMapper.insertBatch(anyList())).thenReturn(1);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(knowledgeV2ServiceCallHandler, times(1)).documentSplit(any());
+            verify(previewKnowledgeMapper, times(1)).insertBatch(anyList());
+            verify(fileInfoV2Service, times(1)).updateById(any(FileInfoV2.class));
+        }
+
+        /**
+         * Test knowledge extraction with CBG source - upload flow.
+         */
+        @Test
+        @DisplayName("Extract knowledge with CBG source")
+        void testKnowledgeExtractAsync_CBG() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("CBG-RAG");
+            mockFileInfo.setType("text/plain");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            JSONArray dataArray = new JSONArray();
+
+            ChunkInfo chunk = new ChunkInfo();
+            chunk.setContent("Test chunk content");
+            chunk.setDocId("cbg-doc-001");
+            dataArray.add(JSON.parseObject(JSON.toJSONString(chunk)));
+            response.setData(dataArray);
+
+            when(s3Util.getObject(anyString())).thenReturn(new java.io.ByteArrayInputStream("test".getBytes()));
+            when(knowledgeV2ServiceCallHandler.documentUpload(any(), any(), any(), any(), any())).thenReturn(response);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(previewKnowledgeMapper.countByFileId(anyString())).thenReturn(0L);
+            when(previewKnowledgeMapper.insertBatch(anyList())).thenReturn(1);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(s3Util, times(1)).getObject(anyString());
+            verify(knowledgeV2ServiceCallHandler, times(1)).documentUpload(any(), any(), any(), any(), any());
+        }
+
+        /**
+         * Test extraction failure with non-zero response code.
+         */
+        @Test
+        @DisplayName("Extract knowledge fails with non-zero response code")
+        void testKnowledgeExtractAsync_NonZeroResponseCode() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(1);
+            response.setMessage("Extraction failed");
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(fileInfoV2Service, times(1)).updateById(any(FileInfoV2.class));
+            assertThat(mockExtractTask.getStatus()).isEqualTo(2);
+        }
+
+        /**
+         * Test extraction with special error code 11111.
+         */
+        @Test
+        @DisplayName("Extract knowledge with error code 11111")
+        void testKnowledgeExtractAsync_ErrorCode11111() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(11111);
+            response.setMessage("Error (inner error message)");
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(fileInfoV2Service, times(1)).updateById(any(FileInfoV2.class));
+        }
+
+        /**
+         * Test extraction with empty chunks - image file.
+         */
+        @Test
+        @DisplayName("Extract knowledge with empty chunks for image")
+        void testKnowledgeExtractAsync_EmptyChunks_Image() {
+            // Given
+            String contentType = "jpeg";  // Using file extension, not MIME type
+            String url = "http://example.com/image.jpg";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            response.setData(new JSONArray());
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(fileInfoV2Service, times(1)).updateById(any(FileInfoV2.class));
+            assertThat(mockFileInfo.getReason()).contains("check if the image contains text");
+        }
+
+        /**
+         * Test extraction with empty chunks - non-image file.
+         */
+        @Test
+        @DisplayName("Extract knowledge with empty chunks for non-image")
+        void testKnowledgeExtractAsync_EmptyChunks_NonImage() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            response.setData(new JSONArray());
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(fileInfoV2Service, times(1)).updateById(any(FileInfoV2.class));
+            assertThat(mockFileInfo.getReason()).contains("file meets upload requirements");
+        }
+
+        /**
+         * Test CBG extraction when S3 file not found.
+         */
+        @Test
+        @DisplayName("CBG extraction fails when S3 file not found")
+        void testKnowledgeExtractAsync_CBG_S3FileNotFound() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("CBG-RAG");
+
+            when(s3Util.getObject(anyString())).thenReturn(null);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(s3Util, times(1)).getObject(anyString());
+            assertThat(mockFileInfo.getReason()).contains("Failed to get file from S3");
+        }
+
+        /**
+         * Test extraction with HTML file type.
+         */
+        @Test
+        @DisplayName("Extract knowledge with HTML file type")
+        void testKnowledgeExtractAsync_HTMLFile() {
+            // Given
+            String contentType = "text/html";
+            String url = "http://example.com/document.html";
+            mockFileInfo.setSource("AIUI-RAG2");
+            mockFileInfo.setType("text/html");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            JSONArray dataArray = new JSONArray();
+
+            ChunkInfo chunk = new ChunkInfo();
+            chunk.setContent("Test HTML content");
+            chunk.setDocId("file-uuid-001");
+            dataArray.add(JSON.parseObject(JSON.toJSONString(chunk)));
+            response.setData(dataArray);
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(previewKnowledgeMapper.countByFileId(anyString())).thenReturn(0L);
+            when(previewKnowledgeMapper.insertBatch(anyList())).thenReturn(1);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeExtractAsync(contentType, url, mockSliceConfig, mockFileInfo, mockExtractTask);
+
+            // Then
+            verify(knowledgeV2ServiceCallHandler, times(1)).documentSplit(any());
+        }
+    }
+
+    /**
+     * Test cases for the knowledgeEmbeddingExtractAsync method.
+     * Validates asynchronous knowledge extraction with embedding.
+     */
+    @Nested
+    @DisplayName("knowledgeEmbeddingExtractAsync Tests")
+    class KnowledgeEmbeddingExtractAsyncTests {
+
+        private SliceConfig mockSliceConfig;
+        private FileInfoV2Service mockFileService;
+
+        @BeforeEach
+        void setUp() {
+            mockSliceConfig = new SliceConfig();
+            mockSliceConfig.setLengthRange(Arrays.asList(300, 800));
+            mockSliceConfig.setSeperator(Arrays.asList("\n"));
+            mockFileService = mock(FileInfoV2Service.class);
+        }
+
+        /**
+         * Test successful extraction with embedding trigger.
+         */
+        @Test
+        @DisplayName("Extract and embed knowledge successfully")
+        void testKnowledgeEmbeddingExtractAsync_Success() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+            mockFileInfo.setSpaceId(1L);
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            JSONArray dataArray = new JSONArray();
+
+            ChunkInfo chunk = new ChunkInfo();
+            chunk.setContent("Test chunk content");
+            chunk.setDocId("file-uuid-001");
+            dataArray.add(JSON.parseObject(JSON.toJSONString(chunk)));
+            response.setData(dataArray);
+
+            DealFileResult dealFileResult = new DealFileResult();
+            dealFileResult.setParseSuccess(true);
+            dealFileResult.setTaskId("task-001");
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(previewKnowledgeMapper.countByFileId(anyString())).thenReturn(0L);
+            when(previewKnowledgeMapper.insertBatch(anyList())).thenReturn(1);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+            doNothing().when(mockFileService).saveTaskAndUpdateFileStatus(anyLong());
+            when(mockFileService.embeddingFile(anyLong(), anyLong())).thenReturn(dealFileResult);
+
+            // When
+            knowledgeService.knowledgeEmbeddingExtractAsync(contentType, url, mockSliceConfig,
+                    mockFileInfo, mockExtractTask, mockFileService);
+
+            // Then
+            verify(knowledgeV2ServiceCallHandler, times(1)).documentSplit(any());
+            verify(mockFileService, times(1)).saveTaskAndUpdateFileStatus(mockFileInfo.getId());
+            verify(mockFileService, times(1)).embeddingFile(mockFileInfo.getId(), mockFileInfo.getSpaceId());
+        }
+
+        /**
+         * Test extraction with embedding when extraction fails.
+         */
+        @Test
+        @DisplayName("Extract and embed fails when extraction returns error")
+        void testKnowledgeEmbeddingExtractAsync_ExtractionFails() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(1);
+            response.setMessage("Extraction failed");
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeEmbeddingExtractAsync(contentType, url, mockSliceConfig,
+                    mockFileInfo, mockExtractTask, mockFileService);
+
+            // Then
+            verify(mockFileService, never()).saveTaskAndUpdateFileStatus(anyLong());
+            verify(mockFileService, never()).embeddingFile(anyLong(), anyLong());
+        }
+
+        /**
+         * Test CBG extraction with embedding.
+         */
+        @Test
+        @DisplayName("Extract and embed with CBG source")
+        void testKnowledgeEmbeddingExtractAsync_CBG() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("CBG-RAG");
+            mockFileInfo.setType("text/plain");
+            mockFileInfo.setSpaceId(1L);
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            JSONArray dataArray = new JSONArray();
+
+            ChunkInfo chunk = new ChunkInfo();
+            chunk.setContent("Test chunk content");
+            chunk.setDocId("cbg-doc-001");
+            dataArray.add(JSON.parseObject(JSON.toJSONString(chunk)));
+            response.setData(dataArray);
+
+            DealFileResult dealFileResult = new DealFileResult();
+            dealFileResult.setParseSuccess(true);
+            dealFileResult.setTaskId("task-001");
+
+            when(s3Util.getObject(anyString())).thenReturn(new java.io.ByteArrayInputStream("test".getBytes()));
+            when(knowledgeV2ServiceCallHandler.documentUpload(any(), any(), any(), any(), any())).thenReturn(response);
+            when(fileInfoV2Service.getById(anyLong())).thenReturn(mockFileInfo);
+            when(previewKnowledgeMapper.countByFileId(anyString())).thenReturn(0L);
+            when(previewKnowledgeMapper.insertBatch(anyList())).thenReturn(1);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+            doNothing().when(mockFileService).saveTaskAndUpdateFileStatus(anyLong());
+            when(mockFileService.embeddingFile(anyLong(), anyLong())).thenReturn(dealFileResult);
+
+            // When
+            knowledgeService.knowledgeEmbeddingExtractAsync(contentType, url, mockSliceConfig,
+                    mockFileInfo, mockExtractTask, mockFileService);
+
+            // Then
+            verify(s3Util, times(1)).getObject(anyString());
+            verify(mockFileService, times(1)).saveTaskAndUpdateFileStatus(mockFileInfo.getId());
+            verify(mockFileService, times(1)).embeddingFile(mockFileInfo.getId(), mockFileInfo.getSpaceId());
+        }
+
+        /**
+         * Test embedding with empty chunks.
+         */
+        @Test
+        @DisplayName("Extract and embed with empty chunks")
+        void testKnowledgeEmbeddingExtractAsync_EmptyChunks() {
+            // Given
+            String contentType = "text/plain";
+            String url = "http://example.com/document.txt";
+            mockFileInfo.setSource("AIUI-RAG2");
+
+            KnowledgeResponse response = new KnowledgeResponse();
+            response.setCode(0);
+            response.setData(new JSONArray());
+
+            when(knowledgeV2ServiceCallHandler.documentSplit(any())).thenReturn(response);
+            when(fileInfoV2Service.updateById(any(FileInfoV2.class))).thenReturn(true);
+            when(extractKnowledgeTaskService.updateById(any(ExtractKnowledgeTask.class))).thenReturn(true);
+
+            // When
+            knowledgeService.knowledgeEmbeddingExtractAsync(contentType, url, mockSliceConfig,
+                    mockFileInfo, mockExtractTask, mockFileService);
+
+            // Then
+            verify(mockFileService, never()).saveTaskAndUpdateFileStatus(anyLong());
+            verify(mockFileService, never()).embeddingFile(anyLong(), anyLong());
         }
     }
 }
