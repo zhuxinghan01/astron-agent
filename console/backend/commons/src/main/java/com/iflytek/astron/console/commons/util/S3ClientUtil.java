@@ -18,23 +18,26 @@ import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/** Concise S3 (MinIO) client utility providing upload and presign capabilities. */
+/**
+ * Concise S3 (MinIO) client utility providing upload and presign capabilities.
+ */
 @Slf4j
 @Component
 public class S3ClientUtil {
-
-    @Value("${s3.endpoint}")
-    private String endpoint;
+    @Value("${s3.remoteEndpoint}")
+    private String remoteEndpoint;
 
     @Value("${s3.accessKey}")
     private String accessKey;
@@ -57,7 +60,13 @@ public class S3ClientUtil {
 
     @PostConstruct
     public void init() {
-        this.minioClient = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+        this.minioClient = MinioClient.builder()
+                .endpoint(remoteEndpoint)
+                .credentials(accessKey, secretKey)
+                .build();
+
+        log.info("Minio config - remoteEndpoint: {}, defaultBucket: {}, presignExpirySeconds: {}, enablePublicRead: {}",
+                remoteEndpoint, defaultBucket, presignExpirySeconds, enablePublicRead);
 
         // Check if default bucket exists, create if not
         try {
@@ -151,7 +160,7 @@ public class S3ClientUtil {
      * @return full object URL
      */
     private String buildObjectUrl(String bucketName, String objectKey) {
-        return String.format("%s/%s/%s", endpoint, bucketName, objectKey);
+        return String.format("%s/%s/%s", remoteEndpoint, bucketName, objectKey);
     }
 
     /**
