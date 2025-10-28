@@ -10,8 +10,6 @@
 
 [English](README.md) | 简体中文
 
-**星辰Agent是一款专为AI开发者和各类组织打造的企业级Agent开发平台。**
-
 </div>
 
 ## 📑 目录
