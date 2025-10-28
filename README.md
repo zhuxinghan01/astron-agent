@@ -12,20 +12,6 @@ English | [简体中文](README-zh.md)
 
 </div>
 
-## 📑 Table of Contents
-
-- [🔭 What is Astron Agent?](#-What-is-Astron-Agent)
-- [📰 News](#-news)
-- [🚀 Quick Start](#-quick-start)
-  - [Option 1: Docker Compose](#option-1-docker-compose-recommended-for-quick-start)
-  - [Option 2: Helm](#option-2-helm-for-kubernetes-environments)
-- [📖 Using Astron](#-using-astron)
-- [📚 Documentation](#-documentation)
-- [🤝 Contributing](#-contributing)
-- [🌟 Star History](#-star-history)
-- [📞 Support](#-support)
-- [📄 License](#-license)
-
 ## 🔭 What is Astron Agent
 Astron Agent is an **enterprise-grade, commercial-friendly** Agentic Workflow development platform that integrates AI workflow orchestration, model management, AI and MCP tool integration, RPA automation, and team collaboration features.
 The platform supports **high-availability** deployment, enabling organizations to rapidly build **scalable, production-ready** intelligent agent applications and establish their AI foundation for the future.
@@ -41,15 +27,6 @@ The platform supports **high-availability** deployment, enabling organizations t
 - **Intelligent RPA Integration:** Enables cross-system process automation, empowering Agents with controllable execution to achieve a complete loop “from decision to action.”  
 - **Ready-to-Use Tool Ecosystem:** Integrates massive AI capabilities and tools from the [iFLYTEK Open Platform](https://www.xfyun.cn), validated by millions of developers, supporting plug-and-play integration without extra development.  
 - **Flexible Large Model Support:** Offers diverse access methods, from rapid API-based model access and validation to one-click deployment of enterprise-level MaaS (Model as a Service) on-premises clusters, meeting needs of all scales.  
-
-### Developer Support
-- **Multi-language Backend:** Supports mainstream languages such as Java, Go, and Python; frontend adapted to TypeScript + React stack.  
-- **Comprehensive Toolchain:** Provides API documentation, deployment guides, and troubleshooting manuals to reduce learning and maintenance costs.  
-- **One-Click Deployment:** Built-in Dockerized environment for out-of-the-box setup and rapid project launch.  
-
-## Architecture Overview
-
-![Architecture Overview](./docs/imgs/structure.png "Architecture Overview")
 
 ## 📰 News
 
@@ -103,7 +80,7 @@ After startup, you can access the services at the following addresses:
 
 ---
 
-> 📖 For complete deployment instructions and configuration details, see [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+> 📖 For complete deployment instructions and configuration details, see [Deployment Guide](docs/DEPLOYMENT_GUIDE_WITH_AUTH.md)
 
 ## 📖 Using Astron Cloud
 
