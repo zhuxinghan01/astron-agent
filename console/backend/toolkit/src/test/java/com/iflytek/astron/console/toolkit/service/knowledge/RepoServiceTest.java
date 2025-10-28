@@ -1147,6 +1147,46 @@ class RepoServiceTest {
 
             verify(repoMapper, never()).updateById(any(Repo.class));
         }
+
+        /**
+         * Test deleteRepo - delete Spark platform repository.
+         * Tests the Spark-compatible tag branch that delegates to deleteXinghuoDataset.
+         */
+        @Test
+        @DisplayName("deleteRepo - Spark platform repository")
+        void testDeleteRepo_SparkRepository() {
+            try (MockedStatic<com.iflytek.astron.console.toolkit.util.OkHttpUtil> okHttpMock =
+                     mockStatic(com.iflytek.astron.console.toolkit.util.OkHttpUtil.class)) {
+
+                // Given
+                when(apiUrl.getDeleteXinghuoDatasetUrl()).thenReturn("https://api.example.com/delete");
+
+                JSONObject mockResponse = new JSONObject();
+                mockResponse.put("code", 0);
+                mockResponse.put("message", "success");
+
+                okHttpMock.when(() -> com.iflytek.astron.console.toolkit.util.OkHttpUtil.post(
+                        anyString(), any(Map.class), any(Map.class), any()))
+                          .thenReturn(mockResponse.toJSONString());
+
+                // When - Use Spark-compatible tag to trigger Spark deletion path
+                Object result = repoService.deleteRepo(100L, "SparkDesk-RAG", mockRequest);
+
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result).isInstanceOf(JSONObject.class);
+                JSONObject jsonResult = (JSONObject) result;
+                assertThat(jsonResult.getInteger("code")).isEqualTo(0);
+
+                // Verify Spark deletion API was called
+                okHttpMock.verify(() -> com.iflytek.astron.console.toolkit.util.OkHttpUtil.post(
+                        anyString(), any(Map.class), any(Map.class), any()), times(1));
+
+                // Verify local repo deletion methods were NOT called
+                verify(repoMapper, never()).selectById(anyLong());
+                verify(repoMapper, never()).updateById(any(Repo.class));
+            }
+        }
     }
 
     /**
