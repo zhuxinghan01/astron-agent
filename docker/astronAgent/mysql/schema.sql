@@ -16486,3 +16486,25 @@ CREATE TABLE `personality_config`
     UNIQUE KEY    `idx_bot_id_config_type` (`bot_id`, `config_type`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Personality Config Table';
 
+-- ----------------------------
+-- Table structure for pronunciation_person_config
+-- ----------------------------
+DROP TABLE IF EXISTS `pronunciation_person_config`;
+create table pronunciation_person_config
+(
+    id                 bigint auto_increment comment 'Primary key ID'
+        primary key,
+    name               varchar(64)                        not null comment 'Pronunciation person name',
+    cover_url          varchar(2048)                      null comment 'Pronunciation person cover image URL',
+    voice_type         varchar(64)                        null comment 'Pronunciation person parameters',
+    sort               int      default 0                 null comment 'Pronunciation person sort',
+    model_manufacturer varchar(64)                        null comment 'Pronunciation person model manufacturer',
+    exquisite          tinyint  default 0                 null comment 'Exquisite pronunciation person (0 = not exquisite, 1 = exquisite)',
+    deleted            tinyint  default 0                 null comment 'Deleted status (0 = not deleted, 1 = deleted)',
+    create_time        datetime default CURRENT_TIMESTAMP null comment 'Creation time',
+    update_time        datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment 'Update time'
+)
+    comment 'Pronunciation person configuration' charset = utf8mb4;
+
+INSERT INTO astron_console.pronunciation_person_config (name, cover_url, voice_type, sort, model_manufacturer, deleted, create_time, update_time) VALUES ( '许久', 'https://1024-cdn.xfyun.cn/2022_1024%2Fcms%2F16824985943686779%2Flfc.png', 'aisjiuxu', 0, 'XFYUN', 0, NOW(), NOW());
+INSERT INTO astron_console.pronunciation_person_config (name, cover_url, voice_type, sort, model_manufacturer, deleted, create_time, update_time) VALUES ('小婧', 'https://1024-cdn.xfyun.cn/2022_1024%2Fcms%2F16824985943709826%2Flxq.png', 'aisjinger', 0, 'XFYUN', 0, NOW(), NOW());
