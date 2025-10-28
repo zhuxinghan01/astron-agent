@@ -40,12 +40,6 @@ The platform supports **high-availability** deployment, enabling organizations t
 - **Ready-to-Use Tool Ecosystem:** Integrates massive AI capabilities and tools from the [iFLYTEK Open Platform](https://www.xfyun.cn), validated by millions of developers, supporting plug-and-play integration without extra development.  
 - **Flexible Large Model Support:** Offers diverse access methods, from rapid API-based model access and validation to one-click deployment of enterprise-level MaaS (Model as a Service) on-premises clusters, meeting needs of all scales.  
 
-### Developer Support
-- **Multi-language Backend:** Supports mainstream languages such as Java, Go, and Python; frontend adapted to TypeScript + React stack.  
-- **Comprehensive Toolchain:** Provides API documentation, deployment guides, and troubleshooting manuals to reduce learning and maintenance costs.  
-- **One-Click Deployment:** Built-in Dockerized environment for out-of-the-box setup and rapid project launch.  
-
-
 ## 🚀 Quick Start
 
 We offer two deployment methods to meet different scenarios:
