@@ -58,11 +58,11 @@ class BotTransactionalServiceImplTest {
 
         chatBotBase = new ChatBotBase();
         chatBotBase.setId(789);
-        chatBotBase.setVersion(2);
+        chatBotBase.setVersion(1);
     }
 
     @Test
-    void testCopyBot_Version2() {
+    void testCopyBot_Version1_BaseBot() {
         // Given
         when(botService.copyBot(uid, botId, spaceId)).thenReturn(chatBotBase);
         doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
@@ -104,17 +104,19 @@ class BotTransactionalServiceImplTest {
     }
 
     @Test
-    void testCopyBot_Version1_NoAdditionalLogic() {
+    void testCopyBot_Version1_WithPersonalityConfig() {
         // Given
         chatBotBase.setVersion(1);
         when(botService.copyBot(uid, botId, spaceId)).thenReturn(chatBotBase);
+        doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
 
         // When
         botTransactionalService.copyBot(uid, botId, request, spaceId);
 
         // Then
         verify(botService).copyBot(uid, botId, spaceId);
-        verifyNoInteractions(botChainService);
+        verify(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
+        verify(botChainService).copyBot(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), spaceId);
         verifyNoInteractions(redissonClient);
     }
 
@@ -122,12 +124,14 @@ class BotTransactionalServiceImplTest {
     void testCopyBot_WithNullSpaceId() {
         // Given
         when(botService.copyBot(uid, botId, null)).thenReturn(chatBotBase);
+        doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
 
         // When
         botTransactionalService.copyBot(uid, botId, request, null);
 
         // Then
         verify(botService).copyBot(uid, botId, null);
+        verify(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
         verify(botChainService).copyBot(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), null);
     }
 
@@ -158,15 +162,17 @@ class BotTransactionalServiceImplTest {
         // Given
         ChatBotBase expectedBot = new ChatBotBase();
         expectedBot.setId(999);
-        expectedBot.setVersion(2);
+        expectedBot.setVersion(1);
 
         when(botService.copyBot(uid, botId, spaceId)).thenReturn(expectedBot);
+        doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(expectedBot.getId()));
 
         // When
         botTransactionalService.copyBot(uid, botId, request, spaceId);
 
         // Then
         verify(botService).copyBot(uid, botId, spaceId);
+        verify(personalityConfigService).copyPersonalityConfig(eq(botId), eq(expectedBot.getId()));
         verify(botChainService).copyBot(uid, Long.valueOf(botId), Long.valueOf(expectedBot.getId()), spaceId);
     }
 }
