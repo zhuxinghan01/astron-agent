@@ -62,7 +62,7 @@ public class TalkAgentController {
         Integer sourceId = talkAgentUpgradeDto.getSourceId();
         botPermissionUtil.checkBot(sourceId);
 
-        return ApiResult.of(talkAgentService.upgradeWorkflow(sourceId, uid, spaceId, request, talkAgentUpgradeDto), null);
+        return ApiResult.success(talkAgentService.upgradeWorkflow(sourceId, uid, spaceId, request, talkAgentUpgradeDto));
     }
 
     @PostMapping("/saveHistory")

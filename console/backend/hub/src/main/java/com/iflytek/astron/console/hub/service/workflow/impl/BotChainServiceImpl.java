@@ -65,15 +65,17 @@ public class BotChainServiceImpl implements BotChainService {
 
     /**
      * Copy workflow
+     *
+     * @return
      */
     @Override
     @Transactional
-    public void cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version, TalkAgentConfigDto talkAgentConfig) {
+    public Long cloneWorkFlow(String uid, Long sourceId, Long targetId, HttpServletRequest request, Long spaceId, Integer version, TalkAgentConfigDto talkAgentConfig) {
         // Query source assistant
         List<UserLangChainInfo> botList = userLangChainDataService.findListByBotId(Math.toIntExact(sourceId));
         if (Objects.isNull(botList) || botList.isEmpty()) {
             log.info("***** Source assistant does not exist, id: {}", sourceId);
-            return;
+            return null;
         }
 
         UserLangChainInfo chainInfo = botList.getFirst();
@@ -98,6 +100,7 @@ public class BotChainServiceImpl implements BotChainService {
         chain.setUpdateTime(LocalDateTime.now());
         userLangChainDataService.insertUserLangChainInfo(chain);
         log.info("----- Source assistant: {}, target assistant: {} got new canvas id: {}, flowId: {}", sourceId, targetId, currentMass, flowId);
+        return currentMass;
     }
 
     /**
@@ -128,7 +131,7 @@ public class BotChainServiceImpl implements BotChainService {
      *
      * @param original Original node ID string
      * @return New node ID string, if the original string contains a colon, add a random UUID after the
-     *         colon, otherwise throw an exception
+     * colon, otherwise throw an exception
      */
     public static String getNewNodeId(String original) {
         int colonIndex = original.indexOf(':');

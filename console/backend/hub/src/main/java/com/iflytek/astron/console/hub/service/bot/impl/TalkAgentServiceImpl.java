@@ -1,6 +1,7 @@
 package com.iflytek.astron.console.hub.service.bot.impl;
 
 import com.iflytek.astron.console.commons.constant.ResponseEnum;
+import com.iflytek.astron.console.commons.dto.bot.BotInfoDto;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentHistoryDto;
 import com.iflytek.astron.console.commons.dto.bot.TalkAgentUpgradeDto;
 import com.iflytek.astron.console.commons.entity.bot.ChatBotBase;
@@ -110,7 +111,7 @@ public class TalkAgentServiceImpl implements TalkAgentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEnum upgradeWorkflow(Integer sourceId, String uid, Long spaceId, HttpServletRequest request, TalkAgentUpgradeDto talkAgentUpgradeDto) {
+    public BotInfoDto upgradeWorkflow(Integer sourceId, String uid, Long spaceId, HttpServletRequest request, TalkAgentUpgradeDto talkAgentUpgradeDto) {
         ChatBotBase base = botService.upgradeCopyBot(uid, sourceId, spaceId, BotVersionEnum.TALK.getVersion());
         log.info("upgrade bot : new bot : {}", base);
         Long targetId = Long.valueOf(base.getId());
@@ -118,8 +119,11 @@ public class TalkAgentServiceImpl implements TalkAgentService {
         redissonClient.getBucket(MaasUtil.generatePrefix(uid, sourceId)).set(String.valueOf(sourceId));
         redissonClient.getBucket(MaasUtil.generatePrefix(uid, sourceId)).expire(Duration.ofSeconds(60));
         // Synchronize Xingchen MAAS
-        botChainService.cloneWorkFlow(uid, Long.valueOf(sourceId), targetId, request, spaceId,
+        Long maasId = botChainService.cloneWorkFlow(uid, Long.valueOf(sourceId), targetId, request, spaceId,
                 BotVersionEnum.TALK.getVersion(), talkAgentUpgradeDto.getTalkAgentConfig());
-        return ResponseEnum.SUCCESS;
+        BotInfoDto botInfoDto = new BotInfoDto();
+        botInfoDto.setBotId(Math.toIntExact(targetId));
+        botInfoDto.setMaasId(maasId);
+        return botInfoDto;
     }
 }
