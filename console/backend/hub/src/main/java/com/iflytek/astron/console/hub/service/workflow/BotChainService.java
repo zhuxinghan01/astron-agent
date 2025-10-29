@@ -16,7 +16,7 @@ public interface BotChainService {
     /**
      * Copy workflow
      *
-     * @param uid             uid
+     * @param uid uid
      * @param spaceId
      * @param version
      * @param talkAgentConfig
