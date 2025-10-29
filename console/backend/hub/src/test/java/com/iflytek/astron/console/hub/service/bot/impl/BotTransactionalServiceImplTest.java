@@ -39,6 +39,9 @@ class BotTransactionalServiceImplTest {
     @Mock
     private RBucket<String> rBucket;
 
+    @Mock
+    private com.iflytek.astron.console.hub.service.bot.PersonalityConfigService personalityConfigService;
+
     @InjectMocks
     private BotTransactionalServiceImpl botTransactionalService;
 
@@ -62,12 +65,14 @@ class BotTransactionalServiceImplTest {
     void testCopyBot_Version2() {
         // Given
         when(botService.copyBot(uid, botId, spaceId)).thenReturn(chatBotBase);
+        doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
 
         // When
         botTransactionalService.copyBot(uid, botId, request, spaceId);
 
         // Then
         verify(botService).copyBot(uid, botId, spaceId);
+        verify(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
         verify(botChainService).copyBot(uid, Long.valueOf(botId), Long.valueOf(chatBotBase.getId()), spaceId);
         verifyNoInteractions(redissonClient);
     }
@@ -79,6 +84,7 @@ class BotTransactionalServiceImplTest {
         String redisKey = "test-prefix";
 
         when(botService.copyBot(uid, botId, spaceId)).thenReturn(chatBotBase);
+        doNothing().when(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
         when(redissonClient.<String>getBucket(anyString())).thenReturn(rBucket);
 
         try (MockedStatic<MaasUtil> maasUtilMock = mockStatic(MaasUtil.class)) {
@@ -89,6 +95,7 @@ class BotTransactionalServiceImplTest {
 
             // Then
             verify(botService).copyBot(uid, botId, spaceId);
+            verify(personalityConfigService).copyPersonalityConfig(eq(botId), eq(chatBotBase.getId()));
             verify(redissonClient, times(2)).getBucket(redisKey);
             verify(rBucket).set(String.valueOf(botId));
             verify(rBucket).expire(Duration.ofSeconds(60));
